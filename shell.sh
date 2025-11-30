@@ -1,0 +1,2 @@
+clear
+. .venv/bin/activate
