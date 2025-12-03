@@ -1,8 +1,8 @@
 
 [project]
-name = "tio"
+name = "tio-run"
 version = "0.1.0"
-description = "Add your description here"
+description = "The core engine of Tio Run, your ETL uncle: Transform the Input to Output and Run :)"
 readme = "README.md"
 requires-python = ">=3.13"
 

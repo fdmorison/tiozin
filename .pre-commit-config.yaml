@@ -1,0 +1,37 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.4.0
+  hooks:
+  - id: check-ast
+  - id: trailing-whitespace
+  - id: check-toml
+  - id: end-of-file-fixer
+
+- repo: local
+  hooks:
+  - id: black
+    name: Format with Black
+    entry: uv run black
+    language: system
+    types: [python]
+
+  - id: autoflake
+    name: autoflake
+    entry: uv run autoflake
+    language: system
+    types: [python]
+
+  - id: isort
+    name: isort
+    entry: uv run isort
+    language: system
+    types: [python]
+
+  - id: flake8
+    name: Check with Flake8
+    entry: uv run flake8
+    language: system
+    pass_filenames: false
+    types: [python]

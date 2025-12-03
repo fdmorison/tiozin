@@ -716,7 +716,7 @@ wheels = [
 ]
 
 [[package]]
-name = "tio"
+name = "tio-run"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

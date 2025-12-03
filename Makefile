@@ -5,6 +5,8 @@ export UV_INDEX_PRIVATE_USERNAME=${ARTIFACTORY_USERNAME}
 install:
 	@uv sync --all-groups
 	@uv pip install -e .
+	@uv run pre-commit install
+	@rm -rf *.egg-info
 
 format:
 	@uv run isort .
@@ -28,4 +30,3 @@ build:
 
 deploy:
 	@echo
-
