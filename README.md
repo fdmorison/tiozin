@@ -1,10 +1,8 @@
-# Welcome to Tio
+# Welcome to Tio :)
 
 <p align="center">
   <img src="docs/tio.png">
 </p>
-
-Welcome to Tio, your companion for data orchestration with simplicity, reliability, and elegance.
 
 In a world where data moves faster than structures can keep up, jobs have grown into untamed monsters: massive tools, heavy configurations, and entire ecosystems to master before running a single line. Tio was born to change this. It brings simplicity, clarity, and testable code back to the heart of data flows.
 
