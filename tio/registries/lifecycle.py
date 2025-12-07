@@ -1,18 +1,19 @@
-from .registry import Registry
+from tio import logs
+
+from .registry import MetadataRegistry
 
 
-class Lifecycle(Registry):
+class Lifecycle(MetadataRegistry):
     """
-    Manages the application lifecycle, including setup and proper shutdown off all registries.
+    Manages the application lifecycle, including setup and proper shutdown.
     """
 
-    def __init__(self):
+    def __init__(self, *registries: MetadataRegistry):
         super().__init__()
-        self.registries: list[Registry] = [
-            # empty
-        ]
+        self.registries = tuple(registries)
 
-    def setup(self):
+    def setup(self) -> None:
+        logs.setup()
         for registry in self.registries:
             try:
                 self.logger.info(f"🟣 {registry} is starting")
@@ -20,21 +21,25 @@ class Lifecycle(Registry):
                 registry.ready = True
                 self.logger.info(f"🟢 {registry} is ready")
             except Exception as e:
-                self.logger.exception(f"🚨 {registry} setup failed: {e}")
+                self.logger.error(f"🚨 {registry} setup failed: {e}")
                 raise
 
         self.ready = True
-        self.logger.info("🟢 All registries are ready.")
+        self.logger.info("🟢 Application startup completed.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        self.logger.info("Starting graceful shutdown...")
+
         for registry in reversed(self.registries):
             try:
-                registry.shutdown()
-                self.logger.info(f"🛑 {registry} shutdown is successful.")
-            except Exception as e:
-                self.logger.exception(f"🚨 {registry} shutdown failed: {e}")
+                if registry.ready:
+                    registry.shutdown()
+                    self.logger.info(f"🛑 {registry} shutdown is successful.")
+                else:
+                    self.logger.info(f"🛑 {registry} shutdown skipped (uninitialized).")
+            except Exception:
+                self.logger.exception(f"🚨 {registry} shutdown failed.")
+            finally:
+                registry.ready = False
+
         self.logger.info("🛑 Application shutdown completed.")
-
-
-# Singleton Service Instance
-lifecycle = Lifecycle()
