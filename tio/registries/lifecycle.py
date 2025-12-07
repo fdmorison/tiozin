@@ -1,15 +1,19 @@
+import logging
+
 from tio import logs
 
 from .registry import MetadataRegistry
 
 
-class Lifecycle(MetadataRegistry):
+class Lifecycle:
     """
     Manages the application lifecycle, including setup and proper shutdown.
     """
 
     def __init__(self, *registries: MetadataRegistry):
-        super().__init__()
+        self.name = type(self).__name__
+        self.logger = logging.getLogger(self.name)
+        self.ready = False
         self.registries = tuple(registries)
 
     def setup(self) -> None:
