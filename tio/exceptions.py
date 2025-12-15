@@ -56,14 +56,14 @@ class NotFoundException(TioException):
 
 
 class AlreadyRunningException(TioException):
-    message = "The `{name}` is already running. It looks like you tried to start it twice."
+    message = "The `{name}` is already running. It looks like you tried to run it twice."
 
     def __init__(self, name: str = RESOURCE) -> None:
         super().__init__(self.message.format(name=name))
 
 
 class AlreadyFinishedException(TioException):
-    message = "The `{name}` has already finished. It looks like you tried to start it twice."
+    message = "The `{name}` has already finished. It looks like you tried to finish it twice."
 
     def __init__(self, name: str = RESOURCE) -> None:
         super().__init__(self.message.format(name=name))

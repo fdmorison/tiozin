@@ -23,7 +23,10 @@ class Job(Resource):
         super().__init__()
 
     def run(self, context: Context) -> None:
-        self.logger.info(f"The job `{self}` is starting.")
+        self.logger.info("The job is starting.")
         time.sleep(3)
-        self.logger.info(f"The job `{self}` has finished with success.")
+        self.logger.info("The job has finished with success.")
         return
+
+    def stop(self) -> None:
+        self.logger.warning("The job received a stop request.")
