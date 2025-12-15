@@ -1,13 +1,20 @@
 from rich.console import Console
 import typer
 
+from . import config
+from .app import TioApp
+
+REQUIRED = ...
+OPTIONAL = None
+
 app = typer.Typer(help="CLI do Tio :)", no_args_is_help=True)
+tio_app = TioApp()
 console = Console()
 
-ASCII_TIO = r"""
+ASCII_TIO = rf"""
   _____ ___ ___       _====_
- |_   _|_ _/ _ \     @(■ᴗ■⌐)@   v0.1.0
-   | |  | | | | |     /(:::)\
+ |_   _|_ _/ _ \     @(■ᴗ■⌐)@   Hello, I'm {config.app_title} v{config.app_version}!
+   | |  | | | | |     /(:::)\   Let's get this job running :)
    | |  | | |_| |      /   \
    |_| |___\___/
 """
@@ -15,10 +22,11 @@ ASCII_TIO = r"""
 
 @app.command()
 def run(
-    path: str = typer.Argument(..., help="Path to the job settings. Eg: job.yaml."),
+    job_uri: str = typer.Argument(REQUIRED, help="URI to the job manifest. Eg: job.yaml."),
 ) -> None:
     console.print(ASCII_TIO)
-    console.print(f"[green]Running job:[/green] {path}\n\n")
+    console.print(f"[green]Tio is now running the job:[/green] {job_uri}\n\n")
+    tio_app.run(job_uri=job_uri)
 
 
 @app.command()

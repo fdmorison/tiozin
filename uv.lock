@@ -727,6 +727,7 @@ dependencies = [
     { name = "single-source" },
     { name = "typer" },
     { name = "uuid6" },
+    { name = "wrapt" },
 ]
 
 [package.dev-dependencies]
@@ -764,6 +765,7 @@ requires-dist = [
     { name = "single-source", specifier = "==0.4.0" },
     { name = "typer", specifier = "==0.20.0" },
     { name = "uuid6", specifier = "==2025.0.1" },
+    { name = "wrapt", specifier = "==2.0.1" },
 ]
 
 [package.metadata.requires-dev]

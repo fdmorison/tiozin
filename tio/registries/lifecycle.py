@@ -1,40 +1,41 @@
-from .registry import Registry
+import logging
+
+from .registry import MetadataRegistry
 
 
-class Lifecycle(Registry):
+class Lifecycle:
     """
-    Manages the application lifecycle, including setup and proper shutdown off all registries.
+    Manages the application lifecycle, including setup and proper shutdown.
     """
 
-    def __init__(self):
-        super().__init__()
-        self.registries: list[Registry] = [
-            # empty
-        ]
+    def __init__(self, *registries: MetadataRegistry):
+        self.name = type(self).__name__
+        self.logger = logging.getLogger(self.name)
+        self.ready = False
+        self.registries = tuple(registries)
 
-    def setup(self):
+    def setup(self) -> None:
         for registry in self.registries:
             try:
-                self.logger.info(f"🟣 {registry} is starting")
+                self.logger.info(f"🟣 {registry} is starting.")
                 registry.setup()
                 registry.ready = True
-                self.logger.info(f"🟢 {registry} is ready")
+                self.logger.info(f"🟢 {registry} is ready.")
             except Exception as e:
-                self.logger.exception(f"🚨 {registry} setup failed: {e}")
+                self.logger.error(f"🚨 {registry} setup failed: {e}.")
                 raise
 
         self.ready = True
-        self.logger.info("🟢 All registries are ready.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         for registry in reversed(self.registries):
             try:
-                registry.shutdown()
-                self.logger.info(f"🛑 {registry} shutdown is successful.")
-            except Exception as e:
-                self.logger.exception(f"🚨 {registry} shutdown failed: {e}")
-        self.logger.info("🛑 Application shutdown completed.")
-
-
-# Singleton Service Instance
-lifecycle = Lifecycle()
+                if registry.ready:
+                    registry.shutdown()
+                    self.logger.info(f"🛑 {registry} shutdown is successful.")
+                else:
+                    self.logger.info(f"🛑 {registry} shutdown skipped (uninitialized).")
+            except Exception:
+                self.logger.exception(f"🚨 {registry} shutdown failed.")
+            finally:
+                registry.ready = False
