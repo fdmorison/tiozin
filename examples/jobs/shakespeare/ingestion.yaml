@@ -1,0 +1,31 @@
+kind: Job
+name: shakespeare_ingestion_job
+team: tio
+cost_center: tio_patinhas
+owner: tio@tio.com
+description: |
+  Ingests Shakespeare source texts to our data lake.
+
+org: tio
+region: latam
+domain: literature
+product: shakespeare
+model: hamlet
+layer: raw
+
+runner:
+  kind: SparkRunner
+
+inputs:
+  load_poems:
+    kind: SparkFileInput
+    path: ./example/data/{{product}}
+
+transforms:
+  add_metadata:
+    kind: SparkMetadataTransform
+
+outputs:
+  save_poems:
+    kind: SparkFileOutput
+    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
