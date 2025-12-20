@@ -6,6 +6,7 @@ from typing import NoReturn
 from tiozin import Context, Job, Resource, logs
 from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
+from tiozin.exceptions import TiozinException
 from tiozin.registries import Lifecycle
 from tiozin.utils.app_status import AppStatus
 
@@ -109,6 +110,10 @@ class TiozinApp(Resource):
                 self.current_job.run(context)
                 self.status = self.status.set_success()
                 return self.current_job
+            except TiozinException as e:
+                self.status = self.status.set_failure()
+                self.logger.error(e.message)
+                SystemExit(1)
             except Exception:
                 self.status = self.status.set_failure()
                 self.logger.exception(f"Unexpected error while executing job `{name}`. ")
