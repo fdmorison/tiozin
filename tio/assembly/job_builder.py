@@ -1,6 +1,7 @@
 from typing import Self
 
 from tio.model.job import Job
+from tio.registries import JobManifest
 
 
 class JobBuilder:
@@ -22,12 +23,12 @@ class JobBuilder:
         ```
     """
 
-    def from_yaml(self, manifest: str) -> Self:
+    def from_manifest(self, manifest: JobManifest) -> Self:
         """
-        Load a Job manifest from a YAML content string.
+        Load a Job from a manifest.
 
         Args:
-            manifest: The YAML content representing the job configuration.
+            manifest: The declarative representation of a data job.
 
         Returns:
             The builder, allowing method chaining for building the Job.

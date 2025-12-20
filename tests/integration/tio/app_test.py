@@ -142,7 +142,7 @@ def test_shutdown_should_be_idempotent(running_app: TioApp):
 def test_run_should_execute_job_and_finish_with_success(job_builder: MagicMock, ready_app: TioApp):
     # Arrange
     job = MagicMock()
-    job_builder.return_value.from_yaml.return_value.build.return_value = job
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     result = ready_app.run("job://test")
@@ -159,7 +159,7 @@ def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_a
     # Arrange
     job = MagicMock()
     job.run.side_effect = RuntimeError("boom")
-    job_builder.return_value.from_yaml.return_value.build.return_value = job
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     with pytest.raises(RuntimeError, match="boom"):
@@ -182,7 +182,7 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
 
     job = MagicMock()
     job.run.side_effect = mocked_job_run
-    job_builder.return_value.from_yaml.return_value.build.return_value = job
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     ready_app.run("job://test")
