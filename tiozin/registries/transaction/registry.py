@@ -3,17 +3,11 @@ from ..registry import MetadataRegistry
 
 class TransactionRegistry(MetadataRegistry):
     """
-    Registry that tracks transactions and their state in Tiozin, creating and using
-    a transaction log or commit log.
+    Tracks transaction states and commit logs.
 
-    Supports any storage backend for transaction metadata (e.g., databases,
-    key/value stores), while keeping Tiozin agnostic to the storage details. Records
-    pending, running, committed, and failed transactions, enabling consistent
-    tracking and auditing across executions.
-
-    Tiozin automatically updates transaction states during pipeline execution, but the
-    TransactionRegistry is also available in the Context for custom inspection or
-    manipulation by Transforms, Inputs, and Outputs.
+    Storage-agnostic contract for transaction backends (like databases or key/value stores).
+    Records pending, running, committed, and failed states for consistent tracking and auditing.
+    Available in Context for custom inspection in Transforms, Inputs, and Outputs.
     """
 
     def __init__(self) -> None:

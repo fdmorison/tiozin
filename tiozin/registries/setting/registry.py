@@ -3,16 +3,10 @@ from ..registry import MetadataRegistry
 
 class SettingRegistry(MetadataRegistry):
     """
-    Registry that manages system settings and configuration parameters in Tiozin.
+    Manages system settings and configuration.
 
-    Supports any storage backend for settings (e.g., databases, YAML/JSON files,
-    environment variables, key/value stores like Consul), while keeping Tiozin agnostic
-    to the storage details. Enables pipelines and tasks to access configuration
-    consistently across different environments.
-
-    Tiozin automatically handles settings retrieval during pipeline execution, but
-    the SettingRegistry is also available in the Context for custom manipulation
-    by Transforms, Inputs, and Outputs.
+    Storage-agnostic contract for setting backends (like databases, YAML files, or Consul).
+    Available in Context for configuration access in Transforms, Inputs, and Outputs.
     """
 
     def __init__(self) -> None:

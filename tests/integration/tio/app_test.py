@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tests.mocks.fake_registry_factory import MockedRegistryFactory
+import tiozin.app
 from tiozin.app import AppStatus, TiozinApp
 
 
@@ -34,7 +35,7 @@ def running_app(created_app: TiozinApp) -> TiozinApp:
     return created_app
 
 
-@patch("tiozin.status.AppStatus.set_booting")
+@patch.object(AppStatus, "set_booting")
 def test_setup_should_leave_application_ready_when_success(
     set_booting: MagicMock, created_app: TiozinApp
 ):
@@ -173,7 +174,7 @@ def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_a
     assert ready_app.status.is_job_finished()
 
 
-@patch("tiozin.app.JobBuilder")
+@patch.object(tiozin.app, "JobBuilder")
 def test_run_should_set_running_before_job_execution(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     actual_status: AppStatus = None
@@ -193,7 +194,7 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
     assert actual_status.is_running()
 
 
-@patch("tiozin.app.JobBuilder")
+@patch.object(tiozin.app, "JobBuilder")
 def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     ready_app.setup = MagicMock()

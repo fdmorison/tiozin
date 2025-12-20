@@ -4,7 +4,7 @@ name = "tiozin"
 version = "0.1.0"
 description = "Tiozin, your friendly ETL framework"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 
 dependencies = [
   "pydantic ==2.12.3",
@@ -14,7 +14,6 @@ dependencies = [
   "pendulum ==3.1.0",
   "uuid6 ==2025.0.1",
   "typer ==0.20.0",
-  "wrapt ==2.0.1",
   "ruamel-yaml ==0.18.17",
 ]
 

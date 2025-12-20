@@ -3,22 +3,20 @@ import json
 from pathlib import Path
 
 from ruamel.yaml import YAML
+from ruamel.yaml.constructor import DuplicateKeyError
+
+from tiozin.exceptions import JobManifestException
 
 from .model import JobManifest
 from .registry import JobRegistry
 
 
 class FileJobRegistry(JobRegistry):
-    """Default implementation of JobRegistry for file-based job manifests.
+    """
+    File-based job manifest storage.
 
-    This is the most basic way for Tiozin to access job manifests. It reads and writes
-    manifest files from local filesystem, GCS, or S3 in YAML or JSON format.
-
-    This class serves as the default implementation of the JobRegistry contract.
-    The community can extend this contract with custom implementations, such as
-    database-backed registries or GitHub-based manifest storage.
-
-    Supported formats: .yaml, .yml, .json
+    Reads and writes manifests from filesystem, GCS, or S3.
+    Default JobRegistry implementation. Supports YAML and JSON formats.
     """
 
     def __init__(self) -> None:
@@ -30,9 +28,12 @@ class FileJobRegistry(JobRegistry):
         self.yaml.default_flow_style = False
 
     def get(self, name: str) -> JobManifest:
-        content = Path(name).read_text(encoding="utf-8")
-        manifest = self.yaml.load(content)
-        return JobManifest.model_validate(manifest)
+        try:
+            content = Path(name).read_text(encoding="utf-8")
+            manifest = self.yaml.load(content)
+            return JobManifest.model_validate(manifest)
+        except DuplicateKeyError as e:
+            raise JobManifestException.from_ruamel(e, name)
 
     def register(self, name: str, value: JobManifest) -> None:
         path = Path(name)

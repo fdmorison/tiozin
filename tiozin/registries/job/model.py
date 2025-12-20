@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -9,10 +11,9 @@ from . import docs
 
 class Manifest(BaseModel):
     """
-    Base definition for any resource in a job manifest.
+    Base manifest for pipeline resources.
 
-    Provides identity and business context that can be reused by
-    pipeline components (runner, inputs, transforms, outputs).
+    Provides identity and business context for runners, inputs, transforms, and outputs.
     """
 
     model_config = ConfigDict(extra="allow")
@@ -39,10 +40,9 @@ class Manifest(BaseModel):
 
 class RunnerManifest(Manifest):
     """
-    Defines how a job runs.
+    Defines job execution environment.
 
-    Describes the execution environment and runtime behavior,
-    e.g., Spark, SQL, or custom runners.
+    Describes runtime behavior (like Spark, SQL, or custom runners).
     """
 
     streaming: bool = Field(False, description=docs.STREAMING)
@@ -50,9 +50,9 @@ class RunnerManifest(Manifest):
 
 class InputManifest(Manifest):
     """
-    Represents a data source for the job.
+    Defines a data source.
 
-    Defines how and from where data is read into the pipeline.
+    Specifies how and where data is read into the pipeline.
     """
 
     schema: Optional[str] = Field(None, description=docs.SCHEMA)
@@ -62,29 +62,26 @@ class InputManifest(Manifest):
 
 class TransformManifest(Manifest):
     """
-    Represents a data transformation step.
+    Defines a data transformation.
 
-    Defines operations that modify or enrich data between input and output.
+    Specifies operations that modify or enrich data.
     """
 
 
 class OutputManifest(Manifest):
     """
-    Represents a data destination for the job.
+    Defines a data destination.
 
-    Defines where and how processed data is written or published.
+    Specifies where and how processed data is written.
     """
 
 
 class JobManifest(Manifest):
     """
-    Declarative representation of a data job.
+    Declarative job definition.
 
-    This manifest describes the job as a structured document, including metadata,
-    business taxonomy, and pipeline components. It allows the job to be treated as code:
-    it can be stored in a database, transferred via APIs, versioned, or even used
-    as training data for AI models. Essentially, it is the blueprint of the job,
-    decoupled from execution.
+    Describes a job as structured data including metadata, taxonomy, and pipeline components.
+    Can be stored, versioned, and transferred as code.
     """
 
     model_config = ConfigDict(extra="ignore")

@@ -3,16 +3,10 @@ from ..registry import MetadataRegistry
 
 class SecretRegistry(MetadataRegistry):
     """
-    Registry that manages secrets and credentials used by Tiozin.
+    Manages secrets and credentials.
 
-    Supports any secure storage backend for secrets (e.g., HashiCorp Vault, AWS
-    Secrets Manager, environment variables), while keeping Tiozin agnostic to the
-    storage details. Ensures secrets can be retrieved safely by the application
-    without hardcoding them.
-
-    Tiozin automatically handles secret retrieval during pipeline execution, but the
-    SecretRegistry is also available in the Context for custom manipulation by
-    Transforms, Inputs, and Outputs.
+    Storage-agnostic contract for secret backends (like HashiCorp Vault or AWS Secrets Manager).
+    Available in Context for secure credential handling in Transforms, Inputs, and Outputs.
     """
 
     def __init__(self) -> None:

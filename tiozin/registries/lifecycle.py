@@ -5,7 +5,9 @@ from .registry import MetadataRegistry
 
 class Lifecycle:
     """
-    Manages the application lifecycle, including setup and proper shutdown.
+    Manages application lifecycle for registries.
+
+    Handles setup and shutdown of all registered components.
     """
 
     def __init__(self, *registries: MetadataRegistry):

@@ -1,6 +1,7 @@
 export APP=$(shell basename "$$PWD")
-export UV_INDEX_PRIVATE_PASSWORD=${ARTIFACTORY_PASSWORD}
-export UV_INDEX_PRIVATE_USERNAME=${ARTIFACTORY_USERNAME}
+
+clean:
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
 
 install:
 	@uv sync --all-groups

@@ -1,22 +1,15 @@
 import time
 
-from .abc.resource import Resource
 from .context import Context
+from .resource import Resource
 
 
 class Job(Resource):
     """
-    Represents a complete ETL process within a TioApp.
+    Represents a complete ETL process.
 
-    A Job is composed of one or more Inputs, one or more Transforms, one or more Outputs,
-    and a Runner, forming the major execution step inside a TioApp. It encapsulates all the
-    logic needed to extract, transform, and load data according to the job manifest.
-
-    Jobs are built from manifests, whose most basic form is YAML files stored on the
-    filesystem, in a bucket, or in a database.
-
-    Jobs are executed within the TioApp, which is responsible for managing registries,
-    configuration, and other runtime information.
+    Combines Inputs, Transforms, Outputs, and a Runner into a single execution unit.
+    Built from manifests (YAML, JSON, or Python) and executed by TiozinApp.
     """
 
     def __init__(self) -> None:

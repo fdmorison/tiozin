@@ -5,11 +5,10 @@ from ..registry import MetadataRegistry
 
 class NoOpSettingRegistry(MetadataRegistry):
     """
-    No-op registry implementation.
+    No-op setting registry.
 
-    This registry performs no operations and always returns None for retrievals.
-    Useful as a placeholder or default when settings management is not required
-    or for testing purposes.
+    Does nothing. Returns None for all operations.
+    Useful for testing or when settings management is disabled.
     """
 
     def __init__(self) -> None:

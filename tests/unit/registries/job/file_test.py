@@ -48,7 +48,7 @@ def test_get_should_fail_on_schema_validation_error():
     path = "tests/mocks/manifests/invalid_schema.yaml"
 
     # Act
-    with pytest.raises(Exception, match="The content is not a valid Job Manifest"):
+    with pytest.raises(Exception, match="The provided TransformManifest cannot be parsed"):
         FileJobRegistry().get(path)
 
 

@@ -15,12 +15,12 @@ artifact_version = get_version(artifact_name, Path(__file__).parent.parent)
 # ===============================================
 #           API
 # ===============================================
-app_name = "tiozin-run"
-app_title = "Tiozin Run"
+app_name = "tiozin"
+app_title = "Tiozin"
 app_version = artifact_version
 app_host = env.HOSTNAME
-app_description = "The core engine of Tiozin Run: Transform the Input to Output and Run :)"
-app_timezone = ZoneInfo("America/Sao_Paulo")
+app_description = "Tiozin, your friendly ETL framework"
+app_timezone = ZoneInfo("UTC")
 
 # ===============================================
 #           Logging
