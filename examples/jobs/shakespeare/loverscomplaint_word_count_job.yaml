@@ -1,13 +1,13 @@
 kind: Job
 name: loverscomplaint_word_count_job
-team: tio
+team: tiozin
 cost_center: tio_patinhas
-owner: tio@tio.com
+owner: tiozin@tiozin.com
 description: |
   Pre-processes Shakespeare source texts and produces
   word count metrics as a refined data product.
 
-org: tio
+org: tiozin
 region: latam
 domain: literature
 product: shakespeare

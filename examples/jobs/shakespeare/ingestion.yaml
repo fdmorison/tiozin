@@ -1,12 +1,12 @@
 kind: Job
 name: shakespeare_ingestion_job
-team: tio
+team: tiozin
 cost_center: tio_patinhas
-owner: tio@tio.com
+owner: tiozin@tiozin.com
 description: |
   Ingests Shakespeare source texts to our data lake.
 
-org: tio
+org: tiozin
 region: latam
 domain: literature
 product: shakespeare

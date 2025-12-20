@@ -1,7 +1,7 @@
 kind: Job
 name: test_job
 
-org: tio
+org: tiozin
 region: latam
 domain: quality
 product: test_cases
