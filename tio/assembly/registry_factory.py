@@ -1,9 +1,9 @@
 from tio.registries import (
+    FileJobRegistry,
     JobRegistry,
     LineageRegistry,
     MetadataRegistry,
     MetricRegistry,
-    NoOpJobRegistry,
     NoOpLineageRegistry,
     NoOpMetricRegistry,
     NoOpSchemaRegistry,
@@ -33,7 +33,7 @@ class RegistryFactory:
         transaction_registry: TransactionRegistry = None,
         setting_registry: SettingRegistry = None,
     ):
-        self._job_registry = job_registry or NoOpJobRegistry()
+        self._job_registry = job_registry or FileJobRegistry()
         self._lineage_registry = lineage_registry or NoOpLineageRegistry()
         self._metric_registry = metric_registry or NoOpMetricRegistry()
         self._schema_registry = schema_registry or NoOpSchemaRegistry()
