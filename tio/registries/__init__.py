@@ -1,7 +1,9 @@
 # isort: skip_file
 # flake8: noqa
-from .job.noop import NoOpJobRegistry as NoOpJobRegistry
 from .job.registry import JobRegistry as JobRegistry
+from .job.file import FileJobRegistry as FileJobRegistry
+from .job.model import JobManifest as JobManifest
+
 from .lifecycle import Lifecycle as Lifecycle
 from .lineage.noop import NoOpLineageRegistry as NoOpLineageRegistry
 from .lineage.registry import LineageRegistry as LineageRegistry

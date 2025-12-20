@@ -112,7 +112,7 @@ class TioApp(Resource):
                 transaction_registry=self.registries.transaction_registry,
             )
             manifest = self.job_registry.get(job_uri)
-            self.current_job = JobBuilder().from_yaml(manifest).build()
+            self.current_job = JobBuilder().from_manifest(manifest).build()
             self.current_job.run(context)
             self.status = self.status.set_success()
             return self.current_job

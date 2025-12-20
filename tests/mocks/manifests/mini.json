@@ -1,0 +1,28 @@
+{
+  "kind": "Job",
+  "name": "test_job",
+  "org": "tio",
+  "region": "latam",
+  "domain": "quality",
+  "product": "test_cases",
+  "model": "some_case",
+  "layer": "test",
+  "runner": {
+    "kind": "TestRunner"
+  },
+  "inputs": {
+    "read_something": {
+      "kind": "TestInput"
+    }
+  },
+  "transforms": {
+    "transform_something": {
+      "kind": "TestTransform"
+    }
+  },
+  "outputs": {
+    "write_something": {
+      "kind": "TestOutput"
+    }
+  }
+}
