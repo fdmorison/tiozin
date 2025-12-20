@@ -3,40 +3,40 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tests.mocks.fake_registry_factory import MockedRegistryFactory
-from tio.app import AppStatus, TioApp
+from tiozin.app import AppStatus, TiozinApp
 
 
 @pytest.fixture(scope="function", autouse=True)
 def mock_signals():
-    with patch("tio.app.signal") as mock_signal, patch("tio.app.atexit") as mock_atexit:
+    with patch("tiozin.app.signal") as mock_signal, patch("tiozin.app.atexit") as mock_atexit:
         yield mock_signal, mock_atexit
 
 
 @pytest.fixture(scope="function")
-def created_app() -> TioApp:
-    app = TioApp(registries=MockedRegistryFactory())
+def created_app() -> TiozinApp:
+    app = TiozinApp(registries=MockedRegistryFactory())
     app.lifecycle = MagicMock()
     app.job_registry = MagicMock()
     return app
 
 
 @pytest.fixture(scope="function")
-def ready_app(created_app: TioApp) -> TioApp:
+def ready_app(created_app: TiozinApp) -> TiozinApp:
     created_app.lifecycle = MagicMock()
     created_app.status = AppStatus.WAITING
     return created_app
 
 
 @pytest.fixture
-def running_app(created_app: TioApp) -> TioApp:
+def running_app(created_app: TiozinApp) -> TiozinApp:
     created_app.current_job = MagicMock()
     created_app.status = AppStatus.RUNNING
     return created_app
 
 
-@patch("tio.status.AppStatus.set_booting")
+@patch("tiozin.status.AppStatus.set_booting")
 def test_setup_should_leave_application_ready_when_success(
-    set_booting: MagicMock, created_app: TioApp
+    set_booting: MagicMock, created_app: TiozinApp
 ):
     # Act
     created_app.setup()
@@ -49,7 +49,7 @@ def test_setup_should_leave_application_ready_when_success(
     assert created_app.status.is_idle()
 
 
-def test_setup_should_fail_and_propagate_exception(created_app: TioApp):
+def test_setup_should_fail_and_propagate_exception(created_app: TiozinApp):
     # Arrange
     created_app.lifecycle.setup.side_effect = RuntimeError("boom")
 
@@ -65,7 +65,7 @@ def test_setup_should_fail_and_propagate_exception(created_app: TioApp):
     assert created_app.status.is_job_finished()
 
 
-def test_setup_should_set_booting_before_initialization(created_app: TioApp):
+def test_setup_should_set_booting_before_initialization(created_app: TiozinApp):
     # Arrange
     actual_status: AppStatus = None
 
@@ -82,7 +82,7 @@ def test_setup_should_set_booting_before_initialization(created_app: TioApp):
     assert actual_status.is_booting()
 
 
-def test_setup_should_be_idempotent(created_app: TioApp):
+def test_setup_should_be_idempotent(created_app: TiozinApp):
     # Act
     created_app.setup()
     created_app.setup()
@@ -92,7 +92,7 @@ def test_setup_should_be_idempotent(created_app: TioApp):
 
 
 def test_setup_should_install_shutdown_hooks(
-    created_app: TioApp, mock_signals: tuple[MagicMock, ...]
+    created_app: TiozinApp, mock_signals: tuple[MagicMock, ...]
 ):
     # Arrange
     mock_signal, mock_atexit = mock_signals
@@ -111,7 +111,7 @@ def test_setup_should_install_shutdown_hooks(
     mock_atexit.register.assert_called_once_with(created_app.shutdown)
 
 
-def test_shutdown_should_terminate(ready_app: TioApp):
+def test_shutdown_should_terminate(ready_app: TiozinApp):
     # Act
     ready_app.shutdown()
 
@@ -120,7 +120,7 @@ def test_shutdown_should_terminate(ready_app: TioApp):
     assert ready_app.status.is_completed()
 
 
-def test_shutdown_should_cancel_running_job(running_app: TioApp):
+def test_shutdown_should_cancel_running_job(running_app: TiozinApp):
     # Act
     running_app.shutdown()
 
@@ -129,7 +129,7 @@ def test_shutdown_should_cancel_running_job(running_app: TioApp):
     assert running_app.status.is_canceled()
 
 
-def test_shutdown_should_be_idempotent(running_app: TioApp):
+def test_shutdown_should_be_idempotent(running_app: TiozinApp):
     # Act
     running_app.shutdown()
     running_app.shutdown()
@@ -138,8 +138,10 @@ def test_shutdown_should_be_idempotent(running_app: TioApp):
     running_app.lifecycle.shutdown.assert_called_once()
 
 
-@patch("tio.app.JobBuilder")
-def test_run_should_execute_job_and_finish_with_success(job_builder: MagicMock, ready_app: TioApp):
+@patch("tiozin.app.JobBuilder")
+def test_run_should_execute_job_and_finish_with_success(
+    job_builder: MagicMock, ready_app: TiozinApp
+):
     # Arrange
     job = MagicMock()
     job_builder.return_value.from_manifest.return_value.build.return_value = job
@@ -154,8 +156,8 @@ def test_run_should_execute_job_and_finish_with_success(job_builder: MagicMock, 
     assert ready_app.status.is_job_finished()
 
 
-@patch("tio.app.JobBuilder")
-def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_app: TioApp):
+@patch("tiozin.app.JobBuilder")
+def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     job = MagicMock()
     job.run.side_effect = RuntimeError("boom")
@@ -171,8 +173,8 @@ def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_a
     assert ready_app.status.is_job_finished()
 
 
-@patch("tio.app.JobBuilder")
-def test_run_should_set_running_before_job_execution(job_builder: MagicMock, ready_app: TioApp):
+@patch("tiozin.app.JobBuilder")
+def test_run_should_set_running_before_job_execution(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     actual_status: AppStatus = None
 
@@ -191,8 +193,8 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
     assert actual_status.is_running()
 
 
-@patch("tio.app.JobBuilder")
-def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TioApp):
+@patch("tiozin.app.JobBuilder")
+def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     ready_app.setup = MagicMock()
 

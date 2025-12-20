@@ -1,7 +1,7 @@
 compact_job = dict(
     kind="Job",
     name="test_job",
-    org="tio",
+    org="tiozin",
     region="latam",
     domain="quality",
     product="test_cases",
@@ -36,7 +36,7 @@ expanded_job = dict(
     owner=None,
     labels={},
     description=None,
-    org="tio",
+    org="tiozin",
     region="latam",
     domain="quality",
     product="test_cases",

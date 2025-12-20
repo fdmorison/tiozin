@@ -23,8 +23,6 @@ test:
 
 build:
 	@DOCKER_BUILDKIT=1 docker build \
-	--build-arg ARTIFACTORY_USERNAME=${ARTIFACTORY_USERNAME} \
-	--build-arg ARTIFACTORY_PASSWORD=${ARTIFACTORY_PASSWORD} \
 	-t local/${APP}:latest .
 	@docker image ls local/${APP}:latest
 

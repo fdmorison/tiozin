@@ -1,58 +1,92 @@
-# Welcome to Tio :)
+# Tiozin
 
 <p align="center">
-  <img src="docs/tio.png">
+  <img src="docs/tiozin.png" alt="Tiozin - Your friendly ETL framework">
 </p>
 
-In a world where data moves faster than structures can keep up, jobs have grown into untamed monsters: massive tools, heavy configurations, and entire ecosystems to master before running a single line. Tio was born to change this. It brings simplicity, clarity, and testable code back to the heart of data flows.
+---
 
-Jobs should be human-sized. They don’t need 80 files, 50 YAMLs, 12 frameworks, or a PhD in complexity. Tio lets you define jobs as if you were having a conversation: direct, clear, expressive.
+ETL shouldn't require 80 files, 50 YAMLs, and a PhD in complexity.
 
-Transform. Input. Output. Nothing more. Nothing less.
+Tiozin brings it back to basics: **Transform. Input. Output.** Nothing more, nothing less.
 
-## What is Tio
+A lightweight Python framework that makes data jobs declarative, testable, and actually enjoyable to write.
 
-Tio is a minimalist ETL/ELT framework that combines Data Engineering and Software Engineering to build professional, maintainable data jobs.
+## Quick Start
 
-It aims to create jobs that are declarative, testable, documentable, and fully pluggable across different data engines such as Spark, SQL warehouses, Apache Beans, and more.
+```bash
+pip install tiozin
+```
 
-## Documentation Index
+**Option 1: Define a job in YAML**
 
-For more details, please refer to the documentation:
+```yaml
+kind: Job
+name: kinglear_word_count_job
 
-- [Installation Guide](docs/installation.md) – How to install and get started with Tio
-- [Core Concepts](docs/core_concepts.md) – Overview of jobs, steps, runtimes, and metadata
-- [Transforms](docs/transforms.md) – Creating and executing transformation steps
-- [Inputs](docs/inputs.md) – Connecting to data sources
-- [Outputs](docs/outputs.md) – Writing results to data destinations
-- [Runners](docs/runners.md) – Executing into different data transformation engines.
-- [Job Definition](docs/pipeline.md) – How to define and configure ETL jobs
-- [Registry System](docs/registries.md) – Registries, NoOp implementations, and SecretRegistry
-- [Family Providers & Plugins](docs/plugins.md) – Built-in and custom provider integrations
-- [Lifecycle & Shutdown](docs/lifecycle.md) – Bootstrap and graceful shutdown
-- [Testing](docs/testing.md) – Testing strategies, mocks, and best practices
+org: tiozin
+region: latam
+domain: literature
+product: shakespeare
+model: kinglear
+layer: refined
 
-## Tio Manifesto
+runner:
+  kind: SparkRunner
 
-**The philosophy behind Tio, in six principles:**
+inputs:
+  load_poems:
+    kind: SparkFileInput
+    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{today_minus_one}}
 
-- **Jobs should be human-sized**
-  Keep them simple, direct, and readable. Avoid unnecessary complexity and boilerplate.
+transforms:
+  word_count:
+    kind: SparkWordCountTransform
 
-- **Transform, Input, Output**
-  Focus on what matters. Every job is composed of clear, purposeful steps.
+outputs:
+  save_word_counts:
+    kind: SparkFileOutput
+    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+```
 
-- **Declarative yet flexible**
-  Configure jobs without losing control, clarity, or readability.
+Run it:
 
-- **Extensible and modular**
-  Registries, runtimes, and steps can be replaced, extended, or customized as needed.
+```bash
+tiozin run examples/jobs/shakespeare/kinglear_word_count_job.yaml
+```
 
-- **Transparent and observable**
-  Logging is useful, not spammy or absent. Metadata registries provide governance, traceability, and lineage. System initialization and shutdown are graceful and observable.
+**Option 2: Use Python directly**
 
-- **Testable by design**
-  Every component can be isolated, mocked, and validated with confidence.
+```python
+from tiozin import TiozinApp
+
+app = TiozinApp()
+app.run("examples/jobs/shakespeare/kinglear_word_count_job.yaml")
+```
+
+Done. No ceremony, no boilerplate.
+
+## Documentation
+
+- [Installation](docs/installation.md)
+- [Jobs](docs/pipeline.md)
+- [Runners](docs/runners.md)
+- [Transforms, Inputs & Outputs](docs/transforms.md)
+- [Registries](docs/registries.md)
+- [Plugins](docs/plugins.md)
+- [Testing](docs/testing.md)
+
+## Philosophy
+
+Your uncle's advice: Keep it simple, readable, and testable.
+
+- **Declarative** – Define what, not how
+- **Pluggable** – Swap runners, registries, plugins as needed
+- **Metadata** – Built-in metadata integration
+- **Observable** – Logs that help, not spam
+- **Testable** – Mock anything, validate everything
+
+No magic. No surprises. Just clean data pipelines.
 
 ## Contributing
 
@@ -60,4 +94,4 @@ Contributions are welcome! See [CONTRIBUTING.md](docs/contributing.md) for guide
 
 ## License
 
-This project is licensed under the [Apache License 2.0](LICENSE).
+This project is licensed under the [Mozilla Public License 2.0](LICENSE).

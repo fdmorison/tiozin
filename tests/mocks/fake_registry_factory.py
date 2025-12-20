@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from tio.assembly.registry_factory import RegistryFactory
+from tiozin.assembly.registry_factory import RegistryFactory
 
 
 class MockedRegistryFactory:

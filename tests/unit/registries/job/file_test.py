@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 from tests.mocks.manifests import mini
-from tio.registries.job.file import FileJobRegistry, JobManifest
+from tiozin.registries.job.file import FileJobRegistry, JobManifest
 
 
 def test_get_should_load_yaml_manifest_from_local_file():
@@ -65,7 +65,7 @@ def test_register_should_write_yaml_manifest(tmp_path: Path):
     expected = dedent(
         """
       kind: Job
-      org: tio
+      org: tiozin
       region: latam
       domain: quality
       product: test_cases

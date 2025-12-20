@@ -1,10 +1,53 @@
 # Python-generated files
-__pycache__/
+**/__pycache__/
 *.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+**/build/
+**/dist/
+**/wheels/
+**/*.egg-info
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
+ENV/
+**/.venv/
+**/venv/
+
+# Coverage
+.coverage
+.coverage.*
+**/htmlcov/
+**/.pytest_cache/
+
+# Environment variables and secrets
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/credentials.json
+**/secrets.*
+**/secret.*
+**/*-credentials.json
+**/*-secrets.*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
+**/logs/
+**/*.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+**/*.db
