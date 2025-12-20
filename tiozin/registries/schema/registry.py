@@ -3,15 +3,10 @@ from ..registry import MetadataRegistry
 
 class SchemaRegistry(MetadataRegistry):
     """
-    Registry that represents schema backends able to retrieve and upsert schemas,
-    similar to the Confluent Schema Registry.
+    Retrieves and stores schemas.
 
-    Supports any storage backend for schemas, typically JSON or Avro, while keeping
-    Tiozin agnostic to the storage details.
-
-    Tiozin automatically handles schema retrieval during pipeline execution, but the
-    SchemaRegistry is also available in the Context for custom manipulation by
-    Transforms, Inputs, and Outputs.
+    Storage-agnostic contract for schema backends (like Confluent Schema Registry).
+    Available in Context for schema handling in Transforms, Inputs, and Outputs.
     """
 
     def __init__(self) -> None:

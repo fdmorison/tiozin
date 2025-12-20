@@ -6,9 +6,10 @@ from .app import TiozinApp
 
 REQUIRED = ...
 OPTIONAL = None
+TITLE = f"{config.app_title} v{config.app_version}"
 
-app = typer.Typer(help=f"Tiozin v{config.app_version}", no_args_is_help=True)
-tiozin_app = TiozinApp()
+cli = typer.Typer(help=TITLE, no_args_is_help=True)
+app = TiozinApp()
 console = Console()
 
 ASCII_TIO = rf"""
@@ -18,25 +19,25 @@ ASCII_TIO = rf"""
   | |  | | |_| / /_ | || |\  |     /(:::)\  and let's get this job running :)
   |_| |___\___/____|___|_| \_|      /   \
 
-  Tiozin v{config.app_version} - Your friendly ETL framework 🤓
+  {TITLE} - Your friendly ETL framework 🤓
 """
 
 
-@app.command()
+@cli.command()
 def run(
     name: str = typer.Argument(REQUIRED, help="Name of the job to create."),
 ) -> None:
     """Submit and run a job."""
     console.print(ASCII_TIO)
     console.print(f"[green]▶ Starting job:[/green] [bold cyan]{name}[/bold cyan]\n")
-    tiozin_app.run(job_uri=name)
+    app.run(name)
 
 
-@app.command()
+@cli.command()
 def version() -> None:
     """Show Tiozin version."""
     console.print(ASCII_TIO)
 
 
 def main() -> None:
-    app()
+    cli()

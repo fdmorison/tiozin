@@ -9,12 +9,10 @@ from tiozin.registries import (
 
 class Context:
     """
-    Represents the execution context for a Tiozin pipeline run.
+    Runtime context for pipeline execution.
 
-    The Context encapsulates all runtime information needed during execution,
-    including access to sessions, utilities, and metadata. It is passed to Jobs,
-    Inputs, Transforms, and Outputs, allowing them to interact with the runtime
-    environment.
+    Provides access to registries and metadata during job runs.
+    Passed to Jobs, Inputs, Transforms, and Outputs.
     """
 
     def __init__(

@@ -19,8 +19,9 @@ from tiozin.registries import (
 
 class RegistryFactory:
     """
-    Factory responsible for creating and caching all registries as singletons.
-    Accepts pre-instantiated registries via constructor, otherwise defaults to NoOp.
+    Creates and manages registry instances.
+
+    Accepts custom registries or defaults to NoOp implementations.
     """
 
     def __init__(

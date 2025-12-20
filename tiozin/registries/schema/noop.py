@@ -5,11 +5,10 @@ from ..registry import MetadataRegistry
 
 class NoOpSchemaRegistry(MetadataRegistry):
     """
-    No-op registry implementation.
+    No-op schema registry.
 
-    This registry performs no operations and always returns None for retrievals.
-    Useful as a placeholder or default when settings management is not required
-    or for testing purposes.
+    Does nothing. Returns None for all operations.
+    Useful for testing or when schema validation is disabled.
     """
 
     def __init__(self) -> None:

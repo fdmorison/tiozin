@@ -7,13 +7,10 @@ T = TypeVar("T")
 
 class MetadataRegistry(ABC, Generic[T]):
     """
-    Base class representing a registry of metadata items.
+    Base class for metadata registries.
 
-    A MetadataRegistry manages, stores, and provides access to metadata that
-    describes resources, configurations, or system entities. Subclasses must
-    define how metadata is stored and retrieved.
-
-    Common use cases include registering schemas, configurations, or catalogs.
+    Stores and retrieves metadata for resources, configurations, or entities.
+    Subclasses define storage and retrieval implementation.
     """
 
     def __init__(self) -> None:
@@ -23,44 +20,42 @@ class MetadataRegistry(ABC, Generic[T]):
 
     def setup(self) -> None:
         """
-        Initialize the metadata registry.
+        Initialize the registry.
 
-        Should prepare any resources required for the registry to function,
-        such as connections, caches, or internal data structures.
+        Prepare connections, caches, or internal structures as needed.
         """
 
     def shutdown(self) -> None:
         """
-        Gracefully shut down the metadata registry.
+        Shut down the registry.
 
-        Should release resources, close connections, and ensure consistency
-        of the stored metadata.
+        Release resources and close connections.
         """
 
     @abstractmethod
     def get(self, identifier: str, failfast: bool = False) -> T:
         """
-        Retrieve the metadata associated with the given identifier.
+        Retrieve metadata by identifier.
 
         Args:
-            identifier: name or unique identifier of the metadata.
-            failfast: if True, raise immediately if the identifier is not found.
+            identifier: Metadata name or unique ID.
+            failfast: Raise if not found (default: False).
 
         Returns:
-            The metadata value, otherwise None when failfast is false.
+            Metadata value, or None if not found and failfast=False.
 
         Raises:
-            tiozin.exceptions.NotFoundException: if identifier cannot be found.
+            NotFoundException: When identifier not found and failfast=True.
         """
 
     @abstractmethod
     def register(self, identifier: str, value: T) -> None:
         """
-        Register a metadata item in the registry.
+        Register metadata in the registry.
 
         Args:
-            identifier: name or unique identifier of the metadata.
-            value: value of type T associated with the metadata.
+            identifier: Metadata name or unique ID.
+            value: Metadata value.
         """
 
     def __str__(self) -> str:

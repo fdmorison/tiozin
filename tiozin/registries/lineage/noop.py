@@ -5,11 +5,10 @@ from ..registry import MetadataRegistry
 
 class NoOpLineageRegistry(MetadataRegistry):
     """
-    No-op registry implementation.
+    No-op lineage registry.
 
-    This registry performs no operations and always returns None for retrievals.
-    Useful as a placeholder or default when settings management is not required
-    or for testing purposes.
+    Does nothing. Returns None for all operations.
+    Useful for testing or when lineage tracking is disabled.
     """
 
     def __init__(self) -> None:

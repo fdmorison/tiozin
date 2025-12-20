@@ -83,7 +83,7 @@ Your uncle's advice: Keep it simple, readable, and testable.
 - **Declarative** – Define what, not how
 - **Pluggable** – Swap runners, registries, plugins as needed
 - **Metadata** – Built-in metadata integration
-- **Observable** – Logs that help, not spam
+- **Observable** – Logs that help
 - **Testable** – Mock anything, validate everything
 
 No magic. No surprises. Just clean data pipelines.
