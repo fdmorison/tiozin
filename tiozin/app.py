@@ -42,13 +42,13 @@ class TiozinApp(Service):
                 return
 
             try:
-                self.logger.info("Application is starting.")
+                self.info("Application is starting.")
                 self.status = self.status.set_booting()
 
                 # Install Shutdown hooks
                 def on_signal(signum, _) -> NoReturn:
                     sigcode = signal.Signals(signum).name
-                    self.logger.warning(f"🚨 Interrupted by {sigcode}")
+                    self.warning(f"🚨 Interrupted by {sigcode}")
                     raise SystemExit(1)
 
                 signal.signal(signal.SIGTERM, on_signal)
@@ -59,7 +59,7 @@ class TiozinApp(Service):
                 # Start registries
                 self.lifecycle.setup()
                 self.status = self.status.set_waiting()
-                self.logger.info("Application startup completed.")
+                self.info("Application startup completed.")
             except Exception:
                 self.status = self.status.set_failure()
                 raise
@@ -69,7 +69,7 @@ class TiozinApp(Service):
             if self.status.is_app_finished():
                 return
 
-            self.logger.info(f"{self.status.capitalize()} Application is shutting down...")
+            self.info(f"{self.status.capitalize()} Application is shutting down...")
 
             if self.status.is_running():
                 self.current_job.stop()
@@ -79,7 +79,7 @@ class TiozinApp(Service):
                 self.lifecycle.shutdown()
                 self.status = self.status.set_completed()
 
-            self.logger.info("Application shutdown completed.")
+            self.info("Application shutdown completed.")
 
     def run(self, name: str) -> Job:
         """
@@ -112,9 +112,9 @@ class TiozinApp(Service):
                 return self.current_job
             except TiozinException as e:
                 self.status = self.status.set_failure()
-                self.logger.error(e.message)
+                self.error(e.message)
                 SystemExit(1)
             except Exception:
                 self.status = self.status.set_failure()
-                self.logger.exception(f"Unexpected error while executing job `{name}`. ")
+                self.exception(f"Unexpected error while executing job `{name}`. ")
                 raise

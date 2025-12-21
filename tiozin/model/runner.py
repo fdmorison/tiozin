@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Unpack
 
 from .context import Context
 from .plugable import Plugable
 from .resource import Resource
+from .typehint import ResourceKwargs
 
 
 class Runner(Plugable, Resource):
@@ -28,9 +29,9 @@ class Runner(Plugable, Resource):
         name: str,
         description: Optional[str] = None,
         streaming: bool = False,
-        **options,
+        **kwargs: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(name, description, **kwargs)
         self.streaming = streaming
 
     @abstractmethod

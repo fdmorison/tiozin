@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar, Unpack
 
 from .context import Context
 from .plugable import Plugable
 from .resource import Resource
+from .typehint import ResourceKwargs
 
 TData = TypeVar("TData")
 TWriter = TypeVar("TWriter")
@@ -27,9 +28,9 @@ class Output(Plugable, Resource, Generic[TData, TWriter]):
         self,
         name: str,
         description: Optional[str] = None,
-        **options,
+        **kwargs: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(name, description, **kwargs)
 
     @abstractmethod
     def write(self, context: Context, data: TData) -> TWriter:

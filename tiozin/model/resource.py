@@ -1,46 +1,36 @@
-from abc import ABC
-import logging
-from typing import Any
+from typing import Optional
 
-from uuid_utils import uuid7
+from tiozin.model.component import Component
 
 
-class Resource(ABC):
+class Resource(Component):
     """
     Base class for all Tiozin ETL resources.
 
-    Resources represent ETL components (Jobs, Inputs, Transforms, Outputs, Runners)
-    with business metadata following Data Mesh principles.
+    Following Data Mesh principles, resources are identified by business metadata
+    that enables discovery, governance, and lineage tracking across domains.
 
     Attributes:
-        kind: Resource class name.
-        name: Resource name.
-        run_id: Unique execution identifier (UUID7).
-        logger: Logger scoped to resource name.
-        org: Organization.
-        region: Geographic region.
-        domain: Business domain.
-        layer: Data layer (raw, staging, refined, etc).
-        product: Data product.
-        model: Data model.
-        description: Optional description.
+        name: Unique identifier for the resource instance.
+        description: Human-readable description of the resource purpose.
+        org: Organization owning the resource (top-level business unit).
+        region: Geographic region where the resource operates or data resides.
+        domain: Business domain in Data Mesh architecture (e.g., 'sales', 'finance').
+        layer: Data architecture layer (e.g., 'raw', 'staging', 'refined', 'curated').
+        product: Data product within the domain, representing a cohesive data asset.
+        model: Specific data model or entity within the product (e.g., 'customer', 'transaction').
 
     Example:
-        class MyResource(Resource):
-            pass
-
-        resource = MyResource(
-            name="etl_job",
-            org="acme",
-            region="us-east",
-            domain="sales",
+        job = Job(
+            name="daily_revenue_etl",
+            description="Aggregates daily revenue from transactions",
+            org="acme_corp",
+            region="us_east",
+            domain="finance",
             layer="refined",
-            product="analytics",
-            model="revenue",
-            description="Revenue ETL"
+            product="revenue_analytics",
+            model="daily_summary"
         )
-
-        resource.logger.info(f"Resource URI: {resource.uri}")
     """
 
     def __init__(
@@ -52,19 +42,15 @@ class Resource(ABC):
         layer: str,
         product: str,
         model: str,
-        description: str = None,
+        description: Optional[str] = None,
     ) -> None:
-        self.kind = type(self).__name__
-        self.name = name
-        self.run_id = str(uuid7())
-        self.logger = logging.getLogger(self.name)
+        super().__init__(name, description)
         self.org = org
         self.region = region
         self.domain = domain
         self.layer = layer
         self.product = product
         self.model = model
-        self.description = description
 
     @property
     def uri(self) -> str:
@@ -73,20 +59,3 @@ class Resource(ABC):
     @property
     def execution_uri(self) -> str:
         return f"{self.uri}:{self.run_id}"
-
-    def to_dict(self) -> dict[str, Any]:
-        return vars(self).copy()
-
-    def __str__(self) -> str:
-        return self.name
-
-    def __repr__(self) -> str:
-        return f'"{self.name}"'
-
-    def __hash__(self) -> int:
-        return hash(self.run_id)
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, self.__class__):
-            return False
-        return self.run_id == other.run_id

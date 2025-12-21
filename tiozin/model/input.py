@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar, Unpack
 
 from .context import Context
 from .plugable import Plugable
 from .resource import Resource
+from .typehint import ResourceKwargs
 
 TData = TypeVar("TData")
 
@@ -35,9 +36,9 @@ class Input(Plugable, Resource, Generic[TData]):
         schema: Optional[str] = None,
         schema_subject: Optional[str] = None,
         schema_version: Optional[str] = None,
-        **options,
+        **kwargs: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(name, description, **kwargs)
         self.schema = schema
         self.schema_subject = schema_subject
         self.schema_version = schema_version
