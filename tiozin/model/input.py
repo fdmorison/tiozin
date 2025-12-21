@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, Optional, TypeVar
 
 from .context import Context
 from .plugable import Plugable
@@ -30,11 +30,11 @@ class Input(Plugable, Resource, Generic[TData]):
 
     def __init__(
         self,
-        name=None,
-        description=None,
-        schema: str = None,
-        schema_subject: str = None,
-        schema_version: str = None,
+        name: str,
+        description: Optional[str] = None,
+        schema: Optional[str] = None,
+        schema_subject: Optional[str] = None,
+        schema_version: Optional[str] = None,
         **options,
     ) -> None:
         super().__init__(name, description, **options)
