@@ -3,7 +3,7 @@ import signal
 from threading import RLock
 from typing import NoReturn
 
-from tiozin import Context, Job, Resource, logs
+from tiozin import Context, Job, Service, logs
 from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinException
@@ -11,7 +11,7 @@ from tiozin.registries import Lifecycle
 from tiozin.utils.app_status import AppStatus
 
 
-class TiozinApp(Resource):
+class TiozinApp(Service):
     """
     Coordinates job execution and manages the ETL lifecycle.
 
