@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Any, Self
 
 
 class Plugable(ABC):
@@ -21,7 +21,7 @@ class Plugable(ABC):
         """Optional cleanup hook. Override if needed."""
 
     @abstractmethod
-    def execute(self, **kwargs) -> None:
+    def execute(self, **kwargs) -> Any:
         """Executes the main logic of the plugin. Must be implemented."""
 
     def __enter__(self) -> Self:

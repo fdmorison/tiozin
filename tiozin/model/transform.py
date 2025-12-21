@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, Optional, TypeVar
 
 from .context import Context
 from .plugable import Plugable
@@ -25,7 +25,12 @@ class Transform(Plugable, Resource, Generic[TData]):
         - PandasEnrichTransform: Data enrichment using Pandas
     """
 
-    def __init__(self, name=None, description=None, **options) -> None:
+    def __init__(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        **options,
+    ) -> None:
         super().__init__(name, description, **options)
 
     @abstractmethod

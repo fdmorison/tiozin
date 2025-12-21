@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 from .context import Context
 from .plugable import Plugable
@@ -23,7 +23,13 @@ class Runner(Plugable, Resource):
         - FlinkRunner: Stream processing with Apache Flink
     """
 
-    def __init__(self, name=None, description=None, streaming: bool = False, **options) -> None:
+    def __init__(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        streaming: bool = False,
+        **options,
+    ) -> None:
         super().__init__(name, description, **options)
         self.streaming = streaming
 
