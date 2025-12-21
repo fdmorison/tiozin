@@ -4,7 +4,7 @@ from typing import Generic, Optional, TypeVar, Unpack
 from .context import Context
 from .plugable import Plugable
 from .resource import Resource
-from .typehint import ResourceKwargs
+from .typehint import Taxonomy
 
 TData = TypeVar("TData")
 
@@ -36,7 +36,7 @@ class Input(Plugable, Resource, Generic[TData]):
         schema: Optional[str] = None,
         schema_subject: Optional[str] = None,
         schema_version: Optional[str] = None,
-        **kwargs: Unpack[ResourceKwargs],
+        **kwargs: Unpack[Taxonomy],
     ) -> None:
         super().__init__(name, description, **kwargs)
         self.schema = schema

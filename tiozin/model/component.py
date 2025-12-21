@@ -1,6 +1,6 @@
 from abc import ABC
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 from uuid_utils import uuid7
 
@@ -9,25 +9,10 @@ class Component(ABC):
     """
     Base class for all Tiozin components.
 
-    Components are identifiable, trackable units in the system with logging capabilities.
-    Each component instance is uniquely identified by a run_id and has associated metadata.
-
-    Attributes:
-        kind: Component class name.
-        name: Component name.
-        run_id: Unique execution identifier (UUID7).
-        logger: Logger scoped to component name.
-        description: Optional human-readable description.
-
-    Example:
-        class MyComponent(Component):
-            def __init__(self, name: str) -> None:
-                super().__init__(name)
-
-        component = MyComponent("my_component")
-        component.info("Component created")
-        component.warning("This is a warning")
-        component.error("Something went wrong")
+    Represents a named and identifiable unit within the system. Components
+    provide logging, lifecycle hooks, and a unique execution identity, and
+    serve as the foundation for higher-level abstractions such as Services
+    and Resources.
     """
 
     def __init__(
@@ -41,7 +26,26 @@ class Component(ABC):
         self.description = description
         self.logger = logging.getLogger(self.name)
 
+    def setup(self, **kwargs) -> None:
+        """
+        Optional initialization hook.
+
+        Called when the component enters its execution context.
+        Override if the component requires setup logic.
+        """
+
+    def teardown(self, **kwargs) -> None:
+        """
+        Optional cleanup hook.
+
+        Called when the component exits its execution context.
+        Override if the component requires cleanup logic.
+        """
+
     def to_dict(self) -> dict[str, Any]:
+        """
+        Returns a shallow dictionary representation of the component state.
+        """
         return vars(self).copy()
 
     def debug(self, msg: str, *args, **kwargs) -> None:
@@ -62,16 +66,37 @@ class Component(ABC):
     def critical(self, msg: str, *args, **kwargs) -> None:
         self.logger.critical(msg, *args, **kwargs)
 
+    def __enter__(self) -> Self:
+        """
+        Enters the component execution context and triggers setup.
+        """
+        self.setup()
+        return self
+
+    def __exit__(self, clazz, error, trace) -> None:
+        """
+        Exits the component execution context and triggers teardown.
+        """
+        self.teardown()
+
     def __str__(self) -> str:
+        """Returns a simple string representation of the component."""
         return self.name
 
     def __repr__(self) -> str:
+        """Returns a concise string representation of the component."""
         return f'"{self.name}"'
 
     def __hash__(self) -> int:
+        """
+        Hashes the component using its unique execution identifier.
+        """
         return hash(self.run_id)
 
     def __eq__(self, other: Any) -> bool:
+        """
+        Compares components by execution identity.
+        """
         if not isinstance(other, self.__class__):
             return False
         return self.run_id == other.run_id

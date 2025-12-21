@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class JobRegistry(MetadataRegistry):
+class JobRegistry(Registry):
     """
     Retrieves and stores job manifests.
 

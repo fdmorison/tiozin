@@ -4,6 +4,7 @@
 from .model.service import Service as Service
 from .model.resource import Resource as Resource
 from .model.plugable import Plugable as Plugable
+from .model.registry import Registry as Registry
 from .model.runner import Runner as Runner
 from .model.transform import Transform as Transform
 from .model.input import Input as Input

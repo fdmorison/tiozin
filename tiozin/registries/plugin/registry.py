@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class PluginRegistry(MetadataRegistry):
+class PluginRegistry(Registry):
     """
     Internal registry that discovers and manages plugin classes in Tiozin.
 

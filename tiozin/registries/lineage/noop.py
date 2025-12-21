@@ -1,9 +1,9 @@
 from typing import Any
 
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class NoOpLineageRegistry(MetadataRegistry):
+class NoOpLineageRegistry(Registry):
     """
     No-op lineage registry.
 

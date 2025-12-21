@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class MetricRegistry(MetadataRegistry):
+class MetricRegistry(Registry):
     """
     Manages metrics and indicators.
 

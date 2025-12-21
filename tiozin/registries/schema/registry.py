@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class SchemaRegistry(MetadataRegistry):
+class SchemaRegistry(Registry):
     """
     Retrieves and stores schemas.
 

@@ -1,11 +1,15 @@
-from abc import ABC, abstractmethod
-import logging
+from abc import abstractmethod
 from typing import Generic, TypeVar
+
+from tiozin.utils import helpers
+
+from .plugable import Plugable
+from .service import Service
 
 T = TypeVar("T")
 
 
-class MetadataRegistry(ABC, Generic[T]):
+class Registry(Plugable, Service, Generic[T]):
     """
     Base class for metadata registries.
 
@@ -13,24 +17,10 @@ class MetadataRegistry(ABC, Generic[T]):
     Subclasses define storage and retrieval implementation.
     """
 
-    def __init__(self) -> None:
-        self.name = type(self).__name__
-        self.logger = logging.getLogger(self.name)
+    def __init__(self, **kwargs) -> None:
+        self.registry_kind = helpers.detect_base_kind(self, Registry)
         self.ready = False
-
-    def setup(self) -> None:
-        """
-        Initialize the registry.
-
-        Prepare connections, caches, or internal structures as needed.
-        """
-
-    def shutdown(self) -> None:
-        """
-        Shut down the registry.
-
-        Release resources and close connections.
-        """
+        super().__init__(**kwargs)
 
     @abstractmethod
     def get(self, identifier: str, failfast: bool = False) -> T:
@@ -57,9 +47,3 @@ class MetadataRegistry(ABC, Generic[T]):
             identifier: Metadata name or unique ID.
             value: Metadata value.
         """
-
-    def __str__(self) -> str:
-        return self.name
-
-    def __repr__(self) -> str:
-        return f'"{self.name}"'

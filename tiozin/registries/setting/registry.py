@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class SettingRegistry(MetadataRegistry):
+class SettingRegistry(Registry):
     """
     Manages system settings and configuration.
 

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from tiozin.model.component import Component
 
 
@@ -36,13 +34,13 @@ class Resource(Component):
     def __init__(
         self,
         name: str,
+        description: str,
         org: str,
         region: str,
         domain: str,
         layer: str,
         product: str,
         model: str,
-        description: Optional[str] = None,
     ) -> None:
         super().__init__(name, description)
         self.org = org

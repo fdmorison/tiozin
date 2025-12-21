@@ -1,13 +1,7 @@
 from typing import TypedDict
 
 
-class ResourceKwargs(TypedDict, total=False):
-    """
-    Keyword arguments for Resource initialization.
-    """
-
-    name: str
-    description: str
+class Taxonomy(TypedDict, total=False):
     org: str
     region: str
     domain: str

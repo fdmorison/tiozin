@@ -1,16 +1,18 @@
 import logging
 
-from .registry import MetadataRegistry
+from tiozin import Service
+
+from ..model.registry import Registry
 
 
-class Lifecycle:
+class Lifecycle(Service):
     """
     Manages application lifecycle for registries.
 
     Handles setup and shutdown of all registered components.
     """
 
-    def __init__(self, *registries: MetadataRegistry):
+    def __init__(self, *registries: Registry) -> None:
         self.name = type(self).__name__
         self.logger = logging.getLogger(self.name)
         self.ready = False
@@ -33,7 +35,7 @@ class Lifecycle:
         for registry in reversed(self.registries):
             try:
                 if registry.ready:
-                    registry.shutdown()
+                    registry.teardown()
                     self.logger.info(f"🛑 {registry} shutdown is successful.")
                 else:
                     self.logger.info(f"🛑 {registry} shutdown skipped (uninitialized).")
