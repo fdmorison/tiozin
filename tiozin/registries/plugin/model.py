@@ -1,9 +1,9 @@
 from typing import Any
 
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class PluginRegistry(MetadataRegistry):
+class PluginRegistry(Registry):
 
     def __init__(self) -> None:
         super().__init__()

@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class SecretRegistry(MetadataRegistry):
+class SecretRegistry(Registry):
     """
     Manages secrets and credentials.
 

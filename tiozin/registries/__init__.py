@@ -9,7 +9,7 @@ from .lineage.noop import NoOpLineageRegistry as NoOpLineageRegistry
 from .lineage.registry import LineageRegistry as LineageRegistry
 from .metric.noop import NoOpMetricRegistry as NoOpMetricRegistry
 from .metric.registry import MetricRegistry as MetricRegistry
-from .registry import MetadataRegistry as MetadataRegistry
+from ..model.registry import Registry as Registry
 from .schema.noop import NoOpSchemaRegistry as NoOpSchemaRegistry
 from .schema.registry import SchemaRegistry as SchemaRegistry
 from .secret.noop import NoOpSecretRegistry as NoOpSecretRegistry

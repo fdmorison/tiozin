@@ -2,7 +2,6 @@ from tiozin.registries import (
     FileJobRegistry,
     JobRegistry,
     LineageRegistry,
-    MetadataRegistry,
     MetricRegistry,
     NoOpLineageRegistry,
     NoOpMetricRegistry,
@@ -10,6 +9,7 @@ from tiozin.registries import (
     NoOpSecretRegistry,
     NoOpSettingRegistry,
     NoOpTransactionRegistry,
+    Registry,
     SchemaRegistry,
     SecretRegistry,
     SettingRegistry,
@@ -42,7 +42,7 @@ class RegistryFactory:
         self._transaction_registry = transaction_registry or NoOpTransactionRegistry()
         self._setting_registry = setting_registry or NoOpSettingRegistry()
 
-    def all_registries(self) -> list[MetadataRegistry]:
+    def all_registries(self) -> list[Registry]:
         return [
             self._job_registry,
             self._lineage_registry,

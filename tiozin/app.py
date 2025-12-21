@@ -13,15 +13,14 @@ from tiozin.utils.app_status import AppStatus
 
 class TiozinApp(Service):
     """
-    Coordinates job execution and manages the ETL lifecycle.
+    Main application entrypoint for Tiozin.
 
-    TiozinApp builds and runs your jobs, handles registries, and sets up context.
-    Inject custom registries via RegistryFactory for testing or custom setups.
+    Coordinates job execution and manages the application lifecycle,
+    including registry initialization, context setup, and graceful
+    startup and shutdown handling.
 
-    Example:
-        from tiozin.app import TiozinApp
-        app = TiozinApp()
-        app.run(job_name)
+    Jobs are resolved from the job registry, built from manifests,
+    and executed under a controlled runtime environment.
     """
 
     def __init__(self, registries: RegistryFactory = None) -> NoReturn:
@@ -83,12 +82,13 @@ class TiozinApp(Service):
 
     def run(self, name: str) -> Job:
         """
-        Runs the job identified by name.
+        Executes a job by name.
 
-        Resolves the manifest, builds the job, and executes it.
+        Resolves the job manifest from the registry, builds the job,
+        and runs it within the application lifecycle.
 
         Args:
-            name: Job identifier to execute.
+            name: Name of the job to execute.
 
         Returns:
             The executed job instance.

@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class TransactionRegistry(MetadataRegistry):
+class TransactionRegistry(Registry):
     """
     Tracks transaction states and commit logs.
 

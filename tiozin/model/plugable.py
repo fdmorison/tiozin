@@ -1,32 +1,35 @@
-from abc import ABC, abstractmethod
-from typing import Any, Self
+from __future__ import annotations
+
+from abc import ABC
+from typing import Any
+
+from tiozin.utils import helpers
 
 
 class Plugable(ABC):
     """
-    Mixin for pluggable components intended to be used with Services and Resources.
+    Mixin for components that can be plugged into Tiozin jobs.
 
-    Plugins can be dynamically discovered, loaded, and executed with optional setup and teardown
-    phases. The execute() method contains the plugin business logic, while setup() and teardown()
-    provide optional extension points for initialization and cleanup.
+    Defines a common execution contract for components that are dynamically
+    discovered and orchestrated by the framework. Intended to be combined
+    with Service and Resource base classes.
     """
 
     def __init__(self, **kwargs) -> None:
+        self.plugin_kind = helpers.detect_base_kind(self, Plugable)
         super().__init__(**kwargs)
 
-    def setup(self, **kwargs) -> None:
-        """Optional initialization hook. Override if needed."""
-
-    def teardown(self, **kwargs) -> None:
-        """Optional cleanup hook. Override if needed."""
-
-    @abstractmethod
     def execute(self, **kwargs) -> Any:
-        """Executes the main logic of the plugin. Must be implemented."""
+        """
+        Executes the core logic of the plugin.
 
-    def __enter__(self) -> Self:
-        self.setup()
-        return self
+        This method is invoked by the framework's core. Implementations should focus
+        solely on the plugin's responsibility and avoid orchestration logic.
 
-    def __exit__(self, clazz, error, trace) -> None:
-        self.teardown()
+        Args:
+            **kwargs: Runtime parameters required for execution.
+
+        Returns:
+            Any value produced by the execution (e.g. transformed data,
+            execution result, or a handle for further processing).
+        """

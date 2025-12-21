@@ -1,7 +1,7 @@
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class LineageRegistry(MetadataRegistry):
+class LineageRegistry(Registry):
     """
     Tracks data lineage following the Open Lineage standard (https://openlineage.io/).
 

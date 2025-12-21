@@ -35,4 +35,13 @@ class JobBuilder:
         Returns:
             Fully built Job ready for execution.
         """
-        return Job()
+        return Job(
+            name="kinglear_word_count_job",
+            description="Pre-processes Shakespeare source texts",
+            org="tiozin",
+            region="latam",
+            domain="literature",
+            product="shakespeare",
+            model="kinglear",
+            layer="refined",
+        )

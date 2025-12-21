@@ -4,7 +4,7 @@ from typing import Generic, Optional, TypeVar, Unpack
 from .context import Context
 from .plugable import Plugable
 from .resource import Resource
-from .typehint import ResourceKwargs
+from .typehint import Taxonomy
 
 TData = TypeVar("TData")
 TWriter = TypeVar("TWriter")
@@ -28,7 +28,7 @@ class Output(Plugable, Resource, Generic[TData, TWriter]):
         self,
         name: str,
         description: Optional[str] = None,
-        **kwargs: Unpack[ResourceKwargs],
+        **kwargs: Unpack[Taxonomy],
     ) -> None:
         super().__init__(name, description, **kwargs)
 

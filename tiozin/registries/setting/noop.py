@@ -1,9 +1,9 @@
 from typing import Any
 
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class NoOpSettingRegistry(MetadataRegistry):
+class NoOpSettingRegistry(Registry):
     """
     No-op setting registry.
 

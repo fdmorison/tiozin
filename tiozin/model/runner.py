@@ -4,24 +4,20 @@ from typing import Any, Optional, Unpack
 from .context import Context
 from .plugable import Plugable
 from .resource import Resource
-from .typehint import ResourceKwargs
+from .typehint import Taxonomy
 
 
 class Runner(Plugable, Resource):
     """
-    Runners are execution engines that orchestrate and run Jobs.
+    Execution engine responsible for running jobs.
 
-    They manage the complete execution lifecycle from preparing the runtime
-    context, executing the pipeline, to handling teardown and cleanup. Runners
-    abstract the execution environment, allowing Jobs to run on different
-    backends (local, distributed, cloud) without code changes.
+    Runners orchestrate the full job execution lifecycle, including
+    preparing the runtime context, executing the pipeline, and handling
+    teardown and cleanup. They abstract the execution environment so that
+    jobs can run on different backends without code changes.
 
-    Providers implement run() for their specific execution engine.
-
-    Examples of runners:
-        - SparkRunner: Execute Jobs using Apache Spark
-        - DataflowRunner: Run on Google Cloud Dataflow
-        - FlinkRunner: Stream processing with Apache Flink
+    Providers implement the execution logic for a specific engine
+    (e.g. Spark, Dataflow, Flink, Pandas, Tensorflow, etc).
     """
 
     def __init__(
@@ -29,7 +25,7 @@ class Runner(Plugable, Resource):
         name: str,
         description: Optional[str] = None,
         streaming: bool = False,
-        **kwargs: Unpack[ResourceKwargs],
+        **kwargs: Unpack[Taxonomy],
     ) -> None:
         super().__init__(name, description, **kwargs)
         self.streaming = streaming

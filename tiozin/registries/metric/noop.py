@@ -1,9 +1,9 @@
 from typing import Any
 
-from ..registry import MetadataRegistry
+from ...model.registry import Registry
 
 
-class NoOpMetricRegistry(MetadataRegistry):
+class NoOpMetricRegistry(Registry):
     """
     No-op metric registry.
 

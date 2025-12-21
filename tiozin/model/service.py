@@ -5,21 +5,9 @@ class Service(Component):
     """
     Base class for infrastructure services.
 
-    Services represent system components like apps and registries.
-    Each service instance is uniquely identified by a run_id.
-
-    Attributes:
-        kind: Service class name.
-        name: Service name (equals kind).
-        run_id: Unique execution identifier (UUID7).
-        logger: Logger scoped to service name.
-
-    Example:
-        class MyService(Service):
-            pass
-
-        service = MyService()
-        service.logger.info("Service started")
+    Services represent long-lived or supporting system components such as
+    applications, registries, and coordinators. They do not carry business
+    or Data Mesh metadata and are identified by their class name.
     """
 
     def __init__(self) -> None:
