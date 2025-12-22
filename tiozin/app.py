@@ -7,11 +7,11 @@ from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinException
 from tiozin.lifecycle import Lifecycle
-from tiozin.model import Component, Context, Job
+from tiozin.model import Context, Job, Resource
 from tiozin.utils.app_status import AppStatus
 
 
-class TiozinApp(Component):
+class TiozinApp(Resource):
     """
     Main application entrypoint for Tiozin.
 

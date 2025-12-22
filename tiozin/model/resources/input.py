@@ -2,16 +2,16 @@ from abc import abstractmethod
 from typing import Generic, Optional, TypeVar, Unpack
 
 from ..context import Context
+from ..operator import Operator
 from ..plugable import Plugable
-from ..resource import Resource
-from ..typehint import ResourceKwargs
+from ..typehint import OperatorKwargs
 
 TData = TypeVar("TData")
 
 
-class Input(Plugable, Resource, Generic[TData]):
+class Input(Plugable, Operator, Generic[TData]):
     """
-    Input components read data from external sources into Tiozin pipelines.
+    Input operators read data from external sources into Tiozin pipelines.
 
     Inputs support multiple sources like databases, files, APIs, streams,
     and cloud storage. They can optionally include schema metadata for
@@ -21,7 +21,7 @@ class Input(Plugable, Resource, Generic[TData]):
         schema: Data schema definition (JSON, Avro, etc)
         schema_subject: Subject name in schema registry
         schema_version: Specific schema version to use
-        options: All extra initialization parameters of the component flow into
+        options: All extra initialization parameters of the operator flow into
             this attribute. Use it to pass provider-specific configurations like
             Spark read options (e.g., header=True, inferSchema=True).
 
@@ -39,7 +39,7 @@ class Input(Plugable, Resource, Generic[TData]):
         schema: Optional[str] = None,
         schema_subject: Optional[str] = None,
         schema_version: Optional[str] = None,
-        **options: Unpack[ResourceKwargs],
+        **options: Unpack[OperatorKwargs],
     ) -> None:
         super().__init__(name, description, **options)
         self.schema = schema
