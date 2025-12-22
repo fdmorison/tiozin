@@ -6,9 +6,8 @@ from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
 from tiozin.exceptions import JobManifestException
-
-from ....model.model.job_manifest import JobManifest
-from ....model.registries.job_registry import JobRegistry
+from tiozin.model.model.job_manifest import JobManifest
+from tiozin.model.registries.job_registry import JobRegistry
 
 
 class FileJobRegistry(JobRegistry):

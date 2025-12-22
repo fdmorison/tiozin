@@ -1,6 +1,6 @@
 from typing import Any
 
-from ....model.registry import Registry
+from tiozin.model.registry import Registry
 
 
 class NoOpTransactionRegistry(Registry):
