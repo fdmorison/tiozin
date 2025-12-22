@@ -4,7 +4,7 @@ from typing import Generic, Optional, TypeVar, Unpack
 from ..context import Context
 from ..plugable import Plugable
 from ..resource import Resource
-from ..typehint import Taxonomy
+from ..typehint import ResourceKwargs
 
 TData = TypeVar("TData")
 
@@ -17,10 +17,13 @@ class Input(Plugable, Resource, Generic[TData]):
     and cloud storage. They can optionally include schema metadata for
     validation and type enforcement.
 
-    Schema attributes:
-        - schema: Data schema definition (JSON, Avro, etc)
-        - schema_subject: Subject name in schema registry
-        - schema_version: Specific schema version to use
+    Attributes:
+        schema: Data schema definition (JSON, Avro, etc)
+        schema_subject: Subject name in schema registry
+        schema_version: Specific schema version to use
+        options: All extra initialization parameters of the component flow into
+            this attribute. Use it to pass provider-specific configurations like
+            Spark read options (e.g., header=True, inferSchema=True).
 
     Examples of inputs:
         - S3Input: Read files from Amazon S3
@@ -36,9 +39,9 @@ class Input(Plugable, Resource, Generic[TData]):
         schema: Optional[str] = None,
         schema_subject: Optional[str] = None,
         schema_version: Optional[str] = None,
-        **kwargs: Unpack[Taxonomy],
+        **options: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **kwargs)
+        super().__init__(name, description, **options)
         self.schema = schema
         self.schema_subject = schema_subject
         self.schema_version = schema_version

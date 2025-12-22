@@ -4,7 +4,7 @@ from typing import Any, Optional, Unpack
 from ..context import Context
 from ..plugable import Plugable
 from ..resource import Resource
-from ..typehint import Taxonomy
+from ..typehint import ResourceKwargs
 
 
 class Runner(Plugable, Resource):
@@ -16,6 +16,12 @@ class Runner(Plugable, Resource):
     teardown and cleanup. They abstract the execution environment so that
     jobs can run on different backends without code changes.
 
+    Attributes:
+        streaming: Indicates whether this runner executes streaming workloads.
+        options: All extra initialization parameters of the component flow into
+            this attribute. Use it to pass provider-specific configurations like
+            Spark session configs (e.g., spark.executor.memory="4g").
+
     Providers implement the execution logic for a specific engine
     (e.g. Spark, Dataflow, Flink, Pandas, Tensorflow, etc).
     """
@@ -25,9 +31,9 @@ class Runner(Plugable, Resource):
         name: str,
         description: Optional[str] = None,
         streaming: bool = False,
-        **kwargs: Unpack[Taxonomy],
+        **options: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **kwargs)
+        super().__init__(name, description, **options)
         self.streaming = streaming
 
     @abstractmethod

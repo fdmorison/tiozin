@@ -1,7 +1,6 @@
-from typing import Any, Optional, Unpack
+from typing import Any
 
 from tiozin.model import Context, Transform
-from tiozin.model.typehint import Taxonomy
 
 
 class NoOpTransform(Transform):
@@ -12,13 +11,8 @@ class NoOpTransform(Transform):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(
-        self,
-        name: str = "noop",
-        description: Optional[str] = None,
-        **kwargs: Unpack[Taxonomy],
-    ) -> None:
-        super().__init__(name, description, **kwargs)
+    def __init__(self, name: str = "noop", **options) -> None:
+        super().__init__(name, **options)
 
     def transform(self, context: Context, *data: Any) -> Any:
         return None

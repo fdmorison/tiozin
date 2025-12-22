@@ -1,7 +1,6 @@
 import atexit
 import signal
 from threading import RLock
-from typing import NoReturn
 
 from tiozin import logs
 from tiozin.assembly.builder import JobBuilder
@@ -24,7 +23,7 @@ class TiozinApp(Component):
     and executed under a controlled runtime environment.
     """
 
-    def __init__(self, registries: RegistryFactory = None) -> NoReturn:
+    def __init__(self, registries: RegistryFactory = None) -> None:
         super().__init__()
         # Simple attributes
         self.status = AppStatus.CREATED
@@ -46,7 +45,7 @@ class TiozinApp(Component):
                 self.status = self.status.set_booting()
 
                 # Install Shutdown hooks
-                def on_signal(signum, _) -> NoReturn:
+                def on_signal(signum, _) -> None:
                     sigcode = signal.Signals(signum).name
                     self.warning(f"🚨 Interrupted by {sigcode}")
                     raise SystemExit(1)
@@ -64,7 +63,7 @@ class TiozinApp(Component):
                 self.status = self.status.set_failure()
                 raise
 
-    def teardown(self) -> NoReturn:
+    def teardown(self) -> None:
         with self.lock:
             if self.status.is_app_finished():
                 return

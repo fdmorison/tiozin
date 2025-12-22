@@ -1,7 +1,6 @@
-from typing import Any, Optional, Unpack
+from typing import Any
 
 from tiozin.model import Context, Runner
-from tiozin.model.typehint import Taxonomy
 
 
 class NoOpRunner(Runner):
@@ -12,14 +11,8 @@ class NoOpRunner(Runner):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(
-        self,
-        name: str = "noop",
-        description: Optional[str] = None,
-        streaming: bool = False,
-        **kwargs: Unpack[Taxonomy],
-    ) -> None:
-        super().__init__(name, description, streaming, **kwargs)
+    def __init__(self, name: str = "noop", **options) -> None:
+        super().__init__(name, **options)
 
     def run(self, context: Context, job: Any) -> None:
         return None

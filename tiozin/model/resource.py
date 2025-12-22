@@ -41,8 +41,9 @@ class Resource(Component):
         layer: str,
         product: str,
         model: str,
+        **options,
     ) -> None:
-        super().__init__(name, description)
+        super().__init__(name, description, **options)
         self.org = org
         self.region = region
         self.domain = domain
