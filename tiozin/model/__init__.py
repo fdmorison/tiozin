@@ -8,10 +8,10 @@ from .operator import Operator as Operator
 from .plugable import Plugable as Plugable
 from .registry import Registry as Registry
 
-from .resources.runner import Runner as Runner
-from .resources.transform import Transform as Transform
-from .resources.input import Input as Input
-from .resources.output import Output as Output
+from .operators.runner import Runner as Runner
+from .operators.transform import Transform as Transform
+from .operators.input import Input as Input
+from .operators.output import Output as Output
 
 from .job import Job as Job
 from .context import Context as Context
