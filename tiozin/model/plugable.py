@@ -15,9 +15,9 @@ class Plugable(ABC):
     with Registry and Resource base classes.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)
         self.plugin_kind = helpers.detect_base_kind(self, Plugable)
-        super().__init__(**kwargs)
 
     def execute(self, **kwargs) -> Any:
         """

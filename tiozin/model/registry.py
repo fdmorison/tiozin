@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, Optional, TypeVar
 
 from tiozin.model import Component, Plugable
 from tiozin.utils import helpers
@@ -15,10 +15,15 @@ class Registry(Plugable, Component, Generic[T]):
     Subclasses define storage and retrieval implementation.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self,
+        name: str = None,
+        description: Optional[str] = None,
+        **options,
+    ) -> None:
+        super().__init__(name, description, **options)
         self.registry_kind = helpers.detect_base_kind(self, Registry)
         self.ready = False
-        super().__init__(**kwargs)
 
     @abstractmethod
     def get(self, identifier: str, failfast: bool = False) -> T:

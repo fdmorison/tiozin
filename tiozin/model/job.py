@@ -3,7 +3,7 @@ from typing import Unpack
 
 from .context import Context
 from .resource import Resource
-from .typehint import Taxonomy
+from .typehint import ResourceKwargs
 
 
 class Job(Resource):
@@ -14,8 +14,8 @@ class Job(Resource):
     Built from manifests (YAML, JSON, or Python) and executed by TiozinApp.
     """
 
-    def __init__(self, **kwargs: Unpack[Taxonomy]) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, **options: Unpack[ResourceKwargs]) -> None:
+        super().__init__(**options)
 
     def run(self, context: Context) -> None:
         self.info("The job is starting.")

@@ -4,7 +4,7 @@ from typing import Generic, Optional, TypeVar, Unpack
 from ..context import Context
 from ..plugable import Plugable
 from ..resource import Resource
-from ..typehint import Taxonomy
+from ..typehint import ResourceKwargs
 
 TData = TypeVar("TData")
 
@@ -19,6 +19,11 @@ class Transform(Plugable, Resource, Generic[TData]):
     implement the transform() method with their specific logic while the framework
     handles orchestration, lifecycle, and context management.
 
+    Attributes:
+        options: All extra initialization parameters of the component flow into
+            this attribute. Use it to pass provider-specific configurations like
+            Spark options (e.g., spark.sql.shuffle.partitions=200).
+
     Examples of transforms:
         - SparkWordCountTransform: Count word occurrences using Spark
         - SQLJoinTransform: Join datasets using SQL engine
@@ -30,9 +35,9 @@ class Transform(Plugable, Resource, Generic[TData]):
         self,
         name: str,
         description: Optional[str] = None,
-        **kwargs: Unpack[Taxonomy],
+        **options: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **kwargs)
+        super().__init__(name, description, **options)
 
     @abstractmethod
     def transform(self, context: Context, *data: TData) -> TData:

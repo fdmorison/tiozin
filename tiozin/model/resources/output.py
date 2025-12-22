@@ -4,7 +4,7 @@ from typing import Generic, Optional, TypeVar, Unpack
 from ..context import Context
 from ..plugable import Plugable
 from ..resource import Resource
-from ..typehint import Taxonomy
+from ..typehint import ResourceKwargs
 
 TData = TypeVar("TData")
 TWriter = TypeVar("TWriter")
@@ -17,6 +17,11 @@ class Output(Plugable, Resource, Generic[TData, TWriter]):
     Outputs support multiple destinations like databases, data warehouses,
     files, and streaming platforms. Providers implement write() for their target.
 
+    Attributes:
+        options: All extra initialization parameters of the component flow into
+            this attribute. Use it to pass provider-specific configurations like
+            Spark write options (e.g., mode="overwrite", partitionBy=["date"]).
+
     Examples of outputs:
         - BigQueryOutput: Write to Google BigQuery tables
         - ParquetOutput: Save data as Parquet files
@@ -28,9 +33,9 @@ class Output(Plugable, Resource, Generic[TData, TWriter]):
         self,
         name: str,
         description: Optional[str] = None,
-        **kwargs: Unpack[Taxonomy],
+        **options: Unpack[ResourceKwargs],
     ) -> None:
-        super().__init__(name, description, **kwargs)
+        super().__init__(name, description, **options)
 
     @abstractmethod
     def write(self, context: Context, data: TData) -> TWriter:
