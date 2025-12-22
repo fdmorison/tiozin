@@ -11,7 +11,7 @@ class Component(ABC):
 
     Represents a named and identifiable unit within the system. Components
     provide logging, lifecycle hooks, and a unique execution identity, and
-    serve as the foundation for higher-level abstractions such as Services
+    serve as the foundation for higher-level abstractions such as Registries
     and Resources.
     """
 

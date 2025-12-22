@@ -12,7 +12,7 @@ class Plugable(ABC):
 
     Defines a common execution contract for components that are dynamically
     discovered and orchestrated by the framework. Intended to be combined
-    with Service and Resource base classes.
+    with Registry and Resource base classes.
     """
 
     def __init__(self, **kwargs) -> None:
