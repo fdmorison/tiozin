@@ -3,7 +3,7 @@
 
 from .model.job_manifest import JobManifest as JobManifest
 
-from .service import Service as Service
+from .component import Component as Component
 from .resource import Resource as Resource
 from .plugable import Plugable as Plugable
 from .registry import Registry as Registry

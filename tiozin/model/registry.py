@@ -1,15 +1,13 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
+from tiozin.model import Component, Plugable
 from tiozin.utils import helpers
-
-from .plugable import Plugable
-from .service import Service
 
 T = TypeVar("T")
 
 
-class Registry(Plugable, Service, Generic[T]):
+class Registry(Plugable, Component, Generic[T]):
     """
     Base class for metadata registries.
 
