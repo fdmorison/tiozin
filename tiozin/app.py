@@ -3,11 +3,12 @@ import signal
 from threading import RLock
 from typing import NoReturn
 
-from tiozin import Context, Job, Service, logs
+from tiozin import logs
 from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinException
-from tiozin.registries import Lifecycle
+from tiozin.lifecycle import Lifecycle
+from tiozin.model import Context, Job, Service
 from tiozin.utils.app_status import AppStatus
 
 

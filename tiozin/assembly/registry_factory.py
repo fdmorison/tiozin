@@ -1,15 +1,17 @@
-from tiozin.registries import (
+from tiozin.family.tio_kernel.registries import (
     FileJobRegistry,
-    JobRegistry,
-    LineageRegistry,
-    MetricRegistry,
     NoOpLineageRegistry,
     NoOpMetricRegistry,
     NoOpSchemaRegistry,
     NoOpSecretRegistry,
     NoOpSettingRegistry,
     NoOpTransactionRegistry,
-    Registry,
+)
+from tiozin.model import Registry
+from tiozin.model.registries import (
+    JobRegistry,
+    LineageRegistry,
+    MetricRegistry,
     SchemaRegistry,
     SecretRegistry,
     SettingRegistry,
