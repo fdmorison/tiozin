@@ -8,11 +8,11 @@ from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinException
 from tiozin.lifecycle import Lifecycle
-from tiozin.model import Context, Job, Service
+from tiozin.model import Component, Context, Job
 from tiozin.utils.app_status import AppStatus
 
 
-class TiozinApp(Service):
+class TiozinApp(Component):
     """
     Main application entrypoint for Tiozin.
 
@@ -54,7 +54,7 @@ class TiozinApp(Service):
                 signal.signal(signal.SIGTERM, on_signal)
                 signal.signal(signal.SIGINT, on_signal)
                 signal.signal(signal.SIGHUP, on_signal)
-                atexit.register(self.shutdown)
+                atexit.register(self.teardown)
 
                 # Start registries
                 self.lifecycle.setup()
@@ -64,7 +64,7 @@ class TiozinApp(Service):
                 self.status = self.status.set_failure()
                 raise
 
-    def shutdown(self) -> NoReturn:
+    def teardown(self) -> NoReturn:
         with self.lock:
             if self.status.is_app_finished():
                 return
@@ -73,10 +73,10 @@ class TiozinApp(Service):
 
             if self.status.is_running():
                 self.current_job.stop()
-                self.lifecycle.shutdown()
+                self.lifecycle.teardown()
                 self.status = self.status.set_canceled()
             else:
-                self.lifecycle.shutdown()
+                self.lifecycle.teardown()
                 self.status = self.status.set_completed()
 
             self.info("Application shutdown completed.")

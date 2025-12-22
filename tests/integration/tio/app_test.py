@@ -109,34 +109,34 @@ def test_setup_should_install_shutdown_hooks(
         mock_signal.SIGHUP,
     }
     assert actual == expected
-    mock_atexit.register.assert_called_once_with(created_app.shutdown)
+    mock_atexit.register.assert_called_once_with(created_app.teardown)
 
 
-def test_shutdown_should_terminate(ready_app: TiozinApp):
+def test_teardown_should_terminate(ready_app: TiozinApp):
     # Act
-    ready_app.shutdown()
+    ready_app.teardown()
 
     # Assert
-    ready_app.lifecycle.shutdown.assert_called()
+    ready_app.lifecycle.teardown.assert_called()
     assert ready_app.status.is_completed()
 
 
-def test_shutdown_should_cancel_running_job(running_app: TiozinApp):
+def test_teardown_should_cancel_running_job(running_app: TiozinApp):
     # Act
-    running_app.shutdown()
+    running_app.teardown()
 
     # Assert
     running_app.current_job.stop.assert_called_once()
     assert running_app.status.is_canceled()
 
 
-def test_shutdown_should_be_idempotent(running_app: TiozinApp):
+def test_teardown_should_be_idempotent(running_app: TiozinApp):
     # Act
-    running_app.shutdown()
-    running_app.shutdown()
+    running_app.teardown()
+    running_app.teardown()
 
     # Assert
-    running_app.lifecycle.shutdown.assert_called_once()
+    running_app.lifecycle.teardown.assert_called_once()
 
 
 @patch("tiozin.app.JobBuilder")

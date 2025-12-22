@@ -55,5 +55,5 @@ class Resource(Component):
         return f"{self.kind}:{self.name}"
 
     @property
-    def execution_uri(self) -> str:
-        return f"{self.uri}:{self.run_id}"
+    def instance_uri(self) -> str:
+        return f"{self.uri}:{self.id}"

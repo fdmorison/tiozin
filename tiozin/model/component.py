@@ -11,18 +11,18 @@ class Component(ABC):
 
     Represents a named and identifiable unit within the system. Components
     provide logging, lifecycle hooks, and a unique execution identity, and
-    serve as the foundation for higher-level abstractions such as Services
+    serve as the foundation for higher-level abstractions such as Registries
     and Resources.
     """
 
     def __init__(
         self,
-        name: str,
+        name: str = None,
         description: Optional[str] = None,
     ) -> None:
-        self.run_id = str(uuid7())
-        self.kind = type(self).__name__
-        self.name = name
+        self.id = str(uuid7())
+        self.kind = type(self)
+        self.name = name or type(self).__name__
         self.description = description
         self.logger = logging.getLogger(self.name)
 
@@ -91,7 +91,7 @@ class Component(ABC):
         """
         Hashes the component using its unique execution identifier.
         """
-        return hash(self.run_id)
+        return hash(self.id)
 
     def __eq__(self, other: Any) -> bool:
         """
@@ -99,4 +99,4 @@ class Component(ABC):
         """
         if not isinstance(other, self.__class__):
             return False
-        return self.run_id == other.run_id
+        return self.id == other.id
