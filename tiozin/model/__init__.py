@@ -3,8 +3,8 @@
 
 from .model.job_manifest import JobManifest as JobManifest
 
-from .component import Component as Component
 from .resource import Resource as Resource
+from .operator import Operator as Operator
 from .plugable import Plugable as Plugable
 from .registry import Registry as Registry
 

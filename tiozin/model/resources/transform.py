@@ -2,14 +2,14 @@ from abc import abstractmethod
 from typing import Generic, Optional, TypeVar, Unpack
 
 from ..context import Context
+from ..operator import Operator
 from ..plugable import Plugable
-from ..resource import Resource
-from ..typehint import ResourceKwargs
+from ..typehint import OperatorKwargs
 
 TData = TypeVar("TData")
 
 
-class Transform(Plugable, Resource, Generic[TData]):
+class Transform(Plugable, Operator, Generic[TData]):
     """
     Transforms are the core processing units in Tiozin pipelines. They take data
     from inputs, apply business logic (filtering, enrichment, aggregation, joins,
@@ -20,7 +20,7 @@ class Transform(Plugable, Resource, Generic[TData]):
     handles orchestration, lifecycle, and context management.
 
     Attributes:
-        options: All extra initialization parameters of the component flow into
+        options: All extra initialization parameters of the operator flow into
             this attribute. Use it to pass provider-specific configurations like
             Spark options (e.g., spark.sql.shuffle.partitions=200).
 
@@ -35,7 +35,7 @@ class Transform(Plugable, Resource, Generic[TData]):
         self,
         name: str,
         description: Optional[str] = None,
-        **options: Unpack[ResourceKwargs],
+        **options: Unpack[OperatorKwargs],
     ) -> None:
         super().__init__(name, description, **options)
 

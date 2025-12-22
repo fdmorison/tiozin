@@ -8,11 +8,11 @@ from tiozin.utils import helpers
 
 class Plugable(ABC):
     """
-    Mixin for components that can be plugged into Tiozin jobs.
+    Mixin for operators that can be plugged into Tiozin jobs.
 
-    Defines a common execution contract for components that are dynamically
+    Defines a common execution contract for operators that are dynamically
     discovered and orchestrated by the framework. Intended to be combined
-    with Registry and Resource base classes.
+    with Registry and Operator base classes.
     """
 
     def __init__(self, *args, **options) -> None:

@@ -2,11 +2,11 @@ import time
 from typing import Unpack
 
 from .context import Context
-from .resource import Resource
-from .typehint import ResourceKwargs
+from .operator import Operator
+from .typehint import OperatorKwargs
 
 
-class Job(Resource):
+class Job(Operator):
     """
     Represents a complete ETL process.
 
@@ -14,7 +14,7 @@ class Job(Resource):
     Built from manifests (YAML, JSON, or Python) and executed by TiozinApp.
     """
 
-    def __init__(self, **options: Unpack[ResourceKwargs]) -> None:
+    def __init__(self, **options: Unpack[OperatorKwargs]) -> None:
         super().__init__(**options)
 
     def run(self, context: Context) -> None:

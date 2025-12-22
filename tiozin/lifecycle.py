@@ -1,7 +1,7 @@
-from tiozin.model import Component, Registry
+from tiozin.model import Registry, Resource
 
 
-class Lifecycle(Component):
+class Lifecycle(Resource):
     """
     Manages application lifecycle for registries.
 

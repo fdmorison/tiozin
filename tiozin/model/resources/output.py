@@ -2,23 +2,23 @@ from abc import abstractmethod
 from typing import Generic, Optional, TypeVar, Unpack
 
 from ..context import Context
+from ..operator import Operator
 from ..plugable import Plugable
-from ..resource import Resource
-from ..typehint import ResourceKwargs
+from ..typehint import OperatorKwargs
 
 TData = TypeVar("TData")
 TWriter = TypeVar("TWriter")
 
 
-class Output(Plugable, Resource, Generic[TData, TWriter]):
+class Output(Plugable, Operator, Generic[TData, TWriter]):
     """
-    Output components write transformed data to external destinations.
+    Output operators write transformed data to external destinations.
 
     Outputs support multiple destinations like databases, data warehouses,
     files, and streaming platforms. Providers implement write() for their target.
 
     Attributes:
-        options: All extra initialization parameters of the component flow into
+        options: All extra initialization parameters of the operator flow into
             this attribute. Use it to pass provider-specific configurations like
             Spark write options (e.g., mode="overwrite", partitionBy=["date"]).
 
@@ -33,7 +33,7 @@ class Output(Plugable, Resource, Generic[TData, TWriter]):
         self,
         name: str,
         description: Optional[str] = None,
-        **options: Unpack[ResourceKwargs],
+        **options: Unpack[OperatorKwargs],
     ) -> None:
         super().__init__(name, description, **options)
 

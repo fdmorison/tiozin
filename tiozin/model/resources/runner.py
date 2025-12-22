@@ -2,12 +2,12 @@ from abc import abstractmethod
 from typing import Any, Optional, Unpack
 
 from ..context import Context
+from ..operator import Operator
 from ..plugable import Plugable
-from ..resource import Resource
-from ..typehint import ResourceKwargs
+from ..typehint import OperatorKwargs
 
 
-class Runner(Plugable, Resource):
+class Runner(Plugable, Operator):
     """
     Execution engine responsible for running jobs.
 
@@ -18,7 +18,7 @@ class Runner(Plugable, Resource):
 
     Attributes:
         streaming: Indicates whether this runner executes streaming workloads.
-        options: All extra initialization parameters of the component flow into
+        options: All extra initialization parameters of the operator flow into
             this attribute. Use it to pass provider-specific configurations like
             Spark session configs (e.g., spark.executor.memory="4g").
 
@@ -31,7 +31,7 @@ class Runner(Plugable, Resource):
         name: str,
         description: Optional[str] = None,
         streaming: bool = False,
-        **options: Unpack[ResourceKwargs],
+        **options: Unpack[OperatorKwargs],
     ) -> None:
         super().__init__(name, description, **options)
         self.streaming = streaming
