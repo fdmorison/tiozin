@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Any, Optional
 
-from tiozin.model.registry import Registry
+from tiozin.model.registries import MetricRegistry
 
 
-class NoOpMetricRegistry(Registry):
+class NoOpMetricRegistry(MetricRegistry):
     """
     No-op metric registry.
 
@@ -14,7 +14,7 @@ class NoOpMetricRegistry(Registry):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def get(self, identifier: str, failfast: bool = False) -> None:
+    def get(self, identifier: str, version: Optional[str] = None) -> Any:
         return None
 
     def register(self, identifier: str, value: Any) -> None:
