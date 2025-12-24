@@ -1,0 +1,428 @@
+import pytest
+
+from tiozin.exceptions import (
+    AlreadyFinishedError,
+    AlreadyRunningError,
+    ConflictError,
+    InvalidInputError,
+    InvalidPluginError,
+    JobAlreadyExistsError,
+    JobError,
+    JobManifestError,
+    JobNotFoundError,
+    NotFoundError,
+    OperationTimeoutError,
+    PluginError,
+    PluginNotFoundError,
+    SchemaError,
+    SchemaNotFoundError,
+    SchemaViolationError,
+    TiozinError,
+    TiozinUnexpectedError,
+)
+
+
+# ============================================================================
+# Testing TiozinError
+# ============================================================================
+def test_tiozin_error_should_have_default_attributes():
+    # Act
+    error = TiozinError()
+
+    # Assert
+    actual = (
+        bool(error.message),
+        error.http_status,
+        error.code,
+    )
+    expected = (True, 400, "TiozinError")
+    assert actual == expected
+
+
+def test_tiozin_error_should_use_custom_attributes_when_provided():
+    # Arrange
+    custom_message = "Custom error message"
+    custom_code = "CUSTOM_ERROR"
+
+    # Act
+    error = TiozinError(message=custom_message, code=custom_code)
+
+    # Assert
+    actual = (error.message, error.code)
+    expected = (custom_message, custom_code)
+    assert actual == expected
+
+
+def test_tiozin_error_to_dict_should_return_code_and_message():
+    # Arrange
+    error = TiozinError(message="Test message", code="TEST_CODE")
+
+    # Act
+    result = error.to_dict()
+
+    # Assert
+    actual = result
+    expected = {
+        "code": "TEST_CODE",
+        "message": "Test message",
+        "http_status": 400,
+    }
+    assert actual == expected
+
+
+def test_tiozin_error_str_should_format_code_and_message():
+    # Arrange
+    error = TiozinError(message="Test message", code="TEST_CODE")
+
+    # Act
+    result = str(error)
+
+    # Assert
+    actual = result
+    expected = "TEST_CODE: Test message"
+    assert actual == expected
+
+
+def test_tiozin_unexpected_error_should_have_default_attributes():
+    # Act
+    error = TiozinUnexpectedError()
+
+    # Assert
+    actual = (
+        bool(error.message),
+        error.http_status,
+        error.code,
+    )
+    expected = (True, 500, "TiozinUnexpectedError")
+    assert actual == expected
+
+
+# ============================================================================
+# Testing Categorical Exceptions
+# ============================================================================
+def test_categorical_errors_should_have_correct_http_status():
+    # Act
+    not_found = NotFoundError()
+    conflict = ConflictError()
+    invalid_input = InvalidInputError()
+    timeout = OperationTimeoutError()
+
+    # Assert
+    actual = (
+        not_found.http_status,
+        conflict.http_status,
+        invalid_input.http_status,
+        timeout.http_status,
+    )
+    expected = (404, 409, 422, 408)
+    assert actual == expected
+
+
+# ============================================================================
+# Testing JobError
+# ============================================================================
+def test_job_not_found_error_should_format_job_name_in_message():
+    # Arrange
+    job_name = "my_job"
+
+    # Act
+    error = JobNotFoundError(job_name=job_name)
+
+    # Assert
+    actual = error.message
+    expected = "Job `my_job` not found."
+    assert actual == expected
+
+
+def test_job_already_exists_error_should_format_job_name_in_message():
+    # Arrange
+    job_name = "my_job"
+
+    # Act
+    error = JobAlreadyExistsError(job_name=job_name)
+
+    # Assert
+    actual = error.message
+    expected = "The job `my_job` already exists."
+    assert actual == expected
+
+
+def test_job_already_exists_error_should_append_reason_when_provided():
+    # Arrange
+    job_name = "my_job"
+    reason = "Some detail here"
+
+    # Act
+    error = JobAlreadyExistsError(job_name=job_name, reason=reason)
+
+    # Assert
+    actual = error.message
+    expected = "The job `my_job` already exists. Some detail here."
+    assert actual == expected
+
+
+def test_job_manifest_error_should_format_job_name_when_provided():
+    # Arrange
+    message = "Invalid manifest"
+    job = "my_job"
+
+    # Act
+    error = JobManifestError(message=message, job=job)
+
+    # Assert
+    actual = error.message
+    expected = "my_job: Invalid manifest"
+    assert actual == expected
+
+
+def test_job_manifest_error_should_use_message_without_job_name():
+    # Arrange
+    message = "Invalid manifest"
+
+    # Act
+    error = JobManifestError(message=message)
+
+    # Assert
+    actual = error.message
+    expected = "Invalid manifest"
+    assert actual == expected
+
+
+def test_job_manifest_error_from_pydantic_should_format_validation_errors():
+    # Arrange
+    from pydantic import BaseModel, ValidationError
+
+    class TestModel(BaseModel):
+        name: int
+
+    with pytest.raises(ValidationError) as exc:
+        TestModel(name="not-an-int")
+
+    # Act
+    error = JobManifestError.from_pydantic(exc.value, job="test_job")
+
+    # Assert
+    assert isinstance(error, JobManifestError)
+    assert "test_job:" in error.message
+
+
+# ============================================================================
+# Testing SchemaError
+# ============================================================================
+def test_schema_violation_error_should_have_default_message():
+    # Act
+    error = SchemaViolationError()
+
+    # Assert
+    actual = bool(error.message)
+    expected = True
+    assert actual == expected
+
+
+def test_schema_not_found_error_should_format_subject_in_message():
+    # Arrange
+    subject = "user_schema"
+
+    # Act
+    error = SchemaNotFoundError(subject=subject)
+
+    # Assert
+    actual = error.message
+    expected = "Schema `user_schema` not found in the registry."
+    assert actual == expected
+
+
+# ============================================================================
+# Testing PluginError
+# ============================================================================
+def test_plugin_not_found_error_should_format_plugin_name_in_message():
+    # Arrange
+    plugin_name = "my_plugin"
+
+    # Act
+    error = PluginNotFoundError(plugin_name=plugin_name)
+
+    # Assert
+    actual = error.message
+    expected = "Plugin `my_plugin` not found."
+    assert actual == expected
+
+
+def test_invalid_plugin_error_should_format_plugin_name_in_message():
+    # Arrange
+    plugin_name = "my_plugin"
+
+    # Act
+    error = InvalidPluginError(plugin_name=plugin_name)
+
+    # Assert
+    actual = error.message
+    expected = "The configuration for plugin `my_plugin` is invalid."
+    assert actual == expected
+
+
+def test_invalid_plugin_error_should_append_details_when_provided():
+    # Arrange
+    plugin_name = "my_plugin"
+    details = "Missing required field 'host'"
+
+    # Act
+    error = InvalidPluginError(plugin_name=plugin_name, details=details)
+
+    # Assert
+    actual = error.message
+    expected = "The configuration for plugin `my_plugin` is invalid. Missing required field 'host'"
+    assert actual == expected
+
+
+# ============================================================================
+# Testing AlreadyRunningError and AlreadyFinishedError
+# ============================================================================
+def test_already_running_error_should_format_resource_name_in_message():
+    # Arrange
+    name = "pipeline"
+
+    # Act
+    error = AlreadyRunningError(name=name)
+
+    # Assert
+    actual = error.message
+    expected = "The `pipeline` is already running."
+    assert actual == expected
+
+
+def test_already_running_error_should_use_default_resource_name():
+    # Act
+    error = AlreadyRunningError()
+
+    # Assert
+    actual = error.message
+    expected = "The `resource` is already running."
+    assert actual == expected
+
+
+def test_already_finished_error_should_format_resource_name_in_message():
+    # Arrange
+    name = "pipeline"
+
+    # Act
+    error = AlreadyFinishedError(name=name)
+
+    # Assert
+    actual = error.message
+    expected = "The `pipeline` has already finished."
+    assert actual == expected
+
+
+def test_already_finished_error_should_use_default_resource_name():
+    # Act
+    error = AlreadyFinishedError()
+
+    # Assert
+    actual = error.message
+    expected = "The `resource` has already finished."
+    assert actual == expected
+
+
+# ============================================================================
+# Exception Hierarchy Tests
+# ============================================================================
+@pytest.mark.parametrize(
+    "error",
+    [
+        NotFoundError(),
+        ConflictError(),
+        InvalidInputError(),
+        OperationTimeoutError(),
+        JobError(),
+        JobNotFoundError(job_name="x"),
+        JobAlreadyExistsError(job_name="x"),
+        JobManifestError(message="x"),
+        SchemaError(),
+        SchemaViolationError(),
+        SchemaNotFoundError(subject="x"),
+        PluginError(),
+        PluginNotFoundError(plugin_name="x"),
+        InvalidPluginError(plugin_name="x"),
+        AlreadyRunningError(),
+        AlreadyFinishedError(),
+    ],
+)
+def test_all_expected_errors_are_tiozin_errors(error):
+    with pytest.raises(TiozinError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        JobNotFoundError(job_name="x"),
+        JobAlreadyExistsError(job_name="x"),
+        JobManifestError(message="x"),
+    ],
+)
+def test_job_errors_are_catchable_as_job_error(error):
+    with pytest.raises(JobError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        SchemaNotFoundError(subject="x"),
+        SchemaViolationError(),
+    ],
+)
+def test_schema_errors_are_catchable_as_schema_error(error):
+    with pytest.raises(SchemaError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        JobNotFoundError(job_name="test"),
+        PluginNotFoundError(plugin_name="test"),
+    ],
+)
+def test_errors_are_catchable_as_not_found(error):
+    with pytest.raises(NotFoundError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        JobAlreadyExistsError(job_name="x"),
+        AlreadyRunningError(),
+        AlreadyFinishedError(),
+    ],
+)
+def test_errors_are_catchable_as_conflict(error):
+    with pytest.raises(ConflictError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        JobManifestError(message="x"),
+        InvalidPluginError(plugin_name="x"),
+        SchemaViolationError(),
+    ],
+)
+def test_errors_are_catchable_as_invalid_input(error):
+    with pytest.raises(InvalidInputError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        PluginNotFoundError(plugin_name="x"),
+        InvalidPluginError(plugin_name="x"),
+    ],
+)
+def test_plugin_errors_are_catchable_as_plugin_error(error):
+    with pytest.raises(PluginError):
+        raise error

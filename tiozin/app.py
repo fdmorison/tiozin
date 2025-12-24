@@ -5,7 +5,7 @@ from threading import RLock
 from tiozin import logs
 from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
-from tiozin.exceptions import TiozinException
+from tiozin.exceptions import TiozinError
 from tiozin.lifecycle import Lifecycle
 from tiozin.model import Context, Job, Resource
 from tiozin.utils.app_status import AppStatus
@@ -110,7 +110,7 @@ class TiozinApp(Resource):
                 self.current_job.run(context)
                 self.status = self.status.set_success()
                 return self.current_job
-            except TiozinException as e:
+            except TiozinError as e:
                 self.status = self.status.set_failure()
                 self.error(e.message)
                 SystemExit(1)
