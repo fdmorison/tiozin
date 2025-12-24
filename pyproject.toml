@@ -69,7 +69,10 @@ show_missing = true
 line-length = 100
 
 [tool.ruff.lint]
-select = ["F401", "I"]
+select = ["F401", "I", "E501", "W505"]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
 
 [tool.ruff.lint.isort]
 known-first-party = ["tiozin"]
