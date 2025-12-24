@@ -5,7 +5,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
-from tiozin.exceptions import JobManifestException
+from tiozin.exceptions import JobManifestError
 from tiozin.model.model.job_manifest import JobManifest
 from tiozin.model.registries.job_registry import JobRegistry
 
@@ -32,7 +32,7 @@ class FileJobRegistry(JobRegistry):
             manifest = self.yaml.load(content)
             return JobManifest.model_validate(manifest)
         except DuplicateKeyError as e:
-            raise JobManifestException.from_ruamel(e, name)
+            raise JobManifestError.from_ruamel(e, name)
 
     def register(self, name: str, value: JobManifest) -> None:
         path = Path(name)

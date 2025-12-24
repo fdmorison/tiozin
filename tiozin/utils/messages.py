@@ -203,7 +203,7 @@ class MessageTemplates(StrEnum):
         for err in error.errors(include_context=True, include_input=True):
             context = {
                 **err,
-                **err["ctx"],
+                **err.get("ctx", {}),
                 "field": ".".join(str(loc) for loc in err.get("loc", ["unknown"])),
             }
             try:

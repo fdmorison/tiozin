@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from tiozin.exceptions import JobManifestException
+from tiozin.exceptions import JobManifestError
 
 from . import job_manifest_docs as docs
 
@@ -35,7 +35,7 @@ class Manifest(BaseModel):
         try:
             return super().model_validate(*args, **kwargs)
         except ValidationError as e:
-            raise JobManifestException.from_pydantic(e)
+            raise JobManifestError.from_pydantic(e)
 
 
 class RunnerManifest(Manifest):
