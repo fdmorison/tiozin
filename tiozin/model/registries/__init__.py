@@ -4,7 +4,6 @@
 from .job_registry import JobRegistry as JobRegistry
 from .lineage_registry import LineageRegistry as LineageRegistry
 from .metric_registry import MetricRegistry as MetricRegistry
-from .plugin_registry import PluginRegistry as PluginRegistry
 from .schema_registry import SchemaRegistry as SchemaRegistry
 from .secret_registry import SecretRegistry as SecretRegistry
 from .setting_registry import SettingRegistry as SettingRegistry
