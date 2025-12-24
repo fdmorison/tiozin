@@ -1,7 +1,7 @@
 from ..registry import Registry
 
 
-class SchemaRegistry(Registry):
+class SchemaRegistry(Registry[object]):
     """
     Retrieves and stores schemas.
 
@@ -9,5 +9,5 @@ class SchemaRegistry(Registry):
     Available in Context for schema handling in Transforms, Inputs, and Outputs.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)

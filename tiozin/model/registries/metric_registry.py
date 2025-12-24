@@ -1,7 +1,7 @@
 from ..registry import Registry
 
 
-class MetricRegistry(Registry):
+class MetricRegistry(Registry[object]):
     """
     Manages metrics and indicators.
 
@@ -9,5 +9,5 @@ class MetricRegistry(Registry):
     Available in Context for custom metrics from Transforms, Inputs, and Outputs.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)

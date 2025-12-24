@@ -1,7 +1,8 @@
+from ..plugable import Plugable
 from ..registry import Registry
 
 
-class PluginRegistry(Registry):
+class PluginRegistry(Registry[Plugable]):
     """
     Internal registry that discovers and manages plugin classes in Tiozin.
 
@@ -14,5 +15,5 @@ class PluginRegistry(Registry):
     Context for custom manipulation.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)
