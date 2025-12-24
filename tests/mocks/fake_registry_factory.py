@@ -4,7 +4,6 @@ from tiozin.assembly.registry_factory import RegistryFactory
 
 
 class MockedRegistryFactory:
-
     def __init__(self) -> None:
         self.lineage_registry = MagicMock(name="lineage", spec=RegistryFactory)
         self.metric_registry = MagicMock(name="metric", spec=RegistryFactory)

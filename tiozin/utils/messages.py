@@ -4,8 +4,7 @@ from pydantic import ValidationError
 
 
 class MessageTemplates(StrEnum):
-
-    MISSING = "The required field `{field}` is missing. " "Please provide this field to continue."
+    MISSING = "The required field `{field}` is missing. Please provide this field to continue."
 
     STRING_TYPE = (
         "The field `{field}` must be a text string. "
@@ -55,20 +54,14 @@ class MessageTemplates(StrEnum):
     )
 
     LIST_TYPE = (
-        "The field `{field}` must be a list. "
-        "Received: `{input}`. "
-        "Please provide a list value."
+        "The field `{field}` must be a list. Received: `{input}`. Please provide a list value."
     )
 
     TUPLE_TYPE = (
-        "The field `{field}` must be a tuple. "
-        "Received: `{input}`. "
-        "Please provide a tuple value."
+        "The field `{field}` must be a tuple. Received: `{input}`. Please provide a tuple value."
     )
 
-    SET_TYPE = (
-        "The field `{field}` must be a set. " "Received: `{input}`. " "Please provide a set value."
-    )
+    SET_TYPE = "The field `{field}` must be a set. Received: `{input}`. Please provide a set value."
 
     GREATER_THAN = (
         "The value of `{field}` must be greater than {gt}. "
@@ -123,9 +116,9 @@ class MessageTemplates(StrEnum):
         "Please review the required pattern."
     )
 
-    VALUE_ERROR = "The value provided for `{field}` is invalid: {msg}. " "Please correct the value."
+    VALUE_ERROR = "The value provided for `{field}` is invalid: {msg}. Please correct the value."
 
-    ASSERTION_ERROR = "The field `{field}` failed validation: {msg}. " "Please verify the value."
+    ASSERTION_ERROR = "The field `{field}` failed validation: {msg}. Please verify the value."
 
     LITERAL_ERROR = (
         "The field `{field}` only accepts specific literal values. "
@@ -151,7 +144,7 @@ class MessageTemplates(StrEnum):
         "Please create a new instance to apply changes."
     )
 
-    DATE_TYPE = "The field `{field}` must be a valid date. " "Please verify the format."
+    DATE_TYPE = "The field `{field}` must be a valid date. Please verify the format."
 
     DATE_PARSING = (
         "I tried to parse the value of `{field}` as a date, "
@@ -159,9 +152,7 @@ class MessageTemplates(StrEnum):
         "Please use the format YYYY-MM-DD."
     )
 
-    DATETIME_TYPE = (
-        "The field `{field}` must be a valid datetime value. " "Please verify the format."
-    )
+    DATETIME_TYPE = "The field `{field}` must be a valid datetime value. Please verify the format."
 
     DATETIME_PARSING = (
         "I tried to parse the value of `{field}` as a datetime, "
@@ -169,7 +160,7 @@ class MessageTemplates(StrEnum):
         "Please use the format YYYY-MM-DD HH:MM:SS."
     )
 
-    TIME_TYPE = "The field `{field}` must be a valid time value. " "Please verify the format."
+    TIME_TYPE = "The field `{field}` must be a valid time value. Please verify the format."
 
     TIME_PARSING = (
         "I tried to parse the value of `{field}` as a time, "
@@ -189,10 +180,10 @@ class MessageTemplates(StrEnum):
     )
 
     URL_SCHEME = (
-        "The URL provided in `{field}` has an invalid scheme. " "Please use http:// or https://."
+        "The URL provided in `{field}` has an invalid scheme. Please use http:// or https://."
     )
 
-    UUID_TYPE = "The field `{field}` must be a valid UUID. " "Please verify the format."
+    UUID_TYPE = "The field `{field}` must be a valid UUID. Please verify the format."
 
     UUID_PARSING = (
         "I tried to parse the value of `{field}` as a UUID, "
