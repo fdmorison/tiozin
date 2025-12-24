@@ -1,23 +1,28 @@
-export APP=$(shell basename "$$PWD")
+APP := $(shell basename "$$PWD")
 
 clean:
+	@rm -rf *.egg-info build dist .ruff_cache .pytest_cache
 	@find . -type d -name "__pycache__" -exec rm -rf {} +
 
+hooks:
+	@uv run pre-commit install
+
 install:
+	@uv sync
+	@uv pip install -e .
+
+install-dev:
 	@uv sync --all-groups
 	@uv pip install -e .
 	@uv run pre-commit install
 	@rm -rf *.egg-info
 
 format:
-	@uv run isort .
-	@uv run autoflake .
-	@uv run black .
+	@uv run ruff check . --fix
+	@uv run ruff format
 
 check:
-	@uv run isort . --check-only
-	@uv run flake8 .
-	@uv run black . --check
+	@uv run ruff check .
 
 test:
 	@uv run pytest -vvv .
@@ -28,4 +33,4 @@ build:
 	@docker image ls local/${APP}:latest
 
 deploy:
-	@echo
+	@echo "deploy not implemented yet"
