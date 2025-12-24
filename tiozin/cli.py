@@ -1,5 +1,5 @@
-from rich.console import Console
 import typer
+from rich.console import Console
 
 from . import config
 from .app import TiozinApp

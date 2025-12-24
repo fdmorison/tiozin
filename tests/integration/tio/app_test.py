@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tests.mocks.fake_registry_factory import MockedRegistryFactory
 import tiozin.app
+from tests.mocks.fake_registry_factory import MockedRegistryFactory
 from tiozin.app import AppStatus, TiozinApp
 
 

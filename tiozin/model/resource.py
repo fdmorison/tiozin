@@ -1,5 +1,5 @@
-from abc import ABC
 import logging
+from abc import ABC
 from typing import Any, Optional, Self, Unpack
 
 from uuid_utils import uuid7

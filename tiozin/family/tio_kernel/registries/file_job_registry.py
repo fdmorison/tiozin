@@ -1,5 +1,5 @@
-from io import StringIO
 import json
+from io import StringIO
 from pathlib import Path
 
 from ruamel.yaml import YAML

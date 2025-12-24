@@ -117,7 +117,6 @@ class RunnerException(ExecutionException):
 
 
 class JobManifestException(NotFoundException, JobException):
-
     def __init__(self, message: str, job: str = None) -> None:
         message = f"{job}: {message}" if job else message
         super().__init__(message)
