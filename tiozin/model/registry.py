@@ -1,13 +1,14 @@
 from abc import abstractmethod
 from typing import Generic, Optional, TypeVar
 
+from tiozin.exceptions import NotFoundException
 from tiozin.model import Plugable, Resource
 from tiozin.utils import helpers
 
-T = TypeVar("T")
+TMetadata = TypeVar("TMetadata")
 
 
-class Registry(Plugable, Resource, Generic[T]):
+class Registry(Plugable, Resource, Generic[TMetadata]):
     """
     Base class for metadata registries.
 
@@ -17,7 +18,7 @@ class Registry(Plugable, Resource, Generic[T]):
 
     def __init__(
         self,
-        name: str = None,
+        name: Optional[str] = None,
         description: Optional[str] = None,
         **options,
     ) -> None:
@@ -26,27 +27,21 @@ class Registry(Plugable, Resource, Generic[T]):
         self.ready = False
 
     @abstractmethod
-    def get(self, identifier: str, failfast: bool = False) -> T:
+    def get(self, identifier: str, version: Optional[str] = None) -> TMetadata:
         """
         Retrieve metadata by identifier.
 
-        Args:
-            identifier: Metadata name or unique ID.
-            failfast: Raise if not found (default: False).
-
-        Returns:
-            Metadata value, or None if not found and failfast=False.
-
         Raises:
-            NotFoundException: When identifier not found and failfast=True.
+            NotFoundException: When metadata was not found.
         """
 
     @abstractmethod
-    def register(self, identifier: str, value: T) -> None:
-        """
-        Register metadata in the registry.
+    def register(self, identifier: str, value: TMetadata) -> None:
+        """Register metadata in the registry."""
 
-        Args:
-            identifier: Metadata name or unique ID.
-            value: Metadata value.
-        """
+    def safe_get(self, identifier: str) -> Optional[TMetadata]:
+        """Retrieve metadata or return None if not found."""
+        try:
+            return self.get(identifier)
+        except NotFoundException:
+            return None

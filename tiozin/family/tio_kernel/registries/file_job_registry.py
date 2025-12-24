@@ -26,7 +26,7 @@ class FileJobRegistry(JobRegistry):
         self.yaml.sort_base_mapping_type_on_output = False
         self.yaml.default_flow_style = False
 
-    def get(self, name: str) -> JobManifest:
+    def get(self, name: str, version: str = None) -> JobManifest:
         try:
             content = Path(name).read_text(encoding="utf-8")
             manifest = self.yaml.load(content)

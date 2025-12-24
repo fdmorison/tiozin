@@ -1,7 +1,7 @@
 from ..registry import Registry
 
 
-class SettingRegistry(Registry):
+class SettingRegistry(Registry[object]):
     """
     Manages system settings and configuration.
 
@@ -9,5 +9,5 @@ class SettingRegistry(Registry):
     Available in Context for configuration access in Transforms, Inputs, and Outputs.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)

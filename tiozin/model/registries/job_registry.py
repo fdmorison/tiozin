@@ -1,7 +1,9 @@
+from tiozin.model import JobManifest
+
 from ..registry import Registry
 
 
-class JobRegistry(Registry):
+class JobRegistry(Registry[JobManifest]):
     """
     Retrieves and stores job manifests.
 
@@ -9,5 +11,5 @@ class JobRegistry(Registry):
     Used internally by Tiozin to resolve jobs from commands like `tiozin run job.yaml`.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)

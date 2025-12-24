@@ -1,7 +1,7 @@
 from ..registry import Registry
 
 
-class TransactionRegistry(Registry):
+class TransactionRegistry(Registry[object]):
     """
     Tracks transaction states and commit logs.
 
@@ -10,5 +10,5 @@ class TransactionRegistry(Registry):
     Available in Context for custom inspection in Transforms, Inputs, and Outputs.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)

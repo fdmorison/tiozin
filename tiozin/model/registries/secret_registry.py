@@ -1,7 +1,7 @@
 from ..registry import Registry
 
 
-class SecretRegistry(Registry):
+class SecretRegistry(Registry[object]):
     """
     Manages secrets and credentials.
 
@@ -9,5 +9,5 @@ class SecretRegistry(Registry):
     Available in Context for secure credential handling in Transforms, Inputs, and Outputs.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **options) -> None:
+        super().__init__(*args, **options)
