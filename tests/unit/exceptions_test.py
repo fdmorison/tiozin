@@ -12,7 +12,6 @@ from tiozin.exceptions import (
     JobNotFoundError,
     NotFoundError,
     OperationTimeoutError,
-    PluginAlreadyExistsError,
     PluginError,
     PluginKindError,
     PluginNotFoundError,
