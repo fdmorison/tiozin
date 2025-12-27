@@ -11,8 +11,8 @@ class NoOpRunner(Runner):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(self, name: str = "noop", **options) -> None:
-        super().__init__(name, **options)
+    def __init__(self, **options) -> None:
+        super().__init__(**options)
 
     def run(self, context: Context, job: Any) -> None:
         return None

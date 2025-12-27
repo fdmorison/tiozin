@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 from abc import ABC
+from dataclasses import dataclass
 from typing import Any
 
 from tiozin.utils import helpers
+
+
+@dataclass(frozen=True)
+class PluginMetadata:
+    kind: str
+    tio_kind: str
+    python_kind: str
+    provider: str
 
 
 class Plugable(ABC):
@@ -14,6 +23,8 @@ class Plugable(ABC):
     discovered and orchestrated by the framework. Intended to be combined
     with Registry and Operator base classes.
     """
+
+    __tiometa__: PluginMetadata = None
 
     def __init__(self, *args, **options) -> None:
         super().__init__(*args, **options)

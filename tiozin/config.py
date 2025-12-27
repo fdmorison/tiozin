@@ -29,3 +29,8 @@ log_level = env.LOG_LEVEL
 log_level_name = logging._levelToName[log_level]
 log_format = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
 log_date_format = "%Y-%m-%dT%H:%M:%S%z"
+
+# ===============================================
+#           Plugins
+# ===============================================
+plugin_provider_group = "tiozin.family"

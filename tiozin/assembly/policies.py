@@ -44,7 +44,7 @@ class PolicyResult:
 
 class ProviderNamePolicy:
     prefix = "tio_"
-    pattern = re.compile("^(?:tio_.+|.+\.tio_.+)$")
+    pattern = re.compile(r"^(?:tio_.+|.+\.tio_.+)$")
 
     @classmethod
     def eval(cls, provider: EntryPoint) -> PolicyResult:

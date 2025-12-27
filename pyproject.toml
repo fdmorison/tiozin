@@ -25,6 +25,9 @@ build-backend = "setuptools.build_meta"
 [project.scripts]
 tiozin = "tiozin.cli:main"
 
+[project.entry-points."tiozin.family"]
+tio_kernel = "tiozin.family.tio_kernel"
+
 [tool.uv]
 required-version = ">=0.8.1"
 

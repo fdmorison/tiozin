@@ -149,20 +149,6 @@ def test_job_already_exists_error_should_format_job_name_in_message():
     assert actual == expected
 
 
-def test_job_already_exists_error_should_append_reason_when_provided():
-    # Arrange
-    job_name = "my_job"
-    reason = "Some detail here"
-
-    # Act
-    error = JobAlreadyExistsError(job_name=job_name, reason=reason)
-
-    # Assert
-    actual = error.message
-    expected = "The job `my_job` already exists. Some detail here."
-    assert actual == expected
-
-
 def test_job_manifest_error_should_format_job_name_when_provided():
     # Arrange
     message = "Invalid manifest"

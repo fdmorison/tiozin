@@ -18,8 +18,8 @@ install-dev:
 	@rm -rf *.egg-info
 
 format:
-	@uv run ruff check . --fix
 	@uv run ruff format
+	@uv run ruff check . --fix --show-fixes
 
 check:
 	@uv run ruff check .
