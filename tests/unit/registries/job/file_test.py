@@ -5,6 +5,7 @@ from textwrap import dedent
 import pytest
 
 from tests.mocks.manifests import mini
+from tiozin.exceptions import JobManifestError
 from tiozin.family.tio_kernel.registries.file_job_registry import FileJobRegistry, JobManifest
 
 
@@ -39,7 +40,7 @@ def test_get_should_fail_when_manifest_has_duplicated_keys():
     path = "tests/mocks/manifests/duplicated_key.yaml"
 
     # Act
-    with pytest.raises(Exception, match="duplicate key"):
+    with pytest.raises(JobManifestError, match="duplicate key"):
         FileJobRegistry().get(path)
 
 
@@ -48,7 +49,7 @@ def test_get_should_fail_on_schema_validation_error():
     path = "tests/mocks/manifests/invalid_schema.yaml"
 
     # Act
-    with pytest.raises(Exception, match="The provided TransformManifest cannot be parsed"):
+    with pytest.raises(JobManifestError, match="The provided TransformManifest cannot be parsed"):
         FileJobRegistry().get(path)
 
 
