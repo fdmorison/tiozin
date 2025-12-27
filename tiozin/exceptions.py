@@ -22,9 +22,11 @@ class TiozinErrorMixin:
     message: str = None
     http_status: int = None
 
-    def __init__(self, message: Optional[str] = None, code: Optional[str] = None) -> None:
+    def __init__(
+        self, message: Optional[str] = None, *, code: Optional[str] = None, **options
+    ) -> None:
         self.code = code or type(self).__name__
-        self.message = message or self.message
+        self.message = (message or self.message).format(code=code, **options)
         super().__init__(self.message)
 
     def to_dict(self) -> dict[str, Any]:
@@ -119,27 +121,24 @@ class JobNotFoundError(JobError, NotFoundError):
     message = "Job `{job_name}` not found."
 
     def __init__(self, job_name: str) -> None:
-        super().__init__(self.message.format(job_name=job_name))
+        super().__init__(job_name=job_name)
 
 
 class JobAlreadyExistsError(JobError, ConflictError):
-    """Raised when a job operation conflicts with its current state."""
-
     message = "The job `{job_name}` already exists."
 
     def __init__(self, job_name: str, reason: str = None) -> None:
-        msg = self.message.format(job_name=job_name)
-        if reason:
-            msg = f"{msg} {reason}."
-        super().__init__(msg)
+        super().__init__(
+            f"{self.message} {reason}." if reason else None,
+            job_name=job_name,
+        )
 
 
 class JobManifestError(JobError, InvalidInputError):
-    """Raised when job manifest validation fails."""
+    message = "{job}: {detail}"
 
-    def __init__(self, message: str, job: str = None) -> None:
-        message = f"{job}: {message}" if job else message
-        super().__init__(message)
+    def __init__(self, message: str, job: str) -> None:
+        super().__init__(job=job, detail=message)
 
     @classmethod
     def from_pydantic(cls, error: ValidationError, job: str = None) -> Self:
@@ -159,56 +158,60 @@ class JobManifestError(JobError, InvalidInputError):
 # Layer 3: Domain Exceptions - Schema
 # ============================================================================
 class SchemaError(InvalidInputError):
-    """Base exception for schema-related errors."""
-
-    message = "The schema is invalid or contains errors."
+    message = "The schema validation failed."
 
 
 class SchemaViolationError(SchemaError, InvalidInputError):
-    """
-    Raised when the input violates one or more schema constraints.
-    """
-
-    message = "The input violates the expected schema."
+    message = "The input violates one or more schema constraints."
 
 
 class SchemaNotFoundError(SchemaError, NotFoundError):
-    """Raised when a schema cannot be found in the registry."""
-
     message = "Schema `{subject}` not found in the registry."
 
     def __init__(self, subject: str) -> None:
-        super().__init__(self.message.format(subject=subject))
+        super().__init__(subject=subject)
 
 
 # ============================================================================
 # Layer 3: Domain Exceptions - Plugin
 # ============================================================================
 class PluginError(TiozinError):
-    """Base exception for unexpected plugin-related errors."""
-
-    message = "An unexpected error occurred in one of the plugins."
+    message = "The plugin discovery, resolution or load failed."
 
 
 class PluginNotFoundError(PluginError, NotFoundError):
-    """Raised when a plugin cannot be found or loaded."""
-
     message = "Plugin `{plugin_name}` not found."
 
-    def __init__(self, plugin_name: str) -> None:
-        super().__init__(self.message.format(plugin_name=plugin_name))
+    def __init__(self, plugin_name: str, reason: str = None) -> None:
+        super().__init__(
+            f"{self.message} {reason}." if reason else None,
+            plugin_name=plugin_name,
+        )
 
 
-class InvalidPluginError(PluginError, InvalidInputError):
-    """Raised when plugin configuration is invalid."""
+class AmbiguousPluginError(PluginError, ConflictError):
+    message = (
+        "The plugin name '{plugin_name}' matches multiple registered plugins. "
+        "Available provider-qualified options are: {candidates}. "
+        "You can disambiguate by specifying the provider-qualified name "
+        "or the fully qualified Python class path."
+    )
 
-    message = "The configuration for plugin `{plugin_name}` is invalid."
+    def __init__(self, plugin_name: str, candidates: list[str] = None) -> None:
+        super().__init__(
+            plugin_name=plugin_name,
+            candidates=", ".join(candidates or []),
+        )
 
-    def __init__(self, plugin_name: str, details: str = None) -> None:
-        msg = self.message.format(plugin_name=plugin_name)
-        if details:
-            msg = f"{msg} {details}"
-        super().__init__(msg)
+
+class PluginKindError(PluginError, InvalidInputError):
+    message = "Plugin '{plugin_name}' cannot be used as '{plugin_kind}'."
+
+    def __init__(self, plugin_name: str, plugin_kind: type) -> None:
+        super().__init__(
+            plugin_name=plugin_name,
+            plugin_kind=plugin_kind.__name__,
+        )
 
 
 # ============================================================================
@@ -225,4 +228,15 @@ class AlreadyFinishedError(ConflictError):
     message = "The `{name}` has already finished."
 
     def __init__(self, name: str = RESOURCE) -> None:
-        super().__init__(self.message.format(name=name))
+        super().__init__(name=name)
+
+
+class PolicyViolationError(InvalidInputError):
+    """
+    Raised when execution is denied due to a policy violation.
+    """
+
+    message = "{policy}: {detail}."
+
+    def __init__(self, policy: type, message: str = None) -> None:
+        super().__init__(policy=policy.__name__, detail=message or "Execution was denied")

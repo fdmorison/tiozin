@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, Optional, TypeVar
 
-from tiozin.exceptions import NotFoundException
+from tiozin.exceptions import NotFoundError
 from tiozin.model import Plugable, Resource
 from tiozin.utils import helpers
 
@@ -43,5 +43,5 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
         """Retrieve metadata or return None if not found."""
         try:
             return self.get(identifier)
-        except NotFoundException:
+        except NotFoundError:
             return None

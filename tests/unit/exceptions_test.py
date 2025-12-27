@@ -3,9 +3,9 @@ import pytest
 from tiozin.exceptions import (
     AlreadyFinishedError,
     AlreadyRunningError,
+    AmbiguousPluginError,
     ConflictError,
     InvalidInputError,
-    InvalidPluginError,
     JobAlreadyExistsError,
     JobError,
     JobManifestError,
@@ -13,7 +13,9 @@ from tiozin.exceptions import (
     NotFoundError,
     OperationTimeoutError,
     PluginError,
+    PluginKindError,
     PluginNotFoundError,
+    PolicyViolationError,
     SchemaError,
     SchemaNotFoundError,
     SchemaViolationError,
@@ -180,11 +182,11 @@ def test_job_manifest_error_should_use_message_without_job_name():
     message = "Invalid manifest"
 
     # Act
-    error = JobManifestError(message=message)
+    error = JobManifestError(message=message, job="foo")
 
     # Assert
     actual = error.message
-    expected = "Invalid manifest"
+    expected = "foo: Invalid manifest"
     assert actual == expected
 
 
@@ -200,6 +202,28 @@ def test_job_manifest_error_from_pydantic_should_format_validation_errors():
 
     # Act
     error = JobManifestError.from_pydantic(exc.value, job="test_job")
+
+    # Assert
+    assert isinstance(error, JobManifestError)
+    assert "test_job:" in error.message
+
+
+def test_job_manifest_error_from_ruamel_should_format_yaml_errors():
+    # Arrange
+    from ruamel.yaml import YAML
+    from ruamel.yaml.error import MarkedYAMLError
+
+    yaml = YAML()
+    yaml_content = """
+    key: value
+    invalid yaml here: [
+    """
+
+    # Act
+    with pytest.raises(MarkedYAMLError) as exc:
+        yaml.load(yaml_content)
+
+    error = JobManifestError.from_ruamel(exc.value, job="test_job")
 
     # Assert
     assert isinstance(error, JobManifestError)
@@ -248,30 +272,49 @@ def test_plugin_not_found_error_should_format_plugin_name_in_message():
     assert actual == expected
 
 
-def test_invalid_plugin_error_should_format_plugin_name_in_message():
+def test_ambiguous_plugin_error_should_format_plugin_name_and_candidates_in_message():
     # Arrange
     plugin_name = "my_plugin"
+    candidates = ["provider1.my_plugin", "provider2.my_plugin"]
 
     # Act
-    error = InvalidPluginError(plugin_name=plugin_name)
+    error = AmbiguousPluginError(plugin_name=plugin_name, candidates=candidates)
 
     # Assert
     actual = error.message
-    expected = "The configuration for plugin `my_plugin` is invalid."
+    expected = (
+        "The plugin name 'my_plugin' matches multiple registered plugins. "
+        "Available provider-qualified options are: provider1.my_plugin, provider2.my_plugin. "
+        "You can disambiguate by specifying the provider-qualified name "
+        "or the fully qualified Python class path."
+    )
     assert actual == expected
 
 
-def test_invalid_plugin_error_should_append_details_when_provided():
+def test_ambiguous_plugin_error_should_handle_empty_candidates_list():
     # Arrange
     plugin_name = "my_plugin"
-    details = "Missing required field 'host'"
 
     # Act
-    error = InvalidPluginError(plugin_name=plugin_name, details=details)
+    error = AmbiguousPluginError(plugin_name=plugin_name, candidates=[])
+
+    # Assert
+    actual = "" in error.message
+    expected = True
+    assert actual == expected
+
+
+def test_plugin_kind_error_should_format_plugin_name_and_kind_in_message():
+    # Arrange
+    plugin_name = "my_plugin"
+    plugin_kind = dict
+
+    # Act
+    error = PluginKindError(plugin_name=plugin_name, plugin_kind=plugin_kind)
 
     # Assert
     actual = error.message
-    expected = "The configuration for plugin `my_plugin` is invalid. Missing required field 'host'"
+    expected = "Plugin 'my_plugin' cannot be used as 'dict'."
     assert actual == expected
 
 
@@ -325,6 +368,39 @@ def test_already_finished_error_should_use_default_resource_name():
 
 
 # ============================================================================
+# Testing PolicyViolationError
+# ============================================================================
+def test_policy_violation_error_should_format_policy_name_and_message():
+    # Arrange
+    class TestPolicy:
+        pass
+
+    custom_message = "Field validation failed"
+
+    # Act
+    error = PolicyViolationError(policy=TestPolicy, message=custom_message)
+
+    # Assert
+    actual = error.message
+    expected = "TestPolicy: Field validation failed."
+    assert actual == expected
+
+
+def test_policy_violation_error_should_use_default_message_when_none_provided():
+    # Arrange
+    class TestPolicy:
+        pass
+
+    # Act
+    error = PolicyViolationError(policy=TestPolicy)
+
+    # Assert
+    actual = error.message
+    expected = "TestPolicy: Execution was denied."
+    assert actual == expected
+
+
+# ============================================================================
 # Exception Hierarchy Tests
 # ============================================================================
 @pytest.mark.parametrize(
@@ -337,15 +413,17 @@ def test_already_finished_error_should_use_default_resource_name():
         JobError(),
         JobNotFoundError(job_name="x"),
         JobAlreadyExistsError(job_name="x"),
-        JobManifestError(message="x"),
+        JobManifestError(message="x", job="y"),
         SchemaError(),
         SchemaViolationError(),
         SchemaNotFoundError(subject="x"),
         PluginError(),
         PluginNotFoundError(plugin_name="x"),
-        InvalidPluginError(plugin_name="x"),
+        PluginKindError(plugin_name="x", plugin_kind=object),
+        AmbiguousPluginError(plugin_name="x"),
         AlreadyRunningError(),
         AlreadyFinishedError(),
+        PolicyViolationError(policy=object),
     ],
 )
 def test_all_expected_errors_are_tiozin_errors(error):
@@ -358,7 +436,7 @@ def test_all_expected_errors_are_tiozin_errors(error):
     [
         JobNotFoundError(job_name="x"),
         JobAlreadyExistsError(job_name="x"),
-        JobManifestError(message="x"),
+        JobManifestError(message="x", job="y"),
     ],
 )
 def test_job_errors_are_catchable_as_job_error(error):
@@ -394,6 +472,7 @@ def test_errors_are_catchable_as_not_found(error):
     "error",
     [
         JobAlreadyExistsError(job_name="x"),
+        AmbiguousPluginError(plugin_name="x"),
         AlreadyRunningError(),
         AlreadyFinishedError(),
     ],
@@ -406,9 +485,10 @@ def test_errors_are_catchable_as_conflict(error):
 @pytest.mark.parametrize(
     "error",
     [
-        JobManifestError(message="x"),
-        InvalidPluginError(plugin_name="x"),
+        JobManifestError(message="x", job="y"),
+        PluginKindError(plugin_name="x", plugin_kind=object),
         SchemaViolationError(),
+        PolicyViolationError(policy=object),
     ],
 )
 def test_errors_are_catchable_as_invalid_input(error):
@@ -420,7 +500,8 @@ def test_errors_are_catchable_as_invalid_input(error):
     "error",
     [
         PluginNotFoundError(plugin_name="x"),
-        InvalidPluginError(plugin_name="x"),
+        AmbiguousPluginError(plugin_name="x"),
+        PluginKindError(plugin_name="x", plugin_kind=object),
     ],
 )
 def test_plugin_errors_are_catchable_as_plugin_error(error):
