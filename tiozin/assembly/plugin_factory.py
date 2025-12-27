@@ -59,8 +59,8 @@ class PluginFactory(Resource):
 
     def __init__(self) -> None:
         super().__init__()
-        self.registry: dict[str, type[Plugable] | set[type[Plugable]]] = {}
-        self.distinct: dict[str, type[Plugable]] = {}
+        self._registry: dict[str, type[Plugable] | set[type[Plugable]]] = {}
+        self._distinct: set[type[Plugable]] = set()
 
     def _discover_tio_providers(self) -> None:
         """Discover and load all plugin providers from entry points."""
@@ -98,10 +98,10 @@ class PluginFactory(Resource):
             provider: Provider namespace (e.g. `tio_pandas`, `tio_spark`, `tio_aws`).
             plugin: Plugin class to register.
         """
-        if not issubclass(plugin, Plugable):
-            raise TypeError(f"Invalid plugin class '{plugin}'. Plugins must subclass Plugable.")
+        if not isinstance(plugin, type) or not issubclass(plugin, Plugable):
+            raise TypeError(f"'{plugin}' is not a Plugin.")
 
-        if plugin.__tiometa__:
+        if plugin in self._distinct:
             return
 
         metadata = PluginMetadata(
@@ -111,10 +111,10 @@ class PluginFactory(Resource):
             provider=provider,
         )
         plugin.__tiometa__ = metadata
-        self.registry.setdefault(metadata.kind, set()).add(plugin)
-        self.registry[metadata.tio_kind] = plugin
-        self.registry[metadata.python_kind] = plugin
-        self.distinct[metadata.python_kind] = plugin
+        self._registry.setdefault(metadata.kind, set()).add(plugin)
+        self._registry[metadata.tio_kind] = plugin
+        self._registry[metadata.python_kind] = plugin
+        self._distinct.add(plugin)
 
     def get(self, kind: str, plugin_kind: type[T] | None = None, **args) -> Plugable | T:
         """
@@ -137,7 +137,7 @@ class PluginFactory(Resource):
         Returns:
             A new instance of the resolved plugin.
         """
-        plugin_or_candidates = self.registry.get(kind)
+        plugin_or_candidates = self._registry.get(kind)
 
         if not plugin_or_candidates:
             raise PluginNotFoundError(kind)
@@ -169,3 +169,7 @@ class PluginFactory(Resource):
 
     def get_registry(self, kind: str, **args) -> Registry:
         return self.get(kind, Registry, **args)
+
+
+# Singleton Instance
+plugin_factory = PluginFactory()
