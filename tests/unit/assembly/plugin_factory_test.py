@@ -15,7 +15,7 @@ def test_register_should_store_plugin_class():
     plugin_factory.register(provider, plugin)
 
     # Assert
-    actual = plugin_factory._registry.get("NoOpTransform")
+    actual = plugin_factory._index.get("NoOpTransform")
     expected = {NoOpTransform}
     assert actual == expected
 
@@ -78,9 +78,9 @@ def test_register_should_index_plugin_by_multiple_keys():
 
     # Assert
     actual = (
-        plugin_factory._registry.get("NoOpInput"),
-        plugin_factory._registry.get("tio_john:NoOpInput"),
-        plugin_factory._registry.get("tiozin.family.tio_kernel.inputs.noop_input.NoOpInput"),
+        plugin_factory._index.get("NoOpInput"),
+        plugin_factory._index.get("tio_john:NoOpInput"),
+        plugin_factory._index.get("tiozin.family.tio_kernel.inputs.noop_input.NoOpInput"),
     )
     expected = (
         {NoOpInput},
@@ -106,7 +106,7 @@ def test_register_should_group_plugins_with_same_name():
     plugin_factory.register("tio_mary", CustomTransform2)
 
     # Assert
-    actual = plugin_factory._registry.get("MyTransform")
+    actual = plugin_factory._index.get("MyTransform")
     expected = {CustomTransform1, CustomTransform2}
     assert actual == expected
 

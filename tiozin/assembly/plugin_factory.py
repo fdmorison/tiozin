@@ -1,15 +1,11 @@
-import importlib
-import inspect
-import pkgutil
-from importlib.metadata import entry_points
-from types import ModuleType
 from typing import TypeVar
 
-from tiozin import config
-from tiozin.assembly.policies import ProviderNamePolicy
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError
 from tiozin.model import Input, Output, Plugable, Registry, Resource, Runner, Transform
 from tiozin.model.plugable import PluginMetadata
+from tiozin.utils import helpers
+
+from .scanner import PluginScanner
 
 T = TypeVar("T", bound=Plugable)
 
@@ -59,49 +55,23 @@ class PluginFactory(Resource):
 
     def __init__(self) -> None:
         super().__init__()
-        self._registry: dict[str, type[Plugable] | set[type[Plugable]]] = {}
-        self._distinct: set[type[Plugable]] = set()
+        self._index: dict[str, type[Plugable] | set[type[Plugable]]] = {}
+        self._plugins: set[type[Plugable]] = set()
 
-    def _discover_tio_providers(self) -> None:
-        """Discover and load all plugin providers from entry points."""
-        for entrypoint in entry_points(group=config.plugin_provider_group):
-            if not ProviderNamePolicy.eval(entrypoint).ok():
-                continue
-            tio_provider = entrypoint.load()
-            self._discover_tio_plugins(tio_provider)
-
-    def _discover_tio_plugins(self, tio: ModuleType) -> None:
-        """Scan a provider module and register all plugin classes found."""
-        tio_name = tio.__name__.split(".")[-1]
-        for _, module_name, _ in pkgutil.walk_packages(tio.__path__, tio.__name__ + "."):
-            try:
-                module = importlib.import_module(module_name)
-                for _, plugin in inspect.getmembers(module, inspect.isclass):
-                    if (
-                        issubclass(plugin, Plugable)
-                        and plugin is not Plugable
-                        and Plugable not in plugin.__bases__
-                        and Registry not in plugin.__bases__
-                        and not inspect.isabstract(plugin)
-                    ):
-                        self.register(tio_name, plugin)
-            except (ImportError, ModuleNotFoundError):
-                # Dependencies of optional provider may not be installed (e.g. tiozin[spark]).
-                # In this case, we silently skip the provider plugins.
-                pass
+    def setup(self) -> None:
+        scanner = PluginScanner(self.logger)
+        for tio_name, plugins in scanner.scan().items():
+            for plugin in plugins:
+                self.register(tio_name, plugin)
 
     def register(self, provider: str, plugin: type[Plugable]) -> None:
         """
-        Register a new plugin.
-
-        Args:
-            provider: Provider namespace (e.g. `tio_pandas`, `tio_spark`, `tio_aws`).
-            plugin: Plugin class to register.
+        Register a new plugin from a given provider namespace (e.g. `tio_pandas`, `tio_spark`)
         """
-        if not isinstance(plugin, type) or not issubclass(plugin, Plugable):
-            raise TypeError(f"'{plugin}' is not a Plugin.")
+        if not helpers.is_plugin(plugin):
+            raise TypeError(f"{plugin!r} is not a Plugin.")
 
-        if plugin in self._distinct:
+        if plugin in self._plugins:
             return
 
         metadata = PluginMetadata(
@@ -111,10 +81,10 @@ class PluginFactory(Resource):
             provider=provider,
         )
         plugin.__tiometa__ = metadata
-        self._registry.setdefault(metadata.kind, set()).add(plugin)
-        self._registry[metadata.tio_kind] = plugin
-        self._registry[metadata.python_kind] = plugin
-        self._distinct.add(plugin)
+        self._index.setdefault(metadata.kind, set()).add(plugin)
+        self._index[metadata.tio_kind] = plugin
+        self._index[metadata.python_kind] = plugin
+        self._plugins.add(plugin)
 
     def get(self, kind: str, plugin_kind: type[T] | None = None, **args) -> Plugable | T:
         """
@@ -137,12 +107,12 @@ class PluginFactory(Resource):
         Returns:
             A new instance of the resolved plugin.
         """
-        plugin_or_candidates = self._registry.get(kind)
+        plugin_or_candidates = self._index.get(kind)
 
         if not plugin_or_candidates:
             raise PluginNotFoundError(kind)
 
-        if isinstance(plugin_or_candidates, type):
+        if helpers.is_plugin(plugin_or_candidates):
             plugin = plugin_or_candidates
         else:
             if len(plugin_or_candidates) > 1:
