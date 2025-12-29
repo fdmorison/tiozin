@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from tests.mocks.manifests.mini import compact_job
-from tiozin.model.model.job_manifest import (
+from tiozin.api.metadata.job_manifest import (
     InputManifest,
     JobManifest,
 )

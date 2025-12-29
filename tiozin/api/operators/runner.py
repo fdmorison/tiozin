@@ -1,10 +1,7 @@
 from abc import abstractmethod
 from typing import Any, Optional, Unpack
 
-from ..context import Context
-from ..operator import Operator
-from ..plugable import Plugable
-from ..typehint import OperatorKwargs
+from .. import Context, Operator, OperatorKwargs, Plugable
 
 
 class Runner(Plugable, Operator):

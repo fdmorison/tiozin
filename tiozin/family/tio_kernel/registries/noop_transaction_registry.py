@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from tiozin.model.registries import TransactionRegistry
+from tiozin.api.registries import TransactionRegistry
 
 
 class NoOpTransactionRegistry(TransactionRegistry):

@@ -3,11 +3,11 @@ import signal
 from threading import RLock
 
 from tiozin import logs
+from tiozin.api import Context, Job, Resource
 from tiozin.assembly.builder import JobBuilder
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinError
 from tiozin.lifecycle import Lifecycle
-from tiozin.model import Context, Job, Resource
 from tiozin.utils.app_status import AppStatus
 
 

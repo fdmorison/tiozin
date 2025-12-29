@@ -6,8 +6,8 @@ from importlib.metadata import EntryPoint, entry_points
 from types import ModuleType
 
 from tiozin import config
+from tiozin.api import Plugable
 from tiozin.assembly.policies import ProviderNamePolicy
-from tiozin.model import Plugable
 from tiozin.utils import helpers
 
 

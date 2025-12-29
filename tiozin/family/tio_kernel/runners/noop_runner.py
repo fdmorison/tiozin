@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.model import Context, Runner
+from tiozin.api import Context, Runner
 
 
 class NoOpRunner(Runner):

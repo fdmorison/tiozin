@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import Any, Generic, Optional, TypeVar
 
+from tiozin.api import Plugable, Resource
 from tiozin.exceptions import NotFoundError
-from tiozin.model import Plugable, Resource
 from tiozin.utils import helpers
 
 TMetadata = TypeVar("TMetadata")

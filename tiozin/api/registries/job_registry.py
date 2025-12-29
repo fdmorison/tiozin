@@ -1,6 +1,4 @@
-from tiozin.model import JobManifest
-
-from ..registry import Registry
+from .. import JobManifest, Registry
 
 
 class JobRegistry(Registry[JobManifest]):

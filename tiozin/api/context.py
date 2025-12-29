@@ -1,4 +1,4 @@
-from tiozin.model.registries import (
+from tiozin.api.registries import (
     LineageRegistry,
     MetricRegistry,
     SchemaRegistry,
