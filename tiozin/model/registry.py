@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from tiozin.exceptions import NotFoundError
 from tiozin.model import Plugable, Resource
@@ -25,6 +25,15 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
         super().__init__(name, description, **options)
         self.registry_kind = helpers.detect_base_kind(self, Registry)
         self.ready = False
+
+    def setup(self, **kwargs) -> None:
+        return None
+
+    def teardown(self, **kwargs) -> None:
+        return None
+
+    def execute(self, **kwargs) -> Any:
+        return None
 
     @abstractmethod
     def get(self, identifier: str, version: Optional[str] = None) -> TMetadata:

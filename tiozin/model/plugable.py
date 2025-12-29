@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
@@ -30,6 +30,7 @@ class Plugable(ABC):
         super().__init__(*args, **options)
         self.plugin_kind = helpers.detect_base_kind(self, Plugable)
 
+    @abstractmethod
     def execute(self, **kwargs) -> Any:
         """
         Executes the core logic of the plugin.
