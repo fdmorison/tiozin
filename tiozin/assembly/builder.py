@@ -1,7 +1,7 @@
 from typing import Self
 
-from tiozin.model import JobManifest
-from tiozin.model.job import Job
+from tiozin.api import JobManifest
+from tiozin.api.job import Job
 
 
 class JobBuilder:

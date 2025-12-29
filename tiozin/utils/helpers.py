@@ -7,7 +7,7 @@ def is_package(obj: Any) -> bool:
 
 
 def is_plugin(plugin: Any) -> bool:
-    from tiozin.model import Plugable, Registry
+    from tiozin.api import Plugable, Registry
 
     return (
         inspect.isclass(plugin)

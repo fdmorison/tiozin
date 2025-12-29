@@ -1,9 +1,9 @@
 import pytest
 
+from tiozin.api import Output
 from tiozin.assembly.plugin_factory import PluginMetadata, plugin_factory
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError
 from tiozin.family.tio_kernel import NoOpInput, NoOpTransform
-from tiozin.model import Output
 
 
 def test_register_should_store_plugin_class():

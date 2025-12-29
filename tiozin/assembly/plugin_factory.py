@@ -1,8 +1,8 @@
 from typing import TypeVar
 
+from tiozin.api import Input, Output, Plugable, Registry, Resource, Runner, Transform
+from tiozin.api.plugable import PluginMetadata
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError
-from tiozin.model import Input, Output, Plugable, Registry, Resource, Runner, Transform
-from tiozin.model.plugable import PluginMetadata
 from tiozin.utils import helpers
 
 from .scanner import PluginScanner

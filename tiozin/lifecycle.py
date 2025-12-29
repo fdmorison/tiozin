@@ -1,4 +1,4 @@
-from tiozin.model import Registry, Resource
+from tiozin.api import Registry, Resource
 
 
 class Lifecycle(Resource):

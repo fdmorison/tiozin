@@ -1,4 +1,4 @@
-from ..registry import Registry
+from tiozin.api import Registry
 
 
 class LineageRegistry(Registry[object]):

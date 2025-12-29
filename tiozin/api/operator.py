@@ -1,4 +1,4 @@
-from tiozin.model.resource import Resource
+from tiozin.api.resource import Resource
 
 
 class Operator(Resource):

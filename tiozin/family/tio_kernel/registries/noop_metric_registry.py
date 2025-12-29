@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from tiozin.model.registries import MetricRegistry
+from tiozin.api.registries import MetricRegistry
 
 
 class NoOpMetricRegistry(MetricRegistry):
