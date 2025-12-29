@@ -58,11 +58,14 @@ class PluginFactory(Resource):
         self._index: dict[str, type[Plugable] | set[type[Plugable]]] = {}
         self._plugins: set[type[Plugable]] = set()
 
-    def setup(self) -> None:
+    def setup(self, **kwargs) -> None:
         scanner = PluginScanner(self.logger)
         for tio_name, plugins in scanner.scan().items():
             for plugin in plugins:
                 self.register(tio_name, plugin)
+
+    def teardown(self, **kwargs) -> None:
+        return None
 
     def register(self, provider: str, plugin: type[Plugable]) -> None:
         """

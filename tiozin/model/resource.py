@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Optional, Self, Unpack
 
 from uuid_utils import uuid7
@@ -48,6 +48,7 @@ class Resource(ABC):
     def instance_uri(self) -> str:
         return f"{self.uri}:{self.id}"
 
+    @abstractmethod
     def setup(self, **kwargs) -> None:
         """
         Optional initialization hook.
@@ -56,6 +57,7 @@ class Resource(ABC):
         Override if the resource requires setup logic.
         """
 
+    @abstractmethod
     def teardown(self, **kwargs) -> None:
         """
         Optional cleanup hook.

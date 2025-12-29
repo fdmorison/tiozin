@@ -50,3 +50,9 @@ class Operator(Resource):
         self.layer = layer
         self.product = product
         self.model = model
+
+    def setup(self, **kwargs) -> None:
+        return None
+
+    def teardown(self, **kwargs) -> None:
+        return None

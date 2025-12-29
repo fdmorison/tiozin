@@ -32,7 +32,7 @@ class FileJobRegistry(JobRegistry):
             manifest = self.yaml.load(content)
             return JobManifest.model_validate(manifest)
         except DuplicateKeyError as e:
-            raise JobManifestError.from_ruamel(e, name)
+            raise JobManifestError.from_ruamel(e, name) from e
 
     def register(self, name: str, value: JobManifest) -> None:
         path = Path(name)

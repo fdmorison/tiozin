@@ -35,7 +35,7 @@ class Manifest(BaseModel):
         try:
             return super().model_validate(*args, **kwargs)
         except ValidationError as e:
-            raise JobManifestError.from_pydantic(e)
+            raise JobManifestError.from_pydantic(e) from e
 
 
 class RunnerManifest(Manifest):
