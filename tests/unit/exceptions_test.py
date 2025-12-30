@@ -151,7 +151,7 @@ def test_job_already_exists_error_should_format_job_name_in_message():
 
 def test_job_manifest_error_should_format_job_name_when_provided():
     # Arrange
-    message = "Invalid manifest"
+    message = "something is wrong"
     job = "my_job"
 
     # Act
@@ -159,20 +159,7 @@ def test_job_manifest_error_should_format_job_name_when_provided():
 
     # Assert
     actual = error.message
-    expected = "my_job: Invalid manifest"
-    assert actual == expected
-
-
-def test_job_manifest_error_should_use_message_without_job_name():
-    # Arrange
-    message = "Invalid manifest"
-
-    # Act
-    error = JobManifestError(message=message, job="foo")
-
-    # Assert
-    actual = error.message
-    expected = "foo: Invalid manifest"
+    expected = "Invalid manifest for `my_job`: something is wrong"
     assert actual == expected
 
 
@@ -191,7 +178,7 @@ def test_job_manifest_error_from_pydantic_should_format_validation_errors():
 
     # Assert
     assert isinstance(error, JobManifestError)
-    assert "test_job:" in error.message
+    assert error.message.startswith("Invalid manifest for `test_job`:")
 
 
 def test_job_manifest_error_from_ruamel_should_format_yaml_errors():
@@ -213,7 +200,7 @@ def test_job_manifest_error_from_ruamel_should_format_yaml_errors():
 
     # Assert
     assert isinstance(error, JobManifestError)
-    assert "test_job:" in error.message
+    assert error.message.startswith("Invalid manifest for `test_job`:")
 
 
 # ============================================================================

@@ -130,10 +130,7 @@ class MessageTemplates(StrEnum):
         "Please choose a valid option."
     )
 
-    EXTRA_FORBIDDEN = (
-        "The field `{field}` is not expected in this context. "
-        "Please remove it or review the input structure."
-    )
+    EXTRA_FORBIDDEN = "Field `{field}` is not allowed."
 
     MODEL_TYPE = "The provided {class_name} cannot be parsed: `{input}`."
 
