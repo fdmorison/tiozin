@@ -2,9 +2,7 @@ import atexit
 import signal
 from threading import RLock
 
-from tiozin import logs
-from tiozin.api import Context, Job, Resource
-from tiozin.assembly.builder import JobBuilder
+from tiozin import Context, Job, Resource, logs
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinError
 from tiozin.lifecycle import Lifecycle
@@ -71,7 +69,7 @@ class TiozinApp(Resource):
             self.info(f"{self.status.capitalize()} Application is shutting down...")
 
             if self.status.is_running():
-                self.current_job.stop()
+                self.current_job.teardown()
                 self.lifecycle.teardown()
                 self.status = self.status.set_canceled()
             else:
@@ -97,6 +95,7 @@ class TiozinApp(Resource):
 
         with self.lock:
             try:
+                self.current_job = None
                 self.status = self.status.set_running()
                 context = Context(
                     lineage_registry=self.registries.lineage_registry,
@@ -106,8 +105,8 @@ class TiozinApp(Resource):
                     transaction_registry=self.registries.transaction_registry,
                 )
                 manifest = self.job_registry.get(name)
-                self.current_job = JobBuilder().from_manifest(manifest).build()
-                self.current_job.run(context)
+                self.current_job = Job.builder().from_manifest(manifest).build()
+                self.current_job.execute(context)
                 self.status = self.status.set_success()
                 return self.current_job
             except TiozinError as e:
@@ -116,5 +115,6 @@ class TiozinApp(Resource):
                 SystemExit(1)
             except Exception:
                 self.status = self.status.set_failure()
-                self.exception(f"Unexpected error while executing job `{name}`. ")
+                job_name = self.current_job.name if self.current_job else name
+                self.exception(f"Unexpected error while executing job `{job_name}`. ")
                 raise

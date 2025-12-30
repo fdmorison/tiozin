@@ -126,7 +126,7 @@ def test_teardown_should_cancel_running_job(running_app: TiozinApp):
     running_app.teardown()
 
     # Assert
-    running_app.current_job.stop.assert_called_once()
+    running_app.current_job.teardown.assert_called_once()
     assert running_app.status.is_canceled()
 
 
@@ -139,7 +139,7 @@ def test_teardown_should_be_idempotent(running_app: TiozinApp):
     running_app.lifecycle.teardown.assert_called_once()
 
 
-@patch("tiozin.app.JobBuilder")
+@patch.object(tiozin.app.Job, "builder")
 def test_run_should_execute_job_and_finish_with_success(
     job_builder: MagicMock, ready_app: TiozinApp
 ):
@@ -151,17 +151,17 @@ def test_run_should_execute_job_and_finish_with_success(
     result = ready_app.run("job://test")
 
     # Assert
-    job.run.assert_called_once()
+    job.execute.assert_called_once()
     assert result is job
     assert ready_app.status.is_success()
     assert ready_app.status.is_job_finished()
 
 
-@patch("tiozin.app.JobBuilder")
+@patch.object(tiozin.app.Job, "builder")
 def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     job = MagicMock()
-    job.run.side_effect = RuntimeError("boom")
+    job.execute.side_effect = RuntimeError("boom")
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -174,7 +174,7 @@ def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_a
     assert ready_app.status.is_job_finished()
 
 
-@patch.object(tiozin.app, "JobBuilder")
+@patch.object(tiozin.app.Job, "builder")
 def test_run_should_set_running_before_job_execution(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     actual_status: AppStatus = None
@@ -184,7 +184,7 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
         actual_status = ready_app.status
 
     job = MagicMock()
-    job.run.side_effect = mocked_job_run
+    job.execute.side_effect = mocked_job_run
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -194,7 +194,7 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
     assert actual_status.is_running()
 
 
-@patch.object(tiozin.app, "JobBuilder")
+@patch.object(tiozin.app.Job, "builder")
 def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     ready_app.setup = MagicMock()

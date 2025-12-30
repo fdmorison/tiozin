@@ -89,7 +89,7 @@ class JobManifest(Manifest):
     # Identity & Ownership
     name: str = Field(description=docs.NAME)
     owner: Optional[str] = Field(None, description=docs.OWNER)
-    team: Optional[str] = Field(None, description=docs.TEAM)
+    maintainer: Optional[str] = Field(None, description=docs.MANTAINER)
     cost_center: Optional[str] = Field(None, description=docs.COST_CENTER)
     labels: Optional[dict[str, str]] = Field(default_factory=dict, description=docs.LABELS)
 
