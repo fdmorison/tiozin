@@ -5,6 +5,7 @@ from .inputs.noop_input import NoOpInput as NoOpInput
 from .outputs.noop_output import NoOpOutput as NoOpOutput
 from .transforms.noop_transform import NoOpTransform as NoOpTransform
 from .runners.noop_runner import NoOpRunner as NoOpRunner
+from .jobs.linear_job import LinearJob as LinearJob
 
 from .registries import FileJobRegistry as FileJobRegistry
 from .registries import NoOpMetricRegistry as NoOpMetricRegistry
