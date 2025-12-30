@@ -1,5 +1,11 @@
 import inspect
-from typing import Any
+from datetime import datetime, timezone
+from decimal import Decimal
+from enum import Enum
+from fractions import Fraction
+from typing import Any, TypeVar
+
+T = TypeVar("T")
 
 
 def is_package(obj: Any) -> bool:
@@ -31,3 +37,44 @@ def detect_base_kind(instance: Any, interface: type) -> type:
     if idx == 0:
         raise RuntimeError(f"{interface.__name__} cannot be instantiated directly")
     return mro[idx - 1]
+
+
+def utcnow() -> datetime:
+    """
+    Return the current UTC time as a timezone-aware datetime.
+    """
+    return datetime.now(timezone.utc)
+
+
+def default(value: T, default_: T) -> T:
+    """
+    Returns a default value only when the input is considered unset.
+
+    Empty strings and empty collections are treated as unset values.
+    Scalar values are considered unset only when they are null.
+    """
+    if value is None:
+        return default_
+    if isinstance(value, (bool, int, float, Decimal, Fraction, Enum)):
+        return value
+    return value or default_
+
+
+def as_list(
+    value: T | list[T] | tuple[T, ...],
+    default_: T | list[T] | tuple[T, ...] | None = None,
+) -> list[T] | None:
+    """
+    Normalize a value into a list.
+
+    Scalars are wrapped into a single-element list, tuples are converted
+    to lists, and lists are returned as-is. `None` is preserved.
+    """
+    value = default(value, default_)
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    return [value]
