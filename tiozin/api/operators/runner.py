@@ -6,21 +6,22 @@ from .. import Context, Operator, OperatorKwargs, Plugable
 
 class Runner(Plugable, Operator):
     """
-    Execution engine responsible for running jobs.
+    Runners coordinate the execution of a pipeline.
 
-    Runners orchestrate the full job execution lifecycle, including
-    preparing the runtime context, executing the pipeline, and handling
-    teardown and cleanup. They abstract the execution environment so that
-    jobs can run on different backends without code changes.
+    A Runner defines the execution backend and is responsible for managing
+    the execution lifecycle of a job, including environment setup, pipeline
+    execution, and resource cleanup.
+
+    Runners coordinate execution either by interpreting values produced by
+    operators or by being invoked directly by operators in eager execution
+    scenarios, depending on the execution model.
+
+    Operators used in a pipeline are expected to be compatible with the
+    Runner's execution backend.
 
     Attributes:
         streaming: Indicates whether this runner executes streaming workloads.
-        options: All extra initialization parameters of the operator flow into
-            this attribute. Use it to pass provider-specific configurations like
-            Spark session configs (e.g., spark.executor.memory="4g").
-
-    Providers implement the execution logic for a specific engine
-    (e.g. Spark, Dataflow, Flink, Pandas, Tensorflow, etc).
+        options: Provider-specific configuration parameters.
     """
 
     def __init__(

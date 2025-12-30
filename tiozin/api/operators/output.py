@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from typing import Generic, Optional, TypeVar, Unpack
+from typing import Generic, TypeVar
 
-from .. import Context, Operator, OperatorKwargs, Plugable
+from .. import Context, Operator, Plugable
 
 TData = TypeVar("TData")
 TWriter = TypeVar("TWriter")
@@ -9,39 +9,28 @@ TWriter = TypeVar("TWriter")
 
 class Output(Plugable, Operator, Generic[TData, TWriter]):
     """
-    Output operators write transformed data to external destinations.
+    Output operators persist data to external systems.
 
-    Outputs support multiple destinations like databases, data warehouses,
-    files, and streaming platforms. Providers implement write() for their target.
+    An Output represents the terminal step of a pipeline, responsible for
+    writing data to a destination such as a database, file system, or
+    streaming sink.
 
-    Attributes:
-        options: All extra initialization parameters of the operator flow into
-            this attribute. Use it to pass provider-specific configurations like
-            Spark write options (e.g., mode="overwrite", partitionBy=["date"]).
+    The `write()` method may return either:
+    - the input data or
+    - a writer object whose concrete type is interpreted by the Runner
+      to decide how the job is executed.
 
-    Examples of outputs:
-        - BigQueryOutput: Write to Google BigQuery tables
-        - ParquetOutput: Save data as Parquet files
-        - RedshiftOutput: Load data into Amazon Redshift
-        - ElasticsearchOutput: Index data in Elasticsearch
+    This Output/Writer modeling enables lazy execution by separating write
+    intent from execution strategy, which is delegated to the Runner. Eager
+    execution may be indicated to the Runner by returning TData or `None`.
     """
 
-    def __init__(
-        self,
-        name: str,
-        description: Optional[str] = None,
-        **options: Unpack[OperatorKwargs],
-    ) -> None:
-        super().__init__(name, description, **options)
-
     @abstractmethod
-    def write(self, context: Context, data: TData) -> TWriter:
+    def write(self, context: Context, data: TData) -> TData | TWriter:
         """
         Write data to destination. Providers must implement.
-
-        Returns a writer object that the Runner will use to complete the operation.
         """
 
-    def execute(self, context: Context, data: TData) -> TWriter:
+    def execute(self, context: Context, data: TData) -> TData | TWriter:
         """Template method that delegates to write()."""
         return self.write(context, data)
