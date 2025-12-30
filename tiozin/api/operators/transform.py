@@ -1,40 +1,26 @@
 from abc import abstractmethod
-from typing import Generic, Optional, TypeVar, Unpack
+from typing import Generic, TypeVar
 
-from .. import Context, Operator, OperatorKwargs, Plugable
+from .. import Context, Operator, Plugable
 
 TData = TypeVar("TData")
 
 
 class Transform(Plugable, Operator, Generic[TData]):
     """
-    Transforms are the core processing units in Tiozin pipelines. They take data
-    from inputs, apply business logic (filtering, enrichment, aggregation, joins,
-    etc), and produce transformed data for outputs.
+    Transform operators apply business logic to produce new data.
 
-    Transforms are extensible and can leverage any processing engine. Providers
-    implement the transform() method with their specific logic while the framework
-    handles orchestration, lifecycle, and context management.
+    A Transform represents a processing step within a pipeline and is
+    responsible for describing how input data should be transformed through
+    business logic such as filtering, enrichment, aggregation, or joins.
 
-    Attributes:
-        options: All extra initialization parameters of the operator flow into
-            this attribute. Use it to pass provider-specific configurations like
-            Spark options (e.g., spark.sql.shuffle.partitions=200).
+    Depending on the provider, data transformation may be performed eagerly
+    or deferred as part of a lazy execution plan coordinated by the Runner.
 
-    Examples of transforms:
-        - SparkWordCountTransform: Count word occurrences using Spark
-        - SQLJoinTransform: Join datasets using SQL engine
-        - FlinkStreamTransform: Real-time stream processing with Flink
-        - PandasEnrichTransform: Data enrichment using Pandas
+    By default, Transforms process each dataset individually. For operations
+    that need to work with multiple datasets simultaneously (joins, unions,
+    cross-dataset aggregations), use CombineTransform instead.
     """
-
-    def __init__(
-        self,
-        name: str,
-        description: Optional[str] = None,
-        **options: Unpack[OperatorKwargs],
-    ) -> None:
-        super().__init__(name, description, **options)
 
     @abstractmethod
     def transform(self, context: Context, *data: TData) -> TData:
@@ -43,3 +29,23 @@ class Transform(Plugable, Operator, Generic[TData]):
     def execute(self, context: Context, *data: TData) -> TData:
         """Template method that delegates to transform()."""
         return self.transform(context, *data)
+
+
+class CombineTransform(Transform[TData]):
+    """
+    Transform that operates on many datasets at once.
+
+    Unlike regular Transforms that process datasets individually,
+    CombineTransforms receive many datasets simultaneously, enabling
+    operations like joins, unions, or cross-dataset aggregations.
+
+    Example:
+        class JoinTransform(CombineTransform):
+            def transform(self, context: Context, main: DataFrame, other: DataFrame) -> DataFrame:
+                # Receive multiple dataframes and join them
+                return main.join(other, on="key")
+    """
+
+    @abstractmethod
+    def transform(self, context: Context, data: TData, *others: TData) -> TData:
+        pass
