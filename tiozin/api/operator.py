@@ -1,4 +1,5 @@
 from tiozin.api.resource import Resource
+from tiozin.utils.helpers import utcnow
 
 
 class Operator(Resource):
@@ -44,12 +45,18 @@ class Operator(Resource):
         **options,
     ) -> None:
         super().__init__(name, description, **options)
+
         self.org = org
         self.region = region
         self.domain = domain
         self.layer = layer
         self.product = product
         self.model = model
+
+        self.run_id = self.id
+        self.created_at = utcnow()
+        self.started_at = None
+        self.finished_at = None
 
     def setup(self, **kwargs) -> None:
         return None
