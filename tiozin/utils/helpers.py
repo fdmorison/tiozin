@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
-from typing import Any, TypeVar
+from typing import Any, Callable, TypeVar
 
 T = TypeVar("T")
 
@@ -63,18 +63,70 @@ def default(value: T, default_: T) -> T:
 def as_list(
     value: T | list[T] | tuple[T, ...],
     default_: T | list[T] | tuple[T, ...] | None = None,
+    wrap_none: bool = False,
 ) -> list[T] | None:
     """
     Normalize a value into a list.
 
     Scalars are wrapped into a single-element list, tuples are converted
-    to lists, and lists are returned as-is. `None` is preserved.
+    to lists, and lists are returned as-is. By default, `None` is preserved
+    and returned as `None`, but if `wrap_none=True`, `None` is wrapped as `[None]`.
     """
     value = default(value, default_)
     if value is None:
-        return None
+        return [None] if wrap_none else None
     if isinstance(value, list):
         return value
     if isinstance(value, tuple):
         return list(value)
     return [value]
+
+
+def as_flat_list(*values: T) -> list[T]:
+    """
+    Flatten multiple lists and scalars into a single list.
+
+    Each value is normalized using `as_list` before flattening.
+    Scalars, lists, and tuples from all arguments are merged into one list.
+    None values are included as list items.
+    """
+    result = []
+    for v in values:
+        result.extend(as_list(v, wrap_none=True))
+    return result
+
+
+def try_get(obj: Any, field: str, default: Any = None) -> Any:
+    """
+    Safely get a field from a dict or an object.
+
+    Returns the value when present, otherwise returns the default.
+    """
+    if obj is None:
+        return default
+
+    if isinstance(obj, dict):
+        return obj.get(field, default)
+
+    return getattr(obj, field, default)
+
+
+def try_get_public_setter(cls: type, method_name: str) -> Callable | None:
+    """
+    Get a method if it's a valid public setter, otherwise return None.
+
+    Public setters are callable methods that accept exactly one parameter
+    (excluding self) and have names that don't start with underscore.
+    """
+    if method_name.startswith("_"):
+        return None
+
+    method = getattr(cls, method_name, None)
+    if not callable(method):
+        return None
+
+    sig = inspect.signature(method)
+    if len(sig.parameters) != 2:
+        return None
+
+    return method
