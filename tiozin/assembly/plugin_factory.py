@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from tiozin.api import Input, Output, Plugable, Registry, Resource, Runner, Transform
+from tiozin.api import Input, Job, Output, Plugable, Registry, Resource, Runner, Transform
 from tiozin.api.plugable import PluginMetadata
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError
 from tiozin.utils import helpers
@@ -36,6 +36,7 @@ class PluginFactory(Resource):
     simple and familiar directory structure, for example:
 
         ├── tio_john
+        |   ├── jobs
         │   ├── inputs
         │   ├── outputs
         │   ├── registries
@@ -127,6 +128,9 @@ class PluginFactory(Resource):
             raise PluginNotFoundError(kind)
 
         return plugin(**args)
+
+    def get_job(self, kind: str, **args) -> Registry:
+        return self.get(kind, Job, **args)
 
     def get_input(self, kind: str, **args) -> Input:
         return self.get(kind, Input, **args)

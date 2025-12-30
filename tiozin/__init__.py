@@ -14,7 +14,7 @@ from tiozin.api import Resource, Operator, Registry, Plugable
 from tiozin.api import Job, Context
 
 # Operators
-from tiozin.api import Runner, Transform, Input, Output
+from tiozin.api import Runner, Transform, Input, Output, Job
 
 # Metadata
 from tiozin.api import JobManifest
@@ -46,6 +46,7 @@ __all__ = [
     "Transform",
     "Input",
     "Output",
+    "Job",
     # Metadata
     "JobManifest",
     # Registries
@@ -57,6 +58,6 @@ __all__ = [
     "SettingRegistry",
     "TransactionRegistry",
     # Entities
-    "Job",
+    "LinearJob",
     "Context",
 ]

@@ -14,7 +14,7 @@ from .context import Context as Context
 
 from .operators.runner import Runner as Runner
 from .operators.transform import Transform as Transform
+from .operators.transform import CombineTransform as CombineTransform
 from .operators.input import Input as Input
 from .operators.output import Output as Output
-
-from .job import Job as Job
+from .operators.job import Job as Job

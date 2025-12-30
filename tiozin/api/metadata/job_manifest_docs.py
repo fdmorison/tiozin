@@ -21,7 +21,7 @@ SCHEMA_VERSION = "Specific schema version"
 # JobManifest - Identity & Ownership
 NAME = "Unique name for the job (it is not the execution ID)"
 OWNER = "Team that required for the job"
-TEAM = "Team that maintains this job"
+MANTAINER = "Team that maintains this job"
 COST_CENTER = "Team that pays for this job"
 LABELS = "Additional metadata as key-value pairs"
 
