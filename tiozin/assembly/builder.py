@@ -2,7 +2,14 @@ import logging
 from typing import Any, Self
 
 from tiozin.api import Input, Job, JobManifest, Output, Runner, Transform
+from tiozin.api.metadata.job_manifest import (
+    InputManifest,
+    OutputManifest,
+    RunnerManifest,
+    TransformManifest,
+)
 from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
+from tiozin.utils.helpers import try_get_public_setter
 
 from .plugin_factory import PluginFactory
 
@@ -17,7 +24,6 @@ class JobBuilder:
 
     def __init__(self) -> None:
         self._built = False
-        self._plugin_factory = PluginFactory()
         self._logger = logging.getLogger(type(self).__name__)
 
         # identity
@@ -38,10 +44,13 @@ class JobBuilder:
         self._layer: str | None = None
 
         # pipeline
-        self._runner: dict | Runner | None = None
-        self._inputs: list[dict | Input] = []
-        self._transforms: list[dict | Transform] = []
-        self._outputs: list[dict | Output] = []
+        self._runner: RunnerManifest | Runner | None = None
+        self._inputs: list[InputManifest | Input] = []
+        self._transforms: list[TransformManifest | Transform] = []
+        self._outputs: list[OutputManifest | Output] = []
+
+        # Job runtime options (provider-specific)
+        self._options: dict[str, Any] = {}
 
     def kind(self, kind: str) -> Self:
         self._kind = kind
@@ -99,120 +108,82 @@ class JobBuilder:
         self._layer = layer
         return self
 
-    def runner(self, runner: Runner | dict[str, Any]) -> Self:
-        if isinstance(runner, Runner):
+    def runner(self, runner: Runner | RunnerManifest | dict[str, Any]) -> Self:
+        if isinstance(runner, (Runner, RunnerManifest)):
             self._runner = runner
         elif isinstance(runner, dict):
-            self._runner = runner
+            self._runner = RunnerManifest.model_validate(runner)
         else:
             raise InvalidInputError(f"Invalid runner definition: {type(runner)}")
 
         return self
 
-    def inputs(self, *values: Input | dict[str, Any]) -> Self:
+    def inputs(self, *values: Input | InputManifest | dict[str, Any]) -> Self:
         for value in values:
-            if isinstance(value, Input):
-                operator = value
-            elif isinstance(value, dict):
-                operator = value
-            else:
-                raise InvalidInputError(f"Invalid input definition: {type(value)}")
+            match value:
+                case Input() | InputManifest():
+                    operator = value
+                case dict():
+                    operator = InputManifest.model_validate(value)
+                case _:
+                    raise InvalidInputError(f"Invalid input definition: {type(value)}")
             self._inputs.append(operator)
 
         return self
 
-    def transforms(self, *values: Transform | dict[str, Any]) -> Self:
+    def transforms(self, *values: Transform | TransformManifest | dict[str, Any]) -> Self:
         for value in values:
-            if isinstance(value, Transform):
-                operator = value
-            elif isinstance(value, dict):
-                operator = value
-            else:
-                raise InvalidInputError(f"Invalid transform definition: {type(value)}")
+            match value:
+                case Transform() | TransformManifest():
+                    operator = value
+                case dict():
+                    operator = TransformManifest.model_validate(value)
+                case _:
+                    raise InvalidInputError(f"Invalid transform definition: {type(value)}")
             self._transforms.append(operator)
 
         return self
 
-    def outputs(self, *values: Output | dict[str, Any]) -> Self:
+    def outputs(self, *values: Output | OutputManifest | dict[str, Any]) -> Self:
         for value in values:
-            if isinstance(value, Output):
-                operator = value
-            elif isinstance(value, dict):
-                operator = value
-            else:
-                raise InvalidInputError(f"Invalid output definition: {type(value)}")
+            match value:
+                case Output() | OutputManifest():
+                    operator = value
+                case dict():
+                    operator = OutputManifest.model_validate(value)
+                case _:
+                    raise InvalidInputError(f"Invalid output definition: {type(value)}")
             self._outputs.append(operator)
 
         return self
 
     def set(self, field: str, value: Any) -> Self:
-        setter = getattr(self, field, None)
-        if callable(setter) and not field.startswith("_"):
-            if value is not None:
-                setter(value)
-        else:
-            raise InvalidInputError(f"Field `{field}` is not a valid builder attribute.")
+        setter = try_get_public_setter(self, field)
+
+        if setter is not None:
+            if isinstance(value, list):
+                return setter(*value)
+            return setter(value)
+
+        self._options[field] = value
         return self
 
     def from_manifest(self, manifest: JobManifest) -> Self:
         for field in JobManifest.model_fields:
-            if field not in ("runner", "inputs", "transforms", "outputs"):
-                self.set(field, getattr(manifest, field))
+            self.set(field, getattr(manifest, field))
 
-        self.runner(
-            manifest.runner.model_dump(),
-        )
-
-        self.inputs(
-            *[
-                {"name": field, **operator.model_dump()}
-                for field, operator in manifest.inputs.items()
-            ]
-        )
-        self.transforms(
-            *[
-                {"name": field, **operator.model_dump()}
-                for field, operator in manifest.transforms.items()
-            ]
-        )
-        self.outputs(
-            *[
-                {"name": field, **operator.model_dump()}
-                for field, operator in manifest.outputs.items()
-            ]
-        )
+        self._options.update(manifest.model_extra)
         return self
 
     def build(self) -> Job:
         if self._built:
             raise TiozinUnexpectedError("The builder can only be used once")
 
-        self._plugin_factory.setup()
+        plugin_factory = PluginFactory()
+        plugin_factory.setup()
 
-        runner = (
-            self._plugin_factory.get_runner(**self._runner)
-            if isinstance(self._runner, dict)
-            else self._runner
-        )
-
-        inputs = [
-            self._plugin_factory.get_input(**operator) if isinstance(operator, dict) else operator
-            for operator in self._inputs
-        ]
-
-        transforms = [
-            self._plugin_factory.get_transform(**operator)
-            if isinstance(operator, dict)
-            else operator
-            for operator in self._transforms
-        ]
-
-        outputs = [
-            self._plugin_factory.get_output(**operator) if isinstance(operator, dict) else operator
-            for operator in self._outputs
-        ]
-
-        job = self._plugin_factory.get_job(
+        job = plugin_factory.load_job(
+            # identity
             kind=self._kind,
             name=self._name,
             description=self._description,
@@ -220,17 +191,23 @@ class JobBuilder:
             maintainer=self._maintainer,
             cost_center=self._cost_center,
             labels=self._labels,
+            # taxonomy
             org=self._org,
             region=self._region,
             domain=self._domain,
             product=self._product,
             model=self._model,
             layer=self._layer,
-            runner=runner,
-            inputs=inputs,
-            transforms=transforms,
-            outputs=outputs,
+            # pipeline
+            runner=plugin_factory.load_step(self._runner),
+            inputs=[plugin_factory.load_step(m) for m in self._inputs],
+            transforms=[plugin_factory.load_step(m) for m in self._transforms],
+            outputs=[plugin_factory.load_step(m) for m in self._outputs],
+            **self._options,
         )
+
+        if self._options:
+            self._logger.warning(f"Unplanned job properties: {list(self._options.keys())}")
 
         self._built = True
         return job
