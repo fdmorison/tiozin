@@ -10,21 +10,24 @@ compact_job = dict(
     runner={
         "kind": "TestRunner",
     },
-    inputs={
-        "read_something": {
+    inputs=[
+        {
             "kind": "TestInput",
+            "name": "read_something",
         }
-    },
-    transforms={
-        "transform_something": {
+    ],
+    transforms=[
+        {
             "kind": "TestTransform",
+            "name": "transform_something",
         }
-    },
-    outputs={
-        "write_something": {
+    ],
+    outputs=[
+        {
             "kind": "TestOutput",
+            "name": "write_something",
         }
-    },
+    ],
 )
 
 
@@ -44,6 +47,7 @@ expanded_job = dict(
     layer="test",
     runner=dict(
         kind="TestRunner",
+        name=None,
         streaming=False,
         description=None,
         org=None,
@@ -53,9 +57,10 @@ expanded_job = dict(
         model=None,
         layer=None,
     ),
-    inputs=dict(
-        read_something=dict(
+    inputs=[
+        dict(
             kind="TestInput",
+            name="read_something",
             description=None,
             org=None,
             region=None,
@@ -67,10 +72,11 @@ expanded_job = dict(
             schema_subject=None,
             schema_version=None,
         )
-    ),
-    transforms=dict(
-        transform_something=dict(
+    ],
+    transforms=[
+        dict(
             kind="TestTransform",
+            name="transform_something",
             description=None,
             org=None,
             region=None,
@@ -79,10 +85,11 @@ expanded_job = dict(
             model=None,
             layer=None,
         )
-    ),
-    outputs=dict(
-        write_something=dict(
+    ],
+    outputs=[
+        dict(
             kind="TestOutput",
+            name="write_something",
             description=None,
             org=None,
             region=None,
@@ -91,5 +98,5 @@ expanded_job = dict(
             model=None,
             layer=None,
         )
-    ),
+    ],
 )

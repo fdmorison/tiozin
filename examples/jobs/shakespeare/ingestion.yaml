@@ -17,15 +17,15 @@ runner:
   kind: SparkRunner
 
 inputs:
-  load_poems:
-    kind: SparkFileInput
+  - kind: SparkFileInput
+    name: load_poems
     path: ./example/data/{{product}}
 
 transforms:
-  add_metadata:
-    kind: SparkMetadataTransform
+  - kind: SparkMetadataTransform
+    name: add_metadata
 
 outputs:
-  save_poems:
-    kind: SparkFileOutput
+  - kind: SparkFileOutput
+    name: save_poems
     path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}

@@ -10,19 +10,22 @@
   "runner": {
     "kind": "TestRunner"
   },
-  "inputs": {
-    "read_something": {
-      "kind": "TestInput"
+  "inputs": [
+    {
+      "kind": "TestInput",
+      "name": "read_something"
     }
-  },
-  "transforms": {
-    "transform_something": {
-      "kind": "TestTransform"
+  ],
+  "transforms": [
+    {
+      "kind": "TestTransform",
+      "name": "transform_something"
     }
-  },
-  "outputs": {
-    "write_something": {
-      "kind": "TestOutput"
+  ],
+  "outputs": [
+    {
+      "kind": "TestOutput",
+      "name": "write_something"
     }
-  }
+  ]
 }
