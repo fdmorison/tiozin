@@ -1,0 +1,33 @@
+kind: LinearJob
+name: example_job
+description: |
+  Minimal example job demonstrating a basic ETL pipeline
+  using no-op operators.
+
+org: tiozin
+region: europe
+domain: marketing
+product: user_events
+model: order_completed
+layer: refined
+
+unplanned_field: 12345
+
+runner:
+  kind: NoOpRunner
+  streaming: false
+
+inputs:
+  - kind: NoOpInput
+    name: load_products
+    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{today}}
+
+transforms:
+  - kind: NoOpTransform
+    name: normalize_products
+    strategy: standardize_fields
+
+outputs:
+  - kind: NoOpOutput
+    name: save_products
+    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
