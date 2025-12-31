@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Generic, TypeVar, Unpack
 
 from tiozin.api import Input, Operator, OperatorKwargs, Output, Plugable, Runner, Transform
-from tiozin.exceptions import InvalidInputError
+from tiozin.exceptions import RequiredArgumentError
 
 if TYPE_CHECKING:
     from tiozin.assembly.builder import JobBuilder
@@ -31,27 +31,22 @@ class Job(Plugable, Operator, Generic[TData]):
 
     def __init__(
         self,
-        name: str,
-        description: str | None,
-        *,
-        runner: Runner,
-        inputs: list[Input],
-        transforms: list[Transform] | None,
-        outputs: list[Output] | None,
-        owner: str | None = None,
-        maintainer: str | None = None,
-        cost_center: str | None = None,
-        labels: dict[str, str] | None = None,
+        owner: str = None,
+        maintainer: str = None,
+        cost_center: str = None,
+        labels: dict[str, str] = None,
+        runner: Runner = None,
+        inputs: list[Input] = None,
+        transforms: list[Transform] = None,
+        outputs: list[Output] = None,
         **options: Unpack[OperatorKwargs],
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(_require_taxonomy=True, **options)
 
-        if not runner:
-            raise InvalidInputError("Job must have a runner")
-
-        if not inputs and not outputs:
-            raise InvalidInputError("Job must have at least one input or output")
-
+        RequiredArgumentError.raise_if_missing(
+            runner=runner,
+            inputs=inputs,
+        )
         self.maintainer = maintainer
         self.cost_center = cost_center
         self.owner = owner

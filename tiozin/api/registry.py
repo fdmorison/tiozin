@@ -16,13 +16,8 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
     Subclasses define storage and retrieval implementation.
     """
 
-    def __init__(
-        self,
-        name: str | None = None,
-        description: str | None = None,
-        **options,
-    ) -> None:
-        super().__init__(name, description, **options)
+    def __init__(self, **options) -> None:
+        super().__init__(**options)
         self.registry_kind = helpers.detect_base_kind(self, Registry)
         self.ready = False
 

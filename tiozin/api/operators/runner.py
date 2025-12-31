@@ -26,12 +26,14 @@ class Runner(Plugable, Operator):
 
     def __init__(
         self,
-        name: str | None = None,
-        description: str | None = None,
+        name: str = None,
         streaming: bool = False,
         **options: Unpack[OperatorKwargs],
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(
+            name=name or type(self).__name__,
+            **options,
+        )
         self.streaming = streaming
 
     @abstractmethod
