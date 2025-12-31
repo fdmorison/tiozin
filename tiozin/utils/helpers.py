@@ -112,7 +112,7 @@ def try_get(obj: Any, field: str, default: Any = None) -> Any:
     return getattr(obj, field, default)
 
 
-def try_get_public_setter(cls: type, method_name: str) -> Callable | None:
+def try_get_public_setter(obj: Any, method_name: str) -> Callable | None:
     """
     Get a method if it's a valid public setter, otherwise return None.
 
@@ -122,12 +122,12 @@ def try_get_public_setter(cls: type, method_name: str) -> Callable | None:
     if method_name.startswith("_"):
         return None
 
-    method = getattr(cls, method_name, None)
+    method = getattr(obj, method_name, None)
     if not callable(method):
         return None
 
     sig = inspect.signature(method)
-    if len(sig.parameters) != 2:
+    if len(sig.parameters) != 1:
         return None
 
     return method
