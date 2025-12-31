@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Optional, Unpack
+from typing import Any, Unpack
 
 from .. import Context, Operator, OperatorKwargs, Plugable
 
@@ -26,8 +26,8 @@ class Runner(Plugable, Operator):
 
     def __init__(
         self,
-        name: str,
-        description: Optional[str] = None,
+        name: str | None = None,
+        description: str | None = None,
         streaming: bool = False,
         **options: Unpack[OperatorKwargs],
     ) -> None:

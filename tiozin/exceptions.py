@@ -1,4 +1,4 @@
-from typing import Any, Optional, Self
+from typing import Any, Self
 
 from pydantic import ValidationError
 from ruamel.yaml.error import MarkedYAMLError
@@ -22,9 +22,7 @@ class TiozinErrorMixin:
     message: str = None
     http_status: int = None
 
-    def __init__(
-        self, message: Optional[str] = None, *, code: Optional[str] = None, **options
-    ) -> None:
+    def __init__(self, message: str | None = None, *, code: str | None = None, **options) -> None:
         self.code = code or type(self).__name__
         self.message = (message or self.message).format(code=code, **options)
         super().__init__(self.message)
