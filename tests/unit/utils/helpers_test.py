@@ -372,7 +372,7 @@ def test_try_get_public_setter_should_return_method():
             pass
 
     # Act
-    result = try_get_public_setter(TestClass, "set_value")
+    result = try_get_public_setter(TestClass(), "set_value")
 
     # Assert
     assert callable(result)
@@ -385,7 +385,7 @@ def test_try_get_public_setter_should_return_method_when_varargs():
             pass
 
     # Act
-    result = try_get_public_setter(TestClass, "input")
+    result = try_get_public_setter(TestClass(), "input")
 
     # Assert
     assert callable(result)
@@ -398,7 +398,7 @@ def test_try_get_public_setter_should_return_none_when_multiple_fixed_parameters
             pass
 
     # Act
-    result = try_get_public_setter(TestClass, "set_values")
+    result = try_get_public_setter(TestClass(), "set_values")
 
     # Assert
     assert result is None
@@ -411,7 +411,7 @@ def test_try_get_public_setter_should_return_none_when_no_parameters():
             pass
 
     # Act
-    result = try_get_public_setter(TestClass, "get_value")
+    result = try_get_public_setter(TestClass(), "get_value")
 
     # Assert
     assert result is None
@@ -424,7 +424,7 @@ def test_try_get_public_setter_should_return_none_when_private():
             pass
 
     # Act
-    result = try_get_public_setter(TestClass, "_set_value")
+    result = try_get_public_setter(TestClass(), "_set_value")
 
     # Assert
     assert result is None
@@ -436,7 +436,7 @@ def test_try_get_public_setter_should_return_none_when_not_callable():
         value = 42
 
     # Act
-    result = try_get_public_setter(TestClass, "value")
+    result = try_get_public_setter(TestClass(), "value")
 
     # Assert
     assert result is None
@@ -448,7 +448,7 @@ def test_try_get_public_setter_should_return_none_when_method_not_found():
         pass
 
     # Act
-    result = try_get_public_setter(TestClass, "set_value")
+    result = try_get_public_setter(TestClass(), "set_value")
 
     # Assert
     assert result is None

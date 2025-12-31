@@ -90,8 +90,6 @@ class JobManifest(Manifest):
     Can be stored, versioned, and transferred as code.
     """
 
-    model_config = ConfigDict(extra="ignore")
-
     # Identity & Ownership
     name: str = Field(description=docs.NAME)
     owner: str | None = Field(None, description=docs.OWNER)
