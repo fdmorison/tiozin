@@ -16,6 +16,7 @@ from tiozin.exceptions import (
     PluginKindError,
     PluginNotFoundError,
     PolicyViolationError,
+    RequiredArgumentError,
     SchemaError,
     SchemaNotFoundError,
     SchemaViolationError,
@@ -371,6 +372,52 @@ def test_policy_violation_error_should_use_default_message_when_none_provided():
     actual = error.message
     expected = "TestPolicy: Execution was denied."
     assert actual == expected
+
+
+# ============================================================================
+# Testing RequiredArgumentError
+# ============================================================================
+def test_raise_if_missing_should_not_raise_when_fields_are_set():
+    RequiredArgumentError.raise_if_missing(
+        name="test",
+        org="acme",
+        domain="sales",
+    )
+
+
+def test_raise_if_missing_should_not_raise_when_disabled():
+    RequiredArgumentError.raise_if_missing(
+        disable_=True,
+        name=None,
+        org="",
+        domain=None,
+    )
+
+
+def test_raise_if_missing_should_not_raise_when_field_is_excluded():
+    RequiredArgumentError.raise_if_missing(
+        exclude_=["name"],
+        name=None,
+        org="acme",
+    )
+
+
+@pytest.mark.parametrize(
+    "empty_value",
+    [None, "", [], {}, tuple(), set()],
+)
+def test_raise_if_missing_should_raise_when_field_is_null_or_empty(empty_value):
+    with pytest.raises(RequiredArgumentError, match="Missing required fields: 'name'"):
+        RequiredArgumentError.raise_if_missing(name=empty_value, org="acme")
+
+
+def test_raise_if_missing_should_raise_when_field_is_not_excluded():
+    with pytest.raises(RequiredArgumentError, match="Missing required fields: 'org'"):
+        RequiredArgumentError.raise_if_missing(
+            exclude_=["name"],
+            name=None,
+            org=None,
+        )
 
 
 # ============================================================================

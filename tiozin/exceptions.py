@@ -238,3 +238,42 @@ class PolicyViolationError(InvalidInputError):
 
     def __init__(self, policy: type, message: str = None) -> None:
         super().__init__(policy=policy.__name__, detail=message or "Execution was denied")
+
+
+class RequiredArgumentError(InvalidInputError):
+    NULL_OR_EMPTY = [None, "", [], {}, tuple(), set()]
+
+    def __init__(self, message: str, **options) -> None:
+        super().__init__(message, **options)
+
+    @classmethod
+    def raise_if_missing(
+        cls,
+        disable_: bool = False,
+        exclude_: list[str] | None = None,
+        **fields,
+    ) -> Self:
+        """
+        Validates that required fields are not null or empty.
+
+        Args:
+            disable_: If True, skip validation entirely
+            exclude_: List of field names to skip validation
+            **fields: Field name-value pairs to validate
+
+        Raises:
+            RequiredArgumentError: If any required field is missing or empty
+        """
+        if disable_:
+            return
+
+        exclude_ = exclude_ or []
+        missing = [
+            argument
+            for argument, value in fields.items()
+            if value in cls.NULL_OR_EMPTY and argument not in exclude_
+        ]
+        if missing:
+            fields_str = ", ".join(f"'{f}'" for f in missing)
+            raise cls(f"Missing required fields: {fields_str}")
+        return cls
