@@ -109,7 +109,7 @@ class Resource(ABC):
 
     def __repr__(self) -> str:
         """Returns a concise string representation of the resource."""
-        return f'"{self.name}"'
+        return f"{self.__class__.__name__}({self.__dict__})"
 
     def __hash__(self) -> int:
         """
