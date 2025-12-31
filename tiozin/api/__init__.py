@@ -3,12 +3,20 @@
 
 from .typehint import OperatorKwargs as OperatorKwargs
 
-from .metadata.job_manifest import JobManifest as JobManifest
-
 from .resource import Resource as Resource
 from .plugable import Plugable as Plugable
 from .registry import Registry as Registry
 from .operator import Operator as Operator
+
+from .metadata.job_manifest import JobManifest as JobManifest
+
+from .registries.job_registry import JobRegistry as JobRegistry
+from .registries.lineage_registry import LineageRegistry as LineageRegistry
+from .registries.metric_registry import MetricRegistry as MetricRegistry
+from .registries.schema_registry import SchemaRegistry as SchemaRegistry
+from .registries.secret_registry import SecretRegistry as SecretRegistry
+from .registries.setting_registry import SettingRegistry as SettingRegistry
+from .registries.transaction_registry import TransactionRegistry as TransactionRegistry
 
 from .context import Context as Context
 

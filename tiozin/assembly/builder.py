@@ -199,10 +199,10 @@ class JobBuilder:
             model=self._model,
             layer=self._layer,
             # pipeline
-            runner=plugin_factory.load_step(self._runner),
-            inputs=[plugin_factory.load_step(m) for m in self._inputs],
-            transforms=[plugin_factory.load_step(m) for m in self._transforms],
-            outputs=[plugin_factory.load_step(m) for m in self._outputs],
+            runner=plugin_factory.load_manifest(self._runner),
+            inputs=[plugin_factory.load_manifest(m) for m in self._inputs],
+            transforms=[plugin_factory.load_manifest(m) for m in self._transforms],
+            outputs=[plugin_factory.load_manifest(m) for m in self._outputs],
             **self._options,
         )
 

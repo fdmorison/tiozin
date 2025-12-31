@@ -5,8 +5,8 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
+from tiozin.api import JobRegistry
 from tiozin.api.metadata.job_manifest import JobManifest
-from tiozin.api.registries.job_registry import JobRegistry
 from tiozin.exceptions import JobManifestError
 
 

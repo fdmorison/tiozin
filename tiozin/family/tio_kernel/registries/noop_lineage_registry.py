@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api.registries import LineageRegistry
+from tiozin.api import LineageRegistry
 
 
 class NoOpLineageRegistry(LineageRegistry):

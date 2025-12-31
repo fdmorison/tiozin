@@ -1,8 +1,8 @@
-from tiozin.api import Registry
-from tiozin.api.registries import (
+from tiozin.api import (
     JobRegistry,
     LineageRegistry,
     MetricRegistry,
+    Registry,
     SchemaRegistry,
     SecretRegistry,
     SettingRegistry,
