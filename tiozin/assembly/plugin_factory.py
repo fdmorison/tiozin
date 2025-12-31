@@ -170,7 +170,3 @@ class PluginFactory(Resource):
                 return self.load_plugin(kind, Output, **args)
             case _:
                 raise TiozinUnexpectedError(f"Unsupported manifest: {type(manifest).__name__}")
-
-
-# Singleton Instance
-plugin_factory = PluginFactory()
