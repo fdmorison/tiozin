@@ -1,4 +1,5 @@
 from tiozin.api.resource import Resource
+from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import utcnow
 
 
@@ -34,17 +35,29 @@ class Operator(Resource):
 
     def __init__(
         self,
-        name: str,
-        description: str,
-        org: str,
-        region: str,
-        domain: str,
-        layer: str,
-        product: str,
-        model: str,
+        name: str = None,
+        org: str = None,
+        region: str = None,
+        domain: str = None,
+        layer: str = None,
+        product: str = None,
+        model: str = None,
+        _require_taxonomy: bool = False,
         **options,
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(name, **options)
+
+        RequiredArgumentError.raise_if_missing(
+            name=name,
+        ).raise_if_missing(
+            org=org,
+            region=region,
+            domain=domain,
+            layer=layer,
+            product=product,
+            model=model,
+            disable_=not _require_taxonomy,
+        )
 
         self.org = org
         self.region = region

@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api.registries import SecretRegistry
+from tiozin.api import SecretRegistry
 
 
 class NoOpSecretRegistry(SecretRegistry):

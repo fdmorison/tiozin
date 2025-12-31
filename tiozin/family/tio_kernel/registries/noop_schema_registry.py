@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api.registries import SchemaRegistry
+from tiozin.api import SchemaRegistry
 
 
 class NoOpSchemaRegistry(SchemaRegistry):

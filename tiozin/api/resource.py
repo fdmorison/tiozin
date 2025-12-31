@@ -30,7 +30,7 @@ class Resource(ABC):
     def __init__(
         self,
         name: str = None,
-        description: str | None = None,
+        description: str = None,
         **options,
     ) -> None:
         self.id = str(uuid7())

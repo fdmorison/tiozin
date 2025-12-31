@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api.registries import SettingRegistry
+from tiozin.api import SettingRegistry
 
 
 class NoOpSettingRegistry(SettingRegistry):

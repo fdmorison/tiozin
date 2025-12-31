@@ -145,9 +145,9 @@ class PluginFactory(Resource):
         """
         return self.load_plugin(kind, Job, **args)
 
-    def load_step(self, manifest: Manifest | Operator) -> Operator:
+    def load_manifest(self, manifest: Manifest | Operator) -> Operator:
         """
-        Load and instantiate a pipeline step from a manifest.
+        Load and instantiate a job step from a manifest.
 
         This method resolves and instantiates the appropriate operator plugin
         (Input, Output, Transform, or Runner) based on the manifest type.

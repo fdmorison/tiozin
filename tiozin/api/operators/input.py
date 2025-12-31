@@ -31,14 +31,12 @@ class Input(Plugable, Operator, Generic[TData]):
 
     def __init__(
         self,
-        name: str,
-        description: str | None = None,
         schema: str | None = None,
         schema_subject: str | None = None,
         schema_version: str | None = None,
         **options: Unpack[OperatorKwargs],
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(**options)
         self.schema = schema
         self.schema_subject = schema_subject
         self.schema_version = schema_version
