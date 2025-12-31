@@ -47,17 +47,17 @@ class Job(Plugable, Operator, Generic[TData]):
         super().__init__(name, description, **options)
 
         if not runner:
-            raise InvalidInputError("Tiozin jobs should have a runner")
+            raise InvalidInputError("Job must have a runner")
 
-        if not inputs:
-            raise InvalidInputError("Tiozin jobs should have at least one input step")
+        if not inputs and not outputs:
+            raise InvalidInputError("Job must have at least one input or output")
 
         self.maintainer = maintainer
         self.cost_center = cost_center
         self.owner = owner
-        self.labels = labels or []
+        self.labels = labels or {}
         self.runner = runner
-        self.inputs = inputs
+        self.inputs = inputs or []
         self.transforms = transforms or []
         self.outputs = outputs or []
 
