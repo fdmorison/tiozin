@@ -1,8 +1,15 @@
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Output, Plugable, Registry, Resource, Runner, Transform
+from tiozin.api import Input, Job, Operator, Output, Plugable, Resource, Runner, Transform
+from tiozin.api.metadata.job_manifest import (
+    InputManifest,
+    Manifest,
+    OutputManifest,
+    RunnerManifest,
+    TransformManifest,
+)
 from tiozin.api.plugable import PluginMetadata
-from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError
+from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
 from tiozin.utils import helpers
 
 from .scanner import PluginScanner
@@ -90,7 +97,7 @@ class PluginFactory(Resource):
         self._index[metadata.python_kind] = plugin
         self._plugins.add(plugin)
 
-    def get(self, kind: str, plugin_kind: type[T] | None = None, **args) -> Plugable | T:
+    def load_plugin(self, kind: str, plugin_kind: type[T] | None = None, **args) -> Plugable | T:
         """
         Resolve and loads a plugin by kind.
 
@@ -129,23 +136,40 @@ class PluginFactory(Resource):
 
         return plugin(**args)
 
-    def get_job(self, kind: str, **args) -> Registry:
-        return self.get(kind, Job, **args)
+    def load_job(self, kind: str, **args) -> Job:
+        """
+        Load and instantiate a Job plugin by kind.
 
-    def get_input(self, kind: str, **args) -> Input:
-        return self.get(kind, Input, **args)
+        This method resolves the Job plugin associated with the given kind and
+        returns a new Job instance using the provided arguments.
+        """
+        return self.load_plugin(kind, Job, **args)
 
-    def get_output(self, kind: str, **args) -> Output:
-        return self.get(kind, Output, **args)
+    def load_step(self, manifest: Manifest | Operator) -> Operator:
+        """
+        Load and instantiate a pipeline step from a manifest.
 
-    def get_transform(self, kind: str, **args) -> Transform:
-        return self.get(kind, Transform, **args)
+        This method resolves and instantiates the appropriate operator plugin
+        (Input, Output, Transform, or Runner) based on the manifest type.
+        If an operator instance is provided, it is returned unchanged.
+        """
+        if isinstance(manifest, Operator):
+            return manifest
 
-    def get_runner(self, kind: str, **args) -> Runner:
-        return self.get(kind, Runner, **args)
+        args = manifest.model_dump()
+        kind = args.pop("kind")
 
-    def get_registry(self, kind: str, **args) -> Registry:
-        return self.get(kind, Registry, **args)
+        match manifest:
+            case RunnerManifest():
+                return self.load_plugin(kind, Runner, **args)
+            case InputManifest():
+                return self.load_plugin(kind, Input, **args)
+            case TransformManifest():
+                return self.load_plugin(kind, Transform, **args)
+            case OutputManifest():
+                return self.load_plugin(kind, Output, **args)
+            case _:
+                raise TiozinUnexpectedError(f"Unsupported manifest: {type(manifest).__name__}")
 
 
 # Singleton Instance

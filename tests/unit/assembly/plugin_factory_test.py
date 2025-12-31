@@ -1,9 +1,16 @@
 import pytest
 
 from tiozin.api import Output
+from tiozin.api.metadata.job_manifest import (
+    InputManifest,
+    Manifest,
+    OutputManifest,
+    RunnerManifest,
+    TransformManifest,
+)
 from tiozin.assembly.plugin_factory import PluginMetadata, plugin_factory
-from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError
-from tiozin.family.tio_kernel import NoOpInput, NoOpTransform
+from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
+from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
 
 
 def test_register_should_store_plugin_class():
@@ -112,7 +119,7 @@ def test_register_should_group_plugins_with_same_name():
 
 
 # ============================================================================
-# get()
+# load()
 # ============================================================================
 @pytest.mark.parametrize(
     "plugin,kind",
@@ -122,12 +129,12 @@ def test_register_should_group_plugins_with_same_name():
         (NoOpInput, "tiozin.family.tio_kernel.inputs.noop_input.NoOpInput"),
     ],
 )
-def test_get_should_return_plugin_instance(plugin: type, kind: str):
+def test_load_should_return_plugin_instance(plugin: type, kind: str):
     # Arrange
     plugin_factory.register("tio_john", plugin)
 
     # Act
-    result = plugin_factory.get(
+    result = plugin_factory.load_plugin(
         kind,
         name="test",
         description="test",
@@ -143,22 +150,22 @@ def test_get_should_return_plugin_instance(plugin: type, kind: str):
     assert isinstance(result, plugin)
 
 
-def test_get_should_fail_when_plugin_not_found():
+def test_load_should_fail_when_plugin_not_found():
     # Act/Assert
     with pytest.raises(PluginNotFoundError):
-        plugin_factory.get("NonExistentPlugin")
+        plugin_factory.load_plugin("NonExistentPlugin")
 
 
-def test_get_should_fail_when_plugin_kind_mismatch():
+def test_load_should_fail_when_plugin_kind_mismatch():
     # Arrange
     plugin_factory.register("tio_john", NoOpInput)
 
     # Act/Assert
     with pytest.raises(PluginNotFoundError):
-        plugin_factory.get("NoOpInput", plugin_kind=Output)
+        plugin_factory.load_plugin("NoOpInput", plugin_kind=Output)
 
 
-def test_get_should_fail_when_multiple_plugins_with_same_name():
+def test_load_should_fail_when_multiple_plugins_with_same_name():
     # Arrange
     class CustomInput1(NoOpInput):
         pass
@@ -174,15 +181,15 @@ def test_get_should_fail_when_multiple_plugins_with_same_name():
 
     # Act/Assert
     with pytest.raises(AmbiguousPluginError):
-        plugin_factory.get("AmbiguousInput")
+        plugin_factory.load_plugin("AmbiguousInput")
 
 
-def test_get_should_pass_arguments_to_plugin_constructor():
+def test_load_should_pass_arguments_to_plugin_constructor():
     # Arrange
     plugin_factory.register("tio_john", NoOpTransform)
 
     # Act
-    plugin = plugin_factory.get(
+    plugin = plugin_factory.load_plugin(
         "NoOpTransform",
         name="my_transform",
         description="my description",
@@ -198,3 +205,140 @@ def test_get_should_pass_arguments_to_plugin_constructor():
     actual = (plugin.name, plugin.description, plugin.org)
     expected = ("my_transform", "my description", "acme")
     assert actual == expected
+
+
+# ============================================================================
+# load_step()
+# ============================================================================
+def test_load_step_should_return_operator_instance_unchanged():
+    # Arrange
+    operator = NoOpInput(
+        name="test",
+        description="test",
+        org="acme",
+        region="us",
+        domain="sales",
+        layer="raw",
+        product="revenue",
+        model="daily",
+    )
+
+    # Act
+    result = plugin_factory.load_step(operator)
+
+    # Assert
+    assert result is operator
+
+
+def test_load_step_should_load_runner_from_manifest():
+    # Arrange
+    plugin_factory.register("tio_kernel", NoOpRunner)
+    manifest = RunnerManifest(
+        kind="NoOpRunner",
+        name="test_runner",
+        description="test",
+        org="acme",
+        region="us",
+        domain="sales",
+        layer="raw",
+        product="revenue",
+        model="daily",
+    )
+
+    # Act
+    result = plugin_factory.load_step(manifest)
+
+    # Assert
+    assert isinstance(result, NoOpRunner)
+    assert result.name == "test_runner"
+
+
+def test_load_step_should_load_input_from_manifest():
+    # Arrange
+    plugin_factory.register("tio_kernel", NoOpInput)
+    manifest = InputManifest(
+        kind="NoOpInput",
+        name="test_input",
+        description="test",
+        org="acme",
+        region="us",
+        domain="sales",
+        layer="raw",
+        product="revenue",
+        model="daily",
+    )
+
+    # Act
+    result = plugin_factory.load_step(manifest)
+
+    # Assert
+    assert isinstance(result, NoOpInput)
+    assert result.name == "test_input"
+
+
+def test_load_step_should_load_transform_from_manifest():
+    # Arrange
+    plugin_factory.register("tio_kernel", NoOpTransform)
+    manifest = TransformManifest(
+        kind="NoOpTransform",
+        name="test_transform",
+        description="test",
+        org="acme",
+        region="us",
+        domain="sales",
+        layer="raw",
+        product="revenue",
+        model="daily",
+    )
+
+    # Act
+    result = plugin_factory.load_step(manifest)
+
+    # Assert
+    assert isinstance(result, NoOpTransform)
+    assert result.name == "test_transform"
+
+
+def test_load_step_should_load_output_from_manifest():
+    # Arrange
+    plugin_factory.register("tio_kernel", NoOpOutput)
+    manifest = OutputManifest(
+        kind="NoOpOutput",
+        name="test_output",
+        description="test",
+        org="acme",
+        region="us",
+        domain="sales",
+        layer="raw",
+        product="revenue",
+        model="daily",
+    )
+
+    # Act
+    result = plugin_factory.load_step(manifest)
+
+    # Assert
+    assert isinstance(result, NoOpOutput)
+    assert result.name == "test_output"
+
+
+def test_load_step_should_fail_for_unsupported_manifest():
+    # Arrange
+    class UnsupportedManifest(Manifest):
+        pass
+
+    manifest = UnsupportedManifest(
+        kind="Something",
+        name="test",
+        description="test",
+        org="acme",
+        region="us",
+        domain="sales",
+        layer="raw",
+        product="revenue",
+        model="daily",
+    )
+
+    # Act/Assert
+    with pytest.raises(TiozinUnexpectedError, match="Unsupported manifest"):
+        plugin_factory.load_step(manifest)
