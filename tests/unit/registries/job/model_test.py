@@ -59,9 +59,9 @@ def test_manifest_should_reject_job_without_taxonomy():
 def test_manifest_should_reject_job_without_steps():
     # Arrange
     data = deepcopy(compact_job)
-    data["inputs"] = {}
-    data["transforms"] = {}
-    data["outputs"] = {}
+    data["inputs"] = []
+    data["transforms"] = []
+    data["outputs"] = []
 
     # Act & Assert
     with pytest.raises(ValidationError, match="Job must have at least one Input step"):
@@ -71,29 +71,29 @@ def test_manifest_should_reject_job_without_steps():
 def test_manifest_should_accept_job_with_input_step_only():
     # Arrange
     data = deepcopy(compact_job)
-    data["transforms"] = {}
-    data["outputs"] = {}
+    data["transforms"] = []
+    data["outputs"] = []
 
     # Act
     manifest = JobManifest(**data)
 
     # Assert
-    actual = {
-        **manifest.inputs,
-        **manifest.transforms,
-        **manifest.outputs,
-    }
-    expected = {
-        "read_something": InputManifest(kind="TestInput"),
-    }
+    actual = [
+        *manifest.inputs,
+        *manifest.transforms,
+        *manifest.outputs,
+    ]
+    expected = [
+        InputManifest(kind="TestInput", name="read_something"),
+    ]
     assert actual == expected
 
 
 def test_manifest_should_reject_job_with_transform_step_only():
     # Arrange
     data = deepcopy(compact_job)
-    data["inputs"] = {}
-    data["outputs"] = {}
+    data["inputs"] = []
+    data["outputs"] = []
 
     # Act
     with pytest.raises(ValidationError, match="Job must have at least one Input step"):
@@ -103,8 +103,8 @@ def test_manifest_should_reject_job_with_transform_step_only():
 def test_manifest_should_reject_job_with_output_step_only():
     # Arrange
     data = deepcopy(compact_job)
-    data["inputs"] = {}
-    data["transforms"] = {}
+    data["inputs"] = []
+    data["transforms"] = []
 
     # Act
     with pytest.raises(ValidationError, match="Job must have at least one Input step"):

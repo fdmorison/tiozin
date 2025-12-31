@@ -66,26 +66,26 @@ def test_register_should_write_yaml_manifest(tmp_path: Path):
     expected = dedent(
         """
       kind: Job
+      name: test_job
       org: tiozin
       region: latam
       domain: quality
       product: test_cases
       model: some_case
       layer: test
-      name: test_job
       labels: {}
       runner:
         kind: TestRunner
         streaming: false
       inputs:
-        read_something:
-          kind: TestInput
+      - kind: TestInput
+        name: read_something
       transforms:
-        transform_something:
-          kind: TestTransform
+      - kind: TestTransform
+        name: transform_something
       outputs:
-        write_something:
-          kind: TestOutput
+      - kind: TestOutput
+        name: write_something
     """
     ).lstrip()
     assert actual == expected

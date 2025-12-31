@@ -19,6 +19,7 @@ class Manifest(BaseModel):
 
     # Identity
     kind: str = Field(description=docs.KIND)
+    name: str | None = Field(None, description=docs.MANIFEST_NAME)
     description: str | None = Field(None, description=docs.DESCRIPTION)
 
     # Business context inspired by Datamesh principles
@@ -55,6 +56,7 @@ class InputManifest(Manifest):
     Specifies how and where data is read into the pipeline.
     """
 
+    name: str = Field(description=docs.INPUT_NAME)
     schema: str | None = Field(None, description=docs.SCHEMA)
     schema_subject: str | None = Field(None, description=docs.SCHEMA_SUBJECT)
     schema_version: str | None = Field(None, description=docs.SCHEMA_VERSION)
@@ -67,6 +69,8 @@ class TransformManifest(Manifest):
     Specifies operations that modify or enrich data.
     """
 
+    name: str = Field(description=docs.TRANSFORM_NAME)
+
 
 class OutputManifest(Manifest):
     """
@@ -74,6 +78,8 @@ class OutputManifest(Manifest):
 
     Specifies where and how processed data is written.
     """
+
+    name: str = Field(description=docs.OUTPUT_NAME)
 
 
 class JobManifest(Manifest):
@@ -103,9 +109,9 @@ class JobManifest(Manifest):
 
     # Pipeline Components
     runner: RunnerManifest = Field(description=docs.RUNNER)
-    inputs: dict[str, InputManifest] = Field(description=docs.INPUTS)
-    transforms: dict[str, TransformManifest] = Field(description=docs.TRANSFORMS)
-    outputs: dict[str, OutputManifest] = Field(description=docs.OUTPUTS)
+    inputs: list[InputManifest] = Field(description=docs.INPUTS)
+    transforms: list[TransformManifest] = Field(description=docs.TRANSFORMS)
+    outputs: list[OutputManifest] = Field(description=docs.OUTPUTS)
 
     @model_validator(mode="after")
     def should_have_at_least_one_step(cls, model: JobManifest) -> JobManifest:
