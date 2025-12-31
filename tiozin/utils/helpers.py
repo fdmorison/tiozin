@@ -1,9 +1,10 @@
 import inspect
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -43,7 +44,7 @@ def utcnow() -> datetime:
     """
     Return the current UTC time as a timezone-aware datetime.
     """
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def default(value: T, default_: T) -> T:

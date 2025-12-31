@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, Optional, TypeVar, Unpack
+from typing import Generic, TypeVar, Unpack
 
 from .. import Context, Operator, OperatorKwargs, Plugable
 
@@ -32,10 +32,10 @@ class Input(Plugable, Operator, Generic[TData]):
     def __init__(
         self,
         name: str,
-        description: Optional[str] = None,
-        schema: Optional[str] = None,
-        schema_subject: Optional[str] = None,
-        schema_version: Optional[str] = None,
+        description: str | None = None,
+        schema: str | None = None,
+        schema_subject: str | None = None,
+        schema_version: str | None = None,
         **options: Unpack[OperatorKwargs],
     ) -> None:
         super().__init__(name, description, **options)

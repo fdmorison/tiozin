@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Unpack
+from typing import TYPE_CHECKING, Generic, TypeVar, Unpack
 
 from tiozin.api import Input, Operator, OperatorKwargs, Output, Plugable, Runner, Transform
 from tiozin.exceptions import InvalidInputError
@@ -32,16 +32,16 @@ class Job(Plugable, Operator, Generic[TData]):
     def __init__(
         self,
         name: str,
-        description: Optional[str],
+        description: str | None,
         *,
         runner: Runner,
         inputs: list[Input],
-        transforms: Optional[list[Transform]],
-        outputs: Optional[list[Output]],
-        owner: Optional[str] = None,
-        maintainer: Optional[str] = None,
-        cost_center: Optional[str] = None,
-        labels: Optional[dict[str, str]] = None,
+        transforms: list[Transform] | None,
+        outputs: list[Output] | None,
+        owner: str | None = None,
+        maintainer: str | None = None,
+        cost_center: str | None = None,
+        labels: dict[str, str] | None = None,
         **options: Unpack[OperatorKwargs],
     ) -> None:
         super().__init__(name, description, **options)

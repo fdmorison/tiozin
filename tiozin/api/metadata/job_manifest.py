@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from tiozin.exceptions import JobManifestError
@@ -21,15 +19,15 @@ class Manifest(BaseModel):
 
     # Identity
     kind: str = Field(description=docs.KIND)
-    description: Optional[str] = Field(None, description=docs.DESCRIPTION)
+    description: str | None = Field(None, description=docs.DESCRIPTION)
 
     # Business context inspired by Datamesh principles
-    org: Optional[str] = Field(None, description=docs.ORG)
-    region: Optional[str] = Field(None, description=docs.REGION)
-    domain: Optional[str] = Field(None, description=docs.DOMAIN)
-    product: Optional[str] = Field(None, description=docs.PRODUCT)
-    model: Optional[str] = Field(None, description=docs.MODEL)
-    layer: Optional[str] = Field(None, description=docs.LAYER)
+    org: str | None = Field(None, description=docs.ORG)
+    region: str | None = Field(None, description=docs.REGION)
+    domain: str | None = Field(None, description=docs.DOMAIN)
+    product: str | None = Field(None, description=docs.PRODUCT)
+    model: str | None = Field(None, description=docs.MODEL)
+    layer: str | None = Field(None, description=docs.LAYER)
 
     @classmethod
     def model_validate(cls, *args, **kwargs) -> None:
@@ -57,9 +55,9 @@ class InputManifest(Manifest):
     Specifies how and where data is read into the pipeline.
     """
 
-    schema: Optional[str] = Field(None, description=docs.SCHEMA)
-    schema_subject: Optional[str] = Field(None, description=docs.SCHEMA_SUBJECT)
-    schema_version: Optional[str] = Field(None, description=docs.SCHEMA_VERSION)
+    schema: str | None = Field(None, description=docs.SCHEMA)
+    schema_subject: str | None = Field(None, description=docs.SCHEMA_SUBJECT)
+    schema_version: str | None = Field(None, description=docs.SCHEMA_VERSION)
 
 
 class TransformManifest(Manifest):
@@ -90,10 +88,10 @@ class JobManifest(Manifest):
 
     # Identity & Ownership
     name: str = Field(description=docs.NAME)
-    owner: Optional[str] = Field(None, description=docs.OWNER)
-    maintainer: Optional[str] = Field(None, description=docs.MANTAINER)
-    cost_center: Optional[str] = Field(None, description=docs.COST_CENTER)
-    labels: Optional[dict[str, str]] = Field(default_factory=dict, description=docs.LABELS)
+    owner: str | None = Field(None, description=docs.OWNER)
+    maintainer: str | None = Field(None, description=docs.MANTAINER)
+    cost_center: str | None = Field(None, description=docs.COST_CENTER)
+    labels: dict[str, str] | None = Field(default_factory=dict, description=docs.LABELS)
 
     # Business Taxonomy (required)
     org: str = Field(description=docs.JOB_ORG)

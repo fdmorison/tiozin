@@ -3,7 +3,6 @@ import re
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from importlib.metadata import EntryPoint
-from typing import Optional
 
 from tiozin.exceptions import PolicyViolationError
 
@@ -29,7 +28,7 @@ class PolicyDecision(StrEnum):
 class PolicyResult:
     policy: type
     decision: PolicyDecision
-    message: Optional[str] = None
+    message: str | None = None
 
     def ok(self) -> bool:
         if self.decision is PolicyDecision.DENY:

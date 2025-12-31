@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
@@ -463,19 +463,19 @@ def test_utcnow_should_return_timezone_aware_datetime():
 
     # Assert
     actual = result.tzinfo
-    expected = timezone.utc
+    expected = UTC
     assert actual == expected
 
 
 def test_utcnow_should_return_current_time():
     # Arrange
-    before = datetime.now(timezone.utc)
+    before = datetime.now(UTC)
 
     # Act
     result = utcnow()
 
     # Arrange
-    after = datetime.now(timezone.utc)
+    after = datetime.now(UTC)
 
     # Assert
     assert before <= result <= after

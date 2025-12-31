@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from tiozin.api.registries import SettingRegistry
 
@@ -14,7 +14,7 @@ class NoOpSettingRegistry(SettingRegistry):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def get(self, identifier: str, version: Optional[str] = None) -> Any:
+    def get(self, identifier: str, version: str | None = None) -> Any:
         return None
 
     def register(self, identifier: str, value: Any) -> None:

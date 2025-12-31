@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Self, Unpack
+from typing import Any, Self, Unpack
 
 from uuid_utils import uuid7
 
@@ -30,7 +30,7 @@ class Resource(ABC):
     def __init__(
         self,
         name: str = None,
-        description: Optional[str] = None,
+        description: str | None = None,
         **options,
     ) -> None:
         self.id = str(uuid7())

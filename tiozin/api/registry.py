@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from tiozin.api import Plugable, Resource
 from tiozin.exceptions import NotFoundError
@@ -18,8 +18,8 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
+        name: str | None = None,
+        description: str | None = None,
         **options,
     ) -> None:
         super().__init__(name, description, **options)
@@ -36,7 +36,7 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
         return None
 
     @abstractmethod
-    def get(self, identifier: str, version: Optional[str] = None) -> TMetadata:
+    def get(self, identifier: str, version: str | None = None) -> TMetadata:
         """
         Retrieve metadata by identifier.
 
@@ -48,7 +48,7 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
     def register(self, identifier: str, value: TMetadata) -> None:
         """Register metadata in the registry."""
 
-    def safe_get(self, identifier: str) -> Optional[TMetadata]:
+    def safe_get(self, identifier: str) -> TMetadata | None:
         """Retrieve metadata or return None if not found."""
         try:
             return self.get(identifier)
