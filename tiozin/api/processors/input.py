@@ -1,12 +1,14 @@
 from abc import abstractmethod
-from typing import Generic, TypeVar, Unpack
+from typing import Generic, TypeVar
 
-from .. import Context, Plugable, Processor, ProcessorKwargs
+from tiozin.exceptions import RequiredArgumentError
+
+from .. import Context, Executable, Plugable, Resource
 
 TData = TypeVar("TData")
 
 
-class Input(Plugable, Processor, Generic[TData]):
+class Input(Plugable, Executable, Resource, Generic[TData]):
     """
     Input operators ingest data into a pipeline.
 
@@ -31,15 +33,34 @@ class Input(Plugable, Processor, Generic[TData]):
 
     def __init__(
         self,
-        schema: str | None = None,
-        schema_subject: str | None = None,
-        schema_version: str | None = None,
-        **options: Unpack[ProcessorKwargs],
+        name: str = None,
+        description: str = None,
+        schema: str = None,
+        schema_subject: str = None,
+        schema_version: str = None,
+        org: str = None,
+        region: str = None,
+        domain: str = None,
+        layer: str = None,
+        product: str = None,
+        model: str = None,
+        **options,
     ) -> None:
-        super().__init__(**options)
+        super().__init__(name, description, **options)
+
+        RequiredArgumentError.raise_if_missing(
+            name=name,
+        )
         self.schema = schema
         self.schema_subject = schema_subject
         self.schema_version = schema_version
+
+        self.org = org
+        self.region = region
+        self.domain = domain
+        self.layer = layer
+        self.product = product
+        self.model = model
 
     @abstractmethod
     def read(self, context: Context) -> TData:
@@ -48,3 +69,9 @@ class Input(Plugable, Processor, Generic[TData]):
     def execute(self, context: Context) -> TData:
         """Template method that delegates to read()."""
         return self.read(context)
+
+    def setup(self) -> None:
+        return None
+
+    def teardown(self) -> None:
+        return None

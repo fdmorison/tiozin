@@ -11,7 +11,7 @@ Public API for building data pipelines with Tiozin.
 from tiozin.api import Executable, Plugable
 
 # Bases
-from tiozin.api import Resource, Processor, Registry
+from tiozin.api import Resource, Registry
 
 # Metadata
 from tiozin.api import JobManifest

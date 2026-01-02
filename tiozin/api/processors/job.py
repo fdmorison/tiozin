@@ -1,13 +1,13 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVar, Unpack
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin.api import (
     Context,
+    Executable,
     Input,
     Output,
     Plugable,
-    Processor,
-    ProcessorKwargs,
+    Resource,
     Runner,
     Transform,
 )
@@ -16,10 +16,10 @@ from tiozin.exceptions import RequiredArgumentError
 if TYPE_CHECKING:
     from tiozin.assembly.job_builder import JobBuilder
 
-TData = TypeVar("TData")
+T = TypeVar("TData")
 
 
-class Job(Plugable, Processor, Generic[TData]):
+class Job(Plugable, Executable, Resource, Generic[T]):
     """
     A Job represents a complete pipeline definition.
 
@@ -41,33 +41,50 @@ class Job(Plugable, Processor, Generic[TData]):
 
     def __init__(
         self,
+        name: str = None,
+        description: str = None,
         owner: str = None,
         maintainer: str = None,
         cost_center: str = None,
         labels: dict[str, str] = None,
+        org: str = None,
+        region: str = None,
+        domain: str = None,
+        layer: str = None,
+        product: str = None,
+        model: str = None,
         runner: Runner = None,
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
         outputs: list[Output] = None,
-        **options: Unpack[ProcessorKwargs],
+        **options,
     ) -> None:
-        super().__init__(**options)
+        super().__init__(name, description, **options)
 
         RequiredArgumentError.raise_if_missing(
+            name=name,
             runner=runner,
             inputs=inputs,
-        ).raise_if_missing(
-            org=self.org,
-            region=self.region,
-            domain=self.domain,
-            layer=self.layer,
-            product=self.product,
-            model=self.model,
+            org=org,
+            region=region,
+            domain=domain,
+            layer=layer,
+            product=product,
+            model=model,
         )
+
         self.maintainer = maintainer
         self.cost_center = cost_center
         self.owner = owner
         self.labels = labels or {}
+
+        self.org = org
+        self.region = region
+        self.domain = domain
+        self.layer = layer
+        self.product = product
+        self.model = model
+
         self.runner = runner
         self.inputs = inputs or []
         self.transforms = transforms or []
@@ -83,6 +100,12 @@ class Job(Plugable, Processor, Generic[TData]):
     def run(self, context: Context) -> None:
         pass
 
-    def execute(self, context: Context) -> TData:
+    def execute(self, context: Context) -> T:
         """Template method that delegates to run()."""
         return self.run(context)
+
+    def setup(self) -> None:
+        return None
+
+    def teardown(self) -> None:
+        return None

@@ -7,7 +7,6 @@ from .resource import Resource as Resource
 from .plugable import Plugable as Plugable
 from .executable import Executable as Executable
 from .registry import Registry as Registry
-from .processor import Processor as Processor
 
 from .metadata.job_manifest import JobManifest as JobManifest
 

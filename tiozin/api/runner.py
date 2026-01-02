@@ -29,10 +29,12 @@ class Runner(Plugable, Executable, Resource):
 
     def __init__(
         self,
+        name: str = None,
+        description: str = None,
         streaming: bool = False,
         **options: Unpack[ProcessorKwargs],
     ) -> None:
-        super().__init__(**options)
+        super().__init__(name, description, **options)
         self.streaming = streaming
 
     @abstractmethod
