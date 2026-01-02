@@ -16,9 +16,3 @@ class NoOpRunner(Runner):
 
     def run(self, context: Context, job: Any) -> None:
         return None
-
-    def setup(self, **kwargs) -> None:
-        return None
-
-    def teardown(self, **kwargs) -> None:
-        return None
