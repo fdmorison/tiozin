@@ -7,16 +7,16 @@ Tiozin - A friendly ETL framework
 Public API for building data pipelines with Tiozin.
 """
 
-# 1st Base Abstractions
-from tiozin.api import Resource, Plugable, Executable
+# Mixins
+from tiozin.api import Executable, Plugable
 
-# 2nd Base Abstractions
-from tiozin.api import Processor, Registry
+# Bases
+from tiozin.api import Resource, Processor, Registry
 
 # Metadata
 from tiozin.api import JobManifest
 
-# 3rd Base Abstractions: Metadata Services
+# Registries
 from tiozin.api import (
     JobRegistry,
     LineageRegistry,
@@ -27,10 +27,10 @@ from tiozin.api import (
     TransactionRegistry,
 )
 
-# 3rd Base Abstractions: Data Services
+# Processors
 from tiozin.api import Runner, Transform, Input, Output, Job
 
-# Main entities
+# Auxiliary entities
 from tiozin.api import Context
 
 # App (imported last to avoid circular imports)
