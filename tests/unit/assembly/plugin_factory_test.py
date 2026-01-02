@@ -12,8 +12,13 @@ from tiozin.api.metadata.job_manifest import (
 )
 from tiozin.assembly.plugin_factory import PluginFactory, PluginMetadata
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
-from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
-from tiozin.family.tio_kernel.registries import FileJobRegistry
+from tiozin.family.tio_kernel import (
+    FileJobRegistry,
+    NoOpInput,
+    NoOpOutput,
+    NoOpRunner,
+    NoOpTransform,
+)
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ from tiozin.api import (
     SettingRegistry,
     TransactionRegistry,
 )
-from tiozin.family.tio_kernel.registries import (
+from tiozin.family.tio_kernel import (
     FileJobRegistry,
     NoOpLineageRegistry,
     NoOpMetricRegistry,
