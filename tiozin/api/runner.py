@@ -1,12 +1,14 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from . import Context, Resource
 from .executable import Executable
 from .plugable import Plugable
 
+T = TypeVar("T")
 
-class Runner(Plugable, Executable, Resource):
+
+class Runner(Plugable, Executable, Resource, Generic[T]):
     """
     Runners execute and coordinate pipelines within a specific backend.
 
@@ -38,12 +40,12 @@ class Runner(Plugable, Executable, Resource):
         self.streaming = streaming
 
     @abstractmethod
-    def run(self, context: Context, job: Any) -> None:
+    def run(self, context: Context, execution_plan: T) -> Any:
         """Run the job. Providers must implement."""
 
-    def execute(self, context: Context, job: Any) -> None:
+    def execute(self, context: Context, execution_plan: T) -> Any:
         """Template method that delegates to run()."""
-        self.run(context, job)
+        self.run(context, execution_plan)
 
     def setup(self) -> None:
         return None
