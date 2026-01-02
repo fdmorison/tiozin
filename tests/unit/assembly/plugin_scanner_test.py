@@ -3,7 +3,7 @@ from importlib.metadata import EntryPoint
 
 import pytest
 
-from tiozin.assembly.scanner import PluginScanner
+from tiozin.assembly.plugin_scanner import PluginScanner
 from tiozin.family import tio_kernel
 from tiozin.family.tio_kernel import (
     FileJobRegistry,

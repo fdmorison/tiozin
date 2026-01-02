@@ -12,7 +12,7 @@ from tiozin.api.plugable import PluginMetadata
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
 from tiozin.utils import helpers
 
-from .scanner import PluginScanner
+from .plugin_scanner import PluginScanner
 
 T = TypeVar("T", bound=Plugable)
 

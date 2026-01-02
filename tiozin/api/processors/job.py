@@ -4,7 +4,7 @@ from tiozin.api import Input, Output, Plugable, Processor, ProcessorKwargs, Runn
 from tiozin.exceptions import RequiredArgumentError
 
 if TYPE_CHECKING:
-    from tiozin.assembly.builder import JobBuilder
+    from tiozin.assembly.job_builder import JobBuilder
 
 TData = TypeVar("TData")
 
@@ -65,6 +65,6 @@ class Job(Plugable, Processor, Generic[TData]):
 
     @staticmethod
     def builder() -> "JobBuilder":
-        from tiozin.assembly.builder import JobBuilder
+        from tiozin.assembly.job_builder import JobBuilder
 
         return JobBuilder()
