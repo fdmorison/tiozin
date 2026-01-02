@@ -1,13 +1,13 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from .. import Context, Operator, Plugable
+from .. import Context, Plugable, Processor
 
 TData = TypeVar("TData")
 TWriter = TypeVar("TWriter")
 
 
-class Output(Plugable, Operator, Generic[TData, TWriter]):
+class Output(Plugable, Processor, Generic[TData, TWriter]):
     """
     Output operators persist data to external systems.
 

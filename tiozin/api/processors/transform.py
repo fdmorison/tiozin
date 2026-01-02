@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from .. import Context, Operator, Plugable
+from .. import Context, Plugable, Processor
 
 TData = TypeVar("TData")
 
 
-class Transform(Plugable, Operator, Generic[TData]):
+class Transform(Plugable, Processor, Generic[TData]):
     """
     Transform operators apply business logic to produce new data.
 

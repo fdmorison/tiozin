@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar, Unpack
 
-from .. import Context, Operator, OperatorKwargs, Plugable
+from .. import Context, Plugable, Processor, ProcessorKwargs
 
 TData = TypeVar("TData")
 
 
-class Input(Plugable, Operator, Generic[TData]):
+class Input(Plugable, Processor, Generic[TData]):
     """
     Input operators ingest data into a pipeline.
 
@@ -34,7 +34,7 @@ class Input(Plugable, Operator, Generic[TData]):
         schema: str | None = None,
         schema_subject: str | None = None,
         schema_version: str | None = None,
-        **options: Unpack[OperatorKwargs],
+        **options: Unpack[ProcessorKwargs],
     ) -> None:
         super().__init__(**options)
         self.schema = schema

@@ -1,13 +1,13 @@
 from typing import Any, TypedDict
 
 
-class OperatorKwargs(TypedDict, total=False):
+class ProcessorKwargs(TypedDict, total=False):
     """
-    Type hints for Operator initialization kwargs.
+    Type hints for Processor initialization kwargs.
 
     Provides autocomplete and type safety for Data Mesh metadata attributes
-    used when initializing Operator-based classes (Jobs, Inputs, Outputs,
-    Transforms, and Runners). These attributes enable discovery, governance,
+    used when initializing Processor-based classes (Jobs, Inputs, Outputs,
+    and Transforms). These attributes enable discovery, governance,
     and lineage tracking across domains.
     """
 

@@ -3,18 +3,21 @@ from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import utcnow
 
 
-class Operator(Resource):
+class Processor(Resource):
     """
-    Base class for all Tiozin ETL operators.
+    Base class for all Tiozin data processors.
 
-    Following Data Mesh principles, operators are identified by business metadata
+    A Processor represents a data processing component in an ETL pipeline.
+    Following Data Mesh principles, processors are identified by business metadata
     that enables discovery, governance, and lineage tracking across domains.
 
+    Processors include Job, Input, Transform, and Output components that handle
+    data ingestion, transformation, and persistence operations.
+
     Attributes:
-        name: Unique identifier for the operator instance.
-        description: Human-readable description of the operator purpose.
-        org: Organization owning the operator (top-level business unit).
-        region: Geographic region where the operator operates or data resides.
+        name: Unique identifier for the processor instance.
+        org: Organization owning the processor (top-level business unit).
+        region: Geographic region where the processor operates or data resides.
         domain: Business domain in Data Mesh architecture (e.g., 'sales', 'finance').
         layer: Data architecture layer (e.g., 'raw', 'staging', 'refined', 'curated').
         product: Data product within the domain, representing a cohesive data asset.
@@ -23,7 +26,6 @@ class Operator(Resource):
     Example:
         job = Job(
             name="daily_revenue_etl",
-            description="Aggregates daily revenue from transactions",
             org="acme_corp",
             region="us_east",
             domain="finance",

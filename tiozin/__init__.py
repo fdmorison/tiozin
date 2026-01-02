@@ -11,7 +11,7 @@ Public API for building data pipelines with Tiozin.
 from tiozin.api import Resource, Plugable
 
 # 2nd Base Abstractions
-from tiozin.api import Operator, Registry
+from tiozin.api import Processor, Registry
 
 # Metadata
 from tiozin.api import JobManifest
@@ -42,7 +42,7 @@ __all__ = [
     # Base abstractions
     "Resource",
     "Plugable",
-    "Operator",
+    "Processor",
     "Registry",
     # Operators
     "Runner",

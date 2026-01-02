@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Any, Unpack
 
-from .. import Context, Operator, OperatorKwargs, Plugable
+from .. import Context, Plugable, Processor, ProcessorKwargs
 
 
-class Runner(Plugable, Operator):
+class Runner(Plugable, Processor):
     """
     Runners coordinate the execution of a pipeline.
 
@@ -28,7 +28,7 @@ class Runner(Plugable, Operator):
         self,
         name: str = None,
         streaming: bool = False,
-        **options: Unpack[OperatorKwargs],
+        **options: Unpack[ProcessorKwargs],
     ) -> None:
         super().__init__(
             name=name or type(self).__name__,

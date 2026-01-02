@@ -1,5 +1,4 @@
-from tiozin.api import Context, Job
-from tiozin.api.operators.transform import CombineTransform
+from tiozin.api import CombineTransform, Context, Job
 from tiozin.utils.helpers import as_list
 
 

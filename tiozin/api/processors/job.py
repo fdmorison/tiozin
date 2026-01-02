@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Generic, TypeVar, Unpack
 
-from tiozin.api import Input, Operator, OperatorKwargs, Output, Plugable, Runner, Transform
+from tiozin.api import Input, Output, Plugable, Processor, ProcessorKwargs, Runner, Transform
 from tiozin.exceptions import RequiredArgumentError
 
 if TYPE_CHECKING:
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 TData = TypeVar("TData")
 
 
-class Job(Plugable, Operator, Generic[TData]):
+class Job(Plugable, Processor, Generic[TData]):
     """
     A Job represents a complete pipeline definition.
 
@@ -39,7 +39,7 @@ class Job(Plugable, Operator, Generic[TData]):
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
         outputs: list[Output] = None,
-        **options: Unpack[OperatorKwargs],
+        **options: Unpack[ProcessorKwargs],
     ) -> None:
         super().__init__(_require_taxonomy=True, **options)
 

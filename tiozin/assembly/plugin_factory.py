@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Operator, Output, Plugable, Resource, Runner, Transform
+from tiozin.api import Input, Job, Output, Plugable, Processor, Resource, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     Manifest,
@@ -145,7 +145,7 @@ class PluginFactory(Resource):
         """
         return self.load_plugin(kind, Job, **args)
 
-    def load_manifest(self, manifest: Manifest | Operator) -> Operator:
+    def load_manifest(self, manifest: Manifest | Processor) -> Processor:
         """
         Load and instantiate a job step from a manifest.
 
@@ -153,7 +153,7 @@ class PluginFactory(Resource):
         (Input, Output, Transform, or Runner) based on the manifest type.
         If an operator instance is provided, it is returned unchanged.
         """
-        if isinstance(manifest, Operator):
+        if isinstance(manifest, Processor):
             return manifest
 
         args = manifest.model_dump()

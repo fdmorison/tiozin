@@ -1,12 +1,12 @@
 # isort: skip_file
 # flake8: noqa
 
-from .typehint import OperatorKwargs as OperatorKwargs
+from .typehint import ProcessorKwargs as ProcessorKwargs
 
 from .resource import Resource as Resource
 from .plugable import Plugable as Plugable
 from .registry import Registry as Registry
-from .operator import Operator as Operator
+from .processor import Processor as Processor
 
 from .metadata.job_manifest import JobManifest as JobManifest
 
@@ -20,9 +20,9 @@ from .registries.transaction_registry import TransactionRegistry as TransactionR
 
 from .context import Context as Context
 
-from .operators.runner import Runner as Runner
-from .operators.transform import Transform as Transform
-from .operators.transform import CombineTransform as CombineTransform
-from .operators.input import Input as Input
-from .operators.output import Output as Output
-from .operators.job import Job as Job
+from .processors.runner import Runner as Runner
+from .processors.transform import Transform as Transform
+from .processors.transform import CombineTransform as CombineTransform
+from .processors.input import Input as Input
+from .processors.output import Output as Output
+from .processors.job import Job as Job

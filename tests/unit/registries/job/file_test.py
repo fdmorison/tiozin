@@ -5,8 +5,9 @@ from textwrap import dedent
 import pytest
 
 from tests.mocks.manifests import mini
+from tiozin.api import JobManifest
 from tiozin.exceptions import JobManifestError
-from tiozin.family.tio_kernel.registries.file_job_registry import FileJobRegistry, JobManifest
+from tiozin.family.tio_kernel import FileJobRegistry
 
 
 def test_get_should_load_yaml_manifest_from_local_file():

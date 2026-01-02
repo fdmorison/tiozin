@@ -17,11 +17,11 @@ class PluginMetadata:
 
 class Plugable(ABC):
     """
-    Mixin for operators that can be plugged into Tiozin jobs.
+    Mixin for components that can be plugged into Tiozin jobs.
 
-    Defines a common execution contract for operators that are dynamically
-    discovered and orchestrated by the framework. Intended to be combined
-    with Registry and Operator base classes.
+    Defines a common execution contract for processors and registries that are
+    dynamically discovered and orchestrated by the framework. Intended to be
+    combined with Registry and Processor base classes.
     """
 
     __tiometa__: PluginMetadata = None
