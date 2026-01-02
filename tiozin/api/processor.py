@@ -58,7 +58,7 @@ class Processor(Resource):
         self.product = product
         self.model = model
 
-        self.run_id = self.id
+        self.run_id = None
         self.created_at = utcnow()
         self.started_at = None
         self.finished_at = None
