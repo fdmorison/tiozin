@@ -20,7 +20,7 @@ from .registries.transaction_registry import TransactionRegistry as TransactionR
 
 from .context import Context as Context
 
-from .processors.runner import Runner as Runner
+from .runner import Runner as Runner
 from .processors.transform import Transform as Transform
 from .processors.transform import CombineTransform as CombineTransform
 from .processors.input import Input as Input

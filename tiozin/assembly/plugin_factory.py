@@ -153,7 +153,7 @@ class PluginFactory(Resource):
         (Input, Output, Transform, or Runner) based on the manifest type.
         If an operator instance is provided, it is returned unchanged.
         """
-        if isinstance(manifest, Processor):
+        if isinstance(manifest, (Processor, Runner)):
             return manifest
 
         args = manifest.model_dump()

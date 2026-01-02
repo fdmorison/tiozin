@@ -16,7 +16,7 @@ from tiozin.api import Processor, Registry
 # Metadata
 from tiozin.api import JobManifest
 
-# 3rd Base Abstractions: Registries
+# 3rd Base Abstractions: Metadata Services
 from tiozin.api import (
     JobRegistry,
     LineageRegistry,
@@ -27,7 +27,7 @@ from tiozin.api import (
     TransactionRegistry,
 )
 
-# 3rd Base Abstractions: Operators
+# 3rd Base Abstractions: Data Services
 from tiozin.api import Runner, Transform, Input, Output, Job
 
 # Main entities
@@ -44,7 +44,7 @@ __all__ = [
     "Plugable",
     "Processor",
     "Registry",
-    # Operators
+    # Data Services
     "Runner",
     "Transform",
     "Input",
@@ -52,7 +52,7 @@ __all__ = [
     "Job",
     # Metadata
     "JobManifest",
-    # Registries
+    # Metadata Services
     "JobRegistry",
     "LineageRegistry",
     "MetricRegistry",

@@ -13,8 +13,8 @@ class Resource(ABC):
 
     A Resource is a named, identifiable unit in the system. It provides
     logging, lifecycle hooks, and a unique execution identity, serving as
-    the foundation for higher-level components such as Registries and
-    Operators.
+    the foundation for higher-level components such as Processors, Runners,
+    and Registries.
 
     Attributes:
         id: Unique identifier for this resource instance.

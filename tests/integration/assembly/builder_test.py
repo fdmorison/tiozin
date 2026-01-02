@@ -126,7 +126,7 @@ def test_builder_should_build_from_plugin_instances():
         .model("some_case")
         .layer("test")
         .runner(
-            NoOpRunner(**TEST_TAXONOMY),
+            NoOpRunner(),
         )
         .inputs(
             NoOpInput(name="read_something", **TEST_TAXONOMY),

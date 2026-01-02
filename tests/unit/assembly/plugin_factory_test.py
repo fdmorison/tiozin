@@ -277,34 +277,18 @@ def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
         kind,
         name="test_runner",
         description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
     )
 
     # Assert
     actual = vars(plugin)
     expected = dict(
+        id=ANY,
         kind=NoOpRunner,
         plugin_kind=Runner,
         name="test_runner",
         description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
         streaming=False,
         options={},
-        id=ANY,
-        run_id=ANY,
-        created_at=ANY,
-        started_at=None,
-        finished_at=None,
         logger=ANY,
     )
     assert actual == expected
