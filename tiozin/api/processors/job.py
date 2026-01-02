@@ -16,7 +16,7 @@ from tiozin.exceptions import RequiredArgumentError
 if TYPE_CHECKING:
     from tiozin.assembly.job_builder import JobBuilder
 
-T = TypeVar("TData")
+T = TypeVar("T")
 
 
 class Job(Plugable, Executable, Resource, Generic[T]):
@@ -97,7 +97,7 @@ class Job(Plugable, Executable, Resource, Generic[T]):
         return JobBuilder()
 
     @abstractmethod
-    def run(self, context: Context) -> None:
+    def run(self, context: Context) -> T:
         pass
 
     def execute(self, context: Context) -> T:

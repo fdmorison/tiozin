@@ -1,8 +1,10 @@
+from typing import Any
+
 from tiozin.api import Context, CoTransform, Job
 from tiozin.utils.helpers import as_list
 
 
-class LinearJob(Job):
+class LinearJob(Job[Any]):
     """
     Execute a job using a linear, sequential execution model.
 
@@ -49,7 +51,7 @@ class LinearJob(Job):
     def __init__(self, **options) -> None:
         super().__init__(**options)
 
-    def run(self, context: Context) -> None:
+    def run(self, context: Context) -> Any:
         self.info("The job has started")
 
         with self.runner:
@@ -66,9 +68,10 @@ class LinearJob(Job):
                 output.write(context, dataset) for output in self.outputs for dataset in datasets
             ]
             # The runner runs each source + transformation + sink combination
-            self.runner.execute(context, datasets)
+            result = self.runner.execute(context, datasets)
 
         self.info("The job ran successfully!")
+        return result
 
     def teardown(self, **kwargs) -> None:
         self.warning("The job received a stop request.")

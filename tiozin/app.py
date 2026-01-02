@@ -106,9 +106,9 @@ class TiozinApp(Resource):
                 )
                 manifest = self.job_registry.get(name)
                 self.current_job = Job.builder().from_manifest(manifest).build()
-                self.current_job.execute(context)
+                result = self.current_job.execute(context)
                 self.status = self.status.set_success()
-                return self.current_job
+                return result
             except TiozinError as e:
                 self.status = self.status.set_failure()
                 self.error(e.message)
