@@ -1,9 +1,9 @@
+from tiozin.api.executable import Executable
 from tiozin.api.resource import Resource
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils.helpers import utcnow
 
 
-class Processor(Resource):
+class Processor(Executable, Resource):
     """
     Base class for all Tiozin data processors.
 
@@ -57,11 +57,6 @@ class Processor(Resource):
         self.layer = layer
         self.product = product
         self.model = model
-
-        self.run_id = None
-        self.created_at = utcnow()
-        self.started_at = None
-        self.finished_at = None
 
     def setup(self, **kwargs) -> None:
         return None

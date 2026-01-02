@@ -1,10 +1,12 @@
 from abc import abstractmethod
 from typing import Any, Unpack
 
-from . import Context, Plugable, ProcessorKwargs, Resource
+from . import Context, ProcessorKwargs, Resource
+from .executable import Executable
+from .plugable import Plugable
 
 
-class Runner(Plugable, Resource):
+class Runner(Plugable, Executable, Resource):
     """
     Runners execute and coordinate pipelines within a specific backend.
 

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from tiozin.api import Plugable, Resource
 from tiozin.exceptions import NotFoundError
@@ -25,9 +25,6 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
         return None
 
     def teardown(self, **kwargs) -> None:
-        return None
-
-    def execute(self, **kwargs) -> Any:
         return None
 
     @abstractmethod

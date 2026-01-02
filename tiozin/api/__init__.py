@@ -5,6 +5,7 @@ from .typehint import ProcessorKwargs as ProcessorKwargs
 
 from .resource import Resource as Resource
 from .plugable import Plugable as Plugable
+from .executable import Executable as Executable
 from .registry import Registry as Registry
 from .processor import Processor as Processor
 

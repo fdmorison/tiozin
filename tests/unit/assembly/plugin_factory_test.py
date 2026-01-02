@@ -1,6 +1,8 @@
+from datetime import datetime
 from unittest.mock import ANY
 
 import pytest
+from freezegun import freeze_time
 
 from tiozin.api import Input, JobRegistry, Output, Registry, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
@@ -19,6 +21,9 @@ from tiozin.family.tio_kernel import (
     NoOpRunner,
     NoOpTransform,
 )
+
+ISO_2025_01_02T12_00_00Z = "2025-01-02T12:00:00Z"
+OBJ_2025_01_02T12_00_00Z = datetime.fromisoformat(ISO_2025_01_02T12_00_00Z)
 
 
 @pytest.fixture
@@ -123,6 +128,7 @@ def test_register_should_group_plugins_with_same_name(factory: PluginFactory):
         "tiozin.family.tio_kernel.inputs.noop_input.NoOpInput",
     ],
 )
+@freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
     # Arrange
     factory.register("tio_kernel", NoOpInput)
@@ -158,9 +164,9 @@ def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
         schema_version=None,
         options={},
         id=ANY,
-        run_id=ANY,
-        created_at=ANY,
-        started_at=None,
+        run_id=None,
+        created_at=OBJ_2025_01_02T12_00_00Z,
+        executed_at=None,
         finished_at=None,
         logger=ANY,
     )
@@ -175,6 +181,7 @@ def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
         "tiozin.family.tio_kernel.outputs.noop_output.NoOpOutput",
     ],
 )
+@freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
     # Arrange
     factory.register("tio_kernel", NoOpOutput)
@@ -207,9 +214,9 @@ def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
         model="daily",
         options={},
         id=ANY,
-        run_id=ANY,
-        created_at=ANY,
-        started_at=None,
+        run_id=None,
+        created_at=OBJ_2025_01_02T12_00_00Z,
+        executed_at=None,
         finished_at=None,
         logger=ANY,
     )
@@ -224,6 +231,7 @@ def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
         "tiozin.family.tio_kernel.transforms.noop_transform.NoOpTransform",
     ],
 )
+@freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
     # Arrange
     factory.register("tio_kernel", NoOpTransform)
@@ -256,9 +264,9 @@ def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
         model="daily",
         options={},
         id=ANY,
-        run_id=ANY,
-        created_at=ANY,
-        started_at=None,
+        run_id=None,
+        created_at=OBJ_2025_01_02T12_00_00Z,
+        executed_at=None,
         finished_at=None,
         logger=ANY,
     )
@@ -273,6 +281,7 @@ def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
         "tiozin.family.tio_kernel.runners.noop_runner.NoOpRunner",
     ],
 )
+@freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
     # Arrange
     factory.register("tio_kernel", NoOpRunner)
@@ -295,6 +304,10 @@ def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
         streaming=False,
         options={},
         logger=ANY,
+        run_id=None,
+        created_at=OBJ_2025_01_02T12_00_00Z,
+        executed_at=None,
+        finished_at=None,
     )
     assert actual == expected
 

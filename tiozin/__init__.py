@@ -8,7 +8,7 @@ Public API for building data pipelines with Tiozin.
 """
 
 # 1st Base Abstractions
-from tiozin.api import Resource, Plugable
+from tiozin.api import Resource, Plugable, Executable
 
 # 2nd Base Abstractions
 from tiozin.api import Processor, Registry
@@ -42,6 +42,7 @@ __all__ = [
     # Base abstractions
     "Resource",
     "Plugable",
+    "Executable",
     "Processor",
     "Registry",
     # Data Services
