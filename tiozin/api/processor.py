@@ -58,8 +58,8 @@ class Processor(Executable, Resource):
         self.product = product
         self.model = model
 
-    def setup(self, **kwargs) -> None:
+    def setup(self) -> None:
         return None
 
-    def teardown(self, **kwargs) -> None:
+    def teardown(self) -> None:
         return None

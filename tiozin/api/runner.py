@@ -43,8 +43,8 @@ class Runner(Plugable, Executable, Resource):
         """Template method that delegates to run()."""
         self.run(context, job)
 
-    def setup(self, **kwargs) -> None:
+    def setup(self) -> None:
         return None
 
-    def teardown(self, **kwargs) -> None:
+    def teardown(self) -> None:
         return None

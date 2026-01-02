@@ -14,7 +14,7 @@ def is_package(obj: Any) -> bool:
 
 
 def is_plugin(plugin: Any) -> bool:
-    from tiozin.api import Plugable, Registry
+    from tiozin.api import Plugable, Processor, Registry
 
     return (
         inspect.isclass(plugin)
@@ -22,7 +22,7 @@ def is_plugin(plugin: Any) -> bool:
         and plugin is not Plugable
         and Plugable not in plugin.__bases__
         and Registry not in plugin.__bases__
-        and not inspect.isabstract(plugin)
+        and Processor not in plugin.__bases__
     )
 
 
