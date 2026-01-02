@@ -44,23 +44,13 @@ class Processor(Resource):
         layer: str = None,
         product: str = None,
         model: str = None,
-        _require_taxonomy: bool = False,
         **options,
     ) -> None:
         super().__init__(name, **options)
 
         RequiredArgumentError.raise_if_missing(
             name=name,
-        ).raise_if_missing(
-            org=org,
-            region=region,
-            domain=domain,
-            layer=layer,
-            product=product,
-            model=model,
-            disable_=not _require_taxonomy,
         )
-
         self.org = org
         self.region = region
         self.domain = domain

@@ -41,11 +41,18 @@ class Job(Plugable, Processor, Generic[TData]):
         outputs: list[Output] = None,
         **options: Unpack[ProcessorKwargs],
     ) -> None:
-        super().__init__(_require_taxonomy=True, **options)
+        super().__init__(**options)
 
         RequiredArgumentError.raise_if_missing(
             runner=runner,
             inputs=inputs,
+        ).raise_if_missing(
+            org=self.org,
+            region=self.region,
+            domain=self.domain,
+            layer=self.layer,
+            product=self.product,
+            model=self.model,
         )
         self.maintainer = maintainer
         self.cost_center = cost_center
