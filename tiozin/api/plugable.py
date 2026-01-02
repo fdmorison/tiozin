@@ -18,7 +18,8 @@ class Plugable:
     Mixin for resources that can be discovered and loaded as plugins.
 
     Provides plugin metadata and discovery capabilities for resources that are
-    dynamically loaded by the framework. Used by Processors, Runners, and Registries.
+    dynamically loaded by the framework. Used by Jobs, Inputs, Transforms,
+    Outputs, Runners, and Registries.
     """
 
     __tiometa__: PluginMetadata = None

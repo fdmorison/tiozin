@@ -14,13 +14,13 @@ class Runner(Plugable, Executable, Resource):
     and is responsible for managing the execution lifecycle of a job, including
     environment setup, pipeline execution, and resource cleanup.
 
-    Unlike Processors (Job, Input, Transform, Output) which define the data
-    processing logic, Runners are execution engines that coordinate how and
-    where processors run, interpreting values produced by processors or
+    Unlike data processing components (Job, Input, Transform, Output) which
+    define the processing logic, Runners are execution engines that coordinate
+    how and where these components run, interpreting values they produce or
     invoking them directly in eager execution scenarios.
 
-    Processors used in a pipeline must be compatible with the Runner's
-    execution backend.
+    Data processing components used in a pipeline must be compatible with
+    the Runner's execution backend.
 
     Attributes:
         streaming: Indicates whether this runner executes streaming workloads.

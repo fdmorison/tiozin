@@ -3,12 +3,12 @@ from typing import Any, TypedDict
 
 class ProcessorKwargs(TypedDict, total=False):
     """
-    Type hints for Processor initialization kwargs.
+    Type hints for data processing component initialization kwargs.
 
     Provides autocomplete and type safety for Data Mesh metadata attributes
-    used when initializing Processor-based classes (Jobs, Inputs, Outputs,
-    and Transforms). These attributes enable discovery, governance,
-    and lineage tracking across domains.
+    used when initializing Jobs, Inputs, Outputs, and Transforms.
+    These attributes enable discovery, governance, and lineage tracking
+    across domains.
     """
 
     name: str

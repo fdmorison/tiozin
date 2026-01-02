@@ -8,8 +8,9 @@ class Executable(ABC):
     """
     Mixin for resources that can be executed.
 
-    Defines the execution contract for processors and runners that perform
-    computational work. Registries are Plugable but not Executable.
+    Defines the execution contract for data processing components (Jobs, Inputs,
+    Transforms, Outputs) and Runners that perform computational work.
+    Registries are Plugable but not Executable.
     """
 
     def __init__(self, *args, **options) -> None:
