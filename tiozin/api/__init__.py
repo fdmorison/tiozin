@@ -1,8 +1,6 @@
 # isort: skip_file
 # flake8: noqa
 
-from .typehint import ProcessorKwargs as ProcessorKwargs
-
 from .resource import Resource as Resource
 from .plugable import Plugable as Plugable
 from .executable import Executable as Executable

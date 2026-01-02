@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from typing import Any, Unpack
+from typing import Any
 
-from . import Context, ProcessorKwargs, Resource
+from . import Context, Resource
 from .executable import Executable
 from .plugable import Plugable
 
@@ -32,7 +32,7 @@ class Runner(Plugable, Executable, Resource):
         name: str = None,
         description: str = None,
         streaming: bool = False,
-        **options: Unpack[ProcessorKwargs],
+        **options,
     ) -> None:
         super().__init__(name, description, **options)
         self.streaming = streaming
