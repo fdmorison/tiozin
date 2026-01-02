@@ -23,7 +23,7 @@ from .context import Context as Context
 
 from .runner import Runner as Runner
 from .processors.transform import Transform as Transform
-from .processors.transform import CombineTransform as CombineTransform
+from .processors.transform import CoTransform as CoTransform
 from .processors.input import Input as Input
 from .processors.output import Output as Output
 from .processors.job import Job as Job

@@ -3,49 +3,55 @@ from typing import Generic, TypeVar
 
 from .. import Context, Plugable, Processor
 
-TData = TypeVar("TData")
+T = TypeVar("T")
 
 
-class Transform(Plugable, Processor, Generic[TData]):
+class Transform(Plugable, Processor, Generic[T]):
     """
     Transform operators apply business logic to produce new data.
 
-    A Transform represents a processing step within a pipeline and is
-    responsible for describing how input data should be transformed through
-    business logic such as filtering, enrichment, aggregation, or joins.
+    Applies transformations like filtering, enrichment, aggregation, or
+    type conversions to a single input dataset. Execution may be eager
+    or lazy, depending on the Runner's strategy.
 
-    Depending on the provider, data transformation may be performed eagerly
-    or deferred as part of a lazy execution plan coordinated by the Runner.
-
-    By default, Transforms process each dataset individually. For operations
-    that need to work with multiple datasets simultaneously (joins, unions,
-    cross-dataset aggregations), use CombineTransform instead.
+    For operations requiring multiple datasets (joins, unions), use CoTransform.
     """
 
     @abstractmethod
-    def transform(self, context: Context, *data: TData) -> TData:
+    def transform(self, context: Context, data: T) -> T:
         """Apply transformation logic. Providers must implement."""
 
-    def execute(self, context: Context, *data: TData) -> TData:
+    def execute(self, context: Context, data: T) -> T:
         """Template method that delegates to transform()."""
-        return self.transform(context, *data)
+        return self.transform(context, data)
 
 
-class CombineTransform(Transform[TData]):
+class CoTransform(Transform[T]):
     """
-    Transform that operates on many datasets at once.
+    Transforms multiple datasets cooperatively.
 
-    Unlike regular Transforms that process datasets individually,
-    CombineTransforms receive many datasets simultaneously, enabling
-    operations like joins, unions, or cross-dataset aggregations.
+    Enables operations that require multiple inputs working together:
+    joins, unions, merges, or cross-dataset transformations. The "Co-" prefix
+    indicates cooperative processing, inspired by Flink's CoProcessFunction.
 
-    Example:
-        class JoinTransform(CombineTransform):
-            def transform(self, context: Context, main: DataFrame, other: DataFrame) -> DataFrame:
-                # Receive multiple dataframes and join them
-                return main.join(other, on="key")
+    Examples:
+            class JoinCustomers(CoTransform):
+                def transform(self, context, orders, customers):
+                    return orders.join(customers, on='customer_id', how='inner')
+
+            class UnionAll(CoTransform):
+                def transform(self, context, *datasets):
+                    return datasets[0].unionByName(*datasets[1:])
+
+            class EnrichOrders(CoTransform):
+                def transform(self, context, orders, products, customers):
+                    return orders.join(products, on='product_id')
+                                 .join(customers, on='customer_id')
+
+    Note:
+        Requires at least 2 inputs. For single-dataset transforms, use Transform.
     """
 
     @abstractmethod
-    def transform(self, context: Context, data: TData, *others: TData) -> TData:
-        pass
+    def transform(self, context: Context, data: T, other: T, *others: T) -> T:
+        """Apply cooperative transformation logic. Providers must implement."""
