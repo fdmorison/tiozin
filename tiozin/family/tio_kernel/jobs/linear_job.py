@@ -49,7 +49,7 @@ class LinearJob(Job):
     def __init__(self, **options) -> None:
         super().__init__(**options)
 
-    def execute(self, context: Context) -> None:
+    def run(self, context: Context) -> None:
         self.info("The job has started")
 
         with self.runner:

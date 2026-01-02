@@ -1,6 +1,16 @@
+from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar, Unpack
 
-from tiozin.api import Input, Output, Plugable, Processor, ProcessorKwargs, Runner, Transform
+from tiozin.api import (
+    Context,
+    Input,
+    Output,
+    Plugable,
+    Processor,
+    ProcessorKwargs,
+    Runner,
+    Transform,
+)
 from tiozin.exceptions import RequiredArgumentError
 
 if TYPE_CHECKING:
@@ -68,3 +78,11 @@ class Job(Plugable, Processor, Generic[TData]):
         from tiozin.assembly.job_builder import JobBuilder
 
         return JobBuilder()
+
+    @abstractmethod
+    def run(self, context: Context) -> None:
+        pass
+
+    def execute(self, context: Context) -> TData:
+        """Template method that delegates to run()."""
+        return self.run(context)
