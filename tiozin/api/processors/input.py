@@ -5,10 +5,10 @@ from tiozin.exceptions import RequiredArgumentError
 
 from .. import Context, Executable, Plugable, Resource
 
-TData = TypeVar("TData")
+T = TypeVar("T")
 
 
-class Input(Plugable, Executable, Resource, Generic[TData]):
+class Input(Plugable, Executable, Resource, Generic[T]):
     """
     Input operators ingest data into a pipeline.
 
@@ -63,10 +63,10 @@ class Input(Plugable, Executable, Resource, Generic[TData]):
         self.model = model
 
     @abstractmethod
-    def read(self, context: Context) -> TData:
+    def read(self, context: Context) -> T:
         """Read data from source. Providers must implement."""
 
-    def execute(self, context: Context) -> TData:
+    def execute(self, context: Context) -> T:
         """Template method that delegates to read()."""
         return self.read(context)
 

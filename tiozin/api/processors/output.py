@@ -5,11 +5,10 @@ from tiozin.exceptions import RequiredArgumentError
 
 from .. import Context, Executable, Plugable, Resource
 
-TData = TypeVar("TData")
-TWriter = TypeVar("TWriter")
+T = TypeVar("T")
 
 
-class Output(Plugable, Executable, Resource, Generic[TData, TWriter]):
+class Output(Plugable, Executable, Resource, Generic[T]):
     """
     Output operators persist data to external systems.
 
@@ -52,12 +51,12 @@ class Output(Plugable, Executable, Resource, Generic[TData, TWriter]):
         self.model = model
 
     @abstractmethod
-    def write(self, context: Context, data: TData) -> TData | TWriter:
+    def write(self, context: Context, data: T) -> T:
         """
         Write data to destination. Providers must implement.
         """
 
-    def execute(self, context: Context, data: TData) -> TData | TWriter:
+    def execute(self, context: Context, data: T) -> T:
         """Template method that delegates to write()."""
         return self.write(context, data)
 
