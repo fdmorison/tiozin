@@ -48,9 +48,6 @@ class LinearJob(Job[Any]):
     graphs may be supported by future implementations.
     """
 
-    def __init__(self, **options) -> None:
-        super().__init__(**options)
-
     def run(self, context: Context) -> Any:
         self.info("The job has started")
 
