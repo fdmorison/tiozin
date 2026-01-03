@@ -12,5 +12,17 @@ _env.read_env()
 # HOSTNAME - The application's hostname, also used as POD_NAME in K8S.
 HOSTNAME = _env("HOSTNAME", socket.gethostname() or "localhost")
 
+# ===============================================
+#           Logging
+# ===============================================
 # LOG_LEVEL - The logging level for the application.
 LOG_LEVEL = _env.log_level("LOG_LEVEL", logging.INFO)
+
+# TIO_LOG_DATE_FORMAT - The date format for log timestamps.
+TIO_LOG_DATE_FORMAT = _env.str("TIO_LOG_DATE_FORMAT", "iso")
+
+# TIO_LOG_JSON - Enable JSON logging format.
+TIO_LOG_JSON = _env.bool("TIO_LOG_JSON", False)
+
+# TIO_LOG_JSON_ENSURE_ASCII - Ensure ASCII encoding in JSON logs.
+TIO_LOG_JSON_ENSURE_ASCII = _env.bool("TIO_LOG_JSON_ENSURE_ASCII", False)

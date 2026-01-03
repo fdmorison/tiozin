@@ -1,9 +1,8 @@
-import logging
 from typing import Any, Self, Unpack
 
 from uuid_utils import uuid7
 
-from tiozin import config
+from tiozin import config, logs
 
 from .typehint import LogKwargs
 
@@ -39,7 +38,7 @@ class Resource:
         self.name = name or self.kind
         self.description = description
         self.options = options
-        self.logger = logging.getLogger(self.name)
+        self.logger = logs.get_logger(self.name)
 
     @property
     def uri(self) -> str:
