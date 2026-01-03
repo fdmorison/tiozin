@@ -22,22 +22,32 @@ def is_plugin(plugin: Any) -> bool:
         and plugin is not Plugable
         and Plugable not in plugin.__bases__
         and Registry not in plugin.__bases__
-        and not inspect.isabstract(plugin)
     )
 
 
 def detect_base_kind(instance: Any, interface: type) -> type:
     """
-    Returns the class immediately below the given boundary in the MRO.
+    Returns the most specific class that directly implements the interface.
+
+    Searches the MRO for the first concrete class that is a subclass of the
+    interface, regardless of mixin order.
 
     Example:
-        detect_base_kind(self, Plugable) -> Input
+        detect_base_kind(runner_instance, Plugable) -> Runner
+        detect_base_kind(input_instance, Plugable) -> Input
     """
     mro = type(instance).__mro__
-    idx = mro.index(interface)
-    if idx == 0:
-        raise RuntimeError(f"{interface.__name__} cannot be instantiated directly")
-    return mro[idx - 1]
+
+    if interface not in mro:
+        raise RuntimeError(f"{type(instance).__name__} does not implement {interface.__name__}")
+
+    for cls in reversed(mro):
+        if cls is interface:
+            continue
+        if issubclass(cls, interface):
+            return cls
+
+    raise RuntimeError(f"Could not detect base kind for {type(instance).__name__}")
 
 
 def utcnow() -> datetime:

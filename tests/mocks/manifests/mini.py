@@ -34,11 +34,11 @@ compact_job = dict(
 expanded_job = dict(
     kind="Job",
     name="test_job",
+    description=None,
     maintainer=None,
     cost_center=None,
     owner=None,
     labels={},
-    description=None,
     org="tiozin",
     region="latam",
     domain="quality",
@@ -50,12 +50,6 @@ expanded_job = dict(
         name=None,
         streaming=False,
         description=None,
-        org=None,
-        region=None,
-        domain=None,
-        product=None,
-        model=None,
-        layer=None,
     ),
     inputs=[
         dict(

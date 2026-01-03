@@ -7,7 +7,7 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.assembly.builder import JobBuilder
+from tiozin.assembly.job_builder import JobBuilder
 from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
 
@@ -126,7 +126,7 @@ def test_builder_should_build_from_plugin_instances():
         .model("some_case")
         .layer("test")
         .runner(
-            NoOpRunner(**TEST_TAXONOMY),
+            NoOpRunner(),
         )
         .inputs(
             NoOpInput(name="read_something", **TEST_TAXONOMY),

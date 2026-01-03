@@ -39,11 +39,12 @@ default = true
 [dependency-groups]
 dev = [
   {include-group = "lint"},
-  {include-group = "test"}
+  {include-group = "test"},
 ]
 test = [
   "pytest-asyncio ==1.2.0",
   "pytest-cov ==7.0.0",
+  "freezegun ==1.5.5",
   "testcontainers ==4.13.2"
 ]
 lint = [

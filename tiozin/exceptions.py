@@ -132,24 +132,24 @@ class JobAlreadyExistsError(JobError, ConflictError):
         )
 
 
-class JobManifestError(JobError, InvalidInputError):
-    message = "Invalid manifest for `{job}`: {detail}"
+class ManifestError(JobError, InvalidInputError):
+    message = "Invalid manifest for `{name}`: {detail}"
 
-    def __init__(self, message: str, job: str) -> None:
-        super().__init__(job=job, detail=message)
+    def __init__(self, message: str, name: str) -> None:
+        super().__init__(name=name, detail=message)
 
     @classmethod
-    def from_pydantic(cls, error: ValidationError, job: str = None) -> Self:
+    def from_pydantic(cls, error: ValidationError, name: str = None) -> Self:
         messages = MessageTemplates.format_friendly_message(error)
         messages = ". ".join(messages)
-        return cls(message=messages, job=job or "unnamed_job")
+        return cls(message=messages, name=name or "manifest")
 
     @classmethod
-    def from_ruamel(cls, error: MarkedYAMLError, job: str = None) -> Self:
+    def from_ruamel(cls, error: MarkedYAMLError, name: str = None) -> Self:
         info = str(error.problem).capitalize()
         line = str(error.problem_mark).strip()
         message = f"{info} {line}"
-        return cls(message=message, job=job)
+        return cls(message=message, name=name)
 
 
 # ============================================================================

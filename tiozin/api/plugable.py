@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
 
 from tiozin.utils import helpers
 
@@ -15,13 +13,13 @@ class PluginMetadata:
     provider: str
 
 
-class Plugable(ABC):
+class Plugable:
     """
-    Mixin for operators that can be plugged into Tiozin jobs.
+    Mixin for resources that can be discovered and loaded as plugins.
 
-    Defines a common execution contract for operators that are dynamically
-    discovered and orchestrated by the framework. Intended to be combined
-    with Registry and Operator base classes.
+    Provides plugin metadata and discovery capabilities for resources that are
+    dynamically loaded by the framework. Used by Jobs, Inputs, Transforms,
+    Outputs, Runners, and Registries.
     """
 
     __tiometa__: PluginMetadata = None
@@ -29,19 +27,3 @@ class Plugable(ABC):
     def __init__(self, *args, **options) -> None:
         super().__init__(*args, **options)
         self.plugin_kind = helpers.detect_base_kind(self, Plugable)
-
-    @abstractmethod
-    def execute(self, **kwargs) -> Any:
-        """
-        Executes the core logic of the plugin.
-
-        This method is invoked by the framework's core. Implementations should focus
-        solely on the plugin's responsibility and avoid orchestration logic.
-
-        Args:
-            **kwargs: Runtime parameters required for execution.
-
-        Returns:
-            Any value produced by the execution (e.g. transformed data,
-            execution result, or a handle for further processing).
-        """

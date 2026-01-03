@@ -13,8 +13,8 @@ class Resource(ABC):
 
     A Resource is a named, identifiable unit in the system. It provides
     logging, lifecycle hooks, and a unique execution identity, serving as
-    the foundation for higher-level components such as Registries and
-    Operators.
+    the foundation for Jobs, Inputs, Transforms, Outputs, Runners,
+    and Registries.
 
     Attributes:
         id: Unique identifier for this resource instance.
@@ -42,25 +42,25 @@ class Resource(ABC):
 
     @property
     def uri(self) -> str:
-        return f"{self.kind}:{self.name}"
+        return f"tiozin://{self.kind.__name__}/{self.name}"
 
     @property
     def instance_uri(self) -> str:
-        return f"{self.uri}:{self.id}"
+        return f"{self.uri}/{self.id}"
 
     @abstractmethod
-    def setup(self, **kwargs) -> None:
+    def setup(self) -> None:
         """
-        Optional initialization hook.
+        Initialization hook.
 
         Called when the resource enters its execution context.
         Override if the resource requires setup logic.
         """
 
     @abstractmethod
-    def teardown(self, **kwargs) -> None:
+    def teardown(self) -> None:
         """
-        Optional cleanup hook.
+        Cleanup hook.
 
         Called when the resource exits its execution context.
         Override if the resource requires cleanup logic.
@@ -109,7 +109,7 @@ class Resource(ABC):
 
     def __repr__(self) -> str:
         """Returns a concise string representation of the resource."""
-        return f"{self.__class__.__name__}({self.__dict__})"
+        return f"{self.name}"
 
     def __hash__(self) -> int:
         """

@@ -148,11 +148,10 @@ def test_run_should_execute_job_and_finish_with_success(
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
-    result = ready_app.run("job://test")
+    ready_app.run("job://test")
 
     # Assert
     job.execute.assert_called_once()
-    assert result is job
     assert ready_app.status.is_success()
     assert ready_app.status.is_job_finished()
 

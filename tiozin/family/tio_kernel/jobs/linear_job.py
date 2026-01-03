@@ -1,9 +1,10 @@
-from tiozin.api import Context, Job
-from tiozin.api.operators.transform import CombineTransform
+from typing import Any
+
+from tiozin.api import Context, CoTransform, Job
 from tiozin.utils.helpers import as_list
 
 
-class LinearJob(Job):
+class LinearJob(Job[Any]):
     """
     Execute a job using a linear, sequential execution model.
 
@@ -50,7 +51,7 @@ class LinearJob(Job):
     def __init__(self, **options) -> None:
         super().__init__(**options)
 
-    def execute(self, context: Context) -> None:
+    def run(self, context: Context) -> Any:
         self.info("The job has started")
 
         with self.runner:
@@ -58,17 +59,19 @@ class LinearJob(Job):
             datasets = [input.read(context) for input in self.inputs]
             # Transformers run sequentially
             for t in self.transforms:
-                if isinstance(t, CombineTransform):
+                if isinstance(t, CoTransform):
                     datasets = [t.transform(context, *as_list(datasets))]
                 else:
                     datasets = [t.transform(context, d) for d in as_list(datasets)]
-            # Each sink saves the same data
-            if self.outputs:
-                datasets = [output.write(context, *as_list(datasets)) for output in self.outputs]
+            # Each output writes the same datasets
+            datasets = [
+                output.write(context, dataset) for output in self.outputs for dataset in datasets
+            ]
             # The runner runs each source + transformation + sink combination
-            self.runner.execute(context, datasets)
+            result = self.runner.execute(context, datasets)
 
         self.info("The job ran successfully!")
+        return result
 
     def teardown(self, **kwargs) -> None:
         self.warning("The job received a stop request.")
