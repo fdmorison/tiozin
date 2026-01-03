@@ -10,13 +10,24 @@ T = TypeVar("T")
 
 class Transform(Plugable, Executable, Resource, Generic[T]):
     """
-    Transform operators apply business logic to produce new data.
+    Defines a data transformation that modifies or enriches data.
 
-    Applies transformations like filtering, enrichment, aggregation, or
-    type conversions to a single input dataset. Execution may be eager
-    or lazy, depending on the Runner's strategy.
+    Specifies operations that transform a single input dataset through
+    business logic such as filtering, enrichment, aggregation, or type
+    conversions. Transforms own the transformation logic and produce
+    transformed data products.
 
+    Execution may be eager or lazy, depending on the Runner's strategy.
     For operations requiring multiple datasets (joins, unions), use CoTransform.
+
+    Attributes:
+        name: Unique identifier for this transform within the job.
+        description: Short description of the transformation logic.
+        org: Organization owning the transformation logic.
+        domain: Domain team owning the transformation.
+        product: Data product being transformed.
+        model: Data model being transformed.
+        layer: Data layer of the transformation output.
     """
 
     def __init__(

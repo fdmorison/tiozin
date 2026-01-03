@@ -10,25 +10,28 @@ T = TypeVar("T")
 
 class Input(Plugable, Executable, Resource, Generic[T]):
     """
-    Input operators ingest data into a pipeline.
+    Defines a data source that ingests data into the pipeline.
 
-    An Input represents the entry point of a pipeline and is responsible for
-    describing how data should be read from an external source, such as a
-    database, file system, API, stream, or object storage.
+    Specifies how and where data is read from external sources such as
+    databases, file systems, APIs, streams, or object storage. Inputs
+    represent the entry point of a pipeline and consume data products
+    from their source layer.
 
-    Depending on the provider, data access may be performed eagerly
-    or deferred as part of a lazy execution plan coordinated by the Runner.
-
-    Schema metadata may be provided to describe the expected structure of the
-    input data. Schema enforcement and validation, when applicable, are
-    provider-specific concerns and may occur eagerly or lazily depending on
-    the execution model.
+    Data access may be eager or lazy, depending on the Runner's execution
+    strategy. Schema metadata can be provided to describe the expected
+    structure of the input data.
 
     Attributes:
-        schema: Optional data schema definition.
-        schema_subject: Optional schema registry subject.
-        schema_version: Optional schema version identifier.
-        options: Provider-specific configuration parameters.
+        name: Unique identifier for this input within the job.
+        description: Short description of the data source.
+        org: Organization owning the source data.
+        domain: Domain team owning the source data.
+        product: Data product being consumed.
+        model: Data model being read (e.g., table, topic, collection).
+        layer: Data layer of the source (e.g., raw, trusted, refined).
+        schema: The schema definition of input data.
+        schema_subject: Schema registry subject name.
+        schema_version: Specific schema version.
     """
 
     def __init__(

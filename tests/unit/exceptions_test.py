@@ -8,8 +8,8 @@ from tiozin.exceptions import (
     InvalidInputError,
     JobAlreadyExistsError,
     JobError,
-    JobManifestError,
     JobNotFoundError,
+    ManifestError,
     NotFoundError,
     OperationTimeoutError,
     PluginError,
@@ -156,7 +156,7 @@ def test_job_manifest_error_should_format_job_name_when_provided():
     job = "my_job"
 
     # Act
-    error = JobManifestError(message=message, job=job)
+    error = ManifestError(message=message, name=job)
 
     # Assert
     actual = error.message
@@ -175,10 +175,10 @@ def test_job_manifest_error_from_pydantic_should_format_validation_errors():
         TestModel(name="not-an-int")
 
     # Act
-    error = JobManifestError.from_pydantic(exc.value, job="test_job")
+    error = ManifestError.from_pydantic(exc.value, name="test_job")
 
     # Assert
-    assert isinstance(error, JobManifestError)
+    assert isinstance(error, ManifestError)
     assert error.message.startswith("Invalid manifest for `test_job`:")
 
 
@@ -197,10 +197,10 @@ def test_job_manifest_error_from_ruamel_should_format_yaml_errors():
     with pytest.raises(MarkedYAMLError) as exc:
         yaml.load(yaml_content)
 
-    error = JobManifestError.from_ruamel(exc.value, job="test_job")
+    error = ManifestError.from_ruamel(exc.value, name="test_job")
 
     # Assert
-    assert isinstance(error, JobManifestError)
+    assert isinstance(error, ManifestError)
     assert error.message.startswith("Invalid manifest for `test_job`:")
 
 
@@ -433,7 +433,7 @@ def test_raise_if_missing_should_raise_when_field_is_not_excluded():
         JobError(),
         JobNotFoundError(job_name="x"),
         JobAlreadyExistsError(job_name="x"),
-        JobManifestError(message="x", job="y"),
+        ManifestError(message="x", name="y"),
         SchemaError(),
         SchemaViolationError(),
         SchemaNotFoundError(subject="x"),
@@ -456,7 +456,7 @@ def test_all_expected_errors_are_tiozin_errors(error):
     [
         JobNotFoundError(job_name="x"),
         JobAlreadyExistsError(job_name="x"),
-        JobManifestError(message="x", job="y"),
+        ManifestError(message="x", name="y"),
     ],
 )
 def test_job_errors_are_catchable_as_job_error(error):
@@ -505,7 +505,7 @@ def test_errors_are_catchable_as_conflict(error):
 @pytest.mark.parametrize(
     "error",
     [
-        JobManifestError(message="x", job="y"),
+        ManifestError(message="x", name="y"),
         PluginKindError(plugin_name="x", plugin_kind=object),
         SchemaViolationError(),
         PolicyViolationError(policy=object),

@@ -5,7 +5,6 @@ from pydantic import ValidationError
 
 from tests.mocks.manifests.mini import compact_job
 from tiozin.api.metadata.job_manifest import (
-    InputManifest,
     JobManifest,
 )
 
@@ -53,59 +52,4 @@ def test_manifest_should_reject_job_without_taxonomy():
 
     # Act
     with pytest.raises(ValidationError):
-        JobManifest(**data)
-
-
-def test_manifest_should_reject_job_without_steps():
-    # Arrange
-    data = deepcopy(compact_job)
-    data["inputs"] = []
-    data["transforms"] = []
-    data["outputs"] = []
-
-    # Act & Assert
-    with pytest.raises(ValidationError, match="Job must have at least one Input step"):
-        JobManifest(**data)
-
-
-def test_manifest_should_accept_job_with_input_step_only():
-    # Arrange
-    data = deepcopy(compact_job)
-    data["transforms"] = []
-    data["outputs"] = []
-
-    # Act
-    manifest = JobManifest(**data)
-
-    # Assert
-    actual = [
-        *manifest.inputs,
-        *manifest.transforms,
-        *manifest.outputs,
-    ]
-    expected = [
-        InputManifest(kind="TestInput", name="read_something"),
-    ]
-    assert actual == expected
-
-
-def test_manifest_should_reject_job_with_transform_step_only():
-    # Arrange
-    data = deepcopy(compact_job)
-    data["inputs"] = []
-    data["outputs"] = []
-
-    # Act
-    with pytest.raises(ValidationError, match="Job must have at least one Input step"):
-        JobManifest(**data)
-
-
-def test_manifest_should_reject_job_with_output_step_only():
-    # Arrange
-    data = deepcopy(compact_job)
-    data["inputs"] = []
-    data["transforms"] = []
-
-    # Act
-    with pytest.raises(ValidationError, match="Job must have at least one Input step"):
         JobManifest(**data)

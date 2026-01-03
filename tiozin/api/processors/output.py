@@ -10,20 +10,25 @@ T = TypeVar("T")
 
 class Output(Plugable, Executable, Resource, Generic[T]):
     """
-    Output operators persist data to external systems.
+    Defines a data destination that persists processed data.
 
-    An Output represents the terminal step of a pipeline, responsible for
-    writing data to a destination such as a database, file system, or
-    streaming sink.
+    Specifies where and how data is written to external systems such as
+    databases, file systems, or streaming sinks. Outputs represent the
+    terminal step of a pipeline and produce data products in their
+    destination layer.
 
-    The `write()` method may return either:
-    - the input data or
-    - a writer object whose concrete type is interpreted by the Runner
-      to decide how the job is executed.
+    The write() method may return the input data, a writer object, or None.
+    Writer objects enable lazy execution by separating write intent from
+    execution strategy, which is delegated to the Runner.
 
-    This Output/Writer modeling enables lazy execution by separating write
-    intent from execution strategy, which is delegated to the Runner. Eager
-    execution may be indicated to the Runner by returning TData or `None`.
+    Attributes:
+        name: Unique identifier for this output within the job.
+        description: Short description of the data destination.
+        org: Organization owning the destination data.
+        domain: Domain team owning the destination.
+        product: Data product being produced.
+        model: Data model being written (e.g., table, topic, collection).
+        layer: Data layer of the destination (e.g., raw, trusted, refined).
     """
 
     def __init__(

@@ -21,22 +21,41 @@ T = TypeVar("T")
 
 class Job(Plugable, Executable, Resource, Generic[T]):
     """
-    A Job represents a complete pipeline definition.
+    Defines a complete data pipeline.
 
-    It composes Inputs, Transforms, Outputs, and a Runner into a single,
-    declarative unit that describes how data should be read, processed, and
-    written, without prescribing a specific execution model.
+    Composes Inputs, Transforms, Outputs, and a Runner into a declarative
+    unit that describes how data should be read, processed, and written.
+    Jobs represent the complete pipeline and produce data products following
+    Data Mesh principles.
 
-    A Job may also interact with registries to look up or register metadata
-    required for pipeline definition and execution, such as schemas, settings,
-    or runtime configuration.
+    Jobs interact with registries to look up or register metadata required
+    for pipeline definition and execution, such as schemas, settings, or
+    runtime configuration.
 
-    The execution behavior of a Job emerges from the interaction between its
-    operators, registries, and the Runner, allowing eager or lazy execution
-    depending on the providers involved.
+    Execution behavior emerges from the interaction between pipeline components,
+    registries, and the Runner, enabling eager or lazy execution depending on
+    the providers involved.
 
     Jobs are typically built from YAML, JSON, or Python manifests and executed
     by the TiozinApp.
+
+    Attributes:
+        name: Unique name for the job (not the execution ID).
+        description: Short description of the pipeline.
+        owner: Team that required the job.
+        maintainer: Team that maintains this job.
+        cost_center: Team that pays for this job.
+        labels: Additional metadata as key-value pairs.
+        org: Organization producing the data product.
+        region: Business region of the domain team.
+        domain: Domain team following the Data Mesh concept.
+        product: Data product being produced.
+        model: Data model being produced (e.g., table, topic, collection).
+        layer: Data layer this job represents (e.g., raw, trusted, refined).
+        runner: Runtime environment where the job runs.
+        inputs: Sources that provide data to the job.
+        transforms: Steps that modify the data.
+        outputs: Destinations where data is written.
     """
 
     def __init__(

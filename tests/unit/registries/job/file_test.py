@@ -6,7 +6,7 @@ import pytest
 
 from tests.mocks.manifests import mini
 from tiozin.api import JobManifest
-from tiozin.exceptions import JobManifestError
+from tiozin.exceptions import ManifestError
 from tiozin.family.tio_kernel import FileJobRegistry
 
 
@@ -41,7 +41,7 @@ def test_get_should_fail_when_manifest_has_duplicated_keys():
     path = "tests/mocks/manifests/duplicated_key.yaml"
 
     # Act
-    with pytest.raises(JobManifestError, match="duplicate key"):
+    with pytest.raises(ManifestError, match="duplicate key"):
         FileJobRegistry().get(path)
 
 
@@ -50,7 +50,7 @@ def test_get_should_fail_on_schema_validation_error():
     path = "tests/mocks/manifests/invalid_schema.yaml"
 
     # Act
-    with pytest.raises(JobManifestError, match="The provided TransformManifest cannot be parsed"):
+    with pytest.raises(ManifestError, match="The provided TransformManifest cannot be parsed"):
         FileJobRegistry().get(path)
 
 
@@ -68,13 +68,13 @@ def test_register_should_write_yaml_manifest(tmp_path: Path):
         """
       kind: Job
       name: test_job
+      labels: {}
       org: tiozin
       region: latam
       domain: quality
       product: test_cases
       model: some_case
       layer: test
-      labels: {}
       runner:
         kind: TestRunner
         streaming: false
