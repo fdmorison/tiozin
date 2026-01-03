@@ -30,30 +30,20 @@ from tiozin.api import (
 # Processors
 from tiozin.api import Runner, Transform, Input, Output, Job
 
-# Auxiliary entities
+# Auxiliary
 from tiozin.api import Context
-
-# App (imported last to avoid circular imports)
 from tiozin.app import TiozinApp
 
 __all__ = [
-    # App
-    "TiozinApp",
-    # Base abstractions
-    "Resource",
-    "PlugIn",
+    # Mixins
     "Executable",
-    "Processor",
+    # Bases
+    "Resource",
     "Registry",
-    # Data Services
-    "Runner",
-    "Transform",
-    "Input",
-    "Output",
-    "Job",
+    "PlugIn",
     # Metadata
     "JobManifest",
-    # Metadata Services
+    # Registries
     "JobRegistry",
     "LineageRegistry",
     "MetricRegistry",
@@ -61,7 +51,13 @@ __all__ = [
     "SecretRegistry",
     "SettingRegistry",
     "TransactionRegistry",
-    # Entities
-    "LinearJob",
+    # Processors
+    "Runner",
+    "Transform",
+    "Input",
+    "Output",
+    "Job",
+    # Auxiliary
     "Context",
+    "TiozinApp",
 ]

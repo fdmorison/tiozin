@@ -5,10 +5,10 @@ from tiozin.exceptions import RequiredArgumentError
 
 from .. import Context, Executable, PlugIn
 
-T = TypeVar("T")
+TData = TypeVar("TData")
 
 
-class Transform(Executable, PlugIn, Generic[T]):
+class Transform(Executable, PlugIn, Generic[TData]):
     """
     Defines a data transformation that modifies or enriches data.
 
@@ -55,21 +55,15 @@ class Transform(Executable, PlugIn, Generic[T]):
         self.model = model
 
     @abstractmethod
-    def transform(self, context: Context, data: T) -> T:
+    def transform(self, context: Context, data: TData) -> TData:
         """Apply transformation logic. Providers must implement."""
 
-    def execute(self, context: Context, data: T) -> T:
+    def execute(self, context: Context, data: TData) -> TData:
         """Template method that delegates to transform()."""
         return self.transform(context, data)
 
-    def setup(self) -> None:
-        return None
 
-    def teardown(self) -> None:
-        return None
-
-
-class CoTransform(Transform[T]):
+class CoTransform(Transform[TData]):
     """
     Transforms multiple datasets cooperatively.
 
@@ -96,5 +90,5 @@ class CoTransform(Transform[T]):
     """
 
     @abstractmethod
-    def transform(self, context: Context, data: T, other: T, *others: T) -> T:
+    def transform(self, context: Context, data: TData, other: TData, *others: TData) -> TData:
         """Apply cooperative transformation logic. Providers must implement."""

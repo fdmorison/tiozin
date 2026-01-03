@@ -15,10 +15,10 @@ from tiozin.exceptions import RequiredArgumentError
 if TYPE_CHECKING:
     from tiozin.assembly.job_builder import JobBuilder
 
-T = TypeVar("T")
+TData = TypeVar("TData")
 
 
-class Job(Executable, PlugIn, Generic[T]):
+class Job(Executable, PlugIn, Generic[TData]):
     """
     Defines a complete data pipeline.
 
@@ -115,15 +115,9 @@ class Job(Executable, PlugIn, Generic[T]):
         return JobBuilder()
 
     @abstractmethod
-    def run(self, context: Context) -> T:
+    def run(self, context: Context) -> TData:
         pass
 
-    def execute(self, context: Context) -> T:
+    def execute(self, context: Context) -> TData:
         """Template method that delegates to run()."""
         return self.run(context)
-
-    def setup(self) -> None:
-        return None
-
-    def teardown(self) -> None:
-        return None

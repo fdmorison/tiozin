@@ -8,6 +8,3 @@ class SchemaRegistry(Registry[object]):
     Storage-agnostic contract for schema backends (like Confluent Schema Registry).
     Available in Context for schema handling in Transforms, Inputs, and Outputs.
     """
-
-    def __init__(self, *args, **options) -> None:
-        super().__init__(*args, **options)

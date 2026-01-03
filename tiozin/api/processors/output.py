@@ -5,10 +5,10 @@ from tiozin.exceptions import RequiredArgumentError
 
 from .. import Context, Executable, PlugIn
 
-T = TypeVar("T")
+TData = TypeVar("TData")
 
 
-class Output(Executable, PlugIn, Generic[T]):
+class Output(Executable, PlugIn, Generic[TData]):
     """
     Defines a data destination that persists processed data.
 
@@ -56,17 +56,11 @@ class Output(Executable, PlugIn, Generic[T]):
         self.model = model
 
     @abstractmethod
-    def write(self, context: Context, data: T) -> T:
+    def write(self, context: Context, data: TData) -> TData:
         """
         Write data to destination. Providers must implement.
         """
 
-    def execute(self, context: Context, data: T) -> T:
+    def execute(self, context: Context, data: TData) -> TData:
         """Template method that delegates to write()."""
         return self.write(context, data)
-
-    def setup(self) -> None:
-        return None
-
-    def teardown(self) -> None:
-        return None

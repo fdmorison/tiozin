@@ -48,9 +48,6 @@ class LinearJob(Job[Any]):
     graphs may be supported by future implementations.
     """
 
-    def __init__(self, **options) -> None:
-        super().__init__(**options)
-
     def run(self, context: Context) -> Any:
         self.info("The job has started")
 
@@ -73,6 +70,6 @@ class LinearJob(Job[Any]):
         self.info("The job ran successfully!")
         return result
 
-    def teardown(self, **kwargs) -> None:
+    def teardown(self) -> None:
         self.warning("The job received a stop request.")
-        super().teardown(**kwargs)
+        self.runner.teardown()

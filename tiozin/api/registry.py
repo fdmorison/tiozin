@@ -19,12 +19,6 @@ class Registry(PlugIn, Generic[TMetadata]):
         super().__init__(**options)
         self.ready = False
 
-    def setup(self, **kwargs) -> None:
-        return None
-
-    def teardown(self, **kwargs) -> None:
-        return None
-
     @abstractmethod
     def get(self, identifier: str, version: str | None = None) -> TMetadata:
         """

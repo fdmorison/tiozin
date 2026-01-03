@@ -11,8 +11,5 @@ class NoOpRunner(Runner[Any]):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(self, **options) -> None:
-        super().__init__(**options)
-
     def run(self, context: Context, execution_plan: Any) -> Any:
         return []

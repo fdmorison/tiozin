@@ -9,6 +9,3 @@ class TransactionRegistry(Registry[object]):
     Records pending, running, committed, and failed states for consistent tracking and auditing.
     Available in Context for custom inspection in Transforms, Inputs, and Outputs.
     """
-
-    def __init__(self, *args, **options) -> None:
-        super().__init__(*args, **options)
