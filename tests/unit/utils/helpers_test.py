@@ -139,10 +139,11 @@ def test_default_should_return_original_value_when_collection_is_not_empty(
     [
         (["item1", "item2"], ["item1", "item2"]),
         (("item1", "item2"), ["item1", "item2"]),
+        ({"item1", "item2"}, ["item1", "item2"]),
+        ({"key": "value"}, [{"key": "value"}]),
         ("scalar", ["scalar"]),
         (42, [42]),
         (True, [True]),
-        ({"key": "value"}, [{"key": "value"}]),
         ([["nested"]], [["nested"]]),
     ],
 )
@@ -151,17 +152,14 @@ def test_as_list_should_convert_value_to_list(value: Any, expected: list[Any]):
     result = as_list(value)
 
     # Assert
-    actual = result
+    actual = sorted(result)
+    expected = sorted(expected)
     assert actual == expected
 
 
-@pytest.mark.parametrize(
-    "value",
-    ["", None, ()],
-)
-def test_as_list_should_return_none_when_value_is_empty_without_default(value: Any):
+def test_as_list_should_return_none_when_none():
     # Act
-    result = as_list(value)
+    result = as_list(None)
 
     # Assert
     actual = result
@@ -169,17 +167,50 @@ def test_as_list_should_return_none_when_value_is_empty_without_default(value: A
     assert actual == expected
 
 
-@pytest.mark.parametrize(
-    "value",
-    ["", None, ()],
-)
-def test_as_list_should_return_default_when_value_is_empty_with_default(value: Any):
+def test_as_list_should_return_default_when_none():
     # Act
-    result = as_list(value, ["default"])
+    result = as_list(None, "default")
 
     # Assert
     actual = result
     expected = ["default"]
+    assert actual == expected
+
+
+def test_as_list_should_return_none_in_list_none_when_wrap_none():
+    # Act
+    result = as_list(None, wrap_none=True)
+
+    # Assert
+    actual = result
+    expected = [None]
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [[], set(), ()],
+)
+def test_as_list_should_return_empty_list_when_empty_collection(value: Any):
+    # Act
+    result = as_list(value)
+
+    # Assert
+    actual = result
+    expected = []
+    assert actual == expected
+
+
+def test_as_list_should_return_list_when_empty_string():
+    # Arrange
+    value = ""
+
+    # Act
+    result = as_list(value)
+
+    # Assert
+    actual = result
+    expected = [""]
     assert actual == expected
 
 
@@ -192,16 +223,6 @@ def test_as_list_should_preserve_list_identity():
 
     # Assert - should be the same object
     assert result is original_list
-
-
-def test_as_list_should_wrap_none_when_wrap_none_is_true():
-    # Act
-    result = as_list(None, wrap_none=True)
-
-    # Assert
-    actual = result
-    expected = [None]
-    assert actual == expected
 
 
 # ============================================================================

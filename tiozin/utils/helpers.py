@@ -42,12 +42,12 @@ def as_list(
     to lists, and lists are returned as-is. By default, `None` is preserved
     and returned as `None`, but if `wrap_none=True`, `None` is wrapped as `[None]`.
     """
-    value = default(value, default_)
+    value = value if value is not None else default_
     if value is None:
         return [None] if wrap_none else None
     if isinstance(value, list):
         return value
-    if isinstance(value, tuple):
+    if isinstance(value, (tuple, set)):
         return list(value)
     return [value]
 
