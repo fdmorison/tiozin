@@ -112,7 +112,7 @@ class TiozinApp(Resource):
             except TiozinError as e:
                 self.status = self.status.set_failure()
                 self.error(e.message)
-                SystemExit(1)
+                raise SystemExit(1) from e
             except Exception:
                 self.status = self.status.set_failure()
                 job_name = self.current_job.name if self.current_job else name
