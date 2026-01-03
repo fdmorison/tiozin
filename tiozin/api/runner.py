@@ -46,9 +46,3 @@ class Runner(Executable, PlugIn, Generic[T]):
     def execute(self, context: Context, execution_plan: T) -> Any:
         """Template method that delegates to run()."""
         self.run(context, execution_plan)
-
-    def setup(self) -> None:
-        return None
-
-    def teardown(self) -> None:
-        return None

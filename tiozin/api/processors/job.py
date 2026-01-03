@@ -121,9 +121,3 @@ class Job(Executable, PlugIn, Generic[T]):
     def execute(self, context: Context) -> T:
         """Template method that delegates to run()."""
         return self.run(context)
-
-    def setup(self) -> None:
-        return None
-
-    def teardown(self) -> None:
-        return None

@@ -72,9 +72,3 @@ class Input(Executable, PlugIn, Generic[T]):
     def execute(self, context: Context) -> T:
         """Template method that delegates to read()."""
         return self.read(context)
-
-    def setup(self) -> None:
-        return None
-
-    def teardown(self) -> None:
-        return None

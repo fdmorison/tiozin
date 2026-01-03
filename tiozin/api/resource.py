@@ -1,5 +1,4 @@
 import logging
-from abc import ABC, abstractmethod
 from typing import Any, Self, Unpack
 
 from uuid_utils import uuid7
@@ -9,7 +8,7 @@ from tiozin import config
 from .typehint import LogKwargs
 
 
-class Resource(ABC):
+class Resource:
     """
     Base class for all Tiozin resources.
 
@@ -53,23 +52,25 @@ class Resource(ABC):
     def instance_uri(self) -> str:
         return f"{self.uri}/{self.id}"
 
-    @abstractmethod
     def setup(self) -> None:
         """
-        Initialization hook.
+        Optional initialization hook.
 
         Called when the resource enters its execution context.
-        Override if the resource requires setup logic.
+        Override if the resource requires setup logic such as establishing
+        connections, initializing sessions, or allocating resources.
         """
+        return None
 
-    @abstractmethod
     def teardown(self) -> None:
         """
-        Cleanup hook.
+        Optional cleanup hook.
 
         Called when the resource exits its execution context.
-        Override if the resource requires cleanup logic.
+        Override if the resource requires cleanup logic such as closing
+        connections, releasing resources, or performing final operations.
         """
+        return None
 
     def to_dict(self) -> dict[str, Any]:
         """

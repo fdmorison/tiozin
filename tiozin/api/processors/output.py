@@ -64,9 +64,3 @@ class Output(Executable, PlugIn, Generic[T]):
     def execute(self, context: Context, data: T) -> T:
         """Template method that delegates to write()."""
         return self.write(context, data)
-
-    def setup(self) -> None:
-        return None
-
-    def teardown(self) -> None:
-        return None
