@@ -9,47 +9,6 @@ from typing import Any, TypeVar
 T = TypeVar("T")
 
 
-def is_package(obj: Any) -> bool:
-    return inspect.ismodule(obj) and hasattr(obj, "__path__")
-
-
-def is_plugin(plugin: Any) -> bool:
-    from tiozin.api import Plugable, Registry
-
-    return (
-        inspect.isclass(plugin)
-        and issubclass(plugin, Plugable)
-        and plugin is not Plugable
-        and Plugable not in plugin.__bases__
-        and Registry not in plugin.__bases__
-    )
-
-
-def detect_base_kind(instance: Any, interface: type) -> type:
-    """
-    Returns the most specific class that directly implements the interface.
-
-    Searches the MRO for the first concrete class that is a subclass of the
-    interface, regardless of mixin order.
-
-    Example:
-        detect_base_kind(runner_instance, Plugable) -> Runner
-        detect_base_kind(input_instance, Plugable) -> Input
-    """
-    mro = type(instance).__mro__
-
-    if interface not in mro:
-        raise RuntimeError(f"{type(instance).__name__} does not implement {interface.__name__}")
-
-    for cls in reversed(mro):
-        if cls is interface:
-            continue
-        if issubclass(cls, interface):
-            return cls
-
-    raise RuntimeError(f"Could not detect base kind for {type(instance).__name__}")
-
-
 def utcnow() -> datetime:
     """
     Return the current UTC time as a timezone-aware datetime.
@@ -141,3 +100,19 @@ def try_get_public_setter(obj: Any, method_name: str) -> Callable | None:
         return None
 
     return method
+
+
+def is_package(obj: Any) -> bool:
+    return inspect.ismodule(obj) and hasattr(obj, "__path__")
+
+
+def is_plugin(plugin: Any) -> bool:
+    from tiozin.api import Plugable, Registry
+
+    return (
+        inspect.isclass(plugin)
+        and issubclass(plugin, Plugable)
+        and plugin is not Plugable
+        and Plugable not in plugin.__bases__
+        and Registry not in plugin.__bases__
+    )

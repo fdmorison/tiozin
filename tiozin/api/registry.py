@@ -3,7 +3,6 @@ from typing import Generic, TypeVar
 
 from tiozin.api import Plugable, Resource
 from tiozin.exceptions import NotFoundError
-from tiozin.utils import helpers
 
 TMetadata = TypeVar("TMetadata")
 
@@ -18,7 +17,6 @@ class Registry(Plugable, Resource, Generic[TMetadata]):
 
     def __init__(self, **options) -> None:
         super().__init__(**options)
-        self.registry_kind = helpers.detect_base_kind(self, Registry)
         self.ready = False
 
     def setup(self, **kwargs) -> None:

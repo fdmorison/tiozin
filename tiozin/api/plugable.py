@@ -1,19 +1,11 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import ClassVar
 
-from tiozin.utils import helpers
-
-
-@dataclass(frozen=True)
-class PluginMetadata:
-    kind: str
-    tio_kind: str
-    python_kind: str
-    provider: str
+from tiozin import config
+from tiozin.api import Resource
 
 
-class Plugable:
+class Plugable(Resource):
     """
     Mixin for resources that can be discovered and loaded as plugins.
 
@@ -22,8 +14,56 @@ class Plugable:
     Outputs, Runners, and Registries.
     """
 
-    __tiometa__: PluginMetadata = None
+    @dataclass(frozen=True)
+    class Metadata:
+        name: str
+        kind: str
+        provider: str
+        uri: str
+        tio_path: str
+        python_path: str
 
-    def __init__(self, *args, **options) -> None:
-        super().__init__(*args, **options)
-        self.plugin_kind = helpers.detect_base_kind(self, Plugable)
+    __tiometa__: ClassVar[Metadata]
+
+    def __init_subclass__(plugin, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        name = plugin.__name__
+        kind = plugin._detect_category()
+        provider = plugin._detect_provider()
+        plugin.__tiometa__ = Plugable.Metadata(
+            name=name,
+            kind=kind,
+            provider=provider,
+            uri=f"tiozin://{provider}/{kind}/{name}",
+            tio_path=f"{provider}:{name}",
+            python_path=f"{plugin.__module__}.{plugin.__qualname__}",
+        )
+
+    @classmethod
+    def _detect_category(plugin) -> str:
+        for clazz in reversed(plugin.__mro__):
+            if clazz is not Plugable and issubclass(clazz, Plugable):
+                return clazz.__name__.lower()
+
+    @classmethod
+    def _detect_provider(plugin) -> str:
+        module_path: list[str] = plugin.__module__.split(".")
+
+        for part in module_path:
+            if part.startswith(config.plugin_provider_prefix):
+                return part
+
+        return config.plugin_provider_unknown
+
+    @property
+    def uri(self) -> str:
+        class_uri = self.__tiometa__.uri
+        if class_uri.endswith(self.name):
+            return class_uri
+        return f"{class_uri}/{self.name}"
+
+    def __str__(self) -> str:
+        return self.uri
+
+    def __repr__(self) -> str:
+        return f"{self.uri}"

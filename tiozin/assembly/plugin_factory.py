@@ -8,7 +8,6 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.api.plugable import PluginMetadata
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
 from tiozin.utils import helpers
 
@@ -85,16 +84,10 @@ class PluginFactory(Resource):
         if plugin in self._plugins:
             return
 
-        metadata = PluginMetadata(
-            kind=plugin.__name__,
-            tio_kind=f"{provider}:{plugin.__name__}",
-            python_kind=f"{plugin.__module__}.{plugin.__qualname__}",
-            provider=provider,
-        )
-        plugin.__tiometa__ = metadata
-        self._index.setdefault(metadata.kind, set()).add(plugin)
-        self._index[metadata.tio_kind] = plugin
-        self._index[metadata.python_kind] = plugin
+        metadata = plugin.__tiometa__
+        self._index.setdefault(metadata.name, set()).add(plugin)
+        self._index[metadata.uri] = plugin
+        self._index[metadata.python_path] = plugin
         self._plugins.add(plugin)
 
     def load_plugin(self, kind: str, plugin_kind: type[T] | None = None, **args) -> Plugable | T:
@@ -118,21 +111,21 @@ class PluginFactory(Resource):
         Returns:
             A new instance of the resolved plugin.
         """
-        plugin_or_candidates = self._index.get(kind)
+        candidates = self._index.get(kind)
 
-        if not plugin_or_candidates:
+        if not candidates:
             raise PluginNotFoundError(kind)
 
-        if helpers.is_plugin(plugin_or_candidates):
-            plugin = plugin_or_candidates
+        if not isinstance(candidates, set):
+            plugin = candidates
         else:
-            if len(plugin_or_candidates) > 1:
-                candidates = [p.__tiometa__.tio_kind for p in plugin_or_candidates]
+            if len(candidates) > 1:
+                candidates = [p.__tiometa__.tio_path for p in candidates]
                 raise AmbiguousPluginError(kind, candidates)
-            plugin = next(iter(plugin_or_candidates))
+            plugin = next(iter(candidates))
 
         if plugin_kind and not issubclass(plugin, plugin_kind):
-            raise PluginNotFoundError(kind)
+            raise PluginNotFoundError(kind, reason=f"{plugin.__name__} is not a {plugin_kind}.")
 
         return plugin(**args)
 
