@@ -39,7 +39,7 @@ class JobManifest(Manifest):
 
     # Pipeline Components
     runner: RunnerManifest = Field(description=docs.JOB_RUNNER)
-    inputs: list[InputManifest] = Field(description=docs.JOB_INPUTS)
+    inputs: list[InputManifest] = Field(description=docs.JOB_INPUTS, min_length=1)
     transforms: list[TransformManifest] = Field(
         default_factory=list, description=docs.JOB_TRANSFORMS
     )
