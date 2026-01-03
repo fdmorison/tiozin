@@ -6,8 +6,7 @@ from tiozin.api import (
     Executable,
     Input,
     Output,
-    Plugable,
-    Resource,
+    PlugIn,
     Runner,
     Transform,
 )
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class Job(Plugable, Executable, Resource, Generic[T]):
+class Job(Executable, PlugIn, Generic[T]):
     """
     Defines a complete data pipeline.
 

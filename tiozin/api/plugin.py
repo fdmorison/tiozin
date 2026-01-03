@@ -5,7 +5,7 @@ from tiozin import config
 from tiozin.api import Resource
 
 
-class Plugable(Resource):
+class PlugIn(Resource):
     """
     Mixin for resources that can be discovered and loaded as plugins.
 
@@ -30,11 +30,11 @@ class Plugable(Resource):
         name = plugin.__name__
         kind = plugin._detect_category()
         provider = plugin._detect_provider()
-        plugin.__tiometa__ = Plugable.Metadata(
+        plugin.__tiometa__ = PlugIn.Metadata(
             name=name,
             kind=kind,
             provider=provider,
-            uri=f"tiozin://{provider}/{kind}/{name}",
+            uri=f"tiozin://{provider}/{kind.lower()}/{name}",
             tio_path=f"{provider}:{name}",
             python_path=f"{plugin.__module__}.{plugin.__qualname__}",
         )
@@ -42,8 +42,8 @@ class Plugable(Resource):
     @classmethod
     def _detect_category(plugin) -> str:
         for clazz in reversed(plugin.__mro__):
-            if clazz is not Plugable and issubclass(clazz, Plugable):
-                return clazz.__name__.lower()
+            if clazz is not PlugIn and issubclass(clazz, PlugIn):
+                return clazz.__name__
 
     @classmethod
     def _detect_provider(plugin) -> str:

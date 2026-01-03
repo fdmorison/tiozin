@@ -3,12 +3,12 @@ from typing import Generic, TypeVar
 
 from tiozin.exceptions import RequiredArgumentError
 
-from .. import Context, Executable, Plugable, Resource
+from .. import Context, Executable, PlugIn
 
 T = TypeVar("T")
 
 
-class Output(Plugable, Executable, Resource, Generic[T]):
+class Output(Executable, PlugIn, Generic[T]):
     """
     Defines a data destination that persists processed data.
 

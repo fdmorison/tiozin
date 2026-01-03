@@ -1,14 +1,14 @@
 from abc import abstractmethod
 from typing import Any, Generic, TypeVar
 
-from . import Context, Resource
+from . import Context
 from .executable import Executable
-from .plugable import Plugable
+from .plugin import PlugIn
 
 T = TypeVar("T")
 
 
-class Runner(Plugable, Executable, Resource, Generic[T]):
+class Runner(Executable, PlugIn, Generic[T]):
     """
     Runners execute and coordinate pipelines within a specific backend.
 

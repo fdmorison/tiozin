@@ -1,13 +1,13 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from tiozin.api import Plugable, Resource
+from tiozin.api import PlugIn
 from tiozin.exceptions import NotFoundError
 
 TMetadata = TypeVar("TMetadata")
 
 
-class Registry(Plugable, Resource, Generic[TMetadata]):
+class Registry(PlugIn, Generic[TMetadata]):
     """
     Base class for metadata registries.
 

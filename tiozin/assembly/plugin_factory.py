@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Output, Plugable, Resource, Runner, Transform
+from tiozin.api import Input, Job, Output, PlugIn, Resource, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     Manifest,
@@ -13,7 +13,7 @@ from tiozin.utils import helpers
 
 from .plugin_scanner import PluginScanner
 
-T = TypeVar("T", bound=Plugable)
+T = TypeVar("T", bound=PlugIn)
 
 
 class PluginFactory(Resource):
@@ -62,24 +62,24 @@ class PluginFactory(Resource):
 
     def __init__(self) -> None:
         super().__init__()
-        self._index: dict[str, type[Plugable] | set[type[Plugable]]] = {}
-        self._plugins: set[type[Plugable]] = set()
+        self._index: dict[str, type[PlugIn] | set[type[PlugIn]]] = {}
+        self._plugins: set[type[PlugIn]] = set()
 
     def setup(self, **kwargs) -> None:
         scanner = PluginScanner(self.logger)
-        for tio_name, plugins in scanner.scan().items():
+        for plugins in scanner.scan().values():
             for plugin in plugins:
-                self.register(tio_name, plugin)
+                self.register(plugin)
 
     def teardown(self, **kwargs) -> None:
         return None
 
-    def register(self, provider: str, plugin: type[Plugable]) -> None:
+    def register(self, plugin: type[PlugIn]) -> None:
         """
         Register a new plugin from a given provider namespace (e.g. `tio_pandas`, `tio_spark`)
         """
         if not helpers.is_plugin(plugin):
-            raise TypeError(f"{plugin!r} is not a Plugin.")
+            raise TypeError(f"{plugin} is not a Plugin.")
 
         if plugin in self._plugins:
             return
@@ -87,10 +87,11 @@ class PluginFactory(Resource):
         metadata = plugin.__tiometa__
         self._index.setdefault(metadata.name, set()).add(plugin)
         self._index[metadata.uri] = plugin
+        self._index[metadata.tio_path] = plugin
         self._index[metadata.python_path] = plugin
         self._plugins.add(plugin)
 
-    def load_plugin(self, kind: str, plugin_kind: type[T] | None = None, **args) -> Plugable | T:
+    def load_plugin(self, kind: str, plugin_kind: type[T] | None = None, **args) -> PlugIn | T:
         """
         Resolve and loads a plugin by kind.
 
@@ -138,7 +139,7 @@ class PluginFactory(Resource):
         """
         return self.load_plugin(kind, Job, **args)
 
-    def load_manifest(self, manifest: Manifest | Plugable) -> Plugable:
+    def load_manifest(self, manifest: Manifest | PlugIn) -> PlugIn:
         """
         Load and instantiate a job step from a manifest.
 
@@ -146,7 +147,7 @@ class PluginFactory(Resource):
         (Input, Output, Transform, or Runner) based on the manifest type.
         If an operator instance is provided, it is returned unchanged.
         """
-        if isinstance(manifest, Plugable):
+        if isinstance(manifest, PlugIn):
             return manifest
 
         args = manifest.model_dump()

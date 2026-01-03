@@ -3,12 +3,12 @@ from typing import Generic, TypeVar
 
 from tiozin.exceptions import RequiredArgumentError
 
-from .. import Context, Executable, Plugable, Resource
+from .. import Context, Executable, PlugIn
 
 T = TypeVar("T")
 
 
-class Transform(Plugable, Executable, Resource, Generic[T]):
+class Transform(Executable, PlugIn, Generic[T]):
     """
     Defines a data transformation that modifies or enriches data.
 
