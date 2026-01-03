@@ -8,10 +8,10 @@ Public API for building data pipelines with Tiozin.
 """
 
 # Mixins
-from tiozin.api import Executable, Plugable
+from tiozin.api import Executable
 
 # Bases
-from tiozin.api import Resource, Registry
+from tiozin.api import Resource, Registry, PlugIn
 
 # Metadata
 from tiozin.api import JobManifest
@@ -41,7 +41,7 @@ __all__ = [
     "TiozinApp",
     # Base abstractions
     "Resource",
-    "Plugable",
+    "PlugIn",
     "Executable",
     "Processor",
     "Registry",

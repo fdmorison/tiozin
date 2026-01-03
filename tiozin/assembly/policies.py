@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from importlib.metadata import EntryPoint
 
+from tiozin import config
 from tiozin.exceptions import PolicyViolationError
 
 logger = logging.getLogger(__name__)
@@ -42,8 +43,8 @@ class PolicyResult:
 
 
 class ProviderNamePolicy:
-    prefix = "tio_"
-    pattern = re.compile(r"^(?:tio_.+|.+\.tio_.+)$")
+    prefix = config.plugin_provider_prefix
+    pattern = re.compile(rf"^(?:{prefix}.+|.+\.{prefix}.+)$")
 
     @classmethod
     def eval(cls, provider: EntryPoint) -> PolicyResult:
@@ -59,7 +60,7 @@ class ProviderNamePolicy:
             decision=PolicyDecision.SKIP,
             message=(
                 "Skipping provider that does not match Tiozin's naming convention. "
-                f"The provider '{provider.name}' should be prefixed with `tio_` and the "
+                f"The provider '{provider.name}' should be prefixed with `{cls.prefix}` and the "
                 f"package '{provider.value}' should end with '{expected_name}'."
             ),
         )

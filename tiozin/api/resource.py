@@ -4,6 +4,8 @@ from typing import Any, Self, Unpack
 
 from uuid_utils import uuid7
 
+from tiozin import config
+
 from .typehint import LogKwargs
 
 
@@ -34,15 +36,18 @@ class Resource(ABC):
         **options,
     ) -> None:
         self.id = str(uuid7())
-        self.kind = type(self)
-        self.name = name or type(self).__name__
+        self.kind = type(self).__name__
+        self.name = name or self.kind
         self.description = description
         self.options = options
         self.logger = logging.getLogger(self.name)
 
     @property
     def uri(self) -> str:
-        return f"tiozin://{self.kind.__name__}/{self.name}"
+        scheme = config.app_name
+        authority = config.app_name
+        path = f"{self.kind}/{self.name}" if self.kind != self.name else f"{self.kind}"
+        return f"{scheme}://{authority}/{path}"
 
     @property
     def instance_uri(self) -> str:

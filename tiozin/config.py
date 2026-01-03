@@ -34,3 +34,5 @@ log_date_format = "%Y-%m-%dT%H:%M:%S%z"
 #           Plugins
 # ===============================================
 plugin_provider_group = "tiozin.family"
+plugin_provider_prefix = "tio_"
+plugin_provider_unknown = "tio_unknown"

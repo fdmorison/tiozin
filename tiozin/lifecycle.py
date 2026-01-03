@@ -16,7 +16,6 @@ class Lifecycle(Resource):
     def setup(self) -> None:
         for registry in self.registries:
             try:
-                self.info(f"🟣 {registry} is starting.")
                 registry.setup()
                 registry.ready = True
                 self.info(f"🟢 {registry} is ready.")

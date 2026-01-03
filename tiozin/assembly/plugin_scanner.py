@@ -6,7 +6,7 @@ from importlib.metadata import EntryPoint, entry_points
 from types import ModuleType
 
 from tiozin import config
-from tiozin.api import Plugable
+from tiozin.api import PlugIn
 from tiozin.assembly.policies import ProviderNamePolicy
 from tiozin.utils import helpers
 
@@ -55,8 +55,8 @@ class PluginScanner:
 
         return providers
 
-    def _scan_plugins(self, tio_package: ModuleType) -> list[type[Plugable]]:
-        plugins: set[type[Plugable]] = set()
+    def _scan_plugins(self, tio_package: ModuleType) -> list[type[PlugIn]]:
+        plugins: set[type[PlugIn]] = set()
 
         for _, module_name, _ in pkgutil.walk_packages(
             tio_package.__path__,
@@ -74,14 +74,14 @@ class PluginScanner:
 
         return list(plugins)
 
-    def scan(self) -> dict[str, list[type[Plugable]]]:
+    def scan(self) -> dict[str, list[type[PlugIn]]]:
         """
         Discover all plugins grouped by provider name.
 
         Returns:
             Mapping of provider name -> list of plugin classes
         """
-        plugins: dict[str, list[type[Plugable]]] = {}
+        plugins: dict[str, list[type[PlugIn]]] = {}
 
         for tio, tio_package in self._scan_providers():
             plugins[tio.name] = self._scan_plugins(tio_package)

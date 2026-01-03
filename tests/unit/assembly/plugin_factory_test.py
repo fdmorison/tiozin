@@ -4,7 +4,7 @@ from unittest.mock import ANY
 import pytest
 from freezegun import freeze_time
 
-from tiozin.api import Input, JobRegistry, Output, Registry, Runner, Transform
+from tiozin.api import Output
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     Manifest,
@@ -12,10 +12,9 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.assembly.plugin_factory import PluginFactory, PluginMetadata
+from tiozin.assembly.plugin_factory import PluginFactory
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
 from tiozin.family.tio_kernel import (
-    FileJobRegistry,
     NoOpInput,
     NoOpOutput,
     NoOpRunner,
@@ -27,65 +26,23 @@ OBJ_2025_01_02T12_00_00Z = datetime.fromisoformat(ISO_2025_01_02T12_00_00Z)
 
 
 @pytest.fixture
-def factory():
-    return PluginFactory()
-
-
-def test_register_should_store_plugin_class(factory: PluginFactory):
-    # Act
-    factory.register(provider="tio_john", plugin=NoOpTransform)
-
-    # Assert
-    actual = factory._index.get("NoOpTransform")
-    expected = {NoOpTransform}
-    assert actual == expected
-
-
-def test_register_should_set_plugin_metadata(factory: PluginFactory):
-    # Act
-    factory.register(provider="tio_john", plugin=NoOpTransform)
-
-    # Assert
-    actual = NoOpTransform.__tiometa__
-    expected = PluginMetadata(
-        kind="NoOpTransform",
-        tio_kind="tio_john:NoOpTransform",
-        python_kind="tiozin.family.tio_kernel.transforms.noop_transform.NoOpTransform",
-        provider="tio_john",
-    )
-    assert actual == expected
-
-
-def test_register_should_preserve_existing_plugin_metadata(factory: PluginFactory):
-    # Act
-    factory.register(provider="tio_john", plugin=NoOpTransform)
-    factory.register(provider="tio_xxxx", plugin=NoOpTransform)
-
-    # Assert
-    actual = NoOpTransform.__tiometa__
-    expected = PluginMetadata(
-        kind="NoOpTransform",
-        tio_kind="tio_john:NoOpTransform",
-        python_kind="tiozin.family.tio_kernel.transforms.noop_transform.NoOpTransform",
-        provider="tio_john",
-    )
-    assert actual == expected
+def factory() -> PluginFactory:
+    f = PluginFactory()
+    f.setup()
+    return f
 
 
 def test_register_should_fail_when_registering_non_plugin(factory: PluginFactory):
     # Act/Assert
     with pytest.raises(TypeError, match="is not a Plugin"):
-        factory.register(provider="tio_john", plugin=12345)
+        factory.register(plugin=12345)
 
 
 def test_register_should_index_plugin_by_multiple_keys(factory: PluginFactory):
-    # Act
-    factory.register(provider="tio_john", plugin=NoOpInput)
-
     # Assert
     actual = (
         factory._index.get("NoOpInput"),
-        factory._index.get("tio_john:NoOpInput"),
+        factory._index.get("tio_kernel:NoOpInput"),
         factory._index.get("tiozin.family.tio_kernel.inputs.noop_input.NoOpInput"),
     )
     expected = (
@@ -98,22 +55,23 @@ def test_register_should_index_plugin_by_multiple_keys(factory: PluginFactory):
 
 def test_register_should_group_plugins_with_same_name(factory: PluginFactory):
     # Arrange
-    class CustomTransform1(NoOpTransform):
+    class CustomTransform(NoOpTransform):
         pass
 
-    class CustomTransform2(NoOpTransform):
+    class1 = CustomTransform
+
+    class CustomTransform(NoOpTransform):
         pass
 
-    CustomTransform1.__name__ = "MyTransform"
-    CustomTransform2.__name__ = "MyTransform"
+    class2 = CustomTransform
 
     # Act
-    factory.register("tio_john", CustomTransform1)
-    factory.register("tio_mary", CustomTransform2)
+    factory.register(class1)
+    factory.register(class2)
 
     # Assert
-    actual = factory._index.get("MyTransform")
-    expected = {CustomTransform1, CustomTransform2}
+    actual = factory._index.get("CustomTransform")
+    expected = {class1, class2}
     assert actual == expected
 
 
@@ -130,9 +88,6 @@ def test_register_should_group_plugins_with_same_name(factory: PluginFactory):
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
-    # Arrange
-    factory.register("tio_kernel", NoOpInput)
-
     # Act
     plugin = factory.load_plugin(
         kind,
@@ -149,8 +104,7 @@ def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
     # Assert
     actual = vars(plugin)
     expected = dict(
-        kind=NoOpInput,
-        plugin_kind=Input,
+        kind="NoOpInput",
         name="test_input",
         description="test",
         org="acme",
@@ -183,9 +137,6 @@ def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
-    # Arrange
-    factory.register("tio_kernel", NoOpOutput)
-
     # Act
     plugin = factory.load_plugin(
         kind,
@@ -202,8 +153,7 @@ def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
     # Assert
     actual = vars(plugin)
     expected = dict(
-        kind=NoOpOutput,
-        plugin_kind=Output,
+        kind="NoOpOutput",
         name="test_output",
         description="test",
         org="acme",
@@ -233,9 +183,6 @@ def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
-    # Arrange
-    factory.register("tio_kernel", NoOpTransform)
-
     # Act
     plugin = factory.load_plugin(
         kind,
@@ -252,8 +199,7 @@ def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
     # Assert
     actual = vars(plugin)
     expected = dict(
-        kind=NoOpTransform,
-        plugin_kind=Transform,
+        kind="NoOpTransform",
         name="test_transform",
         description="test",
         org="acme",
@@ -283,9 +229,6 @@ def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
 def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
-    # Arrange
-    factory.register("tio_kernel", NoOpRunner)
-
     # Act
     plugin = factory.load_plugin(
         kind,
@@ -297,8 +240,7 @@ def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
     actual = vars(plugin)
     expected = dict(
         id=ANY,
-        kind=NoOpRunner,
-        plugin_kind=Runner,
+        kind="NoOpRunner",
         name="test_runner",
         description="test",
         streaming=False,
@@ -321,9 +263,6 @@ def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
     ],
 )
 def test_load_should_load_registry_plugin(factory: PluginFactory, kind: str):
-    # Arrange
-    factory.register("tio_kernel", FileJobRegistry)
-
     # Act
     plugin = factory.load_plugin(kind)
 
@@ -331,9 +270,7 @@ def test_load_should_load_registry_plugin(factory: PluginFactory, kind: str):
     actual = vars(plugin)
     expected = dict(
         id=ANY,
-        kind=FileJobRegistry,
-        plugin_kind=Registry,
-        registry_kind=JobRegistry,
+        kind="FileJobRegistry",
         name="FileJobRegistry",
         description=None,
         options={},
@@ -351,9 +288,6 @@ def test_load_should_fail_when_plugin_not_found(factory: PluginFactory):
 
 
 def test_load_should_fail_when_plugin_kind_mismatch(factory: PluginFactory):
-    # Arrange
-    factory.register("tio_john", NoOpInput)
-
     # Act/Assert
     with pytest.raises(PluginNotFoundError):
         factory.load_plugin("NoOpInput", plugin_kind=Output)
@@ -361,17 +295,15 @@ def test_load_should_fail_when_plugin_kind_mismatch(factory: PluginFactory):
 
 def test_load_should_fail_when_multiple_plugins_with_same_name(factory: PluginFactory):
     # Arrange
-    class CustomInput1(NoOpInput):
+    class AmbiguousInput(NoOpInput):
         pass
 
-    class CustomInput2(NoOpInput):
+    factory.register(AmbiguousInput)
+
+    class AmbiguousInput(NoOpInput):
         pass
 
-    CustomInput1.__name__ = "AmbiguousInput"
-    CustomInput2.__name__ = "AmbiguousInput"
-
-    factory.register("tio_john", CustomInput1)
-    factory.register("tio_mary", CustomInput2)
+    factory.register(AmbiguousInput)
 
     # Act/Assert
     with pytest.raises(AmbiguousPluginError):
@@ -414,7 +346,6 @@ def test_load_step_should_load_plugin_from_manifest(
     factory: PluginFactory, plugin_class: type, manifest_class: type
 ):
     # Arrange
-    factory.register("tio_kernel", plugin_class)
     manifest = manifest_class(
         kind=plugin_class.__name__,
         name="test",
