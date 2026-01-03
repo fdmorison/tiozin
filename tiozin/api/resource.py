@@ -105,11 +105,11 @@ class Resource(ABC):
 
     def __str__(self) -> str:
         """Returns a simple string representation of the resource."""
-        return self.uri
+        return self.name
 
     def __repr__(self) -> str:
         """Returns a concise string representation of the resource."""
-        return f"{self.uri}"
+        return f"{self.name}"
 
     def __hash__(self) -> int:
         """
