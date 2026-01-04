@@ -179,12 +179,11 @@ class PluginError(TiozinError):
 
 class PluginNotFoundError(PluginError, NotFoundError):
     message = "Plugin `{plugin_name}` not found."
+    detail = "Ensure its provider is installed and loads correctly via entry points"
 
-    def __init__(self, plugin_name: str, reason: str = None) -> None:
-        super().__init__(
-            f"{self.message} {reason}." if reason else None,
-            plugin_name=plugin_name,
-        )
+    def __init__(self, plugin_name: str, detail: str = None) -> None:
+        detail = detail or self.detail
+        super().__init__(f"{self.message} {detail}.", plugin_name=plugin_name)
 
 
 class AmbiguousPluginError(PluginError, ConflictError):

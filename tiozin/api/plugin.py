@@ -61,9 +61,3 @@ class PlugIn(Resource):
         if class_uri.endswith(self.name):
             return class_uri
         return f"{class_uri}/{self.name}"
-
-    def __str__(self) -> str:
-        return self.uri
-
-    def __repr__(self) -> str:
-        return f"{self.uri}"

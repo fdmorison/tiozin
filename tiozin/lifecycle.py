@@ -18,9 +18,9 @@ class Lifecycle(Resource):
             try:
                 registry.setup()
                 registry.ready = True
-                self.info(f"🟢 {registry} is ready.")
+                self.info(f"🟢 {registry.uri} is ready.")
             except Exception as e:
-                self.error(f"🚨 {registry} setup failed: {e}.")
+                self.error(f"🚨 {registry.uri} setup failed: {e}.")
                 raise
         self.ready = True
 
@@ -29,10 +29,10 @@ class Lifecycle(Resource):
             try:
                 if registry.ready:
                     registry.teardown()
-                    self.logger.info(f"🛑 {registry} shutdown is successful.")
+                    self.logger.info(f"🛑 {registry.uri} shutdown is successful.")
                 else:
-                    self.info(f"🛑 {registry} shutdown skipped (uninitialized).")
+                    self.info(f"🛑 {registry.uri} shutdown skipped (uninitialized).")
             except Exception:
-                self.exception(f"🚨 {registry} shutdown failed.")
+                self.exception(f"🚨 {registry.uri} shutdown failed.")
             finally:
                 registry.ready = False

@@ -242,7 +242,10 @@ def test_plugin_not_found_error_should_format_plugin_name_in_message():
 
     # Assert
     actual = error.message
-    expected = "Plugin `my_plugin` not found."
+    expected = (
+        "Plugin `my_plugin` not found. "
+        "Ensure its provider is installed and loads correctly via entry points."
+    )
     assert actual == expected
 
 

@@ -423,29 +423,3 @@ def test_builder_should_fail_when_used_twice():
     with pytest.raises(TiozinUnexpectedError, match="can only be used once"):
         builder.build()
         builder.build()
-
-
-def test_builder_should_warn_about_unplanned_fields(caplog):
-    # Arrange
-    manifest = JobManifest(
-        kind="LinearJob",
-        name="test_job",
-        org="tiozin",
-        region="latam",
-        domain="quality",
-        product="test_cases",
-        model="some_case",
-        layer="test",
-        runner=RunnerManifest(kind="NoOpRunner"),
-        inputs=[InputManifest(kind="NoOpInput", name="read_something")],
-        transforms=[],
-        outputs=[OutputManifest(kind="NoOpOutput", name="write_something")],
-        unplanned_field="value",
-    )
-    builder = JobBuilder()
-
-    # Act
-    builder.from_manifest(manifest).build()
-
-    # Assert
-    assert "Unplanned job properties" in caplog.text

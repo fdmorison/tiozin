@@ -1,6 +1,6 @@
-import logging
 from typing import Any, Self
 
+from tiozin import logs
 from tiozin.api import Input, Job, JobManifest, Output, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
@@ -24,7 +24,7 @@ class JobBuilder:
 
     def __init__(self) -> None:
         self._built = False
-        self._logger = logging.getLogger(type(self).__name__)
+        self._logger = logs.get_logger(type(self).__name__)
 
         # identity
         self._kind: str | None = None

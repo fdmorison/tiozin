@@ -27,8 +27,9 @@ app_timezone = ZoneInfo("UTC")
 # ===============================================
 log_level = env.LOG_LEVEL
 log_level_name = logging._levelToName[log_level]
-log_format = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
-log_date_format = "%Y-%m-%dT%H:%M:%S%z"
+log_date_format = env.TIO_LOG_DATE_FORMAT
+log_json = env.TIO_LOG_JSON
+log_json_ensure_ascii = env.TIO_LOG_JSON_ENSURE_ASCII
 
 # ===============================================
 #           Plugins
