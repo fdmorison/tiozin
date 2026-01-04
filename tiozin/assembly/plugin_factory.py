@@ -64,15 +64,12 @@ class PluginFactory(Resource):
         super().__init__()
         self._index: dict[str, type[PlugIn] | set[type[PlugIn]]] = {}
         self._plugins: set[type[PlugIn]] = set()
+        self.logger = self.logger.hide_none().hide_fields("description")
 
-    def setup(self, **kwargs) -> None:
-        scanner = PluginScanner(self.logger)
-        for plugins in scanner.scan().values():
+    def setup(self) -> None:
+        for plugins in PluginScanner(self.logger).scan().values():
             for plugin in plugins:
                 self.register(plugin)
-
-    def teardown(self, **kwargs) -> None:
-        return None
 
     def register(self, plugin: type[PlugIn]) -> None:
         """
@@ -112,22 +109,21 @@ class PluginFactory(Resource):
         Returns:
             A new instance of the resolved plugin.
         """
-        candidates = self._index.get(kind)
+        candidates = helpers.as_list(self._index.get(kind))
 
         if not candidates:
             raise PluginNotFoundError(kind)
 
-        if not isinstance(candidates, set):
-            plugin = candidates
-        else:
-            if len(candidates) > 1:
-                candidates = [p.__tiometa__.tio_path for p in candidates]
-                raise AmbiguousPluginError(kind, candidates)
-            plugin = next(iter(candidates))
+        if len(candidates) > 1:
+            raise AmbiguousPluginError(kind, [p.__tiometa__.tio_path for p in candidates])
+
+        plugin = candidates[0]
+        plugin_name = plugin.__tiometa__.name
 
         if plugin_kind and not issubclass(plugin, plugin_kind):
-            raise PluginNotFoundError(kind, reason=f"{plugin.__name__} is not a {plugin_kind}.")
+            raise PluginNotFoundError(kind, detail=f"{plugin_name} is not a {plugin_kind}.")
 
+        self.info(f"Loading {plugin_name} with args", **args)
         return plugin(**args)
 
     def load_job(self, kind: str, **args) -> Job:
