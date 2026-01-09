@@ -62,6 +62,12 @@ class Transform(Executable, PlugIn, Generic[TData]):
         """Template method that delegates to transform()."""
         return self.transform(context, data)
 
+    def setup(self, context: Context) -> None:
+        return None
+
+    def teardown(self, context: Context) -> None:
+        return None
+
 
 class CoTransform(Transform[TData]):
     """
