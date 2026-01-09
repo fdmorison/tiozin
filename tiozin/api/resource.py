@@ -1,4 +1,4 @@
-from typing import Any, Self, Unpack
+from typing import Any, Unpack
 
 from uuid_utils import uuid7
 
@@ -51,7 +51,7 @@ class Resource:
     def instance_uri(self) -> str:
         return f"{self.uri}/{self.id}"
 
-    def setup(self) -> None:
+    def setup(self, *args, **kwargs) -> None:
         """
         Optional initialization hook.
 
@@ -61,7 +61,7 @@ class Resource:
         """
         return None
 
-    def teardown(self) -> None:
+    def teardown(self, *args, **kwargs) -> None:
         """
         Optional cleanup hook.
 
@@ -94,19 +94,6 @@ class Resource:
 
     def critical(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         self.logger.critical(msg, *args, **kwargs)
-
-    def __enter__(self) -> Self:
-        """
-        Enters the resource execution context and triggers setup.
-        """
-        self.setup()
-        return self
-
-    def __exit__(self, clazz, error, trace) -> None:
-        """
-        Exits the resource execution context and triggers teardown.
-        """
-        self.teardown()
 
     def __str__(self) -> str:
         """Returns a simple string representation of the resource."""
