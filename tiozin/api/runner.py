@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Self, TypeVar
 
 from . import Context
 from .executable import Executable
@@ -46,3 +46,16 @@ class Runner(Executable, PlugIn, Generic[T]):
     def execute(self, context: Context, execution_plan: T) -> Any:
         """Template method that delegates to run()."""
         self.run(context, execution_plan)
+
+    def __enter__(self) -> Self:
+        """
+        Enters the Runner execution context and triggers setup.
+        """
+        self.setup()
+        return self
+
+    def __exit__(self, clazz, error, trace) -> None:
+        """
+        Exits the Runner execution context and triggers teardown.
+        """
+        self.teardown()
