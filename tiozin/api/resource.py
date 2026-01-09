@@ -51,7 +51,7 @@ class Resource:
     def instance_uri(self) -> str:
         return f"{self.uri}/{self.id}"
 
-    def setup(self) -> None:
+    def setup(self, *args, **kwargs) -> None:
         """
         Optional initialization hook.
 
@@ -61,7 +61,7 @@ class Resource:
         """
         return None
 
-    def teardown(self) -> None:
+    def teardown(self, *args, **kwargs) -> None:
         """
         Optional cleanup hook.
 
