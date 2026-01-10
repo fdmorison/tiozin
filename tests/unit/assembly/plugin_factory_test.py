@@ -276,7 +276,6 @@ def test_load_should_load_registry_plugin(factory: PluginFactory, kind: str):
         options={},
         ready=False,
         logger=ANY,
-        yaml=ANY,
     )
     assert actual == expected
 

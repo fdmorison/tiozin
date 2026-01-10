@@ -1,23 +1,18 @@
 kind: Job
 name: test_job
-
 org: tiozin
 region: latam
 domain: quality
 product: test_cases
 model: some_case
 layer: test
-
 runner:
   kind: TestRunner
-
 inputs:
   - kind: TestInput
     name: read_something
-
 transforms:
   - just some invalid format
-
 outputs:
   - kind: TestOutput
     name: write_something
