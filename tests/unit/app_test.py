@@ -4,6 +4,7 @@ import pytest
 
 import tiozin.app
 from tests.mocks.fake_registry_factory import MockedRegistryFactory
+from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.app import AppStatus, TiozinApp
 
 
@@ -203,3 +204,120 @@ def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TiozinAp
 
     # Assert
     ready_app.setup.assert_called_once()
+
+
+def test_run_should_accept_job_instance_directly(ready_app: TiozinApp):
+    # Arrange
+    job = MagicMock()
+    job.name = "test_job"
+    job.execute.return_value = {"result": "success"}
+
+    # Act
+    result = ready_app.run(job)
+
+    # Assert
+    actual = result
+    expected = {"result": "success"}
+    assert actual == expected
+
+
+@patch.object(tiozin.app.Job, "builder")
+def test_run_should_accept_job_manifest_instance(job_builder: MagicMock, ready_app: TiozinApp):
+    # Arrange
+    manifest = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        product="test_cases",
+        model="some_case",
+        layer="test",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+    job = MagicMock()
+    job.execute.return_value = {"result": "success"}
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
+
+    # Act
+    result = ready_app.run(manifest)
+
+    # Assert
+    actual = result
+    expected = {"result": "success"}
+    assert actual == expected
+
+
+@patch.object(tiozin.app.Job, "builder")
+def test_run_should_accept_yaml_string(job_builder: MagicMock, ready_app: TiozinApp):
+    # Arrange
+    yaml_string = """
+        kind: Job
+        name: test_job
+        description: Test job from YAML
+    """
+    job = MagicMock()
+    job.execute.return_value = {"result": "success"}
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
+
+    # Act
+    result = ready_app.run(yaml_string)
+
+    # Assert
+    actual = result
+    expected = {"result": "success"}
+    assert actual == expected
+
+
+@patch.object(tiozin.app.Job, "builder")
+def test_run_should_accept_json_string(job_builder: MagicMock, ready_app: TiozinApp):
+    # Arrange
+    json_string = """
+        {
+            "kind": "Job",
+            "name": "test_job",
+            "description": "Test job from JSON"
+        }
+    """
+    job = MagicMock()
+    job.execute.return_value = {"result": "success"}
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
+
+    # Act
+    result = ready_app.run(json_string)
+
+    # Assert
+    actual = result
+    expected = {"result": "success"}
+    assert actual == expected
+
+
+@patch.object(tiozin.app.Job, "builder")
+def test_run_should_accept_identifier_string_from_registry(
+    job_builder: MagicMock, ready_app: TiozinApp
+):
+    # Arrange
+    ready_app.job_registry.get.return_value = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        product="test_cases",
+        model="some_case",
+        layer="test",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+    job = MagicMock()
+    job.execute.return_value = {"result": "success"}
+    job_builder.return_value.from_manifest.return_value.build.return_value = job
+
+    # Act
+    result = ready_app.run("job://registered_job")
+
+    # Assert
+    actual = result
+    expected = {"result": "success"}
+    assert actual == expected

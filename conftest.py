@@ -4,4 +4,4 @@ from tests import config
 
 # Mock Tiozin Settings
 # Importing config.py will actually immport tests/config.py
-sys.modules[f"{config.package}.config"] = config
+sys.modules[f"{config.artifact_name}.config"] = config
