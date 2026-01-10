@@ -1,19 +1,15 @@
-from copy import deepcopy
-
 import pytest
 from pydantic import ValidationError
 
 from tiozin.api.metadata.output_manifest import OutputManifest
 
-compact_output = {
-    "kind": "TestOutput",
-    "name": "test_output",
-}
-
 
 def test_manifest_should_accept_minimum_output():
     # Arrange
-    data = compact_output
+    data = {
+        "kind": "TestOutput",
+        "name": "test_output",
+    }
 
     # Act
     OutputManifest(**data)
@@ -28,7 +24,10 @@ def test_manifest_should_accept_minimum_output():
 )
 def test_manifest_should_reject_output_without_required_field(field_to_remove):
     # Arrange
-    data = deepcopy(compact_output)
+    data = {
+        "kind": "TestOutput",
+        "name": "test_output",
+    }
     del data[field_to_remove]
 
     # Act
@@ -50,14 +49,19 @@ def test_manifest_should_reject_output_without_required_field(field_to_remove):
 )
 def test_manifest_should_accept_output_with_optional_fields(field_name, field_value):
     # Arrange
-    data = deepcopy(compact_output)
-    data[field_name] = field_value
+    data = {
+        "kind": "TestOutput",
+        "name": "test_output",
+        field_name: field_value,
+    }
 
     # Act
     manifest = OutputManifest(**data)
 
     # Assert
-    assert getattr(manifest, field_name) == field_value
+    actual = getattr(manifest, field_name)
+    expected = field_value
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -70,8 +74,11 @@ def test_manifest_should_accept_output_with_optional_fields(field_name, field_va
 )
 def test_manifest_should_reject_output_with_invalid_field_types(field_name, invalid_value):
     # Arrange
-    data = deepcopy(compact_output)
-    data[field_name] = invalid_value
+    data = {
+        "kind": "TestOutput",
+        "name": "test_output",
+        field_name: invalid_value,
+    }
 
     # Act
     with pytest.raises(ValidationError):
@@ -80,16 +87,25 @@ def test_manifest_should_reject_output_with_invalid_field_types(field_name, inva
 
 def test_manifest_should_have_correct_defaults():
     # Arrange
-    data = compact_output
+    data = {
+        "kind": "TestOutput",
+        "name": "test_output",
+    }
 
     # Act
     manifest = OutputManifest(**data)
 
     # Assert
-    assert manifest.description is None
-    assert manifest.org is None
-    assert manifest.region is None
-    assert manifest.domain is None
-    assert manifest.product is None
-    assert manifest.model is None
-    assert manifest.layer is None
+    actual = manifest
+    expected = OutputManifest(
+        kind="TestOutput",
+        name="test_output",
+        description=None,
+        org=None,
+        region=None,
+        domain=None,
+        product=None,
+        model=None,
+        layer=None,
+    )
+    assert actual == expected

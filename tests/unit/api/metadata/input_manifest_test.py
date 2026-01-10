@@ -1,19 +1,15 @@
-from copy import deepcopy
-
 import pytest
 from pydantic import ValidationError
 
 from tiozin.api.metadata.input_manifest import InputManifest
 
-compact_input = {
-    "kind": "TestInput",
-    "name": "test_input",
-}
-
 
 def test_manifest_should_accept_minimum_input():
     # Arrange
-    data = compact_input
+    data = {
+        "kind": "TestInput",
+        "name": "test_input",
+    }
 
     # Act
     InputManifest(**data)
@@ -28,7 +24,10 @@ def test_manifest_should_accept_minimum_input():
 )
 def test_manifest_should_reject_input_without_required_field(field_to_remove):
     # Arrange
-    data = deepcopy(compact_input)
+    data = {
+        "kind": "TestInput",
+        "name": "test_input",
+    }
     del data[field_to_remove]
 
     # Act
@@ -53,14 +52,19 @@ def test_manifest_should_reject_input_without_required_field(field_to_remove):
 )
 def test_manifest_should_accept_input_with_optional_fields(field_name, field_value):
     # Arrange
-    data = deepcopy(compact_input)
+    data = {
+        "kind": "TestInput",
+        "name": "test_input",
+    }
     data[field_name] = field_value
 
     # Act
     manifest = InputManifest(**data)
 
     # Assert
-    assert getattr(manifest, field_name) == field_value
+    actual = getattr(manifest, field_name)
+    expected = field_value
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -73,8 +77,11 @@ def test_manifest_should_accept_input_with_optional_fields(field_name, field_val
 )
 def test_manifest_should_reject_input_with_invalid_field_types(field_name, invalid_value):
     # Arrange
-    data = deepcopy(compact_input)
-    data[field_name] = invalid_value
+    data = {
+        "kind": "TestInput",
+        "name": "test_input",
+        field_name: invalid_value,
+    }
 
     # Act
     with pytest.raises(ValidationError):
@@ -83,19 +90,28 @@ def test_manifest_should_reject_input_with_invalid_field_types(field_name, inval
 
 def test_manifest_should_have_correct_defaults():
     # Arrange
-    data = compact_input
+    data = {
+        "kind": "TestInput",
+        "name": "test_input",
+    }
 
     # Act
     manifest = InputManifest(**data)
 
     # Assert
-    assert manifest.description is None
-    assert manifest.org is None
-    assert manifest.region is None
-    assert manifest.domain is None
-    assert manifest.product is None
-    assert manifest.model is None
-    assert manifest.layer is None
-    assert manifest.schema is None
-    assert manifest.schema_subject is None
-    assert manifest.schema_version is None
+    actual = manifest
+    expected = InputManifest(
+        kind="TestInput",
+        name="test_input",
+        description=None,
+        org=None,
+        region=None,
+        domain=None,
+        product=None,
+        model=None,
+        layer=None,
+        schema=None,
+        schema_subject=None,
+        schema_version=None,
+    )
+    assert actual == expected
