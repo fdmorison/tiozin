@@ -1,18 +1,16 @@
-from copy import deepcopy
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from tiozin.api.metadata.runner_manifest import RunnerManifest
 
-compact_runner = {
-    "kind": "TestRunner",
-}
-
 
 def test_manifest_should_accept_minimum_runner():
     # Arrange
-    data = compact_runner
+    data = {
+        "kind": "TestRunner",
+    }
 
     # Act
     RunnerManifest(**data)
@@ -23,8 +21,7 @@ def test_manifest_should_accept_minimum_runner():
 
 def test_manifest_should_reject_runner_without_kind():
     # Arrange
-    data = deepcopy(compact_runner)
-    del data["kind"]
+    data = {}
 
     # Act
     with pytest.raises(ValidationError):
@@ -42,14 +39,18 @@ def test_manifest_should_reject_runner_without_kind():
 )
 def test_manifest_should_accept_runner_with_optional_fields(field_name, field_value):
     # Arrange
-    data = deepcopy(compact_runner)
-    data[field_name] = field_value
+    data = {
+        "kind": "TestRunner",
+        field_name: field_value,
+    }
 
     # Act
     manifest = RunnerManifest(**data)
 
     # Assert
-    assert getattr(manifest, field_name) == field_value
+    actual = getattr(manifest, field_name)
+    expected = field_value
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -61,10 +62,14 @@ def test_manifest_should_accept_runner_with_optional_fields(field_name, field_va
         ("streaming", "not_a_bool"),
     ],
 )
-def test_manifest_should_reject_runner_with_invalid_field_types(field_name, invalid_value):
+def test_manifest_should_reject_runner_with_invalid_field_types(
+    field_name: str, invalid_value: Any
+):
     # Arrange
-    data = deepcopy(compact_runner)
-    data[field_name] = invalid_value
+    data = {
+        "kind": "TestRunner",
+        field_name: invalid_value,
+    }
 
     # Act
     with pytest.raises(ValidationError):
@@ -73,12 +78,19 @@ def test_manifest_should_reject_runner_with_invalid_field_types(field_name, inva
 
 def test_manifest_should_have_correct_defaults():
     # Arrange
-    data = compact_runner
+    data = {
+        "kind": "TestRunner",
+    }
 
     # Act
     manifest = RunnerManifest(**data)
 
     # Assert
-    assert manifest.name is None
-    assert manifest.description is None
-    assert manifest.streaming is False
+    actual = manifest
+    expected = RunnerManifest(
+        kind="TestRunner",
+        name=None,
+        description=None,
+        streaming=False,
+    )
+    assert actual == expected
