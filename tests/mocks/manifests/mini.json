@@ -13,19 +13,19 @@
   "inputs": [
     {
       "kind": "TestInput",
-      "name": "read_something"
+      "name": "reader"
     }
   ],
   "transforms": [
     {
       "kind": "TestTransform",
-      "name": "transform_something"
+      "name": "transformer"
     }
   ],
   "outputs": [
     {
       "kind": "TestOutput",
-      "name": "write_something"
+      "name": "writer"
     }
   ]
 }

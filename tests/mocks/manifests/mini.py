@@ -1,4 +1,4 @@
-compact_job = dict(
+job = dict(
     kind="Job",
     name="test_job",
     org="tiozin",
