@@ -32,9 +32,9 @@ class Registry(PlugIn, Generic[TMetadata]):
     def register(self, identifier: str, value: TMetadata) -> None:
         """Register metadata in the registry."""
 
-    def safe_get(self, identifier: str) -> TMetadata | None:
+    def try_get(self, identifier: str, version: str | None = None) -> TMetadata | None:
         """Retrieve metadata or return None if not found."""
         try:
-            return self.get(identifier)
+            return self.get(identifier, version)
         except NotFoundError:
             return None

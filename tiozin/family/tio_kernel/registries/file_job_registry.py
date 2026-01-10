@@ -12,7 +12,7 @@ class FileJobRegistry(JobRegistry):
     Default JobRegistry implementation. Supports YAML and JSON formats.
     """
 
-    def get(self, name: str, version: str = None) -> JobManifest:
+    def get(self, identifier: str, version: str = None) -> JobManifest:
         """
         Retrieve a job manifest from the filesystem.
 
@@ -27,7 +27,7 @@ class FileJobRegistry(JobRegistry):
             FileNotFoundError: If the file does not exist.
             ManifestError: If the file contains invalid YAML/JSON or validation fails.
         """
-        data = Path(name).read_text(encoding="utf-8")
+        data = Path(identifier).read_text(encoding="utf-8")
         return JobManifest.from_yaml_or_json(data)
 
     def register(self, name: str, value: JobManifest) -> None:
