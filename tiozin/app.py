@@ -3,6 +3,7 @@ import signal
 from threading import RLock
 
 from tiozin import Context, Job, Resource, logs
+from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinError
 from tiozin.lifecycle import Lifecycle
@@ -78,18 +79,30 @@ class TiozinApp(Resource):
 
             self.info("Application shutdown completed.")
 
-    def run(self, name: str) -> Job:
+    def run(self, job: str | JobManifest | Job) -> Job:
         """
-        Executes a job by name.
+        Run a job.
 
-        Resolves the job manifest from the registry, builds the job,
-        and runs it within the application lifecycle.
+        This method accepts multiple input representations and normalizes them
+        into a `Job` instance before execution.
+
+        Supported input forms:
+        - `Job`: Executed directly.
+        - `JobManifest`: Used to build the job.
+        - `str` (YAML/JSON): Parsed and validated as a manifest.
+        - `str` (identifier): Resolved from the current job registry.
+
+        The resolved job is executed within the application lifecycle.
 
         Args:
-            name: Name of the job to execute.
+            job: A Job instance, JobManifest, YAML/JSON manifest string, or a job identifier.
 
         Returns:
-            The executed job instance.
+            The job execution result, if any.
+
+        Raises:
+            JobNotFoundError: If the job identifier cannot be resolved.
+            ManifestError: If the manifest string is invalid.
         """
         self.setup()
 
@@ -104,9 +117,15 @@ class TiozinApp(Resource):
                     secret_registry=self.registries.secret_registry,
                     transaction_registry=self.registries.transaction_registry,
                 )
-                manifest = self.job_registry.get(name)
-                self.current_job = Job.builder().from_manifest(manifest).build()
-                result = self.current_job.execute(context)
+
+                if isinstance(job, (str, JobManifest)):
+                    manifest = JobManifest.try_from_yaml_or_json(job)
+                    if manifest is None:
+                        manifest = self.job_registry.get(identifier=job)
+                    job = Job.builder().from_manifest(manifest).build()
+
+                self.current_job = job
+                result = job.execute(context)
                 self.status = self.status.set_success()
                 return result
             except TiozinError as e:
@@ -115,6 +134,8 @@ class TiozinApp(Resource):
                 raise SystemExit(1) from e
             except Exception:
                 self.status = self.status.set_failure()
-                job_name = self.current_job.name if self.current_job else name
-                self.exception(f"Unexpected error while executing job `{job_name}`. ")
+                job_name = self.current_job.name if self.current_job else str(job)
+                self.exception(f"Unexpected error while executing job `{job_name}`.")
                 raise
+            finally:
+                self.current_job = None
