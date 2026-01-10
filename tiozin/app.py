@@ -134,8 +134,8 @@ class TiozinApp(Resource):
                 raise SystemExit(1) from e
             except Exception:
                 self.status = self.status.set_failure()
-                job_name = self.current_job.name if self.current_job else str(job)
-                self.exception(f"Unexpected error while executing job `{job_name}`.")
+                identifier = self.current_job.name if self.current_job else str(job)
+                self.exception(f"Unexpected error while executing job `{identifier}`.")
                 raise
             finally:
                 self.current_job = None
