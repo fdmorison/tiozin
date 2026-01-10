@@ -619,6 +619,106 @@ def test_from_yaml_or_json_should_fail_when_manifest_has_duplicated_keys():
 
 
 # ============================================================================
+# JobManifest.try_from_yaml_or_json() tests
+# ============================================================================
+
+
+def test_try_from_yaml_or_json_should_return_manifest_when_valid_yaml():
+    # Arrange
+    text = dedent("""
+        kind: Job
+        name: test_job
+        labels: {}
+        org: tiozin
+        region: latam
+        domain: quality
+        product: test_cases
+        model: some_case
+        layer: test
+        runner:
+          kind: TestRunner
+          streaming: false
+        inputs:
+        - kind: TestInput
+          name: reader
+    """).lstrip()
+
+    # Act
+    manifest = JobManifest.try_from_yaml_or_json(text)
+
+    # Assert
+    actual = manifest is None
+    expected = False
+    assert actual == expected
+
+
+def test_try_from_yaml_or_json_should_return_none_when_invalid_yaml():
+    # Arrange
+    text = "invalid: yaml: content: ["
+
+    # Act
+    manifest = JobManifest.try_from_yaml_or_json(text)
+
+    # Assert
+    actual = manifest
+    expected = None
+    assert actual == expected
+
+
+def test_try_from_yaml_or_json_should_return_none_when_not_string():
+    # Arrange
+    data = {"kind": "Job", "name": "test"}
+
+    # Act
+    manifest = JobManifest.try_from_yaml_or_json(data)
+
+    # Assert
+    actual = manifest
+    expected = None
+    assert actual == expected
+
+
+def test_try_from_yaml_or_json_should_return_none_when_validation_fails():
+    # Arrange
+    text = dedent("""
+        kind: Job
+        name: test_job
+    """).lstrip()
+
+    # Act
+    manifest = JobManifest.try_from_yaml_or_json(text)
+
+    # Assert
+    actual = manifest
+    expected = None
+    assert actual == expected
+
+
+def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
+    # Arrange
+    data = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        product="test_cases",
+        model="some_case",
+        layer="test",
+        runner=RunnerManifest(kind="TestRunner"),
+        inputs=[InputManifest(kind="TestInput", name="reader")],
+    )
+
+    # Act
+    manifest = JobManifest.try_from_yaml_or_json(data)
+
+    # Assert
+    actual = manifest
+    expected = data
+    assert actual == expected
+
+
+# ============================================================================
 # Roundtrip tests (serialization + deserialization)
 # ============================================================================
 
