@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import json
 from io import StringIO
-from typing import Self
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 from ruamel.yaml import YAML
@@ -41,6 +43,7 @@ class Manifest(BaseModel):
 
         Args:
             data: YAML or JSON formatted string to parse.
+            failfast: returns None instead of raising an exception.
 
         Returns:
             Validated manifest instance.
@@ -53,6 +56,30 @@ class Manifest(BaseModel):
             return cls.model_validate(manifest)
         except DuplicateKeyError as e:
             raise ManifestError.from_ruamel(e, cls.__name__) from e
+
+    @classmethod
+    def try_from_yaml_or_json(cls, data: str | Manifest | Any) -> Self | None:
+        """
+        Alias of from_yaml_or_json() that suppresses all exceptions.
+        Try to load manifest from YAML or JSON string, returning None on failure.
+
+        Args:
+            data: YAML/JSON string, manifest instance, or any other object type.
+
+        Returns:
+            Manifest instance if data is already a manifest or valid YAML/JSON string.
+            Returns None if parsing/validation fails or data is an unsupported type.
+        """
+        if isinstance(data, cls):
+            return data
+
+        if not isinstance(data, str):
+            return None
+
+        try:
+            return cls.from_yaml_or_json(data)
+        except Exception:
+            return None
 
     def to_yaml(self) -> str:
         """
