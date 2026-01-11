@@ -1,8 +1,7 @@
 from typing import Any, Unpack
 
-from uuid_utils import uuid7
-
 from tiozin import config, logs
+from tiozin.utils import helpers
 
 from .typehint import LogKwargs
 
@@ -33,7 +32,7 @@ class Resource:
         description: str = None,
         **options,
     ) -> None:
-        self.id = str(uuid7())
+        self.id = helpers.generate_id()
         self.kind = type(self).__name__
         self.name = name or self.kind
         self.description = description
