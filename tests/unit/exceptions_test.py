@@ -380,7 +380,7 @@ def test_policy_violation_error_should_use_default_message_when_none_provided():
 # ============================================================================
 # Testing RequiredArgumentError
 # ============================================================================
-def test_raise_if_missing_should_not_raise_when_fields_are_set():
+def test_raise_if_missing_should_pass_when_fields_are_set():
     RequiredArgumentError.raise_if_missing(
         name="test",
         org="acme",
@@ -388,7 +388,7 @@ def test_raise_if_missing_should_not_raise_when_fields_are_set():
     )
 
 
-def test_raise_if_missing_should_not_raise_when_disabled():
+def test_raise_if_missing_should_pass_when_disabled():
     RequiredArgumentError.raise_if_missing(
         disable_=True,
         name=None,
@@ -397,7 +397,7 @@ def test_raise_if_missing_should_not_raise_when_disabled():
     )
 
 
-def test_raise_if_missing_should_not_raise_when_field_is_excluded():
+def test_raise_if_missing_should_pass_when_field_is_excluded():
     RequiredArgumentError.raise_if_missing(
         exclude_=["name"],
         name=None,
@@ -414,7 +414,7 @@ def test_raise_if_missing_should_raise_when_field_is_null_or_empty(empty_value):
         RequiredArgumentError.raise_if_missing(name=empty_value, org="acme")
 
 
-def test_raise_if_missing_should_raise_when_field_is_not_excluded():
+def test_raise_if_missing_should_raise_error_when_field_is_not_excluded():
     with pytest.raises(RequiredArgumentError, match="Missing required fields: 'org'"):
         RequiredArgumentError.raise_if_missing(
             exclude_=["name"],
@@ -449,7 +449,7 @@ def test_raise_if_missing_should_raise_when_field_is_not_excluded():
         PolicyViolationError(policy=object),
     ],
 )
-def test_all_expected_errors_are_tiozin_errors(error):
+def test_all_expected_errors_should_be_tiozin_errors(error):
     with pytest.raises(TiozinError):
         raise error
 
@@ -462,7 +462,7 @@ def test_all_expected_errors_are_tiozin_errors(error):
         ManifestError(message="x", name="y"),
     ],
 )
-def test_job_errors_are_catchable_as_job_error(error):
+def test_job_errors_should_be_catchable_as_job_error(error):
     with pytest.raises(JobError):
         raise error
 
@@ -474,7 +474,7 @@ def test_job_errors_are_catchable_as_job_error(error):
         SchemaViolationError(),
     ],
 )
-def test_schema_errors_are_catchable_as_schema_error(error):
+def test_schema_errors_should_be_catchable_as_schema_error(error):
     with pytest.raises(SchemaError):
         raise error
 
@@ -486,7 +486,7 @@ def test_schema_errors_are_catchable_as_schema_error(error):
         PluginNotFoundError(plugin_name="test"),
     ],
 )
-def test_errors_are_catchable_as_not_found(error):
+def test_errors_should_be_catchable_as_not_found(error):
     with pytest.raises(NotFoundError):
         raise error
 
@@ -500,7 +500,7 @@ def test_errors_are_catchable_as_not_found(error):
         AlreadyFinishedError(),
     ],
 )
-def test_errors_are_catchable_as_conflict(error):
+def test_errors_should_be_catchable_as_conflict(error):
     with pytest.raises(ConflictError):
         raise error
 
@@ -514,7 +514,7 @@ def test_errors_are_catchable_as_conflict(error):
         PolicyViolationError(policy=object),
     ],
 )
-def test_errors_are_catchable_as_invalid_input(error):
+def test_errors_should_be_catchable_as_invalid_input(error):
     with pytest.raises(InvalidInputError):
         raise error
 
@@ -527,6 +527,6 @@ def test_errors_are_catchable_as_invalid_input(error):
         PluginKindError(plugin_name="x", plugin_kind=object),
     ],
 )
-def test_plugin_errors_are_catchable_as_plugin_error(error):
+def test_plugin_errors_should_be_catchable_as_plugin_error(error):
     with pytest.raises(PluginError):
         raise error
