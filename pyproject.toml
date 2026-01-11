@@ -11,10 +11,38 @@ dependencies = [
   "environs ==14.3.0",
   "single-source ==0.4.0",
   "structlog ==25.5.0",
-  "uuid6 ==2025.0.1",
+  "uuid-utils ==0.12.0",
   "typer ==0.20.0",
   "ruamel-yaml ==0.18.17",
-  "uuid-utils ==0.12.0",
+  "fsspec ==2026.1.0",
+]
+
+[project.optional-dependencies]
+aws = [
+  "s3fs>=2026.1.0",
+]
+gcp = [
+  "gcsfs>=2026.1.0",
+]
+azure = [
+  "adlfs>=2025.8.0",
+]
+
+[dependency-groups]
+dev = [
+  {include-group = "lint"},
+  {include-group = "test"},
+]
+test = [
+  "pytest ==8.4.2",
+  "pytest-cov ==7.0.0",
+  "freezegun ==1.5.5",
+  "testcontainers ==4.13.2",
+  "tiozin[aws,gcp]",
+]
+lint = [
+  "ruff ==0.14.10",
+  "pre-commit ==4.3.0"
 ]
 
 [build-system]
@@ -34,22 +62,6 @@ required-version = ">=0.8.1"
 name = "pypi"
 url = "https://pypi.org/simple"
 default = true
-
-[dependency-groups]
-dev = [
-  {include-group = "lint"},
-  {include-group = "test"},
-]
-test = [
-  "pytest-asyncio ==1.2.0",
-  "pytest-cov ==7.0.0",
-  "freezegun ==1.5.5",
-  "testcontainers ==4.13.2"
-]
-lint = [
-  "ruff ==0.14.10",
-  "pre-commit ==4.3.0"
-]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
