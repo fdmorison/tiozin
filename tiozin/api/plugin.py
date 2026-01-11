@@ -7,7 +7,7 @@ from tiozin.api import Resource
 
 class PlugIn(Resource):
     """
-    Mixin for resources that can be discovered and loaded as plugins.
+    Base class for resources that can be discovered and loaded as plugins.
 
     Provides plugin metadata and discovery capabilities for resources that are
     dynamically loaded by the framework. Used by Jobs, Inputs, Transforms,
