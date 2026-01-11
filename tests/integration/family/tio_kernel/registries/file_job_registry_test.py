@@ -9,7 +9,26 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
+from tiozin.exceptions import JobNotFoundError
 from tiozin.family.tio_kernel import FileJobRegistry
+
+
+# ============================================================================
+# Access Tests
+# ============================================================================
+@pytest.mark.integration
+def test_get_should_read_from_public_s3_bucket():
+    # Arrange
+    path = "s3://1000genomes/i_dont_exist.yaml"
+
+    # Act/Assert
+    with pytest.raises(JobNotFoundError):
+        FileJobRegistry(anon=True).get(path)
+
+
+# ============================================================================
+# Read tests
+# ============================================================================
 
 
 @pytest.mark.parametrize("ext", ["json", "yaml"])
@@ -39,6 +58,11 @@ def test_get_should_load_manifest_from_local_file(ext: str):
     assert actual == expected
 
 
+# ============================================================================
+# Write tests
+# ============================================================================
+
+
 @pytest.mark.parametrize("ext", ["json", "yaml"])
 def test_register_should_write_manifest_to_local_file(ext: str, tmp_path: Path):
     # Arrange
@@ -59,7 +83,7 @@ def test_register_should_write_manifest_to_local_file(ext: str, tmp_path: Path):
     )
 
     # Act
-    FileJobRegistry().register(output_path, manifest)
+    FileJobRegistry().register(str(output_path), manifest)
 
     # Assert
     actual = output_path.read_text(encoding="utf8")
