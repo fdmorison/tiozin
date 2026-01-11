@@ -12,7 +12,12 @@ repos:
 - repo: local
   hooks:
     - id: format
-      name: Format
+      name: Run Tiozin Lint
       entry: make format
+      language: system
+      types: [python]
+    - id: tests
+      name: Run Tiozin Tests
+      entry: make test
       language: system
       types: [python]
