@@ -3,11 +3,14 @@ from typing import Generic, TypeVar
 
 from tiozin.exceptions import RequiredArgumentError
 
+from ...assembly import tioproxy
+from ...assembly.executable_proxy import ExecutableProxy
 from .. import Context, Executable, PlugIn
 
 TData = TypeVar("TData")
 
 
+@tioproxy(ExecutableProxy)
 class Input(Executable, PlugIn, Generic[TData]):
     """
     Defines a data source that ingests data into the pipeline.

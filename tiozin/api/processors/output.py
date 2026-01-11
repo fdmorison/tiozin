@@ -3,11 +3,14 @@ from typing import Generic, TypeVar
 
 from tiozin.exceptions import RequiredArgumentError
 
+from ...assembly import tioproxy
+from ...assembly.executable_proxy import ExecutableProxy
 from .. import Context, Executable, PlugIn
 
 TData = TypeVar("TData")
 
 
+@tioproxy(ExecutableProxy)
 class Output(Executable, PlugIn, Generic[TData]):
     """
     Defines a data destination that persists processed data.
@@ -65,8 +68,8 @@ class Output(Executable, PlugIn, Generic[TData]):
         """Template method that delegates to write()."""
         return self.write(context, data)
 
-    def setup(self, context: Context) -> None:
+    def setup(self, context: Context, data: TData) -> None:
         return None
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self, context: Context, data: TData) -> None:
         return None

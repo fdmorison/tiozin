@@ -1,13 +1,14 @@
 from abc import abstractmethod
 from typing import Any, Generic, Self, TypeVar
 
-from . import Context
-from .executable import Executable
-from .plugin import PlugIn
+from ..assembly import tioproxy
+from ..assembly.executable_proxy import ExecutableProxy
+from . import Context, Executable, PlugIn
 
 T = TypeVar("T")
 
 
+@tioproxy(ExecutableProxy)
 class Runner(Executable, PlugIn, Generic[T]):
     """
     Runners execute and coordinate pipelines within a specific backend.
