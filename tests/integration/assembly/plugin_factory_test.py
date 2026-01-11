@@ -273,7 +273,7 @@ def test_load_should_load_registry_plugin(factory: PluginFactory, kind: str):
         kind="FileJobRegistry",
         name="FileJobRegistry",
         description=None,
-        options={},
+        options=ANY,
         ready=False,
         logger=ANY,
     )

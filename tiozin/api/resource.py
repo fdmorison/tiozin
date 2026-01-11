@@ -77,23 +77,23 @@ class Resource:
         """
         return vars(self).copy()
 
-    def debug(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.debug(msg, *args, **kwargs)
+    def debug(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.debug(*args, **kwargs)
 
-    def info(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.info(msg, *args, **kwargs)
+    def info(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.info(*args, **kwargs)
 
-    def warning(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.warning(msg, *args, **kwargs)
+    def warning(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.warning(*args, **kwargs)
 
-    def error(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.error(msg, *args, **kwargs)
+    def error(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.error(*args, **kwargs)
 
-    def exception(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.critical(msg, *args, **kwargs)
+    def exception(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.critical(*args, **kwargs)
 
-    def critical(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.critical(msg, *args, **kwargs)
+    def critical(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.critical(*args, **kwargs)
 
     def __str__(self) -> str:
         """Returns a simple string representation of the resource."""

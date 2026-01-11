@@ -42,35 +42,35 @@ class TiozinLogger:
         self._hide_none = enabled
         return self
 
-    def debug(self, msg: str, **kwargs: Unpack[LogKwargs]) -> None:
+    def debug(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.DEBUG:
             return
-        self._logger.debug(self._format(msg), **self._filter(kwargs))
+        self._logger.debug(self._format(msg), *args, **self._filter(kwargs))
 
-    def info(self, msg: str, **kwargs: Unpack[LogKwargs]) -> None:
+    def info(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.INFO:
             return
-        self._logger.info(self._format(msg), **self._filter(kwargs))
+        self._logger.info(self._format(msg), *args, **self._filter(kwargs))
 
-    def warning(self, msg: str, **kwargs: Unpack[LogKwargs]) -> None:
+    def warning(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.WARNING:
             return
-        self._logger.warning(self._format(msg), **self._filter(kwargs))
+        self._logger.warning(self._format(msg), *args, **self._filter(kwargs))
 
-    def error(self, msg: str, **kwargs: Unpack[LogKwargs]) -> None:
+    def error(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.ERROR:
             return
-        self._logger.error(self._format(msg), **self._filter(kwargs))
+        self._logger.error(self._format(msg), *args, **self._filter(kwargs))
 
-    def critical(self, msg: str, **kwargs: Unpack[LogKwargs]) -> None:
+    def critical(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.CRITICAL:
             return
-        self._logger.critical(self._format(msg), **self._filter(kwargs))
+        self._logger.critical(self._format(msg), *args, **self._filter(kwargs))
 
-    def exception(self, msg: str, **kwargs: Unpack[LogKwargs]) -> None:
+    def exception(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.ERROR:
             return
-        self._logger.exception(self._format(msg), **self._filter(kwargs))
+        self._logger.exception(self._format(msg), *args, **self._filter(kwargs))
 
     def _format(self, msg: str) -> str:
         if config.log_json:
