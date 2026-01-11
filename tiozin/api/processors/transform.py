@@ -3,11 +3,14 @@ from typing import Generic, TypeVar
 
 from tiozin.exceptions import RequiredArgumentError
 
+from ...assembly import tioproxy
+from ...assembly.executable_proxy import ExecutableProxy
 from .. import Context, Executable, PlugIn
 
 TData = TypeVar("TData")
 
 
+@tioproxy(ExecutableProxy)
 class Transform(Executable, PlugIn, Generic[TData]):
     """
     Defines a data transformation that modifies or enriches data.
@@ -62,10 +65,10 @@ class Transform(Executable, PlugIn, Generic[TData]):
         """Template method that delegates to transform()."""
         return self.transform(context, data)
 
-    def setup(self, context: Context) -> None:
+    def setup(self, context: Context, data: TData) -> None:
         return None
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self, context: Context, data: TData) -> None:
         return None
 
 
@@ -98,3 +101,9 @@ class CoTransform(Transform[TData]):
     @abstractmethod
     def transform(self, context: Context, data: TData, other: TData, *others: TData) -> TData:
         """Apply cooperative transformation logic. Providers must implement."""
+
+    def setup(self, context: Context, data: TData, other: TData, *others: TData) -> None:
+        return None
+
+    def teardown(self, context: Context, data: TData, other: TData, *others: TData) -> None:
+        return None

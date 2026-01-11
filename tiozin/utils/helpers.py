@@ -6,6 +6,8 @@ from enum import Enum
 from fractions import Fraction
 from typing import Any, TypeVar
 
+from uuid_utils import uuid7
+
 T = TypeVar("T")
 
 
@@ -14,6 +16,19 @@ def utcnow() -> datetime:
     Return the current UTC time as a timezone-aware datetime.
     """
     return datetime.now(UTC)
+
+
+def generate_id() -> str:
+    """
+    Generate a unique identifier.
+
+    Creates a time-ordered UUID v7 that uniquely identifies a resource or resource run and can be
+    sorted chronologically.
+
+    Returns:
+        A UUIDv7 string (time-ordered, globally unique).
+    """
+    return str(uuid7())
 
 
 def default(value: T, default_: T) -> T:

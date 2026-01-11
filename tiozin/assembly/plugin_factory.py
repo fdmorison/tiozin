@@ -117,14 +117,14 @@ class PluginFactory(Resource):
         if len(candidates) > 1:
             raise AmbiguousPluginError(kind, [p.__tiometa__.tio_path for p in candidates])
 
-        plugin = candidates[0]
-        plugin_name = plugin.__tiometa__.name
+        plugin_type = candidates[0]
+        plugin_name = plugin_type.__tiometa__.name
 
-        if plugin_kind and not issubclass(plugin, plugin_kind):
+        if plugin_kind and not issubclass(plugin_type, plugin_kind):
             raise PluginNotFoundError(kind, detail=f"{plugin_name} is not a {plugin_kind}.")
 
         self.info(f"Loading {plugin_name} with args", **args)
-        return plugin(**args)
+        return plugin_type(**args)
 
     def load_job(self, kind: str, **args) -> Job:
         """

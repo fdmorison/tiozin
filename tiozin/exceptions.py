@@ -212,7 +212,16 @@ class PluginKindError(PluginError, InvalidInputError):
 
 
 # ============================================================================
-# Layer 3: Domain Exceptions - Misc
+# Layer 3: Domain Exceptions - Assembly
+# ============================================================================
+class ProxyError(TiozinError):
+    """Base exception for proxy-related errors."""
+
+    message = "Failed to apply proxy to resource."
+
+
+# ============================================================================
+# Layer 4: Domain Exceptions - Misc
 # ============================================================================
 class AlreadyRunningError(ConflictError):
     message = "The `{name}` is already running."
