@@ -65,12 +65,16 @@ class TiozinLogger:
     def critical(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.CRITICAL:
             return
-        self._logger.critical(self._format(msg), *args, **self._filter(kwargs))
+        kwargs = self._filter(kwargs)
+        kwargs.setdefault("exc_info", True)
+        self._logger.critical(self._format(msg), *args, **kwargs)
 
     def exception(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         if config.log_level > logging.ERROR:
             return
-        self._logger.exception(self._format(msg), *args, **self._filter(kwargs))
+        kwargs = self._filter(kwargs)
+        kwargs.setdefault("exc_info", True)
+        self._logger.exception(self._format(msg), *args, **kwargs)
 
     def _format(self, msg: str) -> str:
         if config.log_json:
