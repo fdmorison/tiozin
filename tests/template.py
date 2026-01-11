@@ -1,55 +1,37 @@
 """
 =================================================================================
-TUTORIAL: How to Create Unit Tests
+TIOZIN TEST TEMPLATES
 =================================================================================
 
-TEST NAMING CONVENTION:
------------------------
-Pattern: test_<method>_should_<expected_result>_when_<condition>
+NAMING CONVENTION:
+------------------
+Pattern: test_<subject>_should_<expected>(_when_<condition>)?
 
 Examples:
-- test_sum_should_return_five_when_adding_two_and_three()
+- test_add_should_return_sum()
 - test_divide_should_raise_error_when_divisor_is_zero()
 - test_user_should_be_active_when_created()
 
-AAA STRUCTURE (Arrange, Act, Assert):
---------------------------------------
-All tests must follow the AAA pattern:
-
-1. ARRANGE (Setup)
-   - Configure test data
-   - Create mocks, fixtures or necessary objects
-   - Prepare initial state
-
-2. ACT (Execution)
-   - Execute the method or function being tested
-   - Store the result in a variable
-
-3. ASSERT (Verification)
-   - Declare 'actual' and 'expected' variables
-   - Compare actual with expected
-   - Verify expected behaviors
-
-ASSERT FORMAT:
+AAA STRUCTURE:
 --------------
-In the Assert block, always explicitly declare:
+1. Arrange - Setup test data and dependencies
+2. Act - Execute the code being tested
+3. Assert - Verify expected behavior using actual/expected pattern
 
-    # Assert
-    actual = result
-    expected = expected_value
-    assert actual == expected
+EXAMPLE:
+--------
+    def test_add_should_return_sum():
+        # Arrange
+        a = 2
+        b = 3
 
-This makes the test more readable and facilitates debugging.
+        # Act
+        result = add(a, b)
 
-REQUIRED IMPORTS:
------------------
-- pytest: for decorators and fixtures
-- unittest.mock: for Mock, MagicMock, patch
-- typing: for type hints
-
-=================================================================================
-TEST TEMPLATES
-=================================================================================
+        # Assert
+        actual = result
+        expected = 5
+        assert actual == expected
 """
 
 from unittest.mock import MagicMock, patch
