@@ -15,6 +15,7 @@ dependencies = [
   "typer ~=0.20",
   "ruamel-yaml ~=0.18",
   "fsspec ~=2026.1",
+  "wrapt ~=2.0.1",
 ]
 
 [project.optional-dependencies]

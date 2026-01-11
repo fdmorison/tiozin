@@ -1895,6 +1895,7 @@ dependencies = [
     { name = "structlog" },
     { name = "typer" },
     { name = "uuid-utils" },
+    { name = "wrapt" },
 ]
 
 [package.optional-dependencies]
@@ -1943,6 +1944,7 @@ requires-dist = [
     { name = "structlog", specifier = "~=25.5" },
     { name = "typer", specifier = "~=0.20" },
     { name = "uuid-utils", specifier = "~=0.12" },
+    { name = "wrapt", specifier = "~=2.0.1" },
 ]
 provides-extras = ["aws", "gcp", "azure"]
 
