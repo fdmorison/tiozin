@@ -54,25 +54,27 @@ class PluginTemplateOverlay:
         self._templates: list[tuple] = []
         self._scan_templates(self._plugin)
 
-    def _scan_templates(self, obj: Any, *parents, immutable: bool = False):
+    def _scan_templates(self, obj: Any, *parents) -> None:
         match obj:
-            case str() if TEMPLATE_PATTERN.search(obj) and not immutable:
+            case str() if TEMPLATE_PATTERN.search(obj):
                 self._templates.append((*parents, obj))
             case list():
                 for index, value in enumerate(obj):
-                    self._scan_templates(value, *parents, index, immutable=False)
+                    self._scan_templates(value, *parents, index)
             case tuple():
                 for index, value in enumerate(obj):
-                    self._scan_templates(value, *parents, index, immutable=True)
+                    if isinstance(value, (list, tuple, dict)):
+                        self._scan_templates(value, *parents, index)
             case dict():
                 for field, value in obj.items():
-                    self._scan_templates(value, *parents, field, immutable=False)
+                    self._scan_templates(value, *parents, field)
             case PlugIn():
                 for field, value in vars(obj).items():
                     if not field.startswith("_"):
-                        self._scan_templates(value, *parents, field, immutable=False)
+                        self._scan_templates(value, *parents, field)
 
-    def __enter__(self) -> PluginTemplateOverlay:
+    def _render_templates(self) -> None:
+        """Render each templated field by resolving placeholders with context values."""
         for *path, field, template in self._templates:
             obj = self._plugin
             for key in path:
@@ -84,11 +86,17 @@ class PluginTemplateOverlay:
             except Exception as e:
                 raise InvalidInputError(f"Cannot render template {template} because {e}") from e
 
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> None:
+    def _restore_templates(self) -> None:
+        """Restore each rendered field back to its original template string."""
         for *path, field, original in self._templates:
             obj = self._plugin
             for key in path:
                 obj = helpers.get(obj, key)
             helpers.set_field(obj, field, original)
+
+    def __enter__(self) -> PluginTemplateOverlay:
+        self._render_templates()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        self._restore_templates()
