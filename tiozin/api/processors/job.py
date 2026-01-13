@@ -11,6 +11,7 @@ from tiozin.api import (
     Transform,
 )
 from tiozin.exceptions import RequiredArgumentError
+from tiozin.utils.helpers import merge_fields
 
 if TYPE_CHECKING:
     from tiozin.assembly.job_builder import JobBuilder
@@ -107,6 +108,9 @@ class Job(Executable, PlugIn, Generic[TData]):
         self.inputs = inputs or []
         self.transforms = transforms or []
         self.outputs = outputs or []
+
+        for step in self.inputs + self.transforms + self.outputs:
+            merge_fields(self, step, "org", "region", "domain", "product", "model", "layer")
 
     @staticmethod
     def builder() -> "JobBuilder":

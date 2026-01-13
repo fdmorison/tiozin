@@ -402,6 +402,287 @@ def test_builder_should_reject_invalid_output_type():
         builder.outputs(None)
 
 
+def test_builder_should_propagate_taxonomy_to_inputs():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.kind("LinearJob")
+        .name("test_job")
+        .org("tiozin")
+        .region("europe")
+        .domain("marketing")
+        .product("user_events")
+        .model("order_completed")
+        .layer("refined")
+        .runner({"kind": "NoOpRunner"})
+        .inputs({"kind": "NoOpInput", "name": "read_something"})
+        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .build()
+    )
+
+    # Assert
+    input_operator = job.inputs[0]
+    actual = {
+        "org": input_operator.org,
+        "region": input_operator.region,
+        "domain": input_operator.domain,
+        "product": input_operator.product,
+        "model": input_operator.model,
+        "layer": input_operator.layer,
+    }
+    expected = {
+        "org": "tiozin",
+        "region": "europe",
+        "domain": "marketing",
+        "product": "user_events",
+        "model": "order_completed",
+        "layer": "refined",
+    }
+    assert actual == expected
+
+
+def test_builder_should_propagate_taxonomy_to_outputs():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.kind("LinearJob")
+        .name("test_job")
+        .org("tiozin")
+        .region("europe")
+        .domain("marketing")
+        .product("user_events")
+        .model("order_completed")
+        .layer("refined")
+        .runner({"kind": "NoOpRunner"})
+        .inputs({"kind": "NoOpInput", "name": "read_something"})
+        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .build()
+    )
+
+    # Assert
+    output_operator = job.outputs[0]
+    actual = {
+        "org": output_operator.org,
+        "region": output_operator.region,
+        "domain": output_operator.domain,
+        "product": output_operator.product,
+        "model": output_operator.model,
+        "layer": output_operator.layer,
+    }
+    expected = {
+        "org": "tiozin",
+        "region": "europe",
+        "domain": "marketing",
+        "product": "user_events",
+        "model": "order_completed",
+        "layer": "refined",
+    }
+    assert actual == expected
+
+
+def test_builder_should_propagate_taxonomy_to_transforms():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.kind("LinearJob")
+        .name("test_job")
+        .org("tiozin")
+        .region("europe")
+        .domain("marketing")
+        .product("user_events")
+        .model("order_completed")
+        .layer("refined")
+        .runner({"kind": "NoOpRunner"})
+        .inputs({"kind": "NoOpInput", "name": "read_something"})
+        .transforms({"kind": "NoOpTransform", "name": "transform_something"})
+        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .build()
+    )
+
+    # Assert
+    transform_operator = job.transforms[0]
+    actual = {
+        "org": transform_operator.org,
+        "region": transform_operator.region,
+        "domain": transform_operator.domain,
+        "product": transform_operator.product,
+        "model": transform_operator.model,
+        "layer": transform_operator.layer,
+    }
+    expected = {
+        "org": "tiozin",
+        "region": "europe",
+        "domain": "marketing",
+        "product": "user_events",
+        "model": "order_completed",
+        "layer": "refined",
+    }
+    assert actual == expected
+
+
+def test_builder_should_not_overwrite_input_taxonomy_when_already_set():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.kind("LinearJob")
+        .name("test_job")
+        .org("tiozin")
+        .region("europe")
+        .domain("marketing")
+        .product("user_events")
+        .model("order_completed")
+        .layer("refined")
+        .runner({"kind": "NoOpRunner"})
+        .inputs(
+            {
+                "kind": "NoOpInput",
+                "name": "read_something",
+                "org": "custom_org",
+                "region": "custom_region",
+                "domain": "custom_domain",
+                "product": "custom_product",
+                "model": "custom_model",
+                "layer": "custom_layer",
+            }
+        )
+        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .build()
+    )
+
+    # Assert
+    input_operator = job.inputs[0]
+    actual = {
+        "org": input_operator.org,
+        "region": input_operator.region,
+        "domain": input_operator.domain,
+        "product": input_operator.product,
+        "model": input_operator.model,
+        "layer": input_operator.layer,
+    }
+    expected = {
+        "org": "custom_org",
+        "region": "custom_region",
+        "domain": "custom_domain",
+        "product": "custom_product",
+        "model": "custom_model",
+        "layer": "custom_layer",
+    }
+    assert actual == expected
+
+
+def test_builder_should_not_overwrite_output_taxonomy_when_already_set():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.kind("LinearJob")
+        .name("test_job")
+        .org("tiozin")
+        .region("europe")
+        .domain("marketing")
+        .product("user_events")
+        .model("order_completed")
+        .layer("refined")
+        .runner({"kind": "NoOpRunner"})
+        .inputs({"kind": "NoOpInput", "name": "read_something"})
+        .outputs(
+            {
+                "kind": "NoOpOutput",
+                "name": "write_something",
+                "org": "custom_org",
+                "region": "custom_region",
+                "domain": "custom_domain",
+                "product": "custom_product",
+                "model": "custom_model",
+                "layer": "custom_layer",
+            }
+        )
+        .build()
+    )
+
+    # Assert
+    output_operator = job.outputs[0]
+    actual = {
+        "org": output_operator.org,
+        "region": output_operator.region,
+        "domain": output_operator.domain,
+        "product": output_operator.product,
+        "model": output_operator.model,
+        "layer": output_operator.layer,
+    }
+    expected = {
+        "org": "custom_org",
+        "region": "custom_region",
+        "domain": "custom_domain",
+        "product": "custom_product",
+        "model": "custom_model",
+        "layer": "custom_layer",
+    }
+    assert actual == expected
+
+
+def test_builder_should_not_overwrite_transform_taxonomy_when_already_set():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.kind("LinearJob")
+        .name("test_job")
+        .org("tiozin")
+        .region("europe")
+        .domain("marketing")
+        .product("user_events")
+        .model("order_completed")
+        .layer("refined")
+        .runner({"kind": "NoOpRunner"})
+        .inputs({"kind": "NoOpInput", "name": "read_something"})
+        .transforms(
+            {
+                "kind": "NoOpTransform",
+                "name": "transform_something",
+                "org": "custom_org",
+                "region": "custom_region",
+                "domain": "custom_domain",
+                "product": "custom_product",
+                "model": "custom_model",
+                "layer": "custom_layer",
+            }
+        )
+        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .build()
+    )
+
+    # Assert
+    transform_operator = job.transforms[0]
+    actual = {
+        "org": transform_operator.org,
+        "region": transform_operator.region,
+        "domain": transform_operator.domain,
+        "product": transform_operator.product,
+        "model": transform_operator.model,
+        "layer": transform_operator.layer,
+    }
+    expected = {
+        "org": "custom_org",
+        "region": "custom_region",
+        "domain": "custom_domain",
+        "product": "custom_product",
+        "model": "custom_model",
+        "layer": "custom_layer",
+    }
+    assert actual == expected
+
+
 def test_builder_should_fail_when_used_twice():
     # Arrange
     builder = (
