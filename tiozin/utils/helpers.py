@@ -1,6 +1,6 @@
 import inspect
 from collections import deque
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
@@ -151,24 +151,26 @@ def as_flat_list(*values: T) -> list[T]:
     return result
 
 
-def get(obj: Any, field: str) -> Any:
+def get(obj: Mapping | Sequence | object, field: str | int) -> Any:
     """
-    Get a field from a dict or an object.
+    Get a field from a dict, list, or object.
 
     Args:
-        obj: The dict or object to get the field from. Must not be None.
-        field: The field name to retrieve.
+        obj: The dict, list, or object to get the field from. Must not be None.
+        field: The field name (str) or index (int) to retrieve.
 
     Returns:
         The field value.
 
     Raises:
         ValueError: If obj is None.
-        KeyError: If field not found.
+        KeyError: If field not found or index out of range.
 
     Examples:
         >>> get({"name": "John"}, "name")
         "John"
+        >>> get(["a", "b", "c"], 1)
+        "b"
         >>> from types import SimpleNamespace
         >>> get(SimpleNamespace(age=30), "age")
         30
@@ -180,23 +182,21 @@ def get(obj: Any, field: str) -> Any:
     if obj is None:
         raise ValueError("Cannot get field from None object")
 
-    if isinstance(obj, dict):
-        if field not in obj:
-            raise KeyError(f"Field '{field}' not found in dict")
-        return obj[field]
-
-    if not hasattr(obj, field):
-        raise KeyError(f"Field '{field}' not found in object")
-    return getattr(obj, field)
+    try:
+        if isinstance(obj, (Mapping, Sequence)):
+            return obj[field]
+        return getattr(obj, field)
+    except (KeyError, IndexError, AttributeError) as e:
+        raise KeyError(f"Field '{field}' not found in {type(obj).__name__}") from e
 
 
-def try_get(obj: Any, field: str, default: Any = None) -> Any:
+def try_get(obj: Mapping | Sequence | object, field: str | int, default: Any = None) -> Any:
     """
-    Safely get a field from a dict or an object.
+    Safely get a field from a dict, list, or object.
 
     Args:
-        obj: The dict or object to get the field from. Must not be None.
-        field: The field name to retrieve.
+        obj: The dict, list, or object to get the field from. Must not be None.
+        field: The field name (str) or index (int) to retrieve.
         default: The value to return if the field is not found.
 
     Returns:
@@ -212,6 +212,10 @@ def try_get(obj: Any, field: str, default: Any = None) -> Any:
         None
         >>> try_get({"name": "John"}, "age", 0)
         0
+        >>> try_get(["a", "b", "c"], 1)
+        "b"
+        >>> try_get(["a", "b"], 5, "default")
+        "default"
         >>> from types import SimpleNamespace
         >>> try_get(SimpleNamespace(name="Jane"), "name")
         "Jane"
@@ -221,19 +225,23 @@ def try_get(obj: Any, field: str, default: Any = None) -> Any:
     if obj is None:
         raise ValueError("Cannot get field from None object")
 
-    if isinstance(obj, dict):
-        return obj.get(field, default)
+    try:
+        if isinstance(obj, Mapping):
+            return obj.get(field, default)
+        if isinstance(obj, Sequence):
+            return obj[field]
+        return getattr(obj, field, default)
+    except (IndexError, KeyError, AttributeError):
+        return default
 
-    return getattr(obj, field, default)
 
-
-def set_field(obj: Any, field: str, value: Any) -> None:
+def set_field(obj: Mapping | Sequence | object, field: str | int, value: Any) -> None:
     """
-    Set a field on a dict or an object.
+    Set a field on a dict, list, or object.
 
     Args:
-        obj: The dict or object to set the field on. Must not be None.
-        field: The field name to set.
+        obj: The dict, list, or object to set the field on. Must not be None.
+        field: The field name (str) or index (int) to set.
         value: The value to set.
 
     Raises:
@@ -244,6 +252,10 @@ def set_field(obj: Any, field: str, value: Any) -> None:
         >>> set_field(obj, "age", 30)
         >>> obj
         {"name": "John", "age": 30}
+        >>> obj = ["a", "b", "c"]
+        >>> set_field(obj, 1, "x")
+        >>> obj
+        ["a", "x", "c"]
         >>> from types import SimpleNamespace
         >>> obj = SimpleNamespace(name="Jane")
         >>> set_field(obj, "age", 25)
@@ -255,23 +267,23 @@ def set_field(obj: Any, field: str, value: Any) -> None:
     if obj is None:
         raise ValueError("Cannot set field on None object")
 
-    if isinstance(obj, dict):
+    if isinstance(obj, (Mapping, Sequence)):
         obj[field] = value
     else:
         setattr(obj, field, value)
 
 
-def try_set_field(obj: Any, field: str, value: Any) -> None:
+def try_set_field(obj: Mapping | Sequence | object, field: str | int, value: Any) -> None:
     """
-    Safely set a field on a dict or an object.
+    Safely set a field on a dict, list, or object.
 
     Unlike set_field(), this function does not raise exceptions if the field
     cannot be set (e.g., on immutable objects), making it safe for
     optional updates.
 
     Args:
-        obj: The dict or object to set the field on. Must not be None.
-        field: The field name to set.
+        obj: The dict, list, or object to set the field on. Must not be None.
+        field: The field name (str) or index (int) to set.
         value: The value to set.
 
     Raises:
@@ -282,6 +294,10 @@ def try_set_field(obj: Any, field: str, value: Any) -> None:
         >>> try_set_field(obj, "age", 30)
         >>> obj
         {"name": "John", "age": 30}
+        >>> obj = ["a", "b", "c"]
+        >>> try_set_field(obj, 1, "x")
+        >>> obj
+        ["a", "x", "c"]
         >>> try_set_field(None, "field", "value")
         ValueError: Cannot set field on None object
         >>> from types import SimpleNamespace
@@ -294,7 +310,7 @@ def try_set_field(obj: Any, field: str, value: Any) -> None:
         raise ValueError("Cannot set field on None object")
 
     try:
-        if isinstance(obj, dict):
+        if isinstance(obj, (Mapping, Sequence)):
             obj[field] = value
         else:
             setattr(obj, field, value)
