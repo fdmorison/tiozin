@@ -1,10 +1,14 @@
 from abc import ABCMeta
+from collections.abc import Callable
+from typing import TypeVar
 
 import wrapt
 
 from tiozin.exceptions import ProxyError
 
 TIOPROXY = "__tioproxy__"
+
+T = TypeVar("T")
 
 
 class ProxyMeta(ABCMeta):
@@ -48,7 +52,7 @@ class ProxyMeta(ABCMeta):
         return wrapped
 
 
-def tioproxy(proxy_class: type):
+def tioproxy(proxy_class: T) -> Callable[..., T]:
     """
     Registers a proxy class to be automatically applied on instantiation.
 
