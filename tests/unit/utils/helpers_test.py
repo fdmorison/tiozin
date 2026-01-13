@@ -367,6 +367,24 @@ def test_get_should_return_value_when_field_exists(obj: Any):
 
 
 @pytest.mark.parametrize(
+    "obj,index,expected",
+    [
+        (["a", "b", "c"], 0, "a"),
+        (["a", "b", "c"], 1, "b"),
+        (["a", "b", "c"], 2, "c"),
+        (("x", "y", "z"), 0, "x"),
+        (("x", "y", "z"), 2, "z"),
+    ],
+)
+def test_get_should_return_value_from_sequence_by_index(obj: Any, index: int, expected: Any):
+    # Act
+    result = get(obj, index)
+
+    # Assert
+    assert result == expected
+
+
+@pytest.mark.parametrize(
     "obj",
     [
         {"name": "value"},
@@ -377,6 +395,15 @@ def test_get_should_raise_error_when_field_not_found(obj: Any):
     # Act & Assert
     with pytest.raises(KeyError, match="Field 'age' not found"):
         get(obj, "age")
+
+
+def test_get_should_raise_error_when_index_out_of_range():
+    # Arrange
+    obj = ["a", "b", "c"]
+
+    # Act & Assert
+    with pytest.raises(KeyError, match="Field '10' not found"):
+        get(obj, 10)
 
 
 def test_get_should_raise_error_when_obj_is_none():
@@ -420,6 +447,34 @@ def test_try_get_should_return_value_when_field_exists(obj: Any):
     actual = result
     expected = "value"
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "obj,index,expected",
+    [
+        (["a", "b", "c"], 0, "a"),
+        (["a", "b", "c"], 1, "b"),
+        (("x", "y", "z"), 0, "x"),
+        (("x", "y", "z"), 2, "z"),
+    ],
+)
+def test_try_get_should_return_value_from_sequence_by_index(obj: Any, index: int, expected: Any):
+    # Act
+    result = try_get(obj, index)
+
+    # Assert
+    assert result == expected
+
+
+def test_try_get_should_return_default_when_index_out_of_range():
+    # Arrange
+    obj = ["a", "b"]
+
+    # Act
+    result = try_get(obj, 10, "default")
+
+    # Assert
+    assert result == "default"
 
 
 @pytest.mark.parametrize(
@@ -501,6 +556,26 @@ def test_set_field_should_set_field_on_object(obj: Any):
         assert obj.age == 30
 
 
+def test_set_field_should_set_value_in_list_by_index():
+    # Arrange
+    obj = ["a", "b", "c"]
+
+    # Act
+    set_field(obj, 1, "x")
+
+    # Assert
+    assert obj == ["a", "x", "c"]
+
+
+def test_set_field_should_raise_error_when_setting_tuple():
+    # Arrange
+    obj = ("a", "b", "c")
+
+    # Act & Assert - tuples are immutable, should raise TypeError
+    with pytest.raises(TypeError):
+        set_field(obj, 1, "x")
+
+
 @pytest.mark.parametrize(
     "obj",
     [
@@ -561,6 +636,17 @@ def test_try_set_field_should_set_field_on_object(obj: Any):
         assert obj.age == 30
 
 
+def test_try_set_field_should_set_value_in_list_by_index():
+    # Arrange
+    obj = ["a", "b", "c"]
+
+    # Act
+    try_set_field(obj, 1, "x")
+
+    # Assert
+    assert obj == ["a", "x", "c"]
+
+
 def test_try_set_field_should_raise_error_when_obj_is_none():
     # Act & Assert
     with pytest.raises(ValueError, match="Cannot set field on None object"):
@@ -576,6 +662,17 @@ def test_try_set_field_should_not_raise_on_immutable_object():
 
     # Assert - tuple unchanged
     assert obj == (1, 2, 3)
+
+
+def test_try_set_field_should_not_raise_on_tuple_index_assignment():
+    # Arrange
+    obj = ("a", "b", "c")
+
+    # Act - should not raise exception even though tuples are immutable
+    try_set_field(obj, 1, "x")
+
+    # Assert - tuple unchanged
+    assert obj == ("a", "b", "c")
 
 
 # ============================================================================
