@@ -39,7 +39,9 @@ class PluginTemplateOverlay:
 
     Notes:
         - Only public attributes (not starting with '_') are considered
-        - Recursively traverses nested dicts, lists, and PlugIn instances
+        - Recursively traverses nested dicts, lists, tuples, and PlugIn instances
+        - Immutable sequences (tuples) are not modified, but mutable objects
+          within them (dicts, lists) are processed
         - Resolution happens only within the execution scope
         - The original plugin state is always restored on exit
         - Not thread-safe: a plugin instance must not be accessed or modified
@@ -52,20 +54,23 @@ class PluginTemplateOverlay:
         self._templates: list[tuple] = []
         self._scan_templates(self._plugin)
 
-    def _scan_templates(self, obj: Any, *parents):
+    def _scan_templates(self, obj: Any, *parents, immutable: bool = False):
         match obj:
-            case str() if TEMPLATE_PATTERN.search(obj):
+            case str() if TEMPLATE_PATTERN.search(obj) and not immutable:
                 self._templates.append((*parents, obj))
             case list():
                 for index, value in enumerate(obj):
-                    self._scan_templates(value, *parents, index)
+                    self._scan_templates(value, *parents, index, immutable=False)
+            case tuple():
+                for index, value in enumerate(obj):
+                    self._scan_templates(value, *parents, index, immutable=True)
             case dict():
                 for field, value in obj.items():
-                    self._scan_templates(value, *parents, field)
+                    self._scan_templates(value, *parents, field, immutable=False)
             case PlugIn():
                 for field, value in vars(obj).items():
                     if not field.startswith("_"):
-                        self._scan_templates(value, *parents, field)
+                        self._scan_templates(value, *parents, field, immutable=False)
 
     def __enter__(self) -> PluginTemplateOverlay:
         for *path, field, template in self._templates:

@@ -1,4 +1,6 @@
 import copy
+import logging
+from datetime import datetime
 
 import pytest
 
@@ -19,11 +21,12 @@ def test_overlay_should_render_and_restore_single_template():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.path
+    restored = plugin.path
 
     # Assert
     actual = (
         rendered,
-        plugin.path,
+        restored,
     )
     expected = (
         "./data/sales",
@@ -41,21 +44,23 @@ def test_overlay_should_render_and_restore_multiple_templates():
 
     # Act
     with PluginTemplateOverlay(plugin, context):
-        rendered_path = plugin.path
-        rendered_name = plugin.name
+        rendered = (plugin.path, plugin.name)
+    restored = (plugin.path, plugin.name)
 
     # Assert
     actual = (
-        rendered_path,
-        plugin.path,
-        rendered_name,
-        plugin.name,
+        rendered,
+        restored,
     )
     expected = (
-        "./data/sales/2024-01-15",
-        "./data/{{domain}}/{{date}}",
-        "test_output",
-        "{{prefix}}_output",
+        (
+            "./data/sales/2024-01-15",
+            "test_output",
+        ),
+        (
+            "./data/{{domain}}/{{date}}",
+            "{{prefix}}_output",
+        ),
     )
     assert actual == expected
 
@@ -69,21 +74,23 @@ def test_overlay_should_not_modify_non_template_strings():
 
     # Act
     with PluginTemplateOverlay(plugin, context):
-        rendered_path = plugin.path
-        rendered_name = plugin.name
+        rendered = (plugin.path, plugin.name)
+    restored = (plugin.path, plugin.name)
 
     # Assert
     actual = (
-        rendered_path,
-        plugin.path,
-        rendered_name,
-        plugin.name,
+        rendered,
+        restored,
     )
     expected = (
-        "./data/sales",
-        "./data/sales",
-        "output",
-        "output",
+        (
+            "./data/sales",
+            "output",
+        ),
+        (
+            "./data/sales",
+            "output",
+        ),
     )
     assert actual == expected
 
@@ -97,11 +104,12 @@ def test_overlay_should_not_modify_private_attributes():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin._private
+    restored = plugin._private
 
     # Assert
     actual = (
         rendered,
-        plugin._private,
+        restored,
     )
     expected = (
         "{{domain}}",
@@ -110,7 +118,7 @@ def test_overlay_should_not_modify_private_attributes():
     assert actual == expected
 
 
-def test_overlay_should_handle_nested_dict_templates():
+def test_overlay_should_render_and_restore_nested_dict_templates():
     # Arrange
     plugin = PlugIn()
     plugin.config = {"path": "./data/{{domain}}", "region": "{{region}}"}
@@ -119,20 +127,27 @@ def test_overlay_should_handle_nested_dict_templates():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = dict(plugin.config)
+    restored = plugin.config
 
     # Assert
     actual = (
         rendered,
-        plugin.config,
+        restored,
     )
     expected = (
-        {"path": "./data/sales", "region": "us-east"},
-        {"path": "./data/{{domain}}", "region": "{{region}}"},
+        {
+            "path": "./data/sales",
+            "region": "us-east",
+        },
+        {
+            "path": "./data/{{domain}}",
+            "region": "{{region}}",
+        },
     )
     assert actual == expected
 
 
-def test_overlay_should_handle_nested_list_templates():
+def test_overlay_should_render_and_restore_nested_list_templates():
     # Arrange
     plugin = PlugIn()
     plugin.paths = [
@@ -144,20 +159,27 @@ def test_overlay_should_handle_nested_list_templates():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = list(plugin.paths)
+    restored = plugin.paths
 
     # Assert
     actual = (
         rendered,
-        plugin.paths,
+        restored,
     )
     expected = (
-        ["./prod/data", "./output/sales"],
-        ["./{{env}}/data", "./output/{{domain}}"],
+        [
+            "./prod/data",
+            "./output/sales",
+        ],
+        [
+            "./{{env}}/data",
+            "./output/{{domain}}",
+        ],
     )
     assert actual == expected
 
 
-def test_overlay_should_handle_nested_plugins():
+def test_overlay_should_render_and_restore_nested_plugins():
     # Arrange
     plugin = PlugIn()
     plugin.inner = PlugIn()
@@ -167,11 +189,12 @@ def test_overlay_should_handle_nested_plugins():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.inner.path
+    restored = plugin.inner.path
 
     # Assert
     actual = (
         rendered,
-        plugin.inner.path,
+        restored,
     )
     expected = (
         "sales/inner",
@@ -193,11 +216,12 @@ def test_overlay_should_restore_on_exception():
             raise ValueError("Simulated error")
     except ValueError:
         pass
+    restored = plugin.name
 
     # Assert
     actual = (
         rendered,
-        plugin.name,
+        restored,
     )
     expected = (
         "resolved",
@@ -218,7 +242,7 @@ def test_overlay_should_raise_error_on_missing_variable():
             pass
 
 
-def test_overlay_should_handle_complex_templates():
+def test_overlay_should_render_and_restore_templates_with_multiple_variables():
     # Arrange
     plugin = PlugIn()
     plugin.path = "./data/{{domain}}/{{year}}-{{month}}-{{day}}/file.txt"
@@ -227,11 +251,12 @@ def test_overlay_should_handle_complex_templates():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.path
+    restored = plugin.path
 
     # Assert
     actual = (
         rendered,
-        plugin.path,
+        restored,
     )
     expected = (
         "./data/sales/2024-01-15/file.txt",
@@ -240,7 +265,7 @@ def test_overlay_should_handle_complex_templates():
     assert actual == expected
 
 
-def test_overlay_should_handle_empty_context():
+def test_overlay_should_not_modify_strings_when_context_is_empty():
     # Arrange
     plugin = PlugIn()
     plugin.path = "./data/static"
@@ -249,11 +274,12 @@ def test_overlay_should_handle_empty_context():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.path
+    restored = plugin.path
 
     # Assert
     actual = (
         rendered,
-        plugin.path,
+        restored,
     )
     expected = (
         "./data/static",
@@ -262,7 +288,7 @@ def test_overlay_should_handle_empty_context():
     assert actual == expected
 
 
-def test_overlay_should_handle_deeply_nested_structures():
+def test_overlay_should_render_and_restore_deeply_nested_structures():
     # Arrange
     plugin = PlugIn()
     plugin.config = {
@@ -275,11 +301,12 @@ def test_overlay_should_handle_deeply_nested_structures():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = copy.deepcopy(plugin.config)
+    restored = plugin.config
 
     # Assert
     actual = (
         rendered,
-        plugin.config,
+        restored,
     )
     expected = (
         {
@@ -298,7 +325,7 @@ def test_overlay_should_handle_deeply_nested_structures():
 
 @pytest.mark.parametrize(
     "value",
-    [42, True, False, 3.14, None],
+    [42, True, False, 3.14, None, datetime.now(), logging.getLogger("test")],
 )
 def test_overlay_should_not_modify_non_string_values(value):
     # Arrange
@@ -309,11 +336,12 @@ def test_overlay_should_not_modify_non_string_values(value):
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.value
+    restored = plugin.value
 
     # Assert
     actual = (
         rendered,
-        plugin.value,
+        restored,
     )
     expected = (
         value,
@@ -322,23 +350,114 @@ def test_overlay_should_not_modify_non_string_values(value):
     assert actual == expected
 
 
-def test_overlay_should_handle_multiple_overlays_sequentially():
+def test_overlay_should_not_modify_immutable_tuple_with_templates():
+    # Arrange
+    plugin = PlugIn()
+    plugin.paths = (
+        "./{{env}}/data",
+        "./output/{{domain}}",
+    )
+    context = {"env": "prod", "domain": "sales"}
+
+    # Act
+    with PluginTemplateOverlay(plugin, context):
+        rendered = plugin.paths
+    restored = plugin.paths
+
+    # Assert
+    actual = (
+        rendered,
+        restored,
+    )
+    expected = (
+        (
+            "./{{env}}/data",
+            "./output/{{domain}}",
+        ),
+        (
+            "./{{env}}/data",
+            "./output/{{domain}}",
+        ),
+    )
+    assert actual == expected
+
+
+def test_overlay_should_not_modify_immutable_frozenset_with_templates():
+    # Arrange
+    plugin = PlugIn()
+    plugin.tags = frozenset(["{{env}}", "{{domain}}"])
+    context = {"env": "prod", "domain": "sales"}
+
+    # Act
+    with PluginTemplateOverlay(plugin, context):
+        rendered = plugin.tags
+    restored = plugin.tags
+
+    # Assert
+    actual = (
+        rendered,
+        restored,
+    )
+    expected = (
+        frozenset(["{{env}}", "{{domain}}"]),
+        frozenset(["{{env}}", "{{domain}}"]),
+    )
+    assert actual == expected
+
+
+def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tuple():
+    # Arrange
+    plugin = PlugIn()
+    plugin.data = (
+        {"path": "./data/{{domain}}"},
+        ["./{{env}}/data", "./output/{{region}}"],
+        "static_value",
+    )
+    context = {"domain": "sales", "env": "prod", "region": "us-east"}
+
+    # Act
+    with PluginTemplateOverlay(plugin, context):
+        rendered = copy.deepcopy(plugin.data)
+    restored = plugin.data
+
+    # Assert
+    actual = (
+        rendered,
+        restored,
+    )
+    expected = (
+        (
+            {"path": "./data/sales"},
+            ["./prod/data", "./output/us-east"],
+            "static_value",
+        ),
+        (
+            {"path": "./data/{{domain}}"},
+            ["./{{env}}/data", "./output/{{region}}"],
+            "static_value",
+        ),
+    )
+    assert actual == expected
+
+
+def test_overlay_should_restore_templates_after_each_sequential_overlay():
     # Arrange
     plugin = PlugIn()
     plugin.path = "./data/{{domain}}"
 
     # Act
     with PluginTemplateOverlay(plugin, {"domain": "sales"}):
-        rendered_1 = plugin.path
+        rendered = plugin.path
 
     with PluginTemplateOverlay(plugin, {"domain": "finance"}):
         rendered_2 = plugin.path
+    restored = plugin.path
 
     # Assert
     actual = (
-        rendered_1,
+        rendered,
         rendered_2,
-        plugin.path,
+        restored,
     )
     expected = (
         "./data/sales",
@@ -348,7 +467,7 @@ def test_overlay_should_handle_multiple_overlays_sequentially():
     assert actual == expected
 
 
-def test_overlay_should_handle_jinja2_filters():
+def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
     # Arrange
     plugin = PlugIn()
     plugin.path = "./data/{{domain|upper}}"
@@ -357,11 +476,12 @@ def test_overlay_should_handle_jinja2_filters():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.path
+    restored = plugin.path
 
     # Assert
     actual = (
         rendered,
-        plugin.path,
+        restored,
     )
     expected = (
         "./data/SALES",
@@ -370,7 +490,7 @@ def test_overlay_should_handle_jinja2_filters():
     assert actual == expected
 
 
-def test_overlay_should_handle_jinja2_expressions():
+def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
     # Arrange
     plugin = PlugIn()
     plugin.path = "./data/{{ domain ~ '/' ~ date }}"
@@ -379,11 +499,12 @@ def test_overlay_should_handle_jinja2_expressions():
     # Act
     with PluginTemplateOverlay(plugin, context):
         rendered = plugin.path
+    restored = plugin.path
 
     # Assert
     actual = (
         rendered,
-        plugin.path,
+        restored,
     )
     expected = (
         "./data/sales/2024-01-15",
