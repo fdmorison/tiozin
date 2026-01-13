@@ -1,3 +1,4 @@
+from collections import deque
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
@@ -11,8 +12,12 @@ from tiozin.utils.helpers import (
     as_flat_list,
     as_list,
     default,
+    get,
+    merge_fields,
+    set_field,
     try_get,
     try_get_public_setter,
+    try_set_field,
     utcnow,
 )
 
@@ -140,6 +145,9 @@ def test_default_should_return_original_value_when_collection_is_not_empty(
         (["item1", "item2"], ["item1", "item2"]),
         (("item1", "item2"), ["item1", "item2"]),
         ({"item1", "item2"}, ["item1", "item2"]),
+        (frozenset({"item1", "item2"}), ["item1", "item2"]),
+        (deque(["item1", "item2"]), ["item1", "item2"]),
+        (range(3), [0, 1, 2]),
         ({"key": "value"}, [{"key": "value"}]),
         ("scalar", ["scalar"]),
         (42, [42]),
@@ -282,13 +290,115 @@ def test_as_flat_list_should_preserve_single_list():
     assert actual == expected
 
 
-def test_as_flat_list_should_not_flatten_deep_lists():
+def test_as_flat_list_should_recursively_flatten_nested_lists():
     # Act
     result = as_flat_list([["nested"]], "scalar", [1, 2])
 
     # Assert
     actual = result
-    expected = [["nested"], "scalar", 1, 2]
+    expected = ["nested", "scalar", 1, 2]
+    assert actual == expected
+
+
+def test_as_flat_list_should_flatten_deeply_nested_structures():
+    # Act
+    result = as_flat_list([1, [2, [3, [4]]]], 5)
+
+    # Assert
+    actual = result
+    expected = [1, 2, 3, 4, 5]
+    assert actual == expected
+
+
+def test_as_flat_list_should_flatten_mixed_nested_collections():
+    # Act
+    result = as_flat_list([[1, 2], [[3], [4, [5]]]], (6, [7]))
+
+    # Assert
+    actual = result
+    expected = [1, 2, 3, 4, 5, 6, 7]
+    assert actual == expected
+
+
+def test_as_flat_list_should_flatten_frozensets_deques_and_ranges():
+    # Act
+    result = as_flat_list(frozenset({1, 2}), deque([3, 4]), range(5, 7))
+
+    # Assert
+    actual = sorted(result)
+    expected = [1, 2, 3, 4, 5, 6]
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {5, 1, 3, 2, 4},
+        {4, 2, 3, 1, 5},
+        {1, 5, 2, 4, 3},
+    ],
+)
+def test_as_flat_list_should_sort_sets_for_determinism(values: Any):
+    # Act
+    result = as_flat_list(values)
+
+    # Assert - regardless of set order, output should always be sorted
+    assert result == [1, 2, 3, 4, 5]
+
+
+# ============================================================================
+# Testing get()
+# ============================================================================
+@pytest.mark.parametrize(
+    "obj",
+    [
+        {"name": "value"},
+        SimpleNamespace(name="value"),
+    ],
+)
+def test_get_should_return_value_when_field_exists(obj: Any):
+    # Act
+    result = get(obj, "name")
+
+    # Assert
+    actual = result
+    expected = "value"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "obj",
+    [
+        {"name": "value"},
+        SimpleNamespace(name="value"),
+    ],
+)
+def test_get_should_raise_error_when_field_not_found(obj: Any):
+    # Act & Assert
+    with pytest.raises(KeyError, match="Field 'age' not found"):
+        get(obj, "age")
+
+
+def test_get_should_raise_error_when_obj_is_none():
+    # Act & Assert
+    with pytest.raises(ValueError, match="Cannot get field from None object"):
+        get(None, "field")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [0, False, "", None],
+)
+def test_get_should_handle_falsy_values(value: Any):
+    # Arrange
+    obj = {"field": value}
+
+    # Act
+    result = get(obj, "field")
+
+    # Assert
+    actual = result
+    expected = value
     assert actual == expected
 
 
@@ -346,24 +456,11 @@ def test_try_get_should_return_none_by_default_when_field_not_found(obj: Any):
     assert actual == expected
 
 
-def test_try_get_should_return_default_when_obj_is_none():
-    # Act
-    result = try_get(None, "field", "default")
-
-    # Assert
-    actual = result
-    expected = "default"
-    assert actual == expected
-
-
-def test_try_get_should_return_none_when_obj_is_none_without_default():
-    # Act
-    result = try_get(None, "field")
-
-    # Assert
-    actual = result
-    expected = None
-    assert actual == expected
+@pytest.mark.parametrize("default", [None, "blahblah"])
+def test_try_get_should_raise_error_when_obj_is_none(default: str):
+    # Act & Assert
+    with pytest.raises(ValueError, match="Cannot get field from None object"):
+        try_get(None, "field", default)
 
 
 @pytest.mark.parametrize(
@@ -381,6 +478,263 @@ def test_try_get_should_handle_falsy_values(value: Any):
     actual = result
     expected = value
     assert actual == expected
+
+
+# ============================================================================
+# Testing set_field()
+# ============================================================================
+@pytest.mark.parametrize(
+    "obj",
+    [
+        {"name": "John"},
+        SimpleNamespace(name="John"),
+    ],
+)
+def test_set_field_should_set_field_on_object(obj: Any):
+    # Act
+    set_field(obj, "age", 30)
+
+    # Assert
+    if isinstance(obj, dict):
+        assert obj["age"] == 30
+    else:
+        assert obj.age == 30
+
+
+@pytest.mark.parametrize(
+    "obj",
+    [
+        {},
+        SimpleNamespace(),
+    ],
+)
+def test_set_field_should_create_new_field(obj: Any):
+    # Act
+    set_field(obj, "name", "Jane")
+
+    # Assert
+    if isinstance(obj, dict):
+        assert obj["name"] == "Jane"
+    else:
+        assert obj.name == "Jane"
+
+
+def test_set_field_should_raise_error_when_obj_is_none():
+    # Act & Assert
+    with pytest.raises(ValueError, match="Cannot set field on None object"):
+        set_field(None, "field", "value")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [0, False, "", None],
+)
+def test_set_field_should_handle_falsy_values(value: Any):
+    # Arrange
+    obj = {"field": "initial"}
+
+    # Act
+    set_field(obj, "field", value)
+
+    # Assert
+    assert obj["field"] == value
+
+
+# ============================================================================
+# Testing try_set_field()
+# ============================================================================
+@pytest.mark.parametrize(
+    "obj",
+    [
+        {"name": "John"},
+        SimpleNamespace(name="John"),
+    ],
+)
+def test_try_set_field_should_set_field_on_object(obj: Any):
+    # Act
+    try_set_field(obj, "age", 30)
+
+    # Assert
+    if isinstance(obj, dict):
+        assert obj["age"] == 30
+    else:
+        assert obj.age == 30
+
+
+def test_try_set_field_should_raise_error_when_obj_is_none():
+    # Act & Assert
+    with pytest.raises(ValueError, match="Cannot set field on None object"):
+        try_set_field(None, "field", "value")
+
+
+def test_try_set_field_should_not_raise_on_immutable_object():
+    # Arrange
+    obj = (1, 2, 3)  # Tuples are immutable
+
+    # Act - should not raise exception
+    try_set_field(obj, "field", "value")
+
+    # Assert - tuple unchanged
+    assert obj == (1, 2, 3)
+
+
+# ============================================================================
+# Testing merge_fields()
+# ============================================================================
+def test_merge_fields_should_merge_from_dict_to_dict():
+    # Arrange
+    source = {"name": "John", "age": 30, "city": "NYC"}
+    target = {"name": "Jane"}
+
+    # Act
+    merge_fields(source, target, "age", "city")
+
+    # Assert
+    actual = target
+    expected = {"name": "Jane", "age": 30, "city": "NYC"}
+    assert actual == expected
+
+
+def test_merge_fields_should_merge_from_object_to_object():
+    # Arrange
+    source = SimpleNamespace(name="John", age=30, city="NYC")
+    target = SimpleNamespace(name="Jane")
+
+    # Act
+    merge_fields(source, target, "age", "city")
+
+    # Assert
+    actual = (target.name, target.age, target.city)
+    expected = ("Jane", 30, "NYC")
+    assert actual == expected
+
+
+def test_merge_fields_should_merge_from_dict_to_object():
+    # Arrange
+    source = {"name": "John", "age": 30}
+    target = SimpleNamespace(name="Jane")
+
+    # Act
+    merge_fields(source, target, "age")
+
+    # Assert
+    actual = (target.name, target.age)
+    expected = ("Jane", 30)
+    assert actual == expected
+
+
+def test_merge_fields_should_merge_from_object_to_dict():
+    # Arrange
+    source = SimpleNamespace(name="John", age=30)
+    target = {"name": "Jane"}
+
+    # Act
+    merge_fields(source, target, "age")
+
+    # Assert
+    actual = target
+    expected = {"name": "Jane", "age": 30}
+    assert actual == expected
+
+
+def test_merge_fields_should_not_overwrite_when_force_false_and_target_has_value():
+    # Arrange
+    source = {"name": "John", "age": 30}
+    target = {"name": "Jane", "age": 25}
+
+    # Act
+    merge_fields(source, target, "name", "age")
+
+    # Assert
+    actual = target
+    expected = {"name": "Jane", "age": 25}
+    assert actual == expected
+
+
+def test_merge_fields_should_overwrite_when_force_true_and_target_has_value():
+    # Arrange
+    source = {"name": "John", "age": 30}
+    target = {"name": "Jane", "age": 25}
+
+    # Act
+    merge_fields(source, target, "name", "age", force=True)
+
+    # Assert
+    actual = target
+    expected = {"name": "John", "age": 30}
+    assert actual == expected
+
+
+def test_merge_fields_should_merge_when_target_is_none():
+    # Arrange
+    source = {"name": "John", "age": 30}
+    target = {"name": None, "age": None}
+
+    # Act
+    merge_fields(source, target, "name", "age")
+
+    # Assert
+    actual = target
+    expected = {"name": "John", "age": 30}
+    assert actual == expected
+
+
+def test_merge_fields_should_merge_when_target_field_missing():
+    # Arrange
+    source = {"name": "John", "age": 30}
+    target = {"name": "Jane"}
+
+    # Act
+    merge_fields(source, target, "age")
+
+    # Assert
+    actual = target
+    expected = {"name": "Jane", "age": 30}
+    assert actual == expected
+
+
+def test_merge_fields_should_not_merge_none_values():
+    # Arrange
+    source = {"name": None, "age": 30}
+    target = {"name": "Jane"}
+
+    # Act
+    merge_fields(source, target, "name", "age")
+
+    # Assert
+    actual = target
+    expected = {"name": "Jane", "age": 30}
+    assert actual == expected
+
+
+def test_merge_fields_should_raise_error_when_source_is_none():
+    # Arrange
+    source = None
+    target = {"name": "Jane"}
+
+    # Act & Assert
+    with pytest.raises(ValueError, match="Cannot merge fields from None source"):
+        merge_fields(source, target, "name")
+
+
+def test_merge_fields_should_raise_error_when_target_is_none():
+    # Arrange
+    source = {"name": "John"}
+    target = None
+
+    # Act & Assert
+    with pytest.raises(ValueError, match="Cannot merge fields into None target"):
+        merge_fields(source, target, "name")
+
+
+def test_merge_fields_should_raise_error_when_field_not_in_source():
+    # Arrange
+    source = {"name": "John"}
+    target = {"name": "Jane"}
+
+    # Act & Assert
+    with pytest.raises(KeyError, match="Field 'age' not found"):
+        merge_fields(source, target, "age")
 
 
 # ============================================================================
