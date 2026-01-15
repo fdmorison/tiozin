@@ -10,6 +10,8 @@ from tiozin.api import (
     Runner,
     Transform,
 )
+from tiozin.assembly import tioproxy
+from tiozin.assembly.executable_proxy import ExecutableProxy
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import merge_fields
 
@@ -19,6 +21,7 @@ if TYPE_CHECKING:
 TData = TypeVar("TData")
 
 
+@tioproxy(ExecutableProxy)
 class Job(Executable, PlugIn, Generic[TData]):
     """
     Defines a complete data pipeline.
