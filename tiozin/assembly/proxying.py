@@ -8,7 +8,7 @@ from tiozin.exceptions import ProxyError
 
 TIOPROXY = "__tioproxy__"
 
-T = TypeVar("T")
+TClass = TypeVar("TClass", bound=type)
 
 
 class ProxyMeta(ABCMeta):
@@ -52,7 +52,7 @@ class ProxyMeta(ABCMeta):
         return wrapped
 
 
-def tioproxy(proxy_class: T) -> Callable[..., T]:
+def tioproxy(proxy_class: type[wrapt.ObjectProxy]) -> Callable[[TClass], TClass]:
     """
     Registers a proxy class to be automatically applied on instantiation.
 
@@ -83,7 +83,7 @@ def tioproxy(proxy_class: T) -> Callable[..., T]:
         - Classes must use ProxyMeta as their metaclass (directly or inherited)
     """
 
-    def decorator(wrapped_class: type) -> type:
+    def decorator(wrapped_class: TClass) -> TClass:
         if not issubclass(proxy_class, wrapt.ObjectProxy):
             raise ProxyError(
                 f"Proxy class {proxy_class.__name__} must inherit from wrapt.ObjectProxy."
