@@ -54,9 +54,10 @@ class PlugIn(Resource, metaclass=ProxyMeta):
     @classmethod
     def _detect_provider(plugin) -> str:
         module_path: list[str] = plugin.__module__.split(".")
+        prefixes = tuple(config.plugin_provider_prefixes)
 
         for part in module_path:
-            if part.startswith(config.plugin_provider_prefix):
+            if part.startswith(prefixes):
                 return part
 
         return config.plugin_provider_unknown

@@ -1,5 +1,4 @@
 import logging
-import re
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from importlib.metadata import EntryPoint
@@ -43,25 +42,28 @@ class PolicyResult:
 
 
 class ProviderNamePolicy:
-    prefix = config.plugin_provider_prefix
-    pattern = re.compile(rf"^(?:{prefix}.+|.+\.{prefix}.+)$")
+    prefixes = tuple(config.plugin_provider_prefixes)
 
     @classmethod
     def eval(cls, provider: EntryPoint) -> PolicyResult:
-        name_ok = cls.pattern.fullmatch(provider.name)
+        name_ok = provider.name.startswith(cls.prefixes)
         package_ok = provider.value.endswith(f".{provider.name}")
 
         if name_ok and package_ok:
             return PolicyResult(cls, PolicyDecision.ALLOW)
 
-        expected_name = cls.prefix + provider.name.removeprefix(cls.prefix)
+        current_prefix = next((p for p in cls.prefixes if provider.name.startswith(p)), "")
+        base_name = provider.name.removeprefix(current_prefix)
+        expected_names = [f"{p}{base_name}" for p in cls.prefixes]
+
         return PolicyResult(
             policy=cls,
             decision=PolicyDecision.SKIP,
             message=(
                 "Skipping provider that does not match Tiozin's naming convention. "
-                f"The provider '{provider.name}' should be prefixed with `{cls.prefix}` and the "
-                f"package '{provider.value}' should end with '{expected_name}'."
+                f"The provider '{provider.name}' should be prefixed with one of "
+                f"{cls.prefixes} and the package '{provider.value}' should end with "
+                f"one of {expected_names}."
             ),
         )
 
