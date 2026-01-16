@@ -166,11 +166,15 @@ def test_policy_result_ok_should_use_default_message_when_denied_without_reason(
 # ============================================================================
 # Testing ProviderNamePolicy
 # ============================================================================
-def test_provider_name_policy_should_allow_name_prefixed_with_tio_():
+@pytest.mark.parametrize(
+    "provider_name",
+    ["tio_my_provider", "tia_my_provider"],
+)
+def test_provider_name_policy_should_allow_name_with_valid_prefix(provider_name: str):
     # Arrange
     provider = Mock(spec=EntryPoint)
-    provider.name = "tio_my_provider"
-    provider.value = "some.package.tio_my_provider"
+    provider.name = provider_name
+    provider.value = f"test.{provider_name}"
 
     # Act
     result = ProviderNamePolicy.eval(provider)
@@ -181,22 +185,31 @@ def test_provider_name_policy_should_allow_name_prefixed_with_tio_():
     assert actual == expected
 
 
-def test_provider_name_policy_should_allow_package_suffixed_with_provider_name():
+@pytest.mark.parametrize(
+    "provider_name,provider_value",
+    [
+        ("tio_my_provider", "my.namespace.tia_my_provider"),
+        ("tia_my_provider", "my.namespace.tio_my_provider"),
+    ],
+)
+def test_provider_name_policy_should_skip_package_with_valid_but_swapped_prefix(
+    provider_name, provider_value
+):
     # Arrange
     provider = Mock(spec=EntryPoint)
-    provider.name = "tio_my_provider"
-    provider.value = "my.namespace.tio_my_provider"
+    provider.name = provider_name
+    provider.value = provider_value
 
     # Act
     result = ProviderNamePolicy.eval(provider)
 
     # Assert
     actual = result.decision
-    expected = PolicyDecision.ALLOW
+    expected = PolicyDecision.SKIP
     assert actual == expected
 
 
-def test_provider_name_policy_should_skip_name_without_tio_prefix():
+def test_provider_name_policy_should_skip_name_without_valid_prefix():
     # Arrange
     provider = Mock(spec=EntryPoint)
     provider.name = "my_provider"
@@ -211,10 +224,16 @@ def test_provider_name_policy_should_skip_name_without_tio_prefix():
     assert actual == expected
 
 
-def test_provider_name_policy_should_skip_package_without_provider_name_suffix():
+@pytest.mark.parametrize(
+    "provider_name",
+    ["tio_my_provider", "tia_my_provider"],
+)
+def test_provider_name_policy_should_skip_package_without_provider_name_suffix(
+    provider_name,
+):
     # Arrange
     provider = Mock(spec=EntryPoint)
-    provider.name = "tio_my_provider"
+    provider.name = provider_name
     provider.value = "some.package.wrong_name"
 
     # Act
@@ -226,7 +245,7 @@ def test_provider_name_policy_should_skip_package_without_provider_name_suffix()
     assert actual == expected
 
 
-def test_provider_name_policy_should_include_expected_name_in_skip_message():
+def test_provider_name_policy_should_include_expected_names_in_skip_message():
     # Arrange
     provider = Mock(spec=EntryPoint)
     provider.name = "my_provider"
@@ -236,9 +255,8 @@ def test_provider_name_policy_should_include_expected_name_in_skip_message():
     result = ProviderNamePolicy.eval(provider)
 
     # Assert
-    actual = "tio_my_provider" in result.message
-    expected = True
-    assert actual == expected
+    assert "tio_my_provider" in result.message
+    assert "tia_my_provider" in result.message
 
 
 # ============================================================================

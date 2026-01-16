@@ -35,5 +35,5 @@ log_json_ensure_ascii = env.TIO_LOG_JSON_ENSURE_ASCII
 #           Plugins
 # ===============================================
 plugin_provider_group = "tiozin.family"
-plugin_provider_prefix = "tio_"
+plugin_provider_prefixes = ["tio_", "tia_"]
 plugin_provider_unknown = "tio_unknown"
