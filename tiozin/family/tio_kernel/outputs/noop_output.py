@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, Output
+from tiozin.api import Output, StepContext
 
 
 class NoOpOutput(Output):
@@ -11,5 +11,20 @@ class NoOpOutput(Output):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def write(self, context: Context, data: Any) -> Any:
+    def __init__(self, verbose: bool = False, **options) -> None:
+        super().__init__(**options)
+        self.verbose = verbose
+
+    def setup(self, context: StepContext, *data: Any) -> None:
+        if self.verbose:
+            self.info("Setup skipped.")
+
+    def write(self, context: StepContext, data: Any) -> Any:
+        if self.verbose:
+            self.info("The write was skipped.")
+            self.info("Properties:", **self.to_dict())
         return None
+
+    def teardown(self, context: StepContext, *data: Any) -> None:
+        if self.verbose:
+            self.info("Teardown skipped.")

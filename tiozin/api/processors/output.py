@@ -4,14 +4,14 @@ from typing import Generic, TypeVar
 from tiozin.exceptions import RequiredArgumentError
 
 from ...assembly import tioproxy
-from ...assembly.executable_proxy import ExecutableProxy
-from .. import Context, Executable, PlugIn
+from ...assembly.step_proxy import StepProxy
+from .. import PlugIn, StepContext
 
 TData = TypeVar("TData")
 
 
-@tioproxy(ExecutableProxy)
-class Output(Executable, PlugIn, Generic[TData]):
+@tioproxy(StepProxy)
+class Output(PlugIn, Generic[TData]):
     """
     Defines a data destination that persists processed data.
 
@@ -58,18 +58,18 @@ class Output(Executable, PlugIn, Generic[TData]):
         self.product = product
         self.model = model
 
+    def setup(self, context: StepContext, data: TData) -> None:
+        return None
+
     @abstractmethod
-    def write(self, context: Context, data: TData) -> TData:
+    def write(self, context: StepContext, data: TData) -> TData:
         """
         Write data to destination. Providers must implement.
         """
 
-    def execute(self, context: Context, data: TData) -> TData:
+    def teardown(self, context: StepContext, data: TData) -> None:
+        return None
+
+    def execute(self, context: StepContext, data: TData) -> TData:
         """Template method that delegates to write()."""
         return self.write(context, data)
-
-    def setup(self, context: Context, data: TData) -> None:
-        return None
-
-    def teardown(self, context: Context, data: TData) -> None:
-        return None

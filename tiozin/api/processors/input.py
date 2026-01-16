@@ -4,14 +4,14 @@ from typing import Generic, TypeVar
 from tiozin.exceptions import RequiredArgumentError
 
 from ...assembly import tioproxy
-from ...assembly.executable_proxy import ExecutableProxy
-from .. import Context, Executable, PlugIn
+from ...assembly.step_proxy import StepProxy
+from .. import PlugIn, StepContext
 
 TData = TypeVar("TData")
 
 
-@tioproxy(ExecutableProxy)
-class Input(Executable, PlugIn, Generic[TData]):
+@tioproxy(StepProxy)
+class Input(PlugIn, Generic[TData]):
     """
     Defines a data source that ingests data into the pipeline.
 
@@ -68,16 +68,16 @@ class Input(Executable, PlugIn, Generic[TData]):
         self.product = product
         self.model = model
 
+    def setup(self, context: StepContext) -> None:
+        return None
+
     @abstractmethod
-    def read(self, context: Context) -> TData:
+    def read(self, context: StepContext) -> TData:
         """Read data from source. Providers must implement."""
 
-    def execute(self, context: Context) -> TData:
+    def teardown(self, context: StepContext) -> None:
+        return None
+
+    def execute(self, context: StepContext) -> TData:
         """Template method that delegates to read()."""
         return self.read(context)
-
-    def setup(self, context: Context) -> None:
-        return None
-
-    def teardown(self, context: Context) -> None:
-        return None

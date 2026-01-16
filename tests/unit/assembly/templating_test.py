@@ -1,12 +1,13 @@
 import copy
 import logging
 from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
 
-from tiozin import PlugIn
 from tiozin.assembly.templating import PluginTemplateOverlay
 from tiozin.exceptions import InvalidInputError
+from tiozin.family.tio_kernel import NoOpInput
 
 
 # ============================================================================
@@ -14,9 +15,9 @@ from tiozin.exceptions import InvalidInputError
 # ============================================================================
 def test_overlay_should_render_and_restore_single_template():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{domain}}"
-    context = {"domain": "sales"}
+    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -37,10 +38,10 @@ def test_overlay_should_render_and_restore_single_template():
 
 def test_overlay_should_render_and_restore_multiple_templates():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{domain}}/{{date}}"
     plugin.name = "{{prefix}}_output"
-    context = {"domain": "sales", "date": "2024-01-15", "prefix": "test"}
+    context = MagicMock(template_vars={"domain": "sales", "date": "2024-01-15", "prefix": "test"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -67,10 +68,10 @@ def test_overlay_should_render_and_restore_multiple_templates():
 
 def test_overlay_should_not_modify_non_template_strings():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/sales"
     plugin.name = "output"
-    context = {"domain": "sales"}
+    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -97,9 +98,9 @@ def test_overlay_should_not_modify_non_template_strings():
 
 def test_overlay_should_not_modify_private_attributes():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin._private = "{{domain}}"
-    context = {"domain": "sales"}
+    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -120,9 +121,9 @@ def test_overlay_should_not_modify_private_attributes():
 
 def test_overlay_should_render_and_restore_nested_dict_templates():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.config = {"path": "./data/{{domain}}", "region": "{{region}}"}
-    context = {"domain": "sales", "region": "us-east"}
+    context = MagicMock(template_vars={"domain": "sales", "region": "us-east"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -149,12 +150,12 @@ def test_overlay_should_render_and_restore_nested_dict_templates():
 
 def test_overlay_should_render_and_restore_nested_list_templates():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.paths = [
         "./{{env}}/data",
         "./output/{{domain}}",
     ]
-    context = {"env": "prod", "domain": "sales"}
+    context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -181,10 +182,10 @@ def test_overlay_should_render_and_restore_nested_list_templates():
 
 def test_overlay_should_render_and_restore_nested_plugins():
     # Arrange
-    plugin = PlugIn()
-    plugin.inner = PlugIn()
+    plugin = NoOpInput(name="test")
+    plugin.inner = NoOpInput(name="inner")
     plugin.inner.path = "{{domain}}/inner"
-    context = {"domain": "sales"}
+    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -205,9 +206,9 @@ def test_overlay_should_render_and_restore_nested_plugins():
 
 def test_overlay_should_restore_on_exception():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.name = "{{value}}"
-    context = {"value": "resolved"}
+    context = MagicMock(template_vars={"value": "resolved"})
 
     # Act
     try:
@@ -232,9 +233,9 @@ def test_overlay_should_restore_on_exception():
 
 def test_overlay_should_raise_error_on_missing_variable():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{missing}}"
-    context = {"other": "value"}
+    context = MagicMock(template_vars={"other": "value"})
 
     # Act & Assert
     with pytest.raises(InvalidInputError):
@@ -244,9 +245,11 @@ def test_overlay_should_raise_error_on_missing_variable():
 
 def test_overlay_should_render_and_restore_templates_with_multiple_variables():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{domain}}/{{year}}-{{month}}-{{day}}/file.txt"
-    context = {"domain": "sales", "year": "2024", "month": "01", "day": "15"}
+    context = MagicMock(
+        template_vars={"domain": "sales", "year": "2024", "month": "01", "day": "15"}
+    )
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -267,9 +270,9 @@ def test_overlay_should_render_and_restore_templates_with_multiple_variables():
 
 def test_overlay_should_not_modify_strings_when_context_is_empty():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/static"
-    context = {}
+    context = MagicMock()
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -290,13 +293,13 @@ def test_overlay_should_not_modify_strings_when_context_is_empty():
 
 def test_overlay_should_render_and_restore_deeply_nested_structures():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.config = {
         "level1": {
             "level2": ["./{{a}}", "./{{b}}"],
         }
     }
-    context = {"a": "foo", "b": "bar"}
+    context = MagicMock(template_vars={"a": "foo", "b": "bar"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -329,9 +332,9 @@ def test_overlay_should_render_and_restore_deeply_nested_structures():
 )
 def test_overlay_should_not_modify_non_string_values(value):
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.value = value
-    context = {}
+    context = MagicMock()
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -352,12 +355,12 @@ def test_overlay_should_not_modify_non_string_values(value):
 
 def test_overlay_should_not_modify_immutable_tuple_with_templates():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.paths = (
         "./{{env}}/data",
         "./output/{{domain}}",
     )
-    context = {"env": "prod", "domain": "sales"}
+    context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -384,9 +387,9 @@ def test_overlay_should_not_modify_immutable_tuple_with_templates():
 
 def test_overlay_should_not_modify_immutable_frozenset_with_templates():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.tags = frozenset(["{{env}}", "{{domain}}"])
-    context = {"env": "prod", "domain": "sales"}
+    context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -407,13 +410,13 @@ def test_overlay_should_not_modify_immutable_frozenset_with_templates():
 
 def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tuple():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.data = (
         {"path": "./data/{{domain}}"},
         ["./{{env}}/data", "./output/{{region}}"],
         "static_value",
     )
-    context = {"domain": "sales", "env": "prod", "region": "us-east"}
+    context = MagicMock(template_vars={"domain": "sales", "env": "prod", "region": "us-east"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -442,20 +445,20 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
 
 def test_overlay_should_restore_templates_after_each_sequential_overlay():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{domain}}"
 
     # Act
-    with PluginTemplateOverlay(plugin, {"domain": "sales"}):
-        rendered = plugin.path
+    with PluginTemplateOverlay(plugin, MagicMock(template_vars={"domain": "sales"})):
+        rendered_1 = plugin.path
 
-    with PluginTemplateOverlay(plugin, {"domain": "finance"}):
+    with PluginTemplateOverlay(plugin, MagicMock(template_vars={"domain": "finance"})):
         rendered_2 = plugin.path
     restored = plugin.path
 
     # Assert
     actual = (
-        rendered,
+        rendered_1,
         rendered_2,
         restored,
     )
@@ -469,9 +472,9 @@ def test_overlay_should_restore_templates_after_each_sequential_overlay():
 
 def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{domain|upper}}"
-    context = {"domain": "sales"}
+    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):
@@ -492,9 +495,9 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
 
 def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
     # Arrange
-    plugin = PlugIn()
+    plugin = NoOpInput(name="test")
     plugin.path = "./data/{{ domain ~ '/' ~ date }}"
-    context = {"domain": "sales", "date": "2024-01-15"}
+    context = MagicMock(template_vars={"domain": "sales", "date": "2024-01-15"})
 
     # Act
     with PluginTemplateOverlay(plugin, context):

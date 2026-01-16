@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jinja2 import Environment, StrictUndefined
 
 from tiozin.api import PlugIn
 from tiozin.exceptions import InvalidInputError
 from tiozin.utils import helpers
+
+if TYPE_CHECKING:
+    from tiozin.api import JobContext, RunnerContext, StepContext
 
 JINJA_ENV = Environment(
     undefined=StrictUndefined,
@@ -48,9 +51,9 @@ class PluginTemplateOverlay:
           concurrently while an overlay is active
     """
 
-    def __init__(self, plugin: PlugIn, context: dict[str, Any]) -> None:
+    def __init__(self, plugin: PlugIn, context: JobContext | StepContext | RunnerContext) -> None:
         self._plugin = plugin
-        self._context = context
+        self._context = context.template_vars
         self._templates: list[tuple] = []
         self._scan_templates(self._plugin)
 
@@ -68,7 +71,7 @@ class PluginTemplateOverlay:
             case dict():
                 for field, value in obj.items():
                     self._scan_templates(value, *parents, field)
-            case PlugIn():
+            case PlugIn() if isinstance(obj, self._plugin.plugin_kind_class):
                 for field, value in vars(obj).items():
                     if not field.startswith("_"):
                         self._scan_templates(value, *parents, field)
