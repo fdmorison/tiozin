@@ -89,7 +89,7 @@ def tioproxy(proxy_class: type[wrapt.ObjectProxy]) -> Callable[[TClass], TClass]
                 f"Proxy class {proxy_class.__name__} must inherit from wrapt.ObjectProxy."
             )
 
-        proxies = getattr(wrapped_class, TIOPROXY, [])
+        proxies = list(getattr(wrapped_class, TIOPROXY, []))
         proxies.append(proxy_class)
         setattr(wrapped_class, TIOPROXY, proxies)
 
