@@ -7,9 +7,6 @@ Tiozin - A friendly ETL framework
 Public API for building data pipelines with Tiozin.
 """
 
-# Mixins
-from tiozin.api import Executable
-
 # Bases
 from tiozin.api import Resource, Registry, PlugIn
 
@@ -31,12 +28,10 @@ from tiozin.api import (
 from tiozin.api import Runner, Transform, Input, Output, Job
 
 # Auxiliary
-from tiozin.api import Context
+from tiozin.api import JobContext, StepContext, RunnerContext
 from tiozin.app import TiozinApp
 
 __all__ = [
-    # Mixins
-    "Executable",
     # Bases
     "Resource",
     "Registry",
@@ -58,6 +53,8 @@ __all__ = [
     "Output",
     "Job",
     # Auxiliary
-    "Context",
+    "JobContext",
+    "RunnerContext",
+    "StepContext",
     "TiozinApp",
 ]

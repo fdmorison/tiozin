@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, Input
+from tiozin.api import Input, StepContext
 
 
 class NoOpInput(Input):
@@ -11,5 +11,20 @@ class NoOpInput(Input):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def read(self, context: Context) -> Any:
+    def __init__(self, verbose: bool = False, **options) -> None:
+        super().__init__(**options)
+        self.verbose = verbose
+
+    def setup(self, context: StepContext) -> None:
+        if self.verbose:
+            self.info("Setup skipped.")
+
+    def read(self, context: StepContext) -> Any:
+        if self.verbose:
+            self.info("The read was skipped.")
+            self.info("Properties:", **self.to_dict())
         return None
+
+    def teardown(self, context: StepContext) -> None:
+        if self.verbose:
+            self.info("Teardown skipped.")

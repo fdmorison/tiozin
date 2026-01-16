@@ -4,14 +4,14 @@ from typing import Generic, TypeVar
 from tiozin.exceptions import RequiredArgumentError
 
 from ...assembly import tioproxy
-from ...assembly.executable_proxy import ExecutableProxy
-from .. import Context, Executable, PlugIn
+from ...assembly.step_proxy import StepProxy
+from .. import PlugIn, StepContext
 
 TData = TypeVar("TData")
 
 
-@tioproxy(ExecutableProxy)
-class Transform(Executable, PlugIn, Generic[TData]):
+@tioproxy(StepProxy)
+class Transform(PlugIn, Generic[TData]):
     """
     Defines a data transformation that modifies or enriches data.
 
@@ -57,19 +57,19 @@ class Transform(Executable, PlugIn, Generic[TData]):
         self.product = product
         self.model = model
 
+    def setup(self, context: StepContext, data: TData) -> None:
+        return None
+
     @abstractmethod
-    def transform(self, context: Context, data: TData) -> TData:
+    def transform(self, context: StepContext, data: TData) -> TData:
         """Apply transformation logic. Providers must implement."""
 
-    def execute(self, context: Context, data: TData) -> TData:
+    def teardown(self, context: StepContext, data: TData) -> None:
+        return None
+
+    def execute(self, context: StepContext, data: TData) -> TData:
         """Template method that delegates to transform()."""
         return self.transform(context, data)
-
-    def setup(self, context: Context, data: TData) -> None:
-        return None
-
-    def teardown(self, context: Context, data: TData) -> None:
-        return None
 
 
 class CoTransform(Transform[TData]):
@@ -98,12 +98,12 @@ class CoTransform(Transform[TData]):
         Requires at least 2 inputs. For single-dataset transforms, use Transform.
     """
 
-    @abstractmethod
-    def transform(self, context: Context, data: TData, other: TData, *others: TData) -> TData:
-        """Apply cooperative transformation logic. Providers must implement."""
-
-    def setup(self, context: Context, data: TData, other: TData, *others: TData) -> None:
+    def setup(self, context: StepContext, data: TData, other: TData, *others: TData) -> None:
         return None
 
-    def teardown(self, context: Context, data: TData, other: TData, *others: TData) -> None:
+    @abstractmethod
+    def transform(self, context: StepContext, data: TData, other: TData, *others: TData) -> TData:
+        """Apply cooperative transformation logic. Providers must implement."""
+
+    def teardown(self, context: StepContext, data: TData, other: TData, *others: TData) -> None:
         return None

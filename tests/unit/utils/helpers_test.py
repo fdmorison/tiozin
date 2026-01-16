@@ -1,5 +1,5 @@
 from collections import deque
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from pendulum import UTC
 
 from tiozin.utils.helpers import (
     as_flat_list,

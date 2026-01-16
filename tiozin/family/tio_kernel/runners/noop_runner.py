@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, Runner
+from tiozin.api import Runner, RunnerContext
 
 
 class NoOpRunner(Runner[Any]):
@@ -11,5 +11,20 @@ class NoOpRunner(Runner[Any]):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def run(self, context: Context, execution_plan: Any) -> Any:
+    def __init__(self, verbose: bool = False, **options) -> None:
+        super().__init__(**options)
+        self.verbose = verbose
+
+    def setup(self, context: RunnerContext) -> None:
+        if self.verbose:
+            self.info("Setup skipped.")
+
+    def run(self, context: RunnerContext, execution_plan: Any) -> Any:
+        if self.verbose:
+            self.info("The run was skipped.")
+            self.info("Properties:", **self.to_dict())
         return []
+
+    def teardown(self, context: RunnerContext) -> None:
+        if self.verbose:
+            self.info("Teardown skipped.")

@@ -1,22 +1,24 @@
 import inspect
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
 from typing import Any, TypeVar
 
+import pendulum
 from uuid_utils import uuid7
 
 T = TypeVar("T")
 
 
-def utcnow() -> datetime:
+def utcnow() -> pendulum.DateTime:
     """
     Return the current UTC time as a timezone-aware datetime.
+
+    Returns Pendulum DateTime which prints in ISO 8601 format.
     """
-    return datetime.now(UTC)
+    return pendulum.now("UTC")
 
 
 def generate_id() -> str:

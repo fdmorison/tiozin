@@ -2,16 +2,15 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin.api import (
-    Context,
-    Executable,
     Input,
+    JobContext,
     Output,
     PlugIn,
     Runner,
     Transform,
 )
 from tiozin.assembly import tioproxy
-from tiozin.assembly.executable_proxy import ExecutableProxy
+from tiozin.assembly.job_proxy import JobProxy
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import merge_fields
 
@@ -21,8 +20,8 @@ if TYPE_CHECKING:
 TData = TypeVar("TData")
 
 
-@tioproxy(ExecutableProxy)
-class Job(Executable, PlugIn, Generic[TData]):
+@tioproxy(JobProxy)
+class Job(PlugIn, Generic[TData]):
     """
     Defines a complete data pipeline.
 
@@ -122,9 +121,15 @@ class Job(Executable, PlugIn, Generic[TData]):
         return JobBuilder()
 
     @abstractmethod
-    def run(self, context: Context) -> TData:
+    def run(self, context: JobContext) -> TData:
         pass
 
-    def execute(self, context: Context) -> TData:
+    def execute(self, context: JobContext) -> TData:
         """Template method that delegates to run()."""
         return self.run(context)
+
+    def setup(self, context: JobContext) -> None:
+        return None
+
+    def teardown(self, context: JobContext) -> None:
+        return None
