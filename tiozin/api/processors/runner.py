@@ -3,9 +3,9 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from ..assembly import tioproxy
-from ..assembly.runner_proxy import RunnerProxy
-from . import PlugIn
+from ...assembly import tioproxy
+from ...assembly.runner_proxy import RunnerProxy
+from .. import PlugIn
 
 if TYPE_CHECKING:
     from tiozin import RunnerContext

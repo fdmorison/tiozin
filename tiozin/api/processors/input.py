@@ -1,16 +1,11 @@
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVar
-
-from tiozin.exceptions import RequiredArgumentError
+from typing import Generic, TypeVar
 
 from ...assembly import tioproxy
 from ...assembly.step_proxy import StepProxy
+from ...exceptions import RequiredArgumentError
 from .. import PlugIn
-
-if TYPE_CHECKING:
-    from tiozin import StepContext
+from .step_context import StepContext
 
 TData = TypeVar("TData")
 
