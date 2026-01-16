@@ -21,8 +21,10 @@ class NoOpOutput(Output):
 
     def write(self, context: StepContext, data: Any) -> Any:
         if self.verbose:
+            args = self.to_dict(exclude={"description", "name"})
+            args.update(args.pop("options"))
             self.info("The write was skipped.")
-            self.info("Properties:", **self.to_dict())
+            self.info("Properties:", **args)
         return None
 
     def teardown(self, context: StepContext, *data: Any) -> None:

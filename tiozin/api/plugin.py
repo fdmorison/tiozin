@@ -127,11 +127,30 @@ class PlugIn(Loggable, metaclass=ProxyMeta):
         """
         return None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(
+        self,
+        *,
+        exclude: set[str] | None = None,
+        exclude_none: bool = False,
+    ) -> dict[str, Any]:
         """
         Returns a shallow dictionary representation of the resource state.
+
+        Args:
+            exclude: Field names to exclude from the output.
+            exclude_none: If True, fields with None values are excluded.
         """
-        return vars(self).copy()
+        result: dict[str, Any] = {}
+        exclude = exclude or set()
+
+        for key, value in vars(self).items():
+            if key in exclude:
+                continue
+            if exclude_none and value is None:
+                continue
+            result[key] = value
+
+        return result
 
     def __str__(self) -> str:
         """Returns a simple string representation of the resource."""

@@ -21,8 +21,10 @@ class NoOpRunner(Runner[Any]):
 
     def run(self, context: RunnerContext, execution_plan: Any) -> Any:
         if self.verbose:
+            args = self.to_dict(exclude={"description", "name"})
+            args.update(args.pop("options"))
             self.info("The run was skipped.")
-            self.info("Properties:", **self.to_dict())
+            self.info("Properties:", **args)
         return []
 
     def teardown(self, context: RunnerContext) -> None:
