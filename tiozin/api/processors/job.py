@@ -126,7 +126,7 @@ class Job(PlugIn, Generic[TData]):
         return None
 
     @abstractmethod
-    def run(self, context: JobContext) -> TData:
+    def submit(self, context: JobContext) -> TData:
         pass
 
     def teardown(self, context: JobContext) -> None:

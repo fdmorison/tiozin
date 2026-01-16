@@ -152,7 +152,7 @@ def test_run_should_execute_job_and_finish_with_success(
     ready_app.run("job://test")
 
     # Assert
-    job.execute.assert_called_once()
+    job.submit.assert_called_once()
     assert ready_app.status.is_success()
     assert ready_app.status.is_job_finished()
 
@@ -161,7 +161,7 @@ def test_run_should_execute_job_and_finish_with_success(
 def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     job = MagicMock()
-    job.execute.side_effect = RuntimeError("boom")
+    job.submit.side_effect = RuntimeError("boom")
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -184,7 +184,7 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
         actual_status = ready_app.status
 
     job = MagicMock()
-    job.execute.side_effect = mocked_job_run
+    job.submit.side_effect = mocked_job_run
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -210,7 +210,7 @@ def test_run_should_accept_job_instance_directly(ready_app: TiozinApp):
     # Arrange
     job = MagicMock()
     job.name = "test_job"
-    job.execute.return_value = {"result": "success"}
+    job.submit.return_value = {"result": "success"}
 
     # Act
     result = ready_app.run(job)
@@ -237,7 +237,7 @@ def test_run_should_accept_job_manifest_instance(job_builder: MagicMock, ready_a
         inputs=[{"kind": "TestInput", "name": "reader"}],
     )
     job = MagicMock()
-    job.execute.return_value = {"result": "success"}
+    job.submit.return_value = {"result": "success"}
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -258,7 +258,7 @@ def test_run_should_accept_yaml_string(job_builder: MagicMock, ready_app: Tiozin
         description: Test job from YAML
     """
     job = MagicMock()
-    job.execute.return_value = {"result": "success"}
+    job.submit.return_value = {"result": "success"}
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -281,7 +281,7 @@ def test_run_should_accept_json_string(job_builder: MagicMock, ready_app: Tiozin
         }
     """
     job = MagicMock()
-    job.execute.return_value = {"result": "success"}
+    job.submit.return_value = {"result": "success"}
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
@@ -311,7 +311,7 @@ def test_run_should_accept_identifier_string_from_registry(
         inputs=[{"kind": "TestInput", "name": "reader"}],
     )
     job = MagicMock()
-    job.execute.return_value = {"result": "success"}
+    job.submit.return_value = {"result": "success"}
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act

@@ -117,7 +117,7 @@ class TiozinApp(Loggable):
                     job = Job.builder().from_manifest(manifest).build()
 
                 self.current_job = job
-                result = job.execute()
+                result = job.submit()
                 self.status = self.status.set_success()
                 return result
             except TiozinError as e:

@@ -37,7 +37,7 @@ class JobProxy(wrapt.ObjectProxy):
     environment for Job plugins.
     """
 
-    def execute(self, *args, **kwargs) -> Any:
+    def submit(self, *args, **kwargs) -> Any:
         job: Job = self.__wrapped__
 
         context = JobContext(
@@ -72,7 +72,7 @@ class JobProxy(wrapt.ObjectProxy):
             job.info(f"▶️  Starting {context.kind}")
             with PluginTemplateOverlay(job, context):
                 context.executed_at = utcnow()
-                result = job.run(context, *args, **kwargs)
+                result = job.submit(context, *args, **kwargs)
         except Exception:
             job.error(f"❌  {context.kind} failed after {context.delay:.2f}s")
             raise
