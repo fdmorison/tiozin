@@ -104,6 +104,15 @@ class OperationTimeoutError(TiozinError):
     message = "The operation exceeded the time limit and timed out."
 
 
+class ForbiddenError(TiozinError):
+    """
+    Raised when access to a resource or operation is forbidden.
+    """
+
+    http_status = 403
+    message = "You are not allowed to perform this operation."
+
+
 # ============================================================================
 # Layer 3: Domain Exceptions - Job
 # ============================================================================
@@ -209,6 +218,24 @@ class PluginKindError(PluginError, InvalidInputError):
             plugin_name=plugin_name,
             plugin_kind=plugin_kind.__name__,
         )
+
+
+class PluginAccessForbiddenError(PluginError, ForbiddenError):
+    """
+    Raised when access to a plugin's lifecycle methods is attempted outside of
+    Tiozin's runtime control.
+
+    This error indicates an attempt to directly invoke setup or teardown on a
+    plugin, which are exclusively managed by the Tiozin runtime.
+    """
+
+    message = (
+        "Access to {plugin} lifecycle methods is forbidden. "
+        "Setup and teardown are managed by the Tiozin runtime."
+    )
+
+    def __init__(self, plugin: Any) -> None:
+        super().__init__(plugin=plugin)
 
 
 # ============================================================================
