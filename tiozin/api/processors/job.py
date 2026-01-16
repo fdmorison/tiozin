@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin.api import (
     Input,
-    JobContext,
     Output,
     PlugIn,
     Runner,
@@ -15,6 +16,7 @@ from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import merge_fields
 
 if TYPE_CHECKING:
+    from tiozin.api import JobContext
     from tiozin.assembly.job_builder import JobBuilder
 
 TData = TypeVar("TData")
@@ -115,21 +117,17 @@ class Job(PlugIn, Generic[TData]):
             merge_fields(self, step, "org", "region", "domain", "product", "model", "layer")
 
     @staticmethod
-    def builder() -> "JobBuilder":
+    def builder() -> JobBuilder:
         from tiozin.assembly.job_builder import JobBuilder
 
         return JobBuilder()
 
+    def setup(self, context: JobContext) -> None:
+        return None
+
     @abstractmethod
     def run(self, context: JobContext) -> TData:
         pass
-
-    def execute(self, context: JobContext) -> TData:
-        """Template method that delegates to run()."""
-        return self.run(context)
-
-    def setup(self, context: JobContext) -> None:
-        return None
 
     def teardown(self, context: JobContext) -> None:
         return None

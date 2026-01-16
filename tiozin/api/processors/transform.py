@@ -67,10 +67,6 @@ class Transform(PlugIn, Generic[TData]):
     def teardown(self, context: StepContext, data: TData) -> None:
         return None
 
-    def execute(self, context: StepContext, data: TData) -> TData:
-        """Template method that delegates to transform()."""
-        return self.transform(context, data)
-
 
 class CoTransform(Transform[TData]):
     """
