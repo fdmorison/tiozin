@@ -238,10 +238,7 @@ class PluginAccessForbiddenError(PluginError, ForbiddenError):
         super().__init__(plugin=plugin)
 
 
-# ============================================================================
-# Layer 3: Domain Exceptions - Assembly
-# ============================================================================
-class ProxyError(TiozinError):
+class PluginProxyError(PluginError):
     """Base exception for proxy-related errors."""
 
     message = "Failed to apply proxy to resource."

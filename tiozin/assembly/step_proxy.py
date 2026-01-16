@@ -12,8 +12,6 @@ from tiozin.utils.helpers import utcnow
 if TYPE_CHECKING:
     from tiozin import Input, JobContext, Output, Transform
 
-_LIFECYCLE_METHODS = {"setup", "teardown"}
-
 
 class StepProxy(wrapt.ObjectProxy):
     """
@@ -87,10 +85,11 @@ class StepProxy(wrapt.ObjectProxy):
                 plugin.error(f"🚨 {context.kind} teardown failed because {e}")
             context.finished_at = utcnow()
 
-    def __getattr__(self, name: str) -> Any:
-        if name in _LIFECYCLE_METHODS:
-            raise PluginAccessForbiddenError(self)
-        return super().__getattr__(name)
+    def setup(self, *args, **kwargs) -> None:
+        raise PluginAccessForbiddenError(self)
+
+    def teardown(self, *args, **kwargs) -> None:
+        raise PluginAccessForbiddenError(self)
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
