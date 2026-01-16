@@ -16,18 +16,22 @@ unplanned_field: 12345
 runner:
   kind: NoOpRunner
   streaming: false
+  verbose: true
 
 inputs:
   - kind: NoOpInput
     name: load_products
-    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{today}}
+    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{ D[-1] }}
+    verbose: true
 
 transforms:
   - kind: NoOpTransform
     name: normalize_products
     strategy: standardize_fields
+    verbose: true
 
 outputs:
   - kind: NoOpOutput
     name: save_products
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{ yesterday }}
+    verbose: true
