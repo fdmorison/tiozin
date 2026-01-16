@@ -42,7 +42,6 @@ class JobProxy(wrapt.ObjectProxy):
 
         context = JobContext(
             # Identity
-            id=job.id,
             name=job.name,
             kind=job.plugin_name,
             plugin_kind=job.plugin_kind,

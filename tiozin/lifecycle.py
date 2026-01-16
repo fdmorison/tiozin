@@ -1,7 +1,7 @@
-from tiozin.api import Registry, Resource
+from tiozin.api import Loggable, Registry
 
 
-class Lifecycle(Resource):
+class Lifecycle(Loggable):
     """
     Manages application lifecycle for registries.
 

@@ -1,7 +1,6 @@
 # isort: skip_file
 # flake8: noqa
 
-from .resource import Resource as Resource
 from .loggable import Loggable as Loggable
 from .plugin import PlugIn as PlugIn
 from .registry import Registry as Registry

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from tiozin import config
-from tiozin.api import Resource
+from tiozin.api import Loggable
 from tiozin.assembly import ProxyMeta
 
 
-class PlugIn(Resource, metaclass=ProxyMeta):
+class PlugIn(Loggable, metaclass=ProxyMeta):
     """
     Base class for resources that can be discovered and loaded as plugins.
 
@@ -28,6 +28,17 @@ class PlugIn(Resource, metaclass=ProxyMeta):
         python_path: str
 
     __tiometa__: ClassVar[Metadata]
+
+    def __init__(
+        self,
+        name: str = None,
+        description: str = None,
+        **options,
+    ) -> None:
+        self.kind = self.plugin_name
+        self.name = name or self.kind
+        self.description = description
+        self.options = options
 
     def __init_subclass__(plugin, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
@@ -95,3 +106,37 @@ class PlugIn(Resource, metaclass=ProxyMeta):
         if self.plugin_uri.endswith(self.name):
             return self.plugin_uri
         return f"{self.plugin_uri}/{self.name}"
+
+    def setup(self, *args, **kwargs) -> None:
+        """
+        Optional initialization hook.
+
+        Called when the resource enters its execution context.
+        Override if the resource requires setup logic such as establishing
+        connections, initializing sessions, or allocating resources.
+        """
+        return None
+
+    def teardown(self, *args, **kwargs) -> None:
+        """
+        Optional cleanup hook.
+
+        Called when the resource exits its execution context.
+        Override if the resource requires cleanup logic such as closing
+        connections, releasing resources, or performing final operations.
+        """
+        return None
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Returns a shallow dictionary representation of the resource state.
+        """
+        return vars(self).copy()
+
+    def __str__(self) -> str:
+        """Returns a simple string representation of the resource."""
+        return self.name
+
+    def __repr__(self) -> str:
+        """Returns a concise string representation of the resource."""
+        return f"{self.name}"

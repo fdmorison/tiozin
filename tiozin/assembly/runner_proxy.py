@@ -44,7 +44,6 @@ class RunnerProxy(wrapt.ObjectProxy):
             # Job
             job=context,
             # Identity
-            id=runner.id,
             name=runner.name,
             kind=runner.plugin_name,
             plugin_kind=runner.plugin_kind,

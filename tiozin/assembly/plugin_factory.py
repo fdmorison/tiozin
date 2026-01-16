@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Output, PlugIn, Resource, Runner, Transform
+from tiozin.api import Input, Job, Loggable, Output, PlugIn, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     Manifest,
@@ -16,7 +16,7 @@ from .plugin_scanner import PluginScanner
 T = TypeVar("T", bound=PlugIn)
 
 
-class PluginFactory(Resource):
+class PluginFactory(Loggable):
     """
     The PluginFactory loads each provider package and scans it to automatically discover
     all plugin classes defined inside it, such as Inputs, Outputs, Transforms, Runners,

@@ -46,7 +46,6 @@ class StepProxy(wrapt.ObjectProxy):
             # Job
             job=context,
             # Identity
-            id=step.id,
             name=step.name,
             kind=step.plugin_name,
             plugin_kind=step.plugin_kind,
