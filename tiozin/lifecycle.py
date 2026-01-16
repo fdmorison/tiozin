@@ -29,7 +29,7 @@ class Lifecycle(Resource):
             try:
                 if registry.ready:
                     registry.teardown()
-                    self.logger.info(f"🛑 {registry.uri} shutdown is successful.")
+                    self.info(f"🛑 {registry.uri} shutdown is successful.")
                 else:
                     self.info(f"🛑 {registry.uri} shutdown skipped (uninitialized).")
             except Exception:

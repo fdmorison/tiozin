@@ -1,12 +1,12 @@
-from typing import Any, Unpack
+from typing import Any
 
-from tiozin import config, logs
+from tiozin import config
 from tiozin.utils import helpers
 
-from .typehint import LogKwargs
+from .loggable import Loggable
 
 
-class Resource:
+class Resource(Loggable):
     """
     Base class for all Tiozin resources.
 
@@ -21,9 +21,8 @@ class Resource:
         name: Human-readable name for logging and debugging.
         description: Optional description of the resource's purpose.
         options: Extra provider-specific configuration options.
-        logger: Pre-configured logger instance scoped to this resource's name.
         uri: Unique resource identifier.
-        instance_uri: Unique resource instance identifier".
+        instance_uri: Unique resource instance identifier.
     """
 
     def __init__(
@@ -37,7 +36,6 @@ class Resource:
         self.name = name or self.kind
         self.description = description
         self.options = options
-        self.logger = logs.get_logger(self.name)
 
     @property
     def uri(self) -> str:
@@ -75,24 +73,6 @@ class Resource:
         Returns a shallow dictionary representation of the resource state.
         """
         return vars(self).copy()
-
-    def debug(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.debug(*args, **kwargs)
-
-    def info(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.info(*args, **kwargs)
-
-    def warning(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.warning(*args, **kwargs)
-
-    def error(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.error(*args, **kwargs)
-
-    def exception(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.critical(*args, **kwargs)
-
-    def critical(self, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.critical(*args, **kwargs)
 
     def __str__(self) -> str:
         """Returns a simple string representation of the resource."""

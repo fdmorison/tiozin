@@ -64,7 +64,6 @@ class PluginFactory(Resource):
         super().__init__()
         self._index: dict[str, type[PlugIn] | set[type[PlugIn]]] = {}
         self._plugins: set[type[PlugIn]] = set()
-        self.logger = self.logger.hide_none().hide_fields("description")
 
     def setup(self) -> None:
         for plugins in PluginScanner(self.logger).scan().values():
