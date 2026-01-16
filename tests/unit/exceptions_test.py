@@ -5,6 +5,7 @@ from tiozin.exceptions import (
     AlreadyRunningError,
     AmbiguousPluginError,
     ConflictError,
+    ForbiddenError,
     InvalidInputError,
     JobAlreadyExistsError,
     JobError,
@@ -12,6 +13,7 @@ from tiozin.exceptions import (
     ManifestError,
     NotFoundError,
     OperationTimeoutError,
+    PluginAccessForbiddenError,
     PluginError,
     PluginKindError,
     PluginNotFoundError,
@@ -295,6 +297,26 @@ def test_plugin_kind_error_should_format_plugin_name_and_kind_in_message():
     assert actual == expected
 
 
+def test_plugin_access_forbidden_error_should_format_plugin_in_message():
+    # Arrange
+    class FakePlugin:
+        def __repr__(self):
+            return "FakePlugin(name='test')"
+
+    plugin = FakePlugin()
+
+    # Act
+    error = PluginAccessForbiddenError(plugin=plugin)
+
+    # Assert
+    actual = error.message
+    expected = (
+        "Access to FakePlugin(name='test') lifecycle methods is forbidden. "
+        "Setup and teardown are managed by the Tiozin runtime."
+    )
+    assert actual == expected
+
+
 # ============================================================================
 # Testing AlreadyRunningError and AlreadyFinishedError
 # ============================================================================
@@ -525,8 +547,20 @@ def test_errors_should_be_catchable_as_invalid_input(error):
         PluginNotFoundError(plugin_name="x"),
         AmbiguousPluginError(plugin_name="x"),
         PluginKindError(plugin_name="x", plugin_kind=object),
+        PluginAccessForbiddenError(plugin=object()),
     ],
 )
 def test_plugin_errors_should_be_catchable_as_plugin_error(error):
     with pytest.raises(PluginError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        PluginAccessForbiddenError(plugin=object()),
+    ],
+)
+def test_forbidden_errors_should_be_catchable_as_forbidden_error(error):
+    with pytest.raises(ForbiddenError):
         raise error
