@@ -179,7 +179,7 @@ def test_run_should_set_running_before_job_execution(job_builder: MagicMock, rea
     # Arrange
     actual_status: AppStatus = None
 
-    def mocked_job_run(_):
+    def mocked_job_run(*args, **kwargs):
         nonlocal actual_status
         actual_status = ready_app.status
 

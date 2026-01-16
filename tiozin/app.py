@@ -2,7 +2,7 @@ import atexit
 import signal
 from threading import RLock
 
-from tiozin import Context, Job, Resource, logs
+from tiozin import Job, Resource, logs
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinError
@@ -110,13 +110,6 @@ class TiozinApp(Resource):
             try:
                 self.current_job = None
                 self.status = self.status.set_running()
-                context = Context(
-                    lineage_registry=self.registries.lineage_registry,
-                    metric_registry=self.registries.metric_registry,
-                    schema_registry=self.registries.schema_registry,
-                    secret_registry=self.registries.secret_registry,
-                    transaction_registry=self.registries.transaction_registry,
-                )
 
                 if isinstance(job, (str, JobManifest)):
                     manifest = JobManifest.try_from_yaml_or_json(job)
@@ -125,7 +118,7 @@ class TiozinApp(Resource):
                     job = Job.builder().from_manifest(manifest).build()
 
                 self.current_job = job
-                result = job.execute(context)
+                result = job.execute()
                 self.status = self.status.set_success()
                 return result
             except TiozinError as e:
