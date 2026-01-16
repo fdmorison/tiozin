@@ -4,7 +4,7 @@ from typing import TypeVar
 
 import wrapt
 
-from tiozin.exceptions import ProxyError
+from tiozin.exceptions import PluginProxyError
 
 TIOPROXY = "__tioproxy__"
 
@@ -43,7 +43,7 @@ class ProxyMeta(ABCMeta):
 
         for proxy in reversed(dict.fromkeys(proxies)):
             if not issubclass(proxy, wrapt.ObjectProxy):
-                raise ProxyError(
+                raise PluginProxyError(
                     f"Proxy class {proxy.__name__} must inherit from wrapt.ObjectProxy. "
                     f"Found on class {cls.__name__}."
                 )
@@ -85,7 +85,7 @@ def tioproxy(proxy_class: type[wrapt.ObjectProxy]) -> Callable[[TClass], TClass]
 
     def decorator(wrapped_class: TClass) -> TClass:
         if not issubclass(proxy_class, wrapt.ObjectProxy):
-            raise ProxyError(
+            raise PluginProxyError(
                 f"Proxy class {proxy_class.__name__} must inherit from wrapt.ObjectProxy."
             )
 
