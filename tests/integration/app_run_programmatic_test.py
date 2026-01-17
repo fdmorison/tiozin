@@ -160,7 +160,7 @@ def test_app_should_run_programmatic_job_with_manifests(_atexit, _signal, app: T
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
-def test_app_should_run_programmatic_job_with_full_definition(_atexit, _signal, app: TiozinApp):
+def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal, app: TiozinApp):
     """
     Demonstrates a fully programmatic Job created using the fluent
     Job.builder API with concrete runtime objects.
@@ -244,17 +244,17 @@ def test_app_should_run_programmatic_job_with_full_definition(_atexit, _signal, 
 
 
 # ============================================================================
-# Fully Programmatic Jobs (Direct Job Instantiation)
+# Direct Job Instantiation (Without Builder)
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
-def test_app_should_run_job_programmatically_with_full_definition(_atexit, _signal, app: TiozinApp):
+def test_app_should_run_job_from_direct_instantiation(_atexit, _signal, app: TiozinApp):
     """
-    Demonstrates a fully specified Job created programmatically by declaring
-    all components as concrete classes.
+    Demonstrates a fully specified Job created by directly instantiating
+    the job class with concrete plugin objects.
 
-    This example represents a maintenance job and shows the most explicit
-    and imperative way of defining a job in Tiozin.
+    This example represents a maintenance job and shows how to create
+    jobs without using the Builder API.
     """
     # Arrange
     job = LinearJob(
@@ -311,6 +311,137 @@ def test_app_should_run_job_programmatically_with_full_definition(_atexit, _sign
                 description="Emits a summary report with maintenance actions and metrics.",
                 format="json",
                 destination="logs",
+            )
+        ],
+    )
+
+    # Act
+    app.run(job)
+
+    # Assert
+    assert app.status.is_success()
+
+
+# ============================================================================
+# Programmatic Jobs – Template Variables (temp_workdir)
+# ============================================================================
+@patch("tiozin.app.signal")
+@patch("tiozin.app.atexit")
+def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _signal, app: TiozinApp):
+    """
+    Each job component (job, runner, and steps) runs inside its own temporary
+    working directory.
+
+    When rendering templates:
+    - `{{ temp_workdir }}` resolves to the temporary directory of the current
+      component being configured (job, runner, or step).
+    - `{{ job.temp_workdir }}` resolves to the job-level temporary directory, which is
+      shared across the entire job and is accessible from runners and all steps.
+
+    This test verifies that both `temp_workdir` and `job.temp_workdir` are correctly rendered
+    when using the Builder API with explicit plugin manifests.
+    """
+    # Arrange
+    job = (
+        Job.builder()
+        .kind("LinearJob")
+        .name("temp_workdir_demo")
+        .org("tiozin")
+        .region("latam")
+        .domain("analytics")
+        .product("reports")
+        .model("daily")
+        .layer("refined")
+        .runner(
+            RunnerManifest(
+                kind="NoOpRunner",
+                workspace="{{ temp_workdir }}/runner_workspace",
+            )
+        )
+        .inputs(
+            InputManifest(
+                kind="NoOpInput",
+                name="download_data",
+                local_cache="{{ temp_workdir }}/cache",
+                output_path="{{ job.temp_workdir }}/downloaded.csv",
+            )
+        )
+        .transforms(
+            TransformManifest(
+                kind="NoOpTransform",
+                name="process_data",
+                scratch_dir="{{ temp_workdir }}/scratch",
+                input_path="{{ job.temp_workdir }}/downloaded.csv",
+                output_path="{{ job.temp_workdir }}/processed.parquet",
+            )
+        )
+        .outputs(
+            OutputManifest(
+                kind="NoOpOutput",
+                name="upload_results",
+                staging_dir="{{ temp_workdir }}/staging",
+                source_path="{{ job.temp_workdir }}/processed.parquet",
+            )
+        )
+        .build()
+    )
+
+    # Act
+    app.run(job)
+
+    # Assert
+    assert app.status.is_success()
+
+
+@patch("tiozin.app.signal")
+@patch("tiozin.app.atexit")
+def test_app_should_render_temp_workdir_in_concrete_objects(_atexit, _signal, app: TiozinApp):
+    """
+    Each job component (job, runner, and steps) runs inside its own temporary
+    working directory.
+
+    When rendering templates:
+    - `{{ temp_workdir }}` resolves to the temporary directory of the current
+      component being configured (job, runner, or step).
+    - `{{ job.temp_workdir }}` resolves to the job-level temporary directory, which is
+      shared across the entire job and is accessible from runners and all steps.
+
+    This test verifies that both `temp_workdir` and `job.temp_workdir` are correctly rendered
+    when using direct job instantiation with concrete plugin objects.
+    """
+    # Arrange
+    job = LinearJob(
+        kind="LinearJob",
+        name="temp_workdir_demo",
+        org="tiozin",
+        region="latam",
+        domain="analytics",
+        product="reports",
+        model="daily",
+        layer="refined",
+        runner=NoOpRunner(
+            workspace="{{ temp_workdir }}/runner_workspace",
+        ),
+        inputs=[
+            NoOpInput(
+                name="download_data",
+                local_cache="{{ temp_workdir }}/cache",
+                output_path="{{ job.temp_workdir }}/downloaded.csv",
+            )
+        ],
+        transforms=[
+            NoOpTransform(
+                name="process_data",
+                scratch_dir="{{ temp_workdir }}/scratch",
+                input_path="{{ job.temp_workdir }}/downloaded.csv",
+                output_path="{{ job.temp_workdir }}/processed.parquet",
+            )
+        ],
+        outputs=[
+            NoOpOutput(
+                name="upload_results",
+                staging_dir="{{ temp_workdir }}/staging",
+                source_path="{{ job.temp_workdir }}/processed.parquet",
             )
         ],
     )

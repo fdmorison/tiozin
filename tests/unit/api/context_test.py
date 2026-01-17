@@ -229,3 +229,55 @@ def test_context_teardown_delay_should_calculate_teardown_duration():
     # Assert
     expected = 1.0
     assert actual == expected
+
+
+# ============================================================================
+# Testing Context - Temporary Storage
+# ============================================================================
+def test_context_should_create_temp_workdir_automatically():
+    # Act
+    context = Context(
+        id="ctx-123",
+        name="test_context",
+        kind="TestKind",
+        plugin_kind="TestPlugin",
+        options={},
+    )
+
+    # Assert
+    assert context.temp_workdir is not None
+    assert context.temp_workdir.exists()
+    assert context.temp_workdir.is_dir()
+
+
+def test_context_temp_workdir_should_be_organized_by_name_and_run_id():
+    # Act
+    context = Context(
+        id="ctx-123",
+        name="my_job",
+        kind="TestKind",
+        plugin_kind="TestPlugin",
+        options={},
+    )
+
+    # Assert
+    # temp_workdir should be: /tmp/tiozin/<name>/<run_id>
+    assert "/tiozin/" in str(context.temp_workdir)
+    assert "/my_job/" in str(context.temp_workdir)
+    assert f"/{context.run_id}" in str(context.temp_workdir)
+
+
+def test_context_temp_workdir_should_be_available_in_template_vars():
+    # Act
+    context = Context(
+        id="ctx-123",
+        name="test_context",
+        kind="TestKind",
+        plugin_kind="TestPlugin",
+        options={},
+    )
+
+    # Assert
+    actual = context.template_vars.get("temp_workdir")
+    expected = context.temp_workdir
+    assert actual is expected

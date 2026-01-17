@@ -206,3 +206,70 @@ def test_app_should_run_job_from_full_yaml_file(_atexit, _signal, app: TiozinApp
 
     # Assert
     assert app.status.is_success()
+
+
+# ============================================================================
+# File-Based Jobs – Template Variables (temp_workdir)
+# ============================================================================
+@patch("tiozin.app.signal")
+@patch("tiozin.app.atexit")
+def test_app_should_render_temp_workdir_in_yaml_file_templates(
+    _atexit, _signal, app: TiozinApp, tmp_path: Path
+):
+    """
+    Each job component (job, runner, and steps) runs inside its own temporary
+    working directory.
+
+    When rendering YAML templates:
+    - `{{ temp_workdir }}` resolves to the temporary directory of the current
+      component being configured (job, runner, or step).
+    - `{{ job.temp_workdir }}` resolves to the job-level temporary directory, which is
+      shared across the entire job and is accessible from runners and all steps.
+
+    This allows:
+    - runners to define their own workspaces while still accessing job-scoped files
+    - steps to exchange files explicitly through the job temp_workdir
+    - templates to construct paths without hardcoding filesystem locations
+
+    This test verifies that both `temp_workdir` and `job.temp_workdir` are correctly rendered
+    inside file-based YAML job definitions.
+    """
+    # Arrange
+    job_file = tmp_path / "temp_workdir_job.yaml"
+    job_file.write_text(
+        """
+        kind: LinearJob
+        name: temp_workdir_demo
+        org: tiozin
+        region: latam
+        domain: analytics
+        product: reports
+        model: daily
+        layer: refined
+        runner:
+          kind: NoOpRunner
+          workspace: "{{ temp_workdir }}/runner_workspace"
+        inputs:
+          - kind: NoOpInput
+            name: download_data
+            local_cache: "{{ temp_workdir }}/cache"
+            output_path: "{{ job.temp_workdir }}/downloaded.csv"
+        transforms:
+          - kind: NoOpTransform
+            name: process_data
+            scratch_dir: "{{ temp_workdir }}/scratch"
+            input_path: "{{ job.temp_workdir }}/downloaded.csv"
+            output_path: "{{ job.temp_workdir }}/processed.parquet"
+        outputs:
+          - kind: NoOpOutput
+            name: upload_results
+            staging_dir: "{{ temp_workdir }}/staging"
+            source_path: "{{ job.temp_workdir }}/processed.parquet"
+        """
+    )
+
+    # Act
+    app.run(str(job_file))
+
+    # Assert
+    assert app.status.is_success()

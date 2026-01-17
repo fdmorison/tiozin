@@ -2,12 +2,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
+from pathlib import Path
+from tempfile import gettempdir
 from types import MappingProxyType as FrozenMapping
 from typing import Any
 
 from pendulum import DateTime
 
+from tiozin import config
 from tiozin.utils.helpers import generate_id, utcnow
+
+_TEMP_DIR = Path(gettempdir())
 
 
 @dataclass(kw_only=True)
@@ -24,7 +29,7 @@ class Context:
     extend it to add job-, runner-, or step-specific information.
 
     In simple terms, Context answers:
-    “What is executing, under which identity, and with which runtime state?”
+    "What is executing, under which identity, and with which runtime state?"
 
     Context provides:
     - Execution identity (id, name, kind, plugin kind)
@@ -33,6 +38,7 @@ class Context:
     - A shared session dictionary for exchanging state across execution layers
     - Runtime timestamps for lifecycle tracking and observability
     - Helper properties for computing execution durations
+    - A temporary directory path (tmp_path) for intermediate files
 
     Context is created and managed by Tiozin's runtime layer. User code should
     treat it as a read-only view of the execution environment, except for
@@ -67,7 +73,17 @@ class Context:
     teardown_at: DateTime = None
     finished_at: DateTime = None
 
+    # ------------------
+    # Temporary storage
+    # ------------------
+    temp_workdir: Path = field(default=None, metadata={"template": True})
+
     def __post_init__(self):
+        if self.temp_workdir is None:
+            base_dir = _TEMP_DIR / config.app_name / self.name / self.run_id
+            base_dir.mkdir(parents=True, exist_ok=True)
+            self.temp_workdir = base_dir
+
         self.template_vars = FrozenMapping(
             {
                 **self.template_vars,
