@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tiozin.assembly.templating import PluginTemplateOverlay
+from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import InvalidInputError
 from tiozin.family.tio_kernel import NoOpInput
 

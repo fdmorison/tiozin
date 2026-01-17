@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import StepContext
-from tiozin.assembly.templating import PluginTemplateOverlay
+from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError, TiozinUnexpectedError
 from tiozin.utils.helpers import utcnow
 
