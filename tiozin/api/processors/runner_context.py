@@ -39,7 +39,7 @@ class RunnerContext(Context):
     job: JobContext
 
     def __post_init__(self) -> None:
-        if self.tempdir is None:
-            self.tempdir = self.job.tempdir / self.name
-            self.tempdir.mkdir(parents=True, exist_ok=True)
+        if self.temp_workdir is None:
+            self.temp_workdir = self.job.temp_workdir / self.name
+            self.temp_workdir.mkdir(parents=True, exist_ok=True)
         super().__post_init__()

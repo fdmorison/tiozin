@@ -323,29 +323,29 @@ def test_app_should_run_job_from_direct_instantiation(_atexit, _signal, app: Tio
 
 
 # ============================================================================
-# Programmatic Jobs – Template Variables (tempdir)
+# Programmatic Jobs – Template Variables (temp_workdir)
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
-def test_app_should_render_tempdir_in_builder_with_manifests(_atexit, _signal, app: TiozinApp):
+def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _signal, app: TiozinApp):
     """
     Each job component (job, runner, and steps) runs inside its own temporary
     working directory.
 
     When rendering templates:
-    - `{{ tempdir }}` resolves to the temporary directory of the current
+    - `{{ temp_workdir }}` resolves to the temporary directory of the current
       component being configured (job, runner, or step).
-    - `{{ job.tempdir }}` resolves to the job-level temporary directory, which is
+    - `{{ job.temp_workdir }}` resolves to the job-level temporary directory, which is
       shared across the entire job and is accessible from runners and all steps.
 
-    This test verifies that both `tempdir` and `job.tempdir` are correctly rendered
+    This test verifies that both `temp_workdir` and `job.temp_workdir` are correctly rendered
     when using the Builder API with explicit plugin manifests.
     """
     # Arrange
     job = (
         Job.builder()
         .kind("LinearJob")
-        .name("tempdir_demo")
+        .name("temp_workdir_demo")
         .org("tiozin")
         .region("latam")
         .domain("analytics")
@@ -355,32 +355,32 @@ def test_app_should_render_tempdir_in_builder_with_manifests(_atexit, _signal, a
         .runner(
             RunnerManifest(
                 kind="NoOpRunner",
-                workspace="{{ tempdir }}/runner_workspace",
+                workspace="{{ temp_workdir }}/runner_workspace",
             )
         )
         .inputs(
             InputManifest(
                 kind="NoOpInput",
                 name="download_data",
-                local_cache="{{ tempdir }}/cache",
-                output_path="{{ job.tempdir }}/downloaded.csv",
+                local_cache="{{ temp_workdir }}/cache",
+                output_path="{{ job.temp_workdir }}/downloaded.csv",
             )
         )
         .transforms(
             TransformManifest(
                 kind="NoOpTransform",
                 name="process_data",
-                scratch_dir="{{ tempdir }}/scratch",
-                input_path="{{ job.tempdir }}/downloaded.csv",
-                output_path="{{ job.tempdir }}/processed.parquet",
+                scratch_dir="{{ temp_workdir }}/scratch",
+                input_path="{{ job.temp_workdir }}/downloaded.csv",
+                output_path="{{ job.temp_workdir }}/processed.parquet",
             )
         )
         .outputs(
             OutputManifest(
                 kind="NoOpOutput",
                 name="upload_results",
-                staging_dir="{{ tempdir }}/staging",
-                source_path="{{ job.tempdir }}/processed.parquet",
+                staging_dir="{{ temp_workdir }}/staging",
+                source_path="{{ job.temp_workdir }}/processed.parquet",
             )
         )
         .build()
@@ -395,24 +395,24 @@ def test_app_should_render_tempdir_in_builder_with_manifests(_atexit, _signal, a
 
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
-def test_app_should_render_tempdir_in_concrete_objects(_atexit, _signal, app: TiozinApp):
+def test_app_should_render_temp_workdir_in_concrete_objects(_atexit, _signal, app: TiozinApp):
     """
     Each job component (job, runner, and steps) runs inside its own temporary
     working directory.
 
     When rendering templates:
-    - `{{ tempdir }}` resolves to the temporary directory of the current
+    - `{{ temp_workdir }}` resolves to the temporary directory of the current
       component being configured (job, runner, or step).
-    - `{{ job.tempdir }}` resolves to the job-level temporary directory, which is
+    - `{{ job.temp_workdir }}` resolves to the job-level temporary directory, which is
       shared across the entire job and is accessible from runners and all steps.
 
-    This test verifies that both `tempdir` and `job.tempdir` are correctly rendered
+    This test verifies that both `temp_workdir` and `job.temp_workdir` are correctly rendered
     when using direct job instantiation with concrete plugin objects.
     """
     # Arrange
     job = LinearJob(
         kind="LinearJob",
-        name="tempdir_demo",
+        name="temp_workdir_demo",
         org="tiozin",
         region="latam",
         domain="analytics",
@@ -420,28 +420,28 @@ def test_app_should_render_tempdir_in_concrete_objects(_atexit, _signal, app: Ti
         model="daily",
         layer="refined",
         runner=NoOpRunner(
-            workspace="{{ tempdir }}/runner_workspace",
+            workspace="{{ temp_workdir }}/runner_workspace",
         ),
         inputs=[
             NoOpInput(
                 name="download_data",
-                local_cache="{{ tempdir }}/cache",
-                output_path="{{ job.tempdir }}/downloaded.csv",
+                local_cache="{{ temp_workdir }}/cache",
+                output_path="{{ job.temp_workdir }}/downloaded.csv",
             )
         ],
         transforms=[
             NoOpTransform(
                 name="process_data",
-                scratch_dir="{{ tempdir }}/scratch",
-                input_path="{{ job.tempdir }}/downloaded.csv",
-                output_path="{{ job.tempdir }}/processed.parquet",
+                scratch_dir="{{ temp_workdir }}/scratch",
+                input_path="{{ job.temp_workdir }}/downloaded.csv",
+                output_path="{{ job.temp_workdir }}/processed.parquet",
             )
         ],
         outputs=[
             NoOpOutput(
                 name="upload_results",
-                staging_dir="{{ tempdir }}/staging",
-                source_path="{{ job.tempdir }}/processed.parquet",
+                staging_dir="{{ temp_workdir }}/staging",
+                source_path="{{ job.temp_workdir }}/processed.parquet",
             )
         ],
     )

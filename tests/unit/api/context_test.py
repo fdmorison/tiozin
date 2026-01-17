@@ -234,7 +234,7 @@ def test_context_teardown_delay_should_calculate_teardown_duration():
 # ============================================================================
 # Testing Context - Temporary Storage
 # ============================================================================
-def test_context_should_create_tempdir_automatically():
+def test_context_should_create_temp_workdir_automatically():
     # Act
     context = Context(
         id="ctx-123",
@@ -245,12 +245,12 @@ def test_context_should_create_tempdir_automatically():
     )
 
     # Assert
-    assert context.tempdir is not None
-    assert context.tempdir.exists()
-    assert context.tempdir.is_dir()
+    assert context.temp_workdir is not None
+    assert context.temp_workdir.exists()
+    assert context.temp_workdir.is_dir()
 
 
-def test_context_tempdir_should_be_organized_by_name_and_run_id():
+def test_context_temp_workdir_should_be_organized_by_name_and_run_id():
     # Act
     context = Context(
         id="ctx-123",
@@ -261,13 +261,13 @@ def test_context_tempdir_should_be_organized_by_name_and_run_id():
     )
 
     # Assert
-    # tempdir should be: /tmp/tiozin/<name>/<run_id>
-    assert "/tiozin/" in str(context.tempdir)
-    assert "/my_job/" in str(context.tempdir)
-    assert f"/{context.run_id}" in str(context.tempdir)
+    # temp_workdir should be: /tmp/tiozin/<name>/<run_id>
+    assert "/tiozin/" in str(context.temp_workdir)
+    assert "/my_job/" in str(context.temp_workdir)
+    assert f"/{context.run_id}" in str(context.temp_workdir)
 
 
-def test_context_tempdir_should_be_available_in_template_vars():
+def test_context_temp_workdir_should_be_available_in_template_vars():
     # Act
     context = Context(
         id="ctx-123",
@@ -278,6 +278,6 @@ def test_context_tempdir_should_be_available_in_template_vars():
     )
 
     # Assert
-    actual = context.template_vars.get("tempdir")
-    expected = context.tempdir
+    actual = context.template_vars.get("temp_workdir")
+    expected = context.temp_workdir
     assert actual is expected

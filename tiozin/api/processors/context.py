@@ -76,13 +76,13 @@ class Context:
     # ------------------
     # Temporary storage
     # ------------------
-    tempdir: Path = field(default=None, metadata={"template": True})
+    temp_workdir: Path = field(default=None, metadata={"template": True})
 
     def __post_init__(self):
-        if self.tempdir is None:
+        if self.temp_workdir is None:
             base_dir = _TEMP_DIR / config.app_name / self.name / self.run_id
             base_dir.mkdir(parents=True, exist_ok=True)
-            self.tempdir = base_dir
+            self.temp_workdir = base_dir
 
         self.template_vars = FrozenMapping(
             {
