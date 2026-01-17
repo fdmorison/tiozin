@@ -8,7 +8,7 @@ Public API for building data pipelines with Tiozin.
 """
 
 # Bases
-from tiozin.api import Resource, Registry, PlugIn
+from tiozin.api import Registry, PlugIn
 
 # Metadata
 from tiozin.api import JobManifest
@@ -33,9 +33,8 @@ from tiozin.app import TiozinApp
 
 __all__ = [
     # Bases
-    "Resource",
-    "Registry",
     "PlugIn",
+    "Registry",
     # Metadata
     "JobManifest",
     # Registries

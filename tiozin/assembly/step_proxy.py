@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import StepContext
-from tiozin.assembly.templating import PluginTemplateOverlay
-from tiozin.exceptions import PluginAccessForbiddenError
+from tiozin.assembly.plugin_template import PluginTemplateOverlay
+from tiozin.exceptions import PluginAccessForbiddenError, TiozinUnexpectedError
 from tiozin.utils.helpers import utcnow
 
 if TYPE_CHECKING:
-    from tiozin import Input, JobContext, Output, Transform
+    from tiozin import JobContext
 
 
 class StepProxy(wrapt.ObjectProxy):
@@ -38,51 +38,65 @@ class StepProxy(wrapt.ObjectProxy):
     """
 
     def execute(self, context: JobContext, *args, **kwargs) -> Any:
-        plugin: Transform | Input | Output = self.__wrapped__
+        from tiozin import Input, Output, Transform
+
+        step: Transform | Input | Output = self.__wrapped__
 
         context = StepContext(
             # Job
             job=context,
             # Identity
-            id=plugin.id,
-            name=plugin.name,
-            kind=plugin.plugin_name,
-            plugin_kind=plugin.plugin_kind,
+            name=step.name,
+            kind=step.plugin_name,
+            plugin_kind=step.plugin_kind,
             # Fundamentals
-            org=plugin.org,
-            region=plugin.region,
-            domain=plugin.domain,
-            layer=plugin.layer,
-            product=plugin.product,
-            model=plugin.model,
+            org=step.org,
+            region=step.region,
+            domain=step.domain,
+            layer=step.layer,
+            product=step.product,
+            model=step.model,
             # Templating
             template_vars=context.template_vars,
             # Shared state
             session=context.session,
             # Extra provider/plugin parameters
-            options=plugin.options,
+            options=step.options,
         )
 
         try:
             context.setup_at = utcnow()
-            plugin.setup(context, *args, **kwargs)
-            plugin.info(f"▶️  Starting to {context.plugin_kind} data")
-            with PluginTemplateOverlay(plugin, context):
+            step.setup(context, *args, **kwargs)
+            step.info(f"▶️  Starting to {context.plugin_kind} data")
+            with PluginTemplateOverlay(step, context):
                 context.executed_at = utcnow()
-                result = plugin.execute(context, *args, **kwargs)
+                result = None
+                match step:
+                    case Input():
+                        result = step.read(context)
+                    case Transform():
+                        result = step.transform(context, *args, **kwargs)
+                    case Output():
+                        result = step.write(context, *args, **kwargs)
+                    case _:
+                        raise TiozinUnexpectedError(
+                            "Expected an Input, Transform, or Output step, "
+                            f"but received an instance of {type(step).__name__}. "
+                            "Only pipeline steps may be part of a Job."
+                        )
         except Exception:
-            plugin.error(f"❌  {context.kind} failed after {context.execution_delay:.2f}s")
+            step.error(f"❌  {context.kind} failed after {context.execution_delay:.2f}s")
             raise
         else:
-            plugin.info(f"✔️  {context.kind} finished after {context.execution_delay:.2f}s")
+            step.info(f"✔️  {context.kind} finished after {context.execution_delay:.2f}s")
             return result
         finally:
             context.teardown_at = utcnow()
             try:
-                plugin.teardown(context, *args, **kwargs)
+                step.teardown(context, *args, **kwargs)
             except Exception as e:
                 # TODO Fix: exc_info=True is failing and does not show error message
-                plugin.error(f"🚨 {context.kind} teardown failed because {e}")
+                step.error(f"🚨 {context.kind} teardown failed because {e}")
             context.finished_at = utcnow()
 
     def setup(self, *args, **kwargs) -> None:

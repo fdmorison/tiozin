@@ -1,9 +1,14 @@
-from abc import abstractmethod
-from typing import Any, Generic, TypeVar
+from __future__ import annotations
 
-from ..assembly import tioproxy
-from ..assembly.runner_proxy import RunnerProxy
-from . import PlugIn, RunnerContext
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
+from ...assembly import tioproxy
+from ...assembly.runner_proxy import RunnerProxy
+from .. import PlugIn
+
+if TYPE_CHECKING:
+    from tiozin import RunnerContext
 
 T = TypeVar("T")
 
@@ -51,7 +56,3 @@ class Runner(PlugIn, Generic[T]):
     @abstractmethod
     def teardown(self, context: RunnerContext) -> None:
         pass
-
-    def execute(self, context: RunnerContext, execution_plan: T) -> Any:
-        """Template method that delegates to run()."""
-        self.run(context, execution_plan)

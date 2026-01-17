@@ -48,7 +48,7 @@ class LinearJob(Job[Any]):
     graphs may be supported by future implementations.
     """
 
-    def run(self, context: JobContext) -> Any:
+    def submit(self, context: JobContext) -> Any:
         # Multiple datasets may be load
         datasets = [input.execute(context) for input in self.inputs]
 

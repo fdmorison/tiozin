@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import JobContext
-from tiozin.assembly.templating import PluginTemplateOverlay
+from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError
 from tiozin.utils.helpers import utcnow
 
@@ -37,56 +37,55 @@ class JobProxy(wrapt.ObjectProxy):
     environment for Job plugins.
     """
 
-    def execute(self, *args, **kwargs) -> Any:
-        plugin: Job = self.__wrapped__
+    def submit(self, *args, **kwargs) -> Any:
+        job: Job = self.__wrapped__
 
         context = JobContext(
             # Identity
-            id=plugin.id,
-            name=plugin.name,
-            kind=plugin.plugin_name,
-            plugin_kind=plugin.plugin_kind,
+            name=job.name,
+            kind=job.plugin_name,
+            plugin_kind=job.plugin_kind,
             # Fundamentals
-            maintainer=plugin.maintainer,
-            cost_center=plugin.cost_center,
-            owner=plugin.owner,
-            labels=plugin.labels,
-            org=plugin.org,
-            region=plugin.region,
-            domain=plugin.domain,
-            layer=plugin.layer,
-            product=plugin.product,
-            model=plugin.model,
+            maintainer=job.maintainer,
+            cost_center=job.cost_center,
+            owner=job.owner,
+            labels=job.labels,
+            org=job.org,
+            region=job.region,
+            domain=job.domain,
+            layer=job.layer,
+            product=job.product,
+            model=job.model,
             # Runtime
-            runner=plugin.runner,
+            runner=job.runner,
             # Templating
             template_vars={},
             # Shared state
             session={},
             # Extra provider/plugin parameters
-            options=plugin.options,
+            options=job.options,
         )
 
         try:
             context.setup_at = utcnow()
-            plugin.setup(context, *args, **kwargs)
-            plugin.info(f"▶️  Starting {context.kind}")
-            with PluginTemplateOverlay(plugin, context):
+            job.setup(context)
+            job.info(f"▶️  Starting {context.kind}")
+            with PluginTemplateOverlay(job, context):
                 context.executed_at = utcnow()
-                result = plugin.execute(context, *args, **kwargs)
+                result = job.submit(context, *args, **kwargs)
         except Exception:
-            plugin.error(f"❌  {context.kind} failed after {context.delay:.2f}s")
+            job.error(f"❌  {context.kind} failed after {context.delay:.2f}s")
             raise
         else:
-            plugin.info(f"✔️  {context.kind} finished after {context.delay:.2f}s")
+            job.info(f"✔️  {context.kind} finished after {context.delay:.2f}s")
             return result
         finally:
             context.teardown_at = utcnow()
             try:
-                plugin.teardown(context, *args, **kwargs)
+                job.teardown(context)
             except Exception as e:
                 # TODO Fix: exc_info=True is failing and does not show error message
-                plugin.error(f"🚨 {context.kind} teardown failed because {e}")
+                job.error(f"🚨 {context.kind} teardown failed because {e}")
             context.finished_at = utcnow()
 
     def setup(self, *args, **kwargs) -> None:

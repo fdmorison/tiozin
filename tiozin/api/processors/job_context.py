@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from types import MappingProxyType as FrozenMapping
+from typing import TYPE_CHECKING
 
 from pendulum import DateTime
 
-from tiozin.api import Runner
 from tiozin.utils.helpers import utcnow
 
 from .context import Context
+
+if TYPE_CHECKING:
+    from tiozin import Runner
 
 
 @dataclass

@@ -5,11 +5,11 @@ description: |
   using no-op operators.
 
 org: tiozin
-region: europe
+region: latam
 domain: marketing
-product: user_events
-model: order_completed
 layer: refined
+product: users
+model: customers
 
 unplanned_field: 12345
 
@@ -20,18 +20,18 @@ runner:
 
 inputs:
   - kind: NoOpInput
-    name: load_products
+    name: load_customers
     path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{ D[-1] }}
     verbose: true
 
 transforms:
   - kind: NoOpTransform
-    name: normalize_products
-    strategy: standardize_fields
+    name: mask_pii_fields
+    strategy: sha256
     verbose: true
 
 outputs:
   - kind: NoOpOutput
-    name: save_products
+    name: save_customers
     path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{ yesterday }}
     verbose: true

@@ -1,7 +1,7 @@
 import pendulum
 import pytest
 
-from tiozin.api.context import Context
+from tiozin.api.processors.context import Context
 
 
 # ============================================================================

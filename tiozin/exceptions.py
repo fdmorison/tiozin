@@ -2,6 +2,7 @@ from typing import Any, Self
 
 from pydantic import ValidationError
 from ruamel.yaml.error import MarkedYAMLError
+from wrapt import ObjectProxy
 
 from .utils.messages import MessageTemplates
 
@@ -238,12 +239,6 @@ class PluginAccessForbiddenError(PluginError, ForbiddenError):
         super().__init__(plugin=plugin)
 
 
-class PluginProxyError(PluginError):
-    """Base exception for proxy-related errors."""
-
-    message = "Failed to apply proxy to resource."
-
-
 # ============================================================================
 # Layer 4: Domain Exceptions - Misc
 # ============================================================================
@@ -309,3 +304,24 @@ class RequiredArgumentError(InvalidInputError):
             fields_str = ", ".join(f"'{f}'" for f in missing)
             raise cls(f"Missing required fields: {fields_str}")
         return cls
+
+
+class ProxyContractViolationError(TiozinUnexpectedError):
+    """
+    Raised when a class registered as a proxy violates the required inheritance contract.
+
+    This is a service-level error indicating a bug or invalid internal state
+    in the Tiozin core.
+    """
+
+    message = (
+        "Class `{proxy}` was registered as a proxy but does not inherit from "
+        "`{base}`, and therefore cannot be applied to `{wrapped}`."
+    )
+
+    def __init__(self, proxy: type, wrapped: type, base: type = ObjectProxy) -> None:
+        super().__init__(
+            proxy=proxy.__name__,
+            wrapped=wrapped.__name__,
+            base=base.__name__,
+        )

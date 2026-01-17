@@ -1,7 +1,7 @@
-from tiozin.api import Registry, Resource
+from tiozin.api import Loggable, Registry
 
 
-class Lifecycle(Resource):
+class Lifecycle(Loggable):
     """
     Manages application lifecycle for registries.
 
@@ -29,7 +29,7 @@ class Lifecycle(Resource):
             try:
                 if registry.ready:
                     registry.teardown()
-                    self.logger.info(f"🛑 {registry.uri} shutdown is successful.")
+                    self.info(f"🛑 {registry.uri} shutdown is successful.")
                 else:
                     self.info(f"🛑 {registry.uri} shutdown skipped (uninitialized).")
             except Exception:

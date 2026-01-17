@@ -117,8 +117,6 @@ def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
         schema_subject=None,
         schema_version=None,
         options={},
-        id=ANY,
-        logger=ANY,
         verbose=False,
     )
     assert actual == expected
@@ -160,8 +158,6 @@ def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
         product="revenue",
         model="daily",
         options={},
-        id=ANY,
-        logger=ANY,
         verbose=False,
     )
     assert actual == expected
@@ -203,8 +199,6 @@ def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
         product="revenue",
         model="daily",
         options={},
-        id=ANY,
-        logger=ANY,
         verbose=False,
     )
     assert actual == expected
@@ -230,14 +224,12 @@ def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
     # Assert
     actual = vars(plugin)
     expected = dict(
-        id=ANY,
         kind="NoOpRunner",
         name="test_runner",
         description="test",
         streaming=False,
         verbose=False,
         options={},
-        logger=ANY,
     )
     assert actual == expected
 
@@ -257,13 +249,11 @@ def test_load_should_load_registry_plugin(factory: PluginFactory, kind: str):
     # Assert
     actual = vars(plugin)
     expected = dict(
-        id=ANY,
         kind="FileJobRegistry",
         name="FileJobRegistry",
         description=None,
         options=ANY,
         ready=False,
-        logger=ANY,
     )
     assert actual == expected
 

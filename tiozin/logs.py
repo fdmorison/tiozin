@@ -3,14 +3,13 @@ import logging
 import structlog
 
 from . import config
-from .api.logger import TiozinLogger
 
 CONSOLE_RENDERER = structlog.dev.ConsoleRenderer(colors=True)
 JSON_RENDERER = structlog.processors.JSONRenderer(ensure_ascii=config.log_json_ensure_ascii)
 
 
-def get_logger(name: str) -> TiozinLogger:
-    return TiozinLogger(name)
+def get_logger(name: str) -> logging.Logger:
+    return structlog.get_logger(name)
 
 
 def setup() -> None:

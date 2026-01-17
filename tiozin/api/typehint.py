@@ -1,15 +1,16 @@
+from collections.abc import Mapping
 from typing import Any, TypedDict
 
 
 class LogKwargs(TypedDict, total=False):
     """
-    Type hints for logging method kwargs.
+    Type hints for logging keyword arguments.
 
-    Provides autocomplete and type safety for standard logging keyword arguments
-    used in Resource logging methods (debug, info, warning, error, critical).
+    Provides autocomplete and type safety for standard logging kwargs
+    used in Loggable logging methods.
     """
 
     exc_info: bool | BaseException | tuple[type[BaseException], BaseException, Any] | None
-    stack_info: bool
+    stack_info: bool | None
     stacklevel: int
-    extra: dict[str, Any]
+    extra: Mapping[str, Any]

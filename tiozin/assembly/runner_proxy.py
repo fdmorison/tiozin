@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import RunnerContext
-from tiozin.assembly.templating import PluginTemplateOverlay
+from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError
 from tiozin.utils.helpers import utcnow
 
@@ -38,44 +38,43 @@ class RunnerProxy(wrapt.ObjectProxy):
     """
 
     def execute(self, context: JobContext, *args, **kwargs) -> Any:
-        plugin: Runner = self.__wrapped__
+        runner: Runner = self.__wrapped__
 
         context = RunnerContext(
             # Job
             job=context,
             # Identity
-            id=plugin.id,
-            name=plugin.name,
-            kind=plugin.plugin_name,
-            plugin_kind=plugin.plugin_kind,
+            name=runner.name,
+            kind=runner.plugin_name,
+            plugin_kind=runner.plugin_kind,
             # Templating
             template_vars=context.template_vars,
             # Shared state
             session=context.session,
             # Extra provider/plugin parameters
-            options=plugin.options,
+            options=runner.options,
         )
 
         try:
             context.setup_at = utcnow()
-            plugin.setup(context, **kwargs)
-            plugin.info(f"▶️  Starting the {context.kind}")
-            with PluginTemplateOverlay(plugin, context):
+            runner.setup(context)
+            runner.info(f"▶️  Starting the {context.kind}")
+            with PluginTemplateOverlay(runner, context):
                 context.executed_at = utcnow()
-                result = plugin.execute(context, *args, **kwargs)
+                result = runner.run(context, *args, **kwargs)
         except Exception:
-            plugin.error(f"❌  {context.kind} failed after {context.execution_delay:.2f}s")
+            runner.error(f"❌  {context.kind} failed after {context.execution_delay:.2f}s")
             raise
         else:
-            plugin.info(f"✔️  {context.kind} finished after {context.execution_delay:.2f}s")
+            runner.info(f"✔️  {context.kind} finished after {context.execution_delay:.2f}s")
             return result
         finally:
             context.teardown_at = utcnow()
             try:
-                plugin.teardown(context, **kwargs)
+                runner.teardown(context)
             except Exception as e:
                 # TODO Fix: exc_info=True is failing and does not show error message
-                plugin.error(f"🚨 {context.kind} teardown failed because {e}")
+                runner.error(f"🚨 {context.kind} teardown failed because {e}")
             context.finished_at = utcnow()
 
     def setup(self, *args, **kwargs) -> None:

@@ -42,11 +42,11 @@ class Context:
     # ------------------
     # Identity & Fundamentals
     # ------------------
-    id: str
+    id: str = field(default_factory=generate_id)
     name: str
     kind: str
     plugin_kind: str
-    options: dict[str, Any]
+    options: Mapping[str, Any]
 
     # ------------------
     # Templating

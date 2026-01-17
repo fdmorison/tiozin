@@ -1,11 +1,11 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from tiozin.exceptions import RequiredArgumentError
-
 from ...assembly import tioproxy
 from ...assembly.step_proxy import StepProxy
-from .. import PlugIn, StepContext
+from ...exceptions import RequiredArgumentError
+from .. import PlugIn
+from .step_context import StepContext
 
 TData = TypeVar("TData")
 
@@ -66,10 +66,6 @@ class Transform(PlugIn, Generic[TData]):
 
     def teardown(self, context: StepContext, data: TData) -> None:
         return None
-
-    def execute(self, context: StepContext, data: TData) -> TData:
-        """Template method that delegates to transform()."""
-        return self.transform(context, data)
 
 
 class CoTransform(Transform[TData]):

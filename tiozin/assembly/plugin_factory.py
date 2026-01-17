@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Output, PlugIn, Resource, Runner, Transform
+from tiozin.api import Input, Job, Loggable, Output, PlugIn, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     Manifest,
@@ -16,7 +16,7 @@ from .plugin_scanner import PluginScanner
 T = TypeVar("T", bound=PlugIn)
 
 
-class PluginFactory(Resource):
+class PluginFactory(Loggable):
     """
     The PluginFactory loads each provider package and scans it to automatically discover
     all plugin classes defined inside it, such as Inputs, Outputs, Transforms, Runners,
@@ -64,7 +64,6 @@ class PluginFactory(Resource):
         super().__init__()
         self._index: dict[str, type[PlugIn] | set[type[PlugIn]]] = {}
         self._plugins: set[type[PlugIn]] = set()
-        self.logger = self.logger.hide_none().hide_fields("description")
 
     def setup(self) -> None:
         for plugins in PluginScanner(self.logger).scan().values():
@@ -117,14 +116,18 @@ class PluginFactory(Resource):
         if len(candidates) > 1:
             raise AmbiguousPluginError(kind, [p.__tiometa__.tio_path for p in candidates])
 
-        plugin_type = candidates[0]
-        plugin_name = plugin_type.__tiometa__.name
+        plugin = candidates[0]
+        plugin_name = plugin.__tiometa__.name
 
-        if plugin_kind and not issubclass(plugin_type, plugin_kind):
+        if plugin_kind and not issubclass(plugin, plugin_kind):
             raise PluginNotFoundError(kind, detail=f"{plugin_name} is not a {plugin_kind}.")
 
-        self.info(f"Loading {plugin_name} with args", **args)
-        return plugin_type(**args)
+        plugin_instance = plugin(**args)
+        self.info(
+            f"Loading {plugin_name} with args",
+            **plugin_instance.to_dict(exclude={"description", "kind"}, exclude_none=True),
+        )
+        return plugin_instance
 
     def load_job(self, kind: str, **args) -> Job:
         """

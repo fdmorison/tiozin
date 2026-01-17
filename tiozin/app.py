@@ -2,7 +2,8 @@ import atexit
 import signal
 from threading import RLock
 
-from tiozin import Job, Resource, logs
+from tiozin import Job, logs
+from tiozin.api import Loggable
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.assembly.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinError
@@ -10,7 +11,7 @@ from tiozin.lifecycle import Lifecycle
 from tiozin.utils.app_status import AppStatus
 
 
-class TiozinApp(Resource):
+class TiozinApp(Loggable):
     """
     Main application entrypoint for Tiozin.
 
@@ -24,11 +25,9 @@ class TiozinApp(Resource):
 
     def __init__(self, registries: RegistryFactory = None) -> None:
         super().__init__()
-        # Simple attributes
         self.status = AppStatus.CREATED
         self.current_job = None
         self.lock = RLock()
-        # Registry management
         self.registries = registries or RegistryFactory()
         self.job_registry = self.registries.job_registry
         self.lifecycle = Lifecycle(*self.registries.all_registries())
@@ -118,7 +117,7 @@ class TiozinApp(Resource):
                     job = Job.builder().from_manifest(manifest).build()
 
                 self.current_job = job
-                result = job.execute()
+                result = job.submit()
                 self.status = self.status.set_success()
                 return result
             except TiozinError as e:
