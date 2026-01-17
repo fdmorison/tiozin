@@ -59,6 +59,7 @@ class RunnerProxy(wrapt.ObjectProxy):
             context.setup_at = utcnow()
             runner.setup(context)
             runner.info(f"▶️  Starting the {context.kind}")
+            runner.debug(f"Temporary directory is {context.tempdir}")
             with PluginTemplateOverlay(runner, context):
                 context.executed_at = utcnow()
                 result = runner.run(context, *args, **kwargs)
