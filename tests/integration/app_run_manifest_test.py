@@ -97,7 +97,7 @@ def test_app_should_run_job_from_manifest_with_dicts(_atexit, _signal, app: Tioz
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
-def test_app_should_run_job_from_manifest_with_explicit_manifests(_atexit, _signal, app: TiozinApp):
+def test_app_should_run_job_from_manifest_with_typed_plugins(_atexit, _signal, app: TiozinApp):
     """
     Jobs can be executed from a JobManifest using explicit plugin
     manifest objects.
@@ -217,6 +217,78 @@ def test_app_should_run_job_from_full_manifest(_atexit, _signal, app: TiozinApp)
                 description="Emits a summary report with maintenance actions and metrics.",
                 format="json",
                 destination="logs",
+            )
+        ],
+    )
+
+    # Act
+    app.run(manifest)
+
+    # Assert
+    assert app.status.is_success()
+
+
+# ============================================================================
+# JobManifest – Template Variables (tempdir)
+# ============================================================================
+@patch("tiozin.app.signal")
+@patch("tiozin.app.atexit")
+def test_app_should_render_tempdir_in_manifest_templates(_atexit, _signal, app: TiozinApp):
+    """
+    Each job component (job, runner, and steps) runs inside its own temporary
+    working directory.
+
+    When rendering templates in JobManifest:
+    - `{{ tempdir }}` resolves to the temporary directory of the current
+      component being configured (job, runner, or step).
+    - `{{ job.tempdir }}` resolves to the job-level temporary directory, which is
+      shared across the entire job and is accessible from runners and all steps.
+
+    This allows:
+    - runners to define their own workspaces while still accessing job-scoped files
+    - steps to exchange files explicitly through the job tempdir
+    - templates to construct paths without hardcoding filesystem locations
+
+    This test verifies that both `tempdir` and `job.tempdir` are correctly rendered
+    inside JobManifest-based job definitions.
+    """
+    # Arrange
+    manifest = JobManifest(
+        kind="LinearJob",
+        name="tempdir_demo",
+        org="tiozin",
+        region="latam",
+        domain="analytics",
+        product="reports",
+        model="daily",
+        layer="refined",
+        runner=RunnerManifest(
+            kind="NoOpRunner",
+            workspace="{{ tempdir }}/runner_workspace",
+        ),
+        inputs=[
+            InputManifest(
+                kind="NoOpInput",
+                name="download_data",
+                local_cache="{{ tempdir }}/cache",
+                output_path="{{ job.tempdir }}/downloaded.csv",
+            )
+        ],
+        transforms=[
+            TransformManifest(
+                kind="NoOpTransform",
+                name="process_data",
+                scratch_dir="{{ tempdir }}/scratch",
+                input_path="{{ job.tempdir }}/downloaded.csv",
+                output_path="{{ job.tempdir }}/processed.parquet",
+            )
+        ],
+        outputs=[
+            OutputManifest(
+                kind="NoOpOutput",
+                name="upload_results",
+                staging_dir="{{ tempdir }}/staging",
+                source_path="{{ job.tempdir }}/processed.parquet",
             )
         ],
     )
