@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
+from pathlib import Path
+from tempfile import mkdtemp
 from types import MappingProxyType as FrozenMapping
 from typing import Any
 
 from pendulum import DateTime
 
+from tiozin import config
 from tiozin.utils.helpers import generate_id, utcnow
 
 
@@ -33,6 +36,7 @@ class Context:
     - A shared session dictionary for exchanging state across execution layers
     - Runtime timestamps for lifecycle tracking and observability
     - Helper properties for computing execution durations
+    - A temporary directory path (tmp_path) for intermediate files
 
     Context is created and managed by Tiozin's runtime layer. User code should
     treat it as a read-only view of the execution environment, except for
@@ -67,7 +71,17 @@ class Context:
     teardown_at: DateTime = None
     finished_at: DateTime = None
 
+    # ------------------
+    # Temporary storage
+    # ------------------
+    tempdir: Path = field(default=None, metadata={"template": True})
+
     def __post_init__(self):
+        if self.tempdir is None:
+            self.tempdir = Path(
+                mkdtemp(prefix=f"{config.app_name}_{self.name}_"),
+            )
+
         self.template_vars = FrozenMapping(
             {
                 **self.template_vars,
