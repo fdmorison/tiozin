@@ -47,3 +47,9 @@ class StepContext(Context):
     layer: str
     product: str
     model: str
+
+    def __post_init__(self) -> None:
+        if self.tempdir is None:
+            self.tempdir = self.job.tempdir / self.name
+            self.tempdir.mkdir(parents=True, exist_ok=True)
+        super().__post_init__()

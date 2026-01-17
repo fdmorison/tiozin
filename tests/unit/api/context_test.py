@@ -250,7 +250,7 @@ def test_context_should_create_tempdir_automatically():
     assert context.tempdir.is_dir()
 
 
-def test_context_tempdir_should_include_context_name():
+def test_context_tempdir_should_be_organized_by_name_and_run_id():
     # Act
     context = Context(
         id="ctx-123",
@@ -261,7 +261,10 @@ def test_context_tempdir_should_include_context_name():
     )
 
     # Assert
-    assert "tiozin_my_job_" in str(context.tempdir)
+    # tempdir should be: /tmp/tiozin/<name>/<run_id>
+    assert "/tiozin/" in str(context.tempdir)
+    assert "/my_job/" in str(context.tempdir)
+    assert f"/{context.run_id}" in str(context.tempdir)
 
 
 def test_context_tempdir_should_be_available_in_template_vars():

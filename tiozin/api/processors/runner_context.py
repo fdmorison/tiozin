@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from .context import Context
-
-if TYPE_CHECKING:
-    from .job_context import JobContext
+from .job_context import JobContext
 
 
 @dataclass
@@ -40,3 +37,9 @@ class RunnerContext(Context):
     # Parent Job
     # ------------------
     job: JobContext
+
+    def __post_init__(self) -> None:
+        if self.tempdir is None:
+            self.tempdir = self.job.tempdir / self.name
+            self.tempdir.mkdir(parents=True, exist_ok=True)
+        super().__post_init__()

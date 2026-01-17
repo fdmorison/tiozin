@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
-from tempfile import mkdtemp
+from tempfile import gettempdir
 from types import MappingProxyType as FrozenMapping
 from typing import Any
 
@@ -11,6 +11,8 @@ from pendulum import DateTime
 
 from tiozin import config
 from tiozin.utils.helpers import generate_id, utcnow
+
+_TEMP_DIR = Path(gettempdir())
 
 
 @dataclass(kw_only=True)
@@ -27,7 +29,7 @@ class Context:
     extend it to add job-, runner-, or step-specific information.
 
     In simple terms, Context answers:
-    “What is executing, under which identity, and with which runtime state?”
+    "What is executing, under which identity, and with which runtime state?"
 
     Context provides:
     - Execution identity (id, name, kind, plugin kind)
@@ -78,9 +80,9 @@ class Context:
 
     def __post_init__(self):
         if self.tempdir is None:
-            self.tempdir = Path(
-                mkdtemp(prefix=f"{config.app_name}_{self.name}_"),
-            )
+            base_dir = _TEMP_DIR / config.app_name / self.name / self.run_id
+            base_dir.mkdir(parents=True, exist_ok=True)
+            self.tempdir = base_dir
 
         self.template_vars = FrozenMapping(
             {
