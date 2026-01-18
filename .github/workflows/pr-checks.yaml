@@ -1,0 +1,74 @@
+name: PR Checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            chore
+            docs
+            test
+            style
+            ci
+            build
+
+  validate-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate commits
+        uses: wagoid/commitlint-github-action@v6
+
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install Dependencies
+        run: make install-dev
+
+      - name: Lint
+        run: make check
+
+      - name: Tests
+        run: make test
+
+      - name: Validate release intent
+        run: |
+          set -e
+          VALID_RELEASE_COMMIT='^(feat|fix|perf|refactor)(\(.+\))?:'
+          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=%s)
+
+          if ! echo "$COMMITS" | grep -Eq "$VALID_RELEASE_COMMIT"; then
+            echo "❌ PR must include at least one release-impacting commit (feat/fix/perf/refactor)"
+            exit 1
+          fi
+
+          echo "✅ Release intent detected"

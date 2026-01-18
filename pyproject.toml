@@ -1,10 +1,22 @@
-
 [project]
 name = "tiozin"
-version = "0.1.0"
+version = "1.0.0"
 description = "Tiozin, your friendly ETL framework"
 readme = "README.md"
 requires-python = ">=3.11"
+
+license = "MPL-2.0"
+authors = [
+  { name = "Fabricio D'Morison", email = "fabricio.dmorison@gmail.com" }
+]
+
+keywords = ["etl", "data", "pipeline", "framework"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+]
 
 dependencies = [
   "pydantic ~=2.12",
@@ -31,11 +43,17 @@ azure = [
   "adlfs ~=2025.8",
 ]
 
+[project.urls]
+Homepage = "https://github.com/fdmorison/tiozin"
+Repository = "https://github.com/fdmorison/tiozin"
+Issues = "https://github.com/fdmorison/tiozin/issues"
+
 [dependency-groups]
 dev = [
-  {include-group = "lint"},
-  {include-group = "test"},
+  { include-group = "lint" },
+  { include-group = "test" },
 ]
+
 test = [
   "pytest ==8.4.2",
   "pytest-cov ==7.0.0",
@@ -43,14 +61,15 @@ test = [
   "testcontainers ==4.13.2",
   "tiozin[aws,gcp]",
 ]
+
 lint = [
   "ruff ==0.14.10",
-  "pre-commit ==4.3.0"
+  "pre-commit ==4.3.0",
 ]
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project.scripts]
 tiozin = "tiozin.cli:main"
@@ -73,7 +92,6 @@ addopts = "--cov --cov-report term"
 [tool.coverage.run]
 source = ["tiozin"]
 omit = [
-  "tiozin/app.py",
   "tiozin/env.py",
   "tiozin/config.py",
   "tiozin/logs.py",
@@ -94,11 +112,3 @@ max-doc-length = 100
 
 [tool.ruff.lint.isort]
 known-first-party = ["tiozin"]
-
-[tool.autoflake]
-in-place = true
-recursive = true
-remove-all-unused-imports = true
-ignore-init-module-imports = true
-remove-unused-variables = true
-remove-duplicate-keys = true
