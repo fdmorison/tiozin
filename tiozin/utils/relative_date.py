@@ -335,6 +335,12 @@ class FilesystemFlatView:
         """YYYYMMDDTHHMMSS"""
         return self._dt.format("YYYYMMDD[T]HHmmss")
 
+    def __str__(self) -> str:
+        return self.date
+
+    def __repr__(self) -> str:
+        return f"'{self.date}'"
+
 
 class FilesystemDeepView:
     """
@@ -371,3 +377,9 @@ class FilesystemDeepView:
     @property
     def second(self) -> str:
         return self._dt.format("[year]=YYYY/[month]=MM/[day]=DD/[hour]=HH/[min]=mm/[sec]=ss")
+
+    def __str__(self) -> str:
+        return self.date
+
+    def __repr__(self) -> str:
+        return f"'{self.date}'"

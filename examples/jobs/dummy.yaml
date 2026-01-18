@@ -33,5 +33,5 @@ transforms:
 outputs:
   - kind: NoOpOutput
     name: save_customers
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/{{ DAY[-1].fsdeep.day }}
+    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/{{ DAY[-1].fsdeep }}
     verbose: true
