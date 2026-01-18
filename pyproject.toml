@@ -10,9 +10,10 @@ authors = [
   { name = "Fabricio D'Morison", email = "fabricio.dmorison@gmail.com" }
 ]
 
-keywords = ["etl", "data", "pipeline", "framework"]
+keywords = ["etl", "data", "pipeline", "framework", "declarative", "yaml"]
 
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
