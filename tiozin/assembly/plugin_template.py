@@ -3,19 +3,14 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
-from jinja2 import Environment, StrictUndefined
-
 from tiozin.api import PlugIn
 from tiozin.exceptions import InvalidInputError
-from tiozin.utils import helpers
+from tiozin.utils import helpers, jinja
 
 if TYPE_CHECKING:
     from tiozin.api import JobContext, RunnerContext, StepContext
 
-JINJA_ENV = Environment(
-    undefined=StrictUndefined,
-    autoescape=False,
-)
+JINJA_ENV = jinja.create_jinja_environment()
 
 TEMPLATE_PATTERN = re.compile(r"\{\{[^}]*\}\}")
 
