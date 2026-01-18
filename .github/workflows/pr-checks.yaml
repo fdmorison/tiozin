@@ -3,6 +3,9 @@ name: PR Checks
 on:
   workflow_call:
 
+permissions:
+  pull-requests: read
+
 jobs:
   validate-pr-title:
     runs-on: ubuntu-latest
