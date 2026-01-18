@@ -81,6 +81,6 @@ class JobContext(Context):
             TemplateContextBuilder()
             .with_context(self)
             .with_defaults(self.template_vars)
-            .wiht_datetime(self.nominal_time)
+            .with_datetime(self.nominal_time)
             .build()
         )

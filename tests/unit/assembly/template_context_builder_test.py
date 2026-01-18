@@ -43,14 +43,14 @@ def test_builder_should_include_relative_date_properties_in_context():
 
 
 # ============================================================================
-# Testing TemplateContextBuilder - with_datetime (typo: wiht_datetime)
+# Testing TemplateContextBuilder - with_datetime (typo: with_datetime)
 # ============================================================================
-def test_builder_should_set_custom_datetime_when_wiht_datetime_called():
+def test_builder_should_set_custom_datetime_when_with_datetime_called():
     # Arrange
     custom_dt = datetime(2025, 6, 15, 12, 30, 45)
 
     # Act
-    context = TemplateContextBuilder().wiht_datetime(custom_dt).build()
+    context = TemplateContextBuilder().with_datetime(custom_dt).build()
 
     # Assert
     actual = {
@@ -68,18 +68,18 @@ def test_builder_should_set_custom_datetime_when_wiht_datetime_called():
     assert actual == expected
 
 
-def test_builder_should_raise_when_wiht_datetime_receives_invalid_type():
+def test_builder_should_raise_when_with_datetime_receives_invalid_type():
     # Act & Assert
     with pytest.raises(TypeError, match="nominal_date must be a datetime"):
-        TemplateContextBuilder().wiht_datetime("2025-06-15")
+        TemplateContextBuilder().with_datetime("2025-06-15")
 
 
-def test_builder_should_affect_day_object_when_wiht_datetime_called():
+def test_builder_should_affect_day_object_when_with_datetime_called():
     # Arrange
     custom_dt = datetime(2025, 6, 15, 12, 30, 45)
 
     # Act
-    context = TemplateContextBuilder().wiht_datetime(custom_dt).build()
+    context = TemplateContextBuilder().with_datetime(custom_dt).build()
     day = context["DAY"]
 
     # Assert
@@ -312,7 +312,7 @@ def test_builder_should_support_day_navigation_with_index():
     custom_dt = datetime(2026, 1, 17, 10, 30, 45)
 
     # Act
-    context = TemplateContextBuilder().wiht_datetime(custom_dt).build()
+    context = TemplateContextBuilder().with_datetime(custom_dt).build()
     day = context["DAY"]
 
     # Assert
@@ -334,7 +334,7 @@ def test_builder_should_support_day_navigation_with_properties():
     custom_dt = datetime(2026, 1, 17, 10, 30, 45)
 
     # Act
-    context = TemplateContextBuilder().wiht_datetime(custom_dt).build()
+    context = TemplateContextBuilder().with_datetime(custom_dt).build()
     day = context["DAY"]
 
     # Assert
@@ -354,7 +354,7 @@ def test_builder_should_support_day_fs_navigation():
     custom_dt = datetime(2026, 1, 17, 10, 30, 45)
 
     # Act
-    context = TemplateContextBuilder().wiht_datetime(custom_dt).build()
+    context = TemplateContextBuilder().with_datetime(custom_dt).build()
     day = context["DAY"]
 
     # Assert
@@ -374,7 +374,7 @@ def test_builder_should_support_day_fsdeep_navigation():
     custom_dt = datetime(2026, 1, 17, 10, 30, 45)
 
     # Act
-    context = TemplateContextBuilder().wiht_datetime(custom_dt).build()
+    context = TemplateContextBuilder().with_datetime(custom_dt).build()
     day = context["DAY"]
 
     # Assert
@@ -418,7 +418,7 @@ def test_builder_should_support_fluent_api_chain():
     # Act
     context = (
         TemplateContextBuilder()
-        .wiht_datetime(custom_dt)
+        .with_datetime(custom_dt)
         .with_defaults({"env": "dev"})
         .with_variables({"domain": "sales"})
         .with_context(Ctx(job_name="my_job"))

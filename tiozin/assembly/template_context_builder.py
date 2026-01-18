@@ -17,7 +17,7 @@ class TemplateContextBuilder:
         self._context: dict[str, object] = {}
         self._datetime = utcnow()
 
-    def wiht_datetime(self, nominal_date: datetime) -> Self:
+    def with_datetime(self, nominal_date: datetime) -> Self:
         if not isinstance(nominal_date, datetime):
             raise TypeError("nominal_date must be a datetime")
 
