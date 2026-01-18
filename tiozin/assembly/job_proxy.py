@@ -67,10 +67,10 @@ class JobProxy(wrapt.ObjectProxy):
         )
 
         try:
-            context.setup_at = utcnow()
-            job.setup(context)
             job.info(f"▶️  Starting {context.kind}")
             job.debug(f"Temporary workdir is {context.temp_workdir}")
+            context.setup_at = utcnow()
+            job.setup(context)
             with PluginTemplateOverlay(job, context):
                 context.executed_at = utcnow()
                 result = job.submit(context, *args, **kwargs)
