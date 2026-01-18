@@ -65,10 +65,10 @@ class StepProxy(wrapt.ObjectProxy):
         )
 
         try:
-            context.setup_at = utcnow()
-            step.setup(context, *args, **kwargs)
             step.info(f"▶️  Starting to {context.plugin_kind} data")
             step.debug(f"Temporary workdir is {context.temp_workdir}")
+            context.setup_at = utcnow()
+            step.setup(context, *args, **kwargs)
             with PluginTemplateOverlay(step, context):
                 context.executed_at = utcnow()
                 result = None
