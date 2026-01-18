@@ -3,7 +3,7 @@ import socket
 
 from environs import Env
 
-_env = Env()
+_env = Env(expand_vars=True)
 _env.read_env()
 
 # ===============================================

@@ -16,6 +16,7 @@ unplanned_field: 12345
 runner:
   kind: NoOpRunner
   streaming: false
+  log_level: "{{ ENV.LOG_LEVEL }}"
   verbose: true
 
 inputs:

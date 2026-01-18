@@ -79,8 +79,9 @@ class JobContext(Context):
         super().__post_init__()
         self.template_vars = (
             TemplateContextBuilder()
-            .with_context(self)
+            .with_envvars()
             .with_defaults(self.template_vars)
+            .with_context(self)
             .with_datetime(self.nominal_time)
             .build()
         )
