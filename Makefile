@@ -23,14 +23,13 @@ format:
 
 check:
 	@uv run ruff check .
+	@uv run ruff format --check
 
 test:
 	@uv run pytest -vvv .
 
 build:
-	@DOCKER_BUILDKIT=1 docker build \
-	-t local/${APP}:latest .
-	@docker image ls local/${APP}:latest
+	@uv build
 
 deploy:
-	@echo "deploy not implemented yet"
+	@uv publish --token $$PYPI_API_TOKEN
