@@ -35,18 +35,18 @@ runner:
   kind: SparkRunner
 
 inputs:
-  load_poems:
-    kind: SparkFileInput
-    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{today_minus_one}}
+  - kind: SparkFileInput
+    name: load_poems
+    path: s3://{{org}}-{{domain}}-raw/{{product}}/{{model}}/date={{ DAY[-1] }}
 
 transforms:
-  word_count:
-    kind: SparkWordCountTransform
+  - kind: SparkWordCountTransform
+    name: word_count
 
 outputs:
-  save_word_counts:
-    kind: SparkFileOutput
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+  - kind: SparkFileOutput
+    name: save_word_counts
+    path: s3://{{org}}-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{ today }}
 ```
 
 Run it:
