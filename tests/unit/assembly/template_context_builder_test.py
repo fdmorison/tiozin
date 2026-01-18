@@ -37,7 +37,7 @@ def test_builder_should_include_relative_date_properties_in_context():
     context = TemplateContextBuilder().build()
 
     # Assert
-    expected = {"ds", "ds_nodash", "ts", "iso", "YYYY", "MM", "DD"}
+    expected = {"ds", "ts", "iso", "YYYY", "MM", "DD"}
     actual = {k for k in expected if k in context}
     assert actual == expected
 
@@ -359,12 +359,12 @@ def test_builder_should_support_day_fs_navigation():
 
     # Assert
     actual = (
-        day.fs.nodash,
-        day[-1].fs.nodash,
+        day.fs.date,
+        day[-1].fs.date,
     )
     expected = (
-        "20260117",
-        "20260116",
+        "2026-01-17",
+        "2026-01-16",
     )
     assert actual == expected
 

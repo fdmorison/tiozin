@@ -347,19 +347,6 @@ def test_relative_date_ds_should_return_date_string():
     assert actual == expected
 
 
-def test_relative_date_ds_nodash_should_return_date_without_dashes():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    rd = RelativeDate(dt)
-
-    # Act
-    actual = rd.ds_nodash
-
-    # Assert
-    expected = "20260117"
-    assert actual == expected
-
-
 def test_relative_date_ts_should_return_timestamp_string():
     # Arrange
     dt = pendulum.parse("2026-01-17T10:30:45+00:00")
@@ -370,32 +357,6 @@ def test_relative_date_ts_should_return_timestamp_string():
 
     # Assert
     expected = "2026-01-17T10:30:45"
-    assert actual == expected
-
-
-def test_relative_date_ts_nodash_should_return_timestamp_without_dashes():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    rd = RelativeDate(dt)
-
-    # Act
-    actual = rd.ts_nodash
-
-    # Assert
-    expected = "20260117T103045"
-    assert actual == expected
-
-
-def test_relative_date_ts_nodash_with_tz_should_return_timestamp_with_timezone():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    rd = RelativeDate(dt)
-
-    # Act
-    actual = rd.ts_nodash_with_tz
-
-    # Assert
-    expected = "20260117T103045+0000"
     assert actual == expected
 
 
@@ -412,19 +373,6 @@ def test_relative_date_prev_ds_should_return_previous_date():
     assert actual == expected
 
 
-def test_relative_date_prev_ds_nodash_should_return_previous_date_without_dashes():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    rd = RelativeDate(dt)
-
-    # Act
-    actual = rd.prev_ds_nodash
-
-    # Assert
-    expected = "20260116"
-    assert actual == expected
-
-
 def test_relative_date_next_ds_should_return_next_date():
     # Arrange
     dt = pendulum.parse("2026-01-17T10:30:45+00:00")
@@ -435,19 +383,6 @@ def test_relative_date_next_ds_should_return_next_date():
 
     # Assert
     expected = "2026-01-18"
-    assert actual == expected
-
-
-def test_relative_date_next_ds_nodash_should_return_next_date_without_dashes():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    rd = RelativeDate(dt)
-
-    # Act
-    actual = rd.next_ds_nodash
-
-    # Assert
-    expected = "20260118"
     assert actual == expected
 
 
@@ -541,7 +476,6 @@ def test_relative_date_to_dict_should_contain_core_properties():
     # Assert
     assert dyct["date"] == "2026-01-17"
     assert dyct["ds"] == "2026-01-17"
-    assert dyct["ds_nodash"] == "20260117"
     assert dyct["ts"] == "2026-01-17T10:30:45"
     assert dyct["YYYY"] == "2026"
     assert dyct["MM"] == "01"
@@ -602,19 +536,6 @@ def test_filesystem_flat_view_day_should_return_iso_date():
     assert actual == expected
 
 
-def test_filesystem_flat_view_nodash_should_return_date_without_dashes():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    fs = FilesystemFlatView(dt)
-
-    # Act
-    actual = fs.nodash
-
-    # Assert
-    expected = "20260117"
-    assert actual == expected
-
-
 def test_filesystem_flat_view_hour_should_return_date_with_hour():
     # Arrange
     dt = pendulum.parse("2026-01-17T10:30:45+00:00")
@@ -625,19 +546,6 @@ def test_filesystem_flat_view_hour_should_return_date_with_hour():
 
     # Assert
     expected = "2026-01-17T10"
-    assert actual == expected
-
-
-def test_filesystem_flat_view_hour_nodash_should_return_compact_date_with_hour():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    fs = FilesystemFlatView(dt)
-
-    # Act
-    actual = fs.hour_nodash
-
-    # Assert
-    expected = "20260117T10"
     assert actual == expected
 
 
@@ -654,19 +562,6 @@ def test_filesystem_flat_view_minute_should_return_date_with_hour_minute():
     assert actual == expected
 
 
-def test_filesystem_flat_view_minute_nodash_should_return_compact_date_with_minute():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    fs = FilesystemFlatView(dt)
-
-    # Act
-    actual = fs.minute_nodash
-
-    # Assert
-    expected = "20260117T1030"
-    assert actual == expected
-
-
 def test_filesystem_flat_view_second_should_return_full_timestamp():
     # Arrange
     dt = pendulum.parse("2026-01-17T10:30:45+00:00")
@@ -677,19 +572,6 @@ def test_filesystem_flat_view_second_should_return_full_timestamp():
 
     # Assert
     expected = "2026-01-17T10-30-45"
-    assert actual == expected
-
-
-def test_filesystem_flat_view_second_nodash_should_return_compact_timestamp():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    fs = FilesystemFlatView(dt)
-
-    # Act
-    actual = fs.second_nodash
-
-    # Assert
-    expected = "20260117T103045"
     assert actual == expected
 
 
@@ -816,14 +698,14 @@ def test_relative_date_offset_should_return_correct_fsdeep_hour():
     assert actual == expected
 
 
-def test_relative_date_tomorrow_should_return_correct_fs_nodash():
+def test_relative_date_tomorrow_should_return_correct_fs_date():
     # Arrange
     dt = pendulum.parse("2026-01-17T10:30:45+00:00")
     rd = RelativeDate(dt)
 
     # Act
-    actual = rd.tomorrow.fs.nodash
+    actual = rd.tomorrow.fs.date
 
     # Assert
-    expected = "20260118"
+    expected = "2026-01-18"
     assert actual == expected

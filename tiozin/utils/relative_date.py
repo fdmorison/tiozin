@@ -12,7 +12,7 @@ class RelativeDate:
 
     Example usage (Jinja):
         {{ D[-1].iso8601 }}
-        {{ D[0].fs.hms_nodash }}
+        {{ D[0].fs.hour }}
         {{ D[-1].yesterday.date }}
     """
 
@@ -50,12 +50,12 @@ class RelativeDate:
 
     @property
     def dt(self) -> DateTime:
-        """Pendulum DateTime object"""
+        """Pendulum DateTime object."""
         return self._dt
 
     @property
     def date(self) -> str:
-        """YYYY-MM-DD"""
+        """Date string, eg: 2026-01-14"""
         return self._dt.to_date_string()
 
     # ==========================================================================
@@ -64,27 +64,27 @@ class RelativeDate:
 
     @property
     def iso(self) -> str:
-        """ISO 8601 datetime"""
+        """ISO 8601 datetime, eg: 2026-01-14T01:59:57+00:00"""
         return self._dt.to_iso8601_string()
 
     @property
     def iso8601(self) -> str:
-        """ISO 8601 datetime"""
+        """ISO 8601 datetime, eg: 2026-01-14T01:59:57+00:00"""
         return self._dt.to_iso8601_string()
 
     @property
     def rfc3339(self) -> str:
-        """RFC 3339 datetime"""
+        """RFC 3339 datetime, eg: 2026-01-14T01:59:57+00:00"""
         return self._dt.to_rfc3339_string()
 
     @property
     def w3c(self) -> str:
-        """W3C datetime"""
+        """W3C datetime, eg: 2026-01-14T01:59:57+00:00"""
         return self._dt.to_w3c_string()
 
     @property
     def sql_datetime(self) -> str:
-        """W3C datetime"""
+        """SQL datetime, eg: 2026-01-14 01:59:57"""
         return self._dt.to_datetime_string()
 
     # ==========================================================================
@@ -93,12 +93,12 @@ class RelativeDate:
 
     @property
     def unix(self) -> int:
-        """Unix timestamp (seconds)"""
+        """Unix timestamp (int seconds), eg: 1768370397"""
         return self._dt.int_timestamp
 
     @property
     def unix_float(self) -> float:
-        """Unix timestamp (seconds, float)"""
+        """Unix timestamp (float seconds), eg: 1768370397.0"""
         return self._dt.float_timestamp
 
     # ==========================================================================
@@ -107,22 +107,12 @@ class RelativeDate:
 
     @property
     def fs(self) -> FilesystemFlatView:
-        """
-        Filesystem-safe flat formats.
-
-        Example:
-            {{ D[-1].fs.hms_nodash }}
-        """
+        """Filesystem-safe flat formats, eg: {{ D.fs.hour }}"""
         return FilesystemFlatView(self._dt)
 
     @property
     def fsdeep(self) -> FilesystemDeepView:
-        """
-        Filesystem-safe deep (hierarchical) paths.
-
-        Example:
-            {{ D[-1].fsdeep.hms }}
-        """
+        """Filesystem-safe deep (hierarchical) paths, eg: {{ D.fsdeep.hour }}"""
         return FilesystemDeepView(self._dt)
 
     # ==========================================================================
@@ -131,17 +121,17 @@ class RelativeDate:
 
     @property
     def today(self) -> RelativeDate:
-        """D[n+0]"""
+        """Same day, eg: D[n].today == D[n]"""
         return self
 
     @property
     def yesterday(self) -> RelativeDate:
-        """D[n-1]"""
+        """Previous day, eg: D[n].yesterday == D[n-1]"""
         return RelativeDate(self._dt.subtract(days=1))
 
     @property
     def tomorrow(self) -> RelativeDate:
-        """D[n+1]"""
+        """Next day, eg: D[n].tomorrow == D[n+1]"""
         return RelativeDate(self._dt.add(days=1))
 
     # ==========================================================================
@@ -150,117 +140,110 @@ class RelativeDate:
 
     @property
     def YYYY(self) -> str:
-        return self._dt.format("YYYY")  # 2026
+        """Year (4 digits), eg: 2026"""
+        return self._dt.format("YYYY")
 
     @property
     def MM(self) -> str:
-        return self._dt.format("MM")  # 01
+        """Month (2 digits), eg: 01"""
+        return self._dt.format("MM")
 
     @property
     def DD(self) -> str:
-        return self._dt.format("DD")  # 14
+        """Day of month (2 digits), eg: 14"""
+        return self._dt.format("DD")
 
     @property
     def DDD(self) -> str:
-        return self._dt.format("DDD")  # 014 (day of year)
+        """Day of year (3 digits), eg: 014"""
+        return self._dt.format("DDD")
 
     @property
     def HH(self) -> str:
-        return self._dt.format("HH")  # 01
+        """Hour (2 digits, 24h), eg: 01"""
+        return self._dt.format("HH")
 
     @property
     def mm(self) -> str:
-        return self._dt.format("mm")  # 59
+        """Minute (2 digits), eg: 59"""
+        return self._dt.format("mm")
 
     @property
     def ss(self) -> str:
-        return self._dt.format("ss")  # 57
+        """Second (2 digits), eg: 57"""
+        return self._dt.format("ss")
 
     @property
     def time(self) -> str:
-        return self._dt.to_time_string()  # 01:59:57
+        """Time string, eg: 01:59:57"""
+        return self._dt.to_time_string()
 
     @property
     def Z(self) -> str:
-        return self._dt.format("Z")  # +00:00
+        """Timezone offset with colon, eg: +00:00"""
+        return self._dt.format("Z")
 
     @property
     def ZZ(self) -> str:
-        return self._dt.format("ZZ")  # +0000
+        """Timezone offset without colon, eg: +0000"""
+        return self._dt.format("ZZ")
 
     @property
     def z(self) -> str:
-        return self._dt.format("z")  # UTC
+        """Timezone abbreviation, eg: UTC"""
+        return self._dt.format("z")
 
     @property
     def zz(self) -> str:
-        return self._dt.format("zz")  # UTC
+        """Timezone abbreviation, eg: UTC"""
+        return self._dt.format("zz")
 
     # ==========================================================================
     # Airflow standards
     # ==========================================================================
+
     @property
     def ds(self) -> str:
-        """YYYY-MM-DD"""
+        """Airflow ds format, eg: 2026-01-14"""
         return self._dt.to_date_string()
 
     @property
-    def ds_nodash(self) -> str:
-        """YYYYMMDD"""
-        return self._dt.format("YYYYMMDD")
-
-    @property
     def ts(self) -> str:
-        """YYYY-MM-DDTHH:MM:SS"""
+        """Airflow ts format, eg: 2026-01-14T01:59:57"""
         return self._dt.format("YYYY-MM-DD[T]HH:mm:ss")
 
     @property
-    def ts_nodash(self) -> str:
-        """YYYYMMDDTHHMMSS"""
-        return self._dt.format("YYYYMMDD[T]HHmmss")
-
-    @property
-    def ts_nodash_with_tz(self) -> str:
-        """YYYYMMDDTHHMMSSZZ"""
-        return self._dt.format("YYYYMMDD[T]HHmmssZZ")
-
-    @property
     def prev_ds(self) -> str:
+        """Previous day ds, eg: 2026-01-13"""
         return self._dt.subtract(days=1).to_date_string()
 
     @property
-    def prev_ds_nodash(self) -> str:
-        return self._dt.subtract(days=1).format("YYYYMMDD")
-
-    @property
     def next_ds(self) -> str:
+        """Next day ds, eg: 2026-01-15"""
         return self._dt.add(days=1).to_date_string()
 
     @property
-    def next_ds_nodash(self) -> str:
-        return self._dt.add(days=1).format("YYYYMMDD")
-
-    @property
     def execution_date(self) -> DateTime:
+        """Airflow execution_date (DateTime object)."""
         return self._dt
 
     @property
     def logical_date(self) -> DateTime:
+        """Airflow logical_date (DateTime object)."""
         return self._dt
 
     @property
     def data_interval_start(self) -> DateTime:
+        """Airflow data_interval_start (DateTime object)."""
         return self._dt
 
     @property
     def data_interval_end(self) -> DateTime:
+        """Airflow data_interval_end (next day DateTime object)."""
         return self._dt.add(days=1)
 
     def to_dict(self) -> dict[str, object]:
-        """
-        Export all public @property attributes as a flat dict
-        suitable for template rendering.
-        """
+        """Export all public @property attributes as a flat dict."""
         dyct = {}
 
         for name in dir(self):
@@ -283,57 +266,35 @@ class RelativeDate:
 
 
 class FilesystemFlatView:
-    """
-    Flat filesystem-safe date representations.
-    """
+    """Flat filesystem-safe date representations."""
 
     def __init__(self, dt: DateTime):
         self._dt = dt
 
     @property
     def date(self) -> str:
-        """YYYY-MM-DD"""
+        """Date, eg: 2026-01-14"""
         return self._dt.to_date_string()
 
     @property
     def day(self) -> str:
-        """YYYY-MM-DD"""
+        """Date (alias for date), eg: 2026-01-14"""
         return self._dt.to_date_string()
 
     @property
-    def nodash(self) -> str:
-        """YYYYMMDD"""
-        return self._dt.format("YYYYMMDD")
-
-    @property
     def hour(self) -> str:
-        """YYYY-MM-DDTHH"""
+        """Date with hour, eg: 2026-01-14T01"""
         return self._dt.format("YYYY-MM-DD[T]HH")
 
     @property
-    def hour_nodash(self) -> str:
-        """YYYYMMDDTHH"""
-        return self._dt.format("YYYYMMDD[T]HH")
-
-    @property
     def minute(self) -> str:
-        """YYYY-MM-DDTHH-MM"""
+        """Date with hour and minute, eg: 2026-01-14T01-59"""
         return self._dt.format("YYYY-MM-DD[T]HH-mm")
 
     @property
-    def minute_nodash(self) -> str:
-        """YYYYMMDDTHHMM"""
-        return self._dt.format("YYYYMMDD[T]HHmm")
-
-    @property
     def second(self) -> str:
-        """YYYY-MM-DDTHH-MM-SS"""
+        """Date with hour, minute and second, eg: 2026-01-14T01-59-57"""
         return self._dt.format("YYYY-MM-DD[T]HH-mm-ss")
-
-    @property
-    def second_nodash(self) -> str:
-        """YYYYMMDDTHHMMSS"""
-        return self._dt.format("YYYYMMDD[T]HHmmss")
 
     def __str__(self) -> str:
         return self.date
@@ -343,39 +304,50 @@ class FilesystemFlatView:
 
 
 class FilesystemDeepView:
-    """
-    Deep (hierarchical) filesystem-safe date representations.
-    """
+    """Deep (hierarchical) filesystem-safe date representations."""
 
     def __init__(self, dt: DateTime):
         self._dt = dt
 
     @property
     def year(self) -> str:
+        """Eg: year=2026"""
         return self._dt.format("[year]=YYYY")
 
     @property
     def month(self) -> str:
+        """Eg: year=2026/month=01"""
         return self._dt.format("[year]=YYYY/[month]=MM")
 
     @property
     def date(self) -> str:
+        """Eg: year=2026/month=01/day=14"""
         return self._dt.format("[year]=YYYY/[month]=MM/[day]=DD")
 
     @property
     def day(self) -> str:
+        """eg: year=2026/month=01/day=14"""
         return self._dt.format("[year]=YYYY/[month]=MM/[day]=DD")
 
     @property
     def hour(self) -> str:
+        """
+        eg: year=2026/month=01/day=14/hour=01
+        """
         return self._dt.format("[year]=YYYY/[month]=MM/[day]=DD/[hour]=HH")
 
     @property
     def minute(self) -> str:
+        """
+        Eg: year=2026/month=01/day=14/hour=01/min=59
+        """
         return self._dt.format("[year]=YYYY/[month]=MM/[day]=DD/[hour]=HH/[min]=mm")
 
     @property
     def second(self) -> str:
+        """
+        Eg: year=2026/month=01/day=14/hour=01/min=59/sec=57
+        """
         return self._dt.format("[year]=YYYY/[month]=MM/[day]=DD/[hour]=HH/[min]=mm/[sec]=ss")
 
     def __str__(self) -> str:
