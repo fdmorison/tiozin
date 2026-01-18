@@ -61,6 +61,7 @@ jobs:
         run: make test
 
       - name: Validate release intent
+        if: ${{ !startsWith(github.head_ref, 'release-please--') }}
         run: |
           set -e
           VALID_RELEASE_COMMIT='^(feat|fix|perf|refactor)(\(.+\))?:'
