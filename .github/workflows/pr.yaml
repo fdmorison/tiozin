@@ -1,0 +1,13 @@
+name: PR Actions
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "tiozin/**/*.py"
+      - "tests/**/*.py"
+      - "pyproject.toml"
+
+jobs:
+  check:
+    uses: ./.github/workflows/pr-checks.yaml
