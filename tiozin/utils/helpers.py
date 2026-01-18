@@ -1,6 +1,7 @@
 import inspect
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
@@ -8,6 +9,8 @@ from typing import Any, TypeVar
 
 import pendulum
 from uuid_utils import uuid7
+
+from .relative_date import RelativeDate
 
 T = TypeVar("T")
 
@@ -19,6 +22,36 @@ def utcnow() -> pendulum.DateTime:
     Returns Pendulum DateTime which prints in ISO 8601 format.
     """
     return pendulum.now("UTC")
+
+
+def coerce_datetime(value) -> pendulum.DateTime:
+    """
+    Convert various datetime representations to Pendulum DateTime.
+
+    Accepts: RelativeDate, pendulum.DateTime, datetime, ISO-8601 string.
+    Returns None if value is None.
+
+    Raises:
+        TypeError: If value cannot be converted to datetime.
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, RelativeDate):
+        return value.dt
+
+    if isinstance(value, pendulum.DateTime):
+        return value
+
+    if isinstance(value, datetime):
+        return pendulum.instance(value)
+
+    if isinstance(value, str):
+        return pendulum.parse(value)
+
+    raise TypeError(
+        f"Expected RelativeDate, datetime or ISO string, got {type(value).__name__}: {value!r}"
+    )
 
 
 def generate_id() -> str:
