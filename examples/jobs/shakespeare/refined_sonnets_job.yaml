@@ -1,5 +1,5 @@
 kind: LinearJob
-name: kinglear_word_count_job
+name: refined_loverscomplaint_job
 description: |
   Pre-processes Shakespeare source texts and produces
   word count metrics as a refined data product.
@@ -12,7 +12,7 @@ org: tiozin
 region: latam
 domain: literature
 product: shakespeare
-model: kinglear
+model: sonnets
 layer: refined
 
 runner:
@@ -21,7 +21,8 @@ runner:
 inputs:
   - kind: SparkFileInput
     name: load_poems
-    path: ./output/lake-{{domain}}-raw/{{product}}/all/date={{today}}/_source_file_name={{model}}.txt
+    layer: raw
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{product}}/date={{today}}/input_file_name={{model}}.txt
 
 transforms:
   - kind: SparkWordCountTransform
@@ -30,4 +31,4 @@ transforms:
 outputs:
   - kind: SparkFileOutput
     name: save_word_counts
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}

@@ -11,7 +11,7 @@ org: tiozin
 region: latam
 domain: literature
 product: shakespeare
-model: all
+model: shakespeare
 layer: raw
 
 runner:
@@ -22,11 +22,11 @@ inputs:
     name: load_poems
     path: examples/data/{{product}}
     format: text
-    include_source_file: true
+    include_input_file: true
 
 outputs:
   - kind: SparkFileOutput
     name: save_poems
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
     partition_by:
-    - _source_file_name
+    - input_file_name
