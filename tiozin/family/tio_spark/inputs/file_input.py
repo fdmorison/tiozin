@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 SparkFormat = Literal["parquet", "csv", "json", "orc", "avro", "delta", "iceberg", "jdbc"]
 
-SOURCE_FILE_PATH_COLUMN = "_source_file_path"
-SOURCE_FILE_NAME_COLUMN = "_source_file_name"
+INPUT_FILE_PATH_COLUMN = "input_file_path"
+INPUT_FILE_NAME_COLUMN = "input_file_name"
 
 
 class SparkFileInput(Input[DataFrame]):
@@ -30,20 +30,20 @@ class SparkFileInput(Input[DataFrame]):
     Attributes:
         path: Path to the file or directory to read.
         format: File format (parquet, csv, json, etc.).
-        include_source_file: If True, adds '_source_file_path' and '_source_file_name' columns.
+        include_input_file: If True, adds '_source_file_path' and 'input_file_name' columns.
     """
 
     def __init__(
         self,
         path: str = None,
         format: SparkFormat = "parquet",
-        include_source_file: bool = False,
+        include_input_file: bool = False,
         **options,
     ) -> None:
         super().__init__(**options)
         self.path = path
         self.format = format
-        self.include_source_file = include_source_file
+        self.include_input_file = include_input_file
 
     def read(self, context: StepContext) -> DataFrame:
         spark = SparkSession.getActiveSession()
@@ -55,11 +55,13 @@ class SparkFileInput(Input[DataFrame]):
         else:
             df = reader.load()
 
-        if self.include_source_file:
-            df = df.withColumn(SOURCE_FILE_PATH_COLUMN, input_file_name())
+        if self.include_input_file:
             df = df.withColumn(
-                SOURCE_FILE_NAME_COLUMN,
-                element_at(split(input_file_name(), "/"), -1),
+                INPUT_FILE_PATH_COLUMN,
+                input_file_name(),
+            ).withColumn(
+                INPUT_FILE_NAME_COLUMN,
+                element_at(split(INPUT_FILE_PATH_COLUMN, "/"), -1),
             )
 
         self.info(f"Read {self.format} from: {self.path or 'default location'}")

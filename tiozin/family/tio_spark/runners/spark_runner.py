@@ -58,7 +58,7 @@ class SparkRunner(Runner[SparkPlan]):
         self._spark.sparkContext.setLogLevel(self.log_level)
         context.session["spark"] = self._spark
 
-        self.info(f"SparkSession started for app `{context.job.name}`")
+        self.info(f"Created SparkSession for App `{context.job.name}`")
 
     def run(self, _: RunnerContext, execution_plan: SparkPlan) -> None:
         for result in as_list(execution_plan):
