@@ -56,3 +56,4 @@ ENV/
 main.py
 test.py
 output
+.output
