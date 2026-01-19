@@ -55,3 +55,4 @@ ENV/
 # Custom
 main.py
 test.py
+output
