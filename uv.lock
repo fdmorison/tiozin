@@ -1568,6 +1568,15 @@ wheels = [
 ]
 
 [[package]]
+name = "py4j"
+version = "0.10.9.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/31/0b210511177070c8d5d3059556194352e5753602fa64b85b7ab81ec1a009/py4j-0.10.9.9.tar.gz", hash = "sha256:f694cad19efa5bd1dee4f3e5270eb406613c974394035e5bfc4ec1aba870b879", size = 761089, upload-time = "2025-01-15T03:53:18.624Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/db/ea0203e495be491c85af87b66e37acfd3bf756fd985f87e46fc5e3bf022c/py4j-0.10.9.9-py2.py3-none-any.whl", hash = "sha256:c7c26e4158defb37b0bb124933163641a2ff6e3a3913f7811b0ddbe07ed61533", size = 203008, upload-time = "2025-01-15T03:53:15.648Z" },
+]
+
+[[package]]
 name = "pyasn1"
 version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1731,6 +1740,15 @@ wheels = [
 crypto = [
     { name = "cryptography" },
 ]
+
+[[package]]
+name = "pyspark"
+version = "3.5.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "py4j" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/80/5a/3806f44eb47387e8af803508cdd6bbc0df784febf4dc010700be04a1ff89/pyspark-3.5.8.tar.gz", hash = "sha256:54cca0767b21b40e3953ad1d30f8601c53abf9cbda763653289cdcfcac52313c", size = 317817299, upload-time = "2026-01-15T11:46:14.487Z" }
 
 [[package]]
 name = "pytest"
@@ -2039,6 +2057,9 @@ azure = [
 gcp = [
     { name = "gcsfs" },
 ]
+tio-spark = [
+    { name = "pyspark" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -2048,7 +2069,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "testcontainers" },
-    { name = "tiozin", extra = ["aws", "gcp"] },
+    { name = "tiozin", extra = ["aws", "gcp", "tio-spark"] },
 ]
 lint = [
     { name = "pre-commit" },
@@ -2059,7 +2080,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "testcontainers" },
-    { name = "tiozin", extra = ["aws", "gcp"] },
+    { name = "tiozin", extra = ["aws", "gcp", "tio-spark"] },
 ]
 
 [package.metadata]
@@ -2071,6 +2092,7 @@ requires-dist = [
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "pendulum", specifier = "~=3.1.0" },
     { name = "pydantic", specifier = "~=2.12" },
+    { name = "pyspark", marker = "extra == 'tio-spark'", specifier = ">=3.5.0,<4.0.0" },
     { name = "ruamel-yaml", specifier = "~=0.18" },
     { name = "s3fs", marker = "extra == 'aws'", specifier = "~=2026.1" },
     { name = "single-source", specifier = "~=0.4" },
@@ -2079,7 +2101,7 @@ requires-dist = [
     { name = "uuid-utils", specifier = "~=0.12" },
     { name = "wrapt", specifier = "~=2.0.1" },
 ]
-provides-extras = ["aws", "gcp", "azure"]
+provides-extras = ["aws", "gcp", "azure", "tio-spark"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2089,7 +2111,7 @@ dev = [
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "ruff", specifier = "==0.14.10" },
     { name = "testcontainers", specifier = "==4.13.2" },
-    { name = "tiozin", extras = ["aws", "gcp"] },
+    { name = "tiozin", extras = ["aws", "gcp", "tio-spark"] },
 ]
 lint = [
     { name = "pre-commit", specifier = "==4.3.0" },
@@ -2100,7 +2122,7 @@ test = [
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "testcontainers", specifier = "==4.13.2" },
-    { name = "tiozin", extras = ["aws", "gcp"] },
+    { name = "tiozin", extras = ["aws", "gcp", "tio-spark"] },
 ]
 
 [[package]]
