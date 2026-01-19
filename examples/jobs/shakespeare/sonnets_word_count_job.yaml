@@ -1,11 +1,12 @@
-kind: Job
+kind: LinearJob
 name: sonnets_word_count_job
-team: tiozin
-cost_center: tio_patinhas
-owner: tiozin@tiozin.com
 description: |
   Pre-processes Shakespeare source texts and produces
   word count metrics as a refined data product.
+
+owner: literature@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
 
 org: tiozin
 region: latam
@@ -20,7 +21,7 @@ runner:
 inputs:
   - kind: SparkFileInput
     name: load_poems
-    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{today}}
+    path: ./output/lake-{{domain}}-raw/{{product}}/all/date={{today}}/_source_file_name={{model}}.txt
 
 transforms:
   - kind: SparkWordCountTransform
