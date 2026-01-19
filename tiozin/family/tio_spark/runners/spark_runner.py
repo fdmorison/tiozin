@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TypeAlias
 
 from pyspark.sql import DataFrame, DataFrameWriter, SparkSession
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
-from tiozin.api import Runner
+from tiozin import Context, Runner, config
 from tiozin.exceptions import JobError
 from tiozin.utils.helpers import as_list
-
-if TYPE_CHECKING:
-    from tiozin import RunnerContext
-
 
 DEFAULT_LOGLEVEL = "WARN"
 
@@ -40,14 +36,14 @@ class SparkRunner(Runner[SparkPlan]):
         """Returns the active SparkSession, or None if not started."""
         return self._spark
 
-    def setup(self, context: RunnerContext) -> None:
+    def setup(self, context: Context) -> None:
         if self._spark:
             return
 
         builder: SparkSession.Builder = SparkSession.builder
         builder = (
-            builder.appName(context.job.name)
-            .config("spark.sql.session.timeZone", "UTC")
+            builder.appName(context.name)
+            .config("spark.sql.session.timeZone", str(config.app_timezone))
             .config("spark.sql.adaptive.enabled", "true")
         )
 
@@ -57,10 +53,9 @@ class SparkRunner(Runner[SparkPlan]):
         self._spark = builder.getOrCreate()
         self._spark.sparkContext.setLogLevel(self.log_level)
         context.session["spark"] = self._spark
+        self.info(f"🔥 SparkSession ready for {context.name}")
 
-        self.info(f"Created SparkSession for App `{context.job.name}`")
-
-    def run(self, _: RunnerContext, execution_plan: SparkPlan) -> None:
+    def run(self, _: Context, execution_plan: SparkPlan) -> None:
         for result in as_list(execution_plan):
             match result:
                 case None:
@@ -78,7 +73,7 @@ class SparkRunner(Runner[SparkPlan]):
                     raise JobError(f"Unsupported Spark plan: {type(result)}")
         return None
 
-    def teardown(self, _: RunnerContext) -> None:
+    def teardown(self, _: Context) -> None:
         if self._spark:
             self._spark.stop()
             self.info("SparkSession stopped")
