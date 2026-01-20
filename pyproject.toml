@@ -64,6 +64,9 @@ test = [
   "freezegun ==1.5.5",
   "testcontainers ==4.13.2",
   "tiozin[aws,gcp,tio_spark]",
+  "pandas>=1.0.5",
+  "pyarrow>=4.0.0",
+  "numpy<2.0",
 ]
 
 lint = [
