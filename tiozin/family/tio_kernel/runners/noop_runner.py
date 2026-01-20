@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Runner, RunnerContext
+from tiozin.api import Context, JobContext, Runner
 
 
 class NoOpRunner(Runner[Any]):
@@ -15,11 +15,11 @@ class NoOpRunner(Runner[Any]):
         super().__init__(**options)
         self.verbose = verbose
 
-    def setup(self, context: RunnerContext) -> None:
+    def setup(self, context: JobContext) -> None:
         if self.verbose:
             self.info("Setup skipped.")
 
-    def run(self, context: RunnerContext, execution_plan: Any) -> Any:
+    def run(self, context: Context, execution_plan: Any) -> Any:
         if self.verbose:
             args = self.to_dict(exclude={"description", "name"})
             args.update(args.pop("options"))
@@ -27,6 +27,6 @@ class NoOpRunner(Runner[Any]):
             self.info("Properties:", **args)
         return []
 
-    def teardown(self, context: RunnerContext) -> None:
+    def teardown(self, context: JobContext) -> None:
         if self.verbose:
             self.info("Teardown skipped.")
