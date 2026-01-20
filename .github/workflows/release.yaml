@@ -33,7 +33,6 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,9 +55,9 @@ jobs:
           path: dist/
 
   publish-pypi:
-    needs: build
+    needs: [release, build]
+    if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -81,8 +80,8 @@ jobs:
 
   publish-github:
     needs: [release, build]
+    if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
