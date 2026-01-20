@@ -20,8 +20,11 @@ def test_builder_should_build_immutable_context():
 
 
 def test_builder_should_include_day_in_context():
+    # Arrange
+    builder = TemplateContextBuilder().with_datetime()
+
     # Act
-    context = TemplateContextBuilder().build()
+    context = builder.build()
 
     # Assert
     actual = (
@@ -33,8 +36,11 @@ def test_builder_should_include_day_in_context():
 
 
 def test_builder_should_include_relative_date_properties_in_context():
+    # Arrange
+    builder = TemplateContextBuilder().with_datetime()
+
     # Act
-    context = TemplateContextBuilder().build()
+    context = builder.build()
 
     # Assert
     expected = {"ds", "ts", "iso", "YYYY", "MM", "DD"}
@@ -290,6 +296,7 @@ def test_builder_should_override_all_with_date_properties():
     # Act
     context = (
         TemplateContextBuilder()
+        .with_datetime()
         .with_defaults({"ds": "default_ds"})
         .with_variables({"ds": "variable_ds"})
         .build()

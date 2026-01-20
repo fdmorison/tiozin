@@ -49,17 +49,13 @@ class StepProxy(wrapt.ObjectProxy):
             name=step.name,
             kind=step.plugin_name,
             plugin_kind=step.plugin_kind,
-            # Fundamentals
+            # Domain Metadata
             org=step.org,
             region=step.region,
             domain=step.domain,
             layer=step.layer,
             product=step.product,
             model=step.model,
-            # Templating
-            template_vars=context.template_vars,
-            # Shared state
-            session=context.session,
             # Extra provider/plugin parameters
             options=step.options,
         )
@@ -86,10 +82,10 @@ class StepProxy(wrapt.ObjectProxy):
                             "Only pipeline steps may be part of a Job."
                         )
         except Exception:
-            step.error(f"❌  {context.kind} failed after {context.execution_delay:.2f}s")
+            step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
             raise
         else:
-            step.info(f"✔️  {context.kind} finished after {context.execution_delay:.2f}s")
+            step.info(f"{context.kind} finished in {context.execution_delay:.2f}s")
             return result
         finally:
             context.teardown_at = utcnow()
