@@ -16,10 +16,51 @@ SparkPlan: TypeAlias = DataFrame | DataFrameWriter | DataStreamWriter | None
 
 class SparkRunner(Runner[SparkPlan]):
     """
-    Spark execution backend for tiozin pipelines.
+    Executes Tiozin pipelines using Apache Spark.
 
-    Manages SparkSession lifecycle and executes Spark DataFrames,
-    DataFrameWriters, and DataStreamWriters.
+    This runner is responsible for creating and managing a SparkSession and
+    executing Spark execution plans produced by inputs, transforms, and
+    outputs. It supports batch and streaming execution transparently.
+
+    The runner executes:
+        - Spark DataFrames (actions)
+        - DataFrameWriters (file outputs)
+        - DataStreamWriters (streaming queries)
+
+    Spark configuration is provided via runner options and applied during
+    session initialization.
+
+    For details about Spark execution and configuration, refer to the official
+    Spark documentation at:
+
+    https://spark.apache.org/docs/latest/
+
+    Attributes:
+        log_level:
+            Spark log level applied to the SparkContext (e.g. ``WARN``,
+            ``INFO``).
+
+        **options:
+            Spark configuration options passed directly to the
+            ``SparkSession.builder`` (e.g. ``spark.executor.memory``).
+
+    Examples:
+
+        ```python
+        SparkRunner(
+            log_level="WARN",
+            spark.executor.memory="4g",
+            spark.sql.shuffle.partitions="200",
+        )
+        ```
+
+        ```yaml
+        runner:
+          type: SparkRunner
+          log_level: WARN
+          spark.executor.memory: 4g
+          spark.sql.shuffle.partitions: 200
+        ```
     """
 
     def __init__(

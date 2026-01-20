@@ -1,5 +1,5 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, explode, lower, split
+from pyspark.sql.functions import explode, lower, split
 
 from tiozin import StepContext, Transform
 from tiozin.utils.helpers import as_list
@@ -13,108 +13,80 @@ COUNT_FIELD = "count"
 
 class SparkWordCountTransform(Transform):
     """
-    Performs a word count on text data contained in a Spark DataFrame.
+    Counts word occurrences in a Spark DataFrame column.
 
-    It splits the text in the specified `text_field` into words, optionally converts them
-    to lowercase, and computes the total count for each word.
+    This transform tokenizes text rows into words, optionally normalizes them
+    to lowercase, and aggregates word counts. Counts can be scoped by one or
+    more columns (e.g. document, poem, category).
 
-    Input Schema:
-        - "value STRING" or
-        - "key STRING, value STRING"
+    By default, the input content is expected in the ``value`` column. The output
+    always contains the columns ``word`` and ``count`` with the following schema
+    (Spark DDL):
 
-    Output Schema:
-        - "word STRING, count BIGINT" or
-        - "key STRING, word STRING, count BIGINT"
+        word STRING, count BIGINT
+
+    When ``count_by`` is used, the grouping columns are included in the output
+    schema before ``word`` and ``count``, example:
+
+        document_id INTEGER, word STRING, count BIGINT
 
     Attributes:
-        text_field: Name of the column containing the text. Default: 'value'.
-        lowercase: Whether to convert words to lowercase before counting. Default: True.
-        group_by: Column name or list of column names to aggregate counts by. Optional.
+        content_field:
+            Name of the column containing the textual content to be tokenized.
+            Defaults to ``value``.
+
+        count_by:
+            Column name or list of column names used to scope the word counts.
+            Optional.
+
+        lowercase:
+            Whether to normalize words to lowercase before counting.
+            Defaults to ``True``.
 
     Examples:
 
         ```python
-        SparkWordCountTransformer(
-             text_field="value",
-             lowercase=True,
-         )
+        SparkWordCountTransform(
+            content_field="value",
+            lowercase=True,
+            count_by="document_id",
+        )
         ```
 
         ```yaml
-        transformers:
-            - type: SparkWordCountTransformer
-              text_field: value
-              lowercase: true
+        transforms:
+          - kind: SparkWordCountTransform
+            name: word_count
+            content_field: value
+            lowercase: true
         ```
-
-        Input DataFrame                          Output DataFrame
-        +----------------------------------+     +------+-----+
-        | value                            |     | word |count|
-        +----------------------------------+     +------+-----+
-        | lorem ipsum dolor sit amet       |     | amet |   1 |
-        | lorem lorem dolor sit sit sit sit| ==> | dolor|   2 |
-        +----------------------------------+     | ipsum|   1 |
-                                                 | lorem|   3 |
-                                                 | sit  |   5 |
-                                                 +------+-----+
-        ```python
-        SparkWordCountTransformer(
-             text_field="value",
-             lowercase=True,
-             group_by="poem"
-         )
-        ```
-
-        ```yaml
-        transformers:
-            - type: SparkWordCountTransformer
-              text_field: value
-              lowercase: true
-              group_by: poem
-        ```
-
-        Input DataFrame                                Output DataFrame
-        +-------+--------------------------------+     +-------+--------+-----+
-        | poem  | value                          |     | poem  | word   |count|
-        +-------+--------------------------------+     +-------+--------+-----+
-        | hamlet| lorem's ipsum' dolor sit amet  |     | hamlet| amet   |  1  |
-        | sonnet| lorem lorem dolor sit sit sit  | ==> | hamlet| dolor  |  1  |
-        |       | sit                            |     | hamlet| ipsum' |  1  |
-        +------+---------------------------------+     | hamlet| lorem's|  1  |
-                                                       | hamlet| sit    |  1  |
-                                                       | sonnet| dolor  |  1  |
-                                                       | sonnet| lorem  |  2  |
-                                                       | sonnet| sit    |  4  |
-                                                       +-------+--------+-----+
     """
 
     def __init__(
         self,
-        text_field: str = None,
+        content_field: str = None,
+        count_by: str | list[str] = None,
         lowercase: bool = True,
-        group_by: str | list[str] = None,
         **options,
     ) -> None:
         super().__init__(**options)
-        self.text_field = text_field or DEFAULT_SOURCE_COLUMN
+        self.content_field = content_field or DEFAULT_SOURCE_COLUMN
         self.lowercase = lowercase
-        self.group_by = as_list(group_by, [])
+        self.count_by = as_list(count_by, [])
 
     def transform(self, context: StepContext, data: DataFrame) -> DataFrame:
         tokenize = split(
-            lower(self.text_field) if self.lowercase else col(self.text_field),
+            lower(self.content_field) if self.lowercase else self.content_field,
             TOKEN_DELIMITER_RULE,
         )
 
         tokens = data.select(
-            *self.group_by,
+            *self.count_by,
             explode(tokenize).alias(WORD_FIELD),
         )
 
-        grouping_cols = [*self.group_by, WORD_FIELD]
+        grouping_cols = [*self.count_by, WORD_FIELD]
 
-        wordcounts = (
-            tokens.groupBy(grouping_cols).count().filter(col(WORD_FIELD) != "").sort(grouping_cols)
+        return (
+            tokens.groupBy(grouping_cols).count().filter(f"{WORD_FIELD} != ''").sort(grouping_cols)
         )
-
-        return wordcounts

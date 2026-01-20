@@ -27,6 +27,8 @@ inputs:
 transforms:
   - kind: SparkWordCountTransform
     name: word_count
+    content_field: value
+    lowercase: true
 
 outputs:
   - kind: SparkFileOutput
