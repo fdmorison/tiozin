@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.1.0...tiozin-v1.2.0) (2026-01-20)
+
+
+### Features
+
+* Tio Spark provider with basic Runner, Inputs, Outputs, Transforms, and declarative job examples ([#81](https://github.com/fdmorison/tiozin/issues/81)) ([8312c61](https://github.com/fdmorison/tiozin/commit/8312c613c8949cfa98384ba7903fecf38d491588))
+
 ## [1.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.0.0...tiozin-v1.1.0) (2026-01-18)
 
 
