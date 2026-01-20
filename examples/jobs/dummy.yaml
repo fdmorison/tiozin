@@ -22,7 +22,7 @@ runner:
 inputs:
   - kind: NoOpInput
     name: load_customers
-    path: ./output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{ DAY[-1] }}
+    path: .output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{ DAY[-1] }}
     verbose: true
 
 transforms:
@@ -34,5 +34,5 @@ transforms:
 outputs:
   - kind: NoOpOutput
     name: save_customers
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/{{ DAY[-1].fsdeep }}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/{{ DAY[-1].fsdeep }}
     verbose: true

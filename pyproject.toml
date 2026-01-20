@@ -43,6 +43,9 @@ gcp = [
 azure = [
   "adlfs ~=2025.8",
 ]
+tio_spark = [
+  "pyspark >=3.5.0,<4.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/fdmorison/tiozin"
@@ -60,7 +63,10 @@ test = [
   "pytest-cov ==7.0.0",
   "freezegun ==1.5.5",
   "testcontainers ==4.13.2",
-  "tiozin[aws,gcp]",
+  "tiozin[aws,gcp,tio_spark]",
+  "pandas>=1.0.5",
+  "pyarrow>=4.0.0",
+  "numpy<2.0",
 ]
 
 lint = [
@@ -77,6 +83,7 @@ tiozin = "tiozin.cli:main"
 
 [project.entry-points."tiozin.family"]
 tio_kernel = "tiozin.family.tio_kernel"
+tio_spark = "tiozin.family.tio_spark"
 
 [tool.uv]
 required-version = ">=0.8.1"

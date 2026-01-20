@@ -1,16 +1,17 @@
-kind: Job
+kind: LinearJob
 name: shakespeare_ingestion_job
-team: tiozin
-cost_center: tio_patinhas
-owner: tiozin@tiozin.com
 description: |
   Ingests Shakespeare source texts to our data lake.
+
+owner: literature@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
 
 org: tiozin
 region: latam
 domain: literature
 product: shakespeare
-model: hamlet
+model: shakespeare
 layer: raw
 
 runner:
@@ -19,13 +20,13 @@ runner:
 inputs:
   - kind: SparkFileInput
     name: load_poems
-    path: ./example/data/{{product}}
-
-transforms:
-  - kind: SparkMetadataTransform
-    name: add_metadata
+    path: examples/data/{{product}}
+    format: text
+    include_input_file: true
 
 outputs:
   - kind: SparkFileOutput
     name: save_poems
-    path: ./output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+    partition_by:
+    - input_file_name
