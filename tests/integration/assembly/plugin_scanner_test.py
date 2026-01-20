@@ -1,4 +1,3 @@
-import logging
 from importlib.metadata import EntryPoint
 
 import pytest
@@ -16,8 +15,7 @@ from tiozin.family.tio_kernel import (
 
 @pytest.fixture
 def scanner():
-    logger = logging.getLogger("test")
-    return PluginScanner(logger)
+    return PluginScanner()
 
 
 # ============================================================================

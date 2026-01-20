@@ -1,17 +1,16 @@
 import importlib
 import inspect
-import logging
 import pkgutil
 from importlib.metadata import EntryPoint, entry_points
 from types import ModuleType
 
 from tiozin import config
-from tiozin.api import PlugIn
+from tiozin.api import Loggable, PlugIn
 from tiozin.assembly.policies import ProviderNamePolicy
 from tiozin.utils import helpers
 
 
-class PluginScanner:
+class PluginScanner(Loggable):
     """
     Scans plugin provider packages to discover plugin classes.
 
@@ -22,9 +21,6 @@ class PluginScanner:
     The scanner does not register, instantiate, validate, or resolve plugins.
     It only returns discovered plugin classes grouped by provider name.
     """
-
-    def __init__(self, logger: logging.Logger) -> None:
-        self.logger = logger
 
     def _scan_providers(self) -> list[tuple[EntryPoint, ModuleType]]:
         providers: list[tuple[EntryPoint, ModuleType]] = []
@@ -38,19 +34,17 @@ class PluginScanner:
             try:
                 package = tio.load()
             except Exception as e:
-                self.logger.exception(
-                    f"Skipping provider '{tio.name}': {e}",
-                    exc_info=True,
-                )
+                self.exception(f"💥 Provider `{tio.name}` failed to load: {e}", exc_info=True)
                 continue
 
             # Provider must be a package
             if not helpers.is_package(package):
-                self.logger.warning(
-                    f"Skipping provider '{tio.name}': expected a package, got {package!r}"
+                self.warning(
+                    f"🧓 Skipping provider `{tio.name}` because it is not a package: {package}"
                 )
                 continue
 
+            self.info(f"🧓 Provider `{tio.name}` discovered")
             providers.append((tio, package))
 
         return providers

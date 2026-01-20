@@ -66,7 +66,7 @@ class PluginFactory(Loggable):
         self._plugins: set[type[PlugIn]] = set()
 
     def setup(self) -> None:
-        for plugins in PluginScanner(self.logger).scan().values():
+        for plugins in PluginScanner().scan().values():
             for plugin in plugins:
                 self.register(plugin)
 
