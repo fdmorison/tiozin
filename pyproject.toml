@@ -1,6 +1,6 @@
 [project]
 name = "tiozin"
-version = "1.1.0"
+version = "1.2.0"
 description = "Tiozin, your friendly ETL framework"
 readme = "README.md"
 requires-python = ">=3.11"
