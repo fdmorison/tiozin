@@ -15,7 +15,8 @@ from .registries.secret_registry import SecretRegistry as SecretRegistry
 from .registries.setting_registry import SettingRegistry as SettingRegistry
 from .registries.transaction_registry import TransactionRegistry as TransactionRegistry
 
-from .processors.runner_context import RunnerContext as RunnerContext
+from .processors.context import Context as Context
+
 from .processors.runner import Runner as Runner
 
 from .processors.step_context import StepContext as StepContext

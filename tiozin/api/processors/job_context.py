@@ -54,34 +54,19 @@ class JobContext(Context):
     environment of a single job run.
     """
 
-    # ------------------
-    # Fundamentals
-    # -------------------
-    org: str
-    region: str
-    domain: str
-    layer: str
-    product: str
-    model: str
-
     maintainer: str
     cost_center: str
     owner: str
     labels: dict[str, str]
 
-    # ------------------
-    # Runtime
-    # ------------------
     runner: Runner = field(metadata={"template": False})
     nominal_time: DateTime = field(default_factory=utcnow)
 
     def __post_init__(self):
-        super().__post_init__()
         self.template_vars = (
             TemplateContextBuilder()
-            .with_envvars()
-            .with_defaults(self.template_vars)
-            .with_context(self)
+            .with_variables(self.template_vars)
             .with_datetime(self.nominal_time)
             .build()
         )
+        super().__post_init__()

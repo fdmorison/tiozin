@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 import os
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from datetime import datetime
 from types import MappingProxyType as FrozenMapping
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import pendulum
 
 from tiozin import env
 from tiozin.utils.helpers import utcnow
 from tiozin.utils.relative_date import RelativeDate
+
+if TYPE_CHECKING:
+    from tiozin import Context
 
 
 class TemplateContextBuilder:
@@ -33,19 +38,19 @@ class TemplateContextBuilder:
         self._variables: dict[str, Any] = {}
         self._envvars: dict[str, str] = {}
         self._context: dict[str, Any] = {}
-        self._datetime = utcnow()
+        self._datetime = None
 
-    def with_datetime(self, nominal_date: datetime) -> Self:
+    def with_datetime(self, nominal_date: datetime = None) -> Self:
         """
         Sets the base datetime used for relative date computations.
 
         This datetime becomes the reference point for the `RelativeDate` object exposed in the
         template context as `DAY`.
         """
-        if not isinstance(nominal_date, datetime):
+        if nominal_date and not isinstance(nominal_date, datetime):
             raise TypeError("nominal_date must be a datetime")
 
-        self._datetime = pendulum.instance(nominal_date)
+        self._datetime = pendulum.instance(nominal_date) if nominal_date else utcnow()
         return self
 
     def with_defaults(self, defaults: Mapping[str, object]) -> Self:
@@ -74,7 +79,7 @@ class TemplateContextBuilder:
         self._variables |= variables
         return self
 
-    def with_context(self, context: Any) -> Self:
+    def with_context(self, context: Context) -> Self:
         """
         Extracts template variables from a context object (dataclass).
 
@@ -105,14 +110,26 @@ class TemplateContextBuilder:
         return self
 
     def build(self) -> Mapping[str, object]:
-        relative_date = RelativeDate(self._datetime)
-        return FrozenMapping(
-            {
-                **self._defaults,
-                **self._variables,
-                **self._context,
-                **relative_date.to_dict(),
-                "DAY": relative_date,
-                "ENV": self._envvars,
-            }
-        )
+        """
+        Build template context with the following precedence (lowest → highest):
+
+        - defaults
+        - variables (user-provided)
+        - context (system / dataclass-backed, authoritative)
+        - ENV (isolated namespace)
+        - RelativeDate flat fields (better DevExperience)
+        - DAY (RelativeDate object)
+        """
+        result = {}
+        result |= self._defaults
+        result |= self._variables
+        result |= self._context
+
+        result["ENV"] = self._envvars
+
+        if self._datetime:
+            relative_date = RelativeDate(self._datetime)
+            result |= relative_date.to_dict()
+            result["DAY"] = relative_date
+
+        return FrozenMapping(result)

@@ -45,25 +45,22 @@ class JobProxy(wrapt.ObjectProxy):
             name=job.name,
             kind=job.plugin_name,
             plugin_kind=job.plugin_kind,
-            # Fundamentals
-            maintainer=job.maintainer,
-            cost_center=job.cost_center,
-            owner=job.owner,
-            labels=job.labels,
+            # Domain Metadata
             org=job.org,
             region=job.region,
             domain=job.domain,
             layer=job.layer,
             product=job.product,
             model=job.model,
-            # Runtime
-            runner=job.runner,
-            # Templating
-            template_vars={},
-            # Shared state
-            session={},
             # Extra provider/plugin parameters
             options=job.options,
+            # Ownership
+            maintainer=job.maintainer,
+            cost_center=job.cost_center,
+            owner=job.owner,
+            labels=job.labels,
+            # Runtime
+            runner=job.runner,
         )
 
         try:
@@ -75,10 +72,10 @@ class JobProxy(wrapt.ObjectProxy):
                 context.executed_at = utcnow()
                 result = job.submit(context, *args, **kwargs)
         except Exception:
-            job.error(f"❌  {context.kind} failed after {context.delay:.2f}s")
+            job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
             raise
         else:
-            job.info(f"✔️  {context.kind} finished after {context.delay:.2f}s")
+            job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
             return result
         finally:
             context.teardown_at = utcnow()

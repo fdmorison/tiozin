@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import _GeneratorContextManager, contextmanager
 from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.api import RunnerContext
+from tiozin.api import Context
 from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError
-from tiozin.utils.helpers import utcnow
 
 if TYPE_CHECKING:
     from tiozin import JobContext, Runner
@@ -15,68 +16,19 @@ if TYPE_CHECKING:
 
 class RunnerProxy(wrapt.ObjectProxy):
     """
-    Runtime proxy that enriches a Runner with Tiozin's core capabilities.
+    Internal proxy that wraps Runner plugins with runtime capabilities.
 
-    The RunnerProxy adds cross-cutting runtime features—such as templating, logging,
-    context propagation, and lifecycle control—to provider-defined Runner implementations,
-    without modifying the original plugin.
+    This proxy intercepts Runner lifecycle methods to add:
+    - Template variable overlay from the caller's context
+    - Standardized logging for setup, run, and teardown phases
+    - Error handling and timing metrics
 
-    The wrapped Runner remains unaware of the proxy and is expected to focus exclusively
-    on its domain-specific execution logic.
+    Direct calls to setup() and teardown() are blocked; use the context
+    manager interface instead: `with runner(context) as r: ...`
 
-    Core responsibilities include:
-    - Managing the execution lifecycle (setup, execute, teardown)
-    - Constructing and providing a RunnerContext from a JobContext
-    - Propagating template variables and shared session state
-    - Enforcing runtime constraints and access policies
-    - Providing standardized logging, timing, and error handling
-
-    This proxy belongs to Tiozin's runtime layer and is not an orchestration mechanism.
-    It does not schedule executions, manage dependencies, or define execution order.
-    Its responsibility is to provide a consistent and safe execution environment for
-    Runner plugins.
+    This is an internal implementation detail. Plugin developers should
+    refer to the Runner base class for the public API contract.
     """
-
-    def execute(self, context: JobContext, *args, **kwargs) -> Any:
-        runner: Runner = self.__wrapped__
-
-        context = RunnerContext(
-            # Job
-            job=context,
-            # Identity
-            name=runner.name,
-            kind=runner.plugin_name,
-            plugin_kind=runner.plugin_kind,
-            # Templating
-            template_vars=context.template_vars,
-            # Shared state
-            session=context.session,
-            # Extra provider/plugin parameters
-            options=runner.options,
-        )
-
-        try:
-            runner.info(f"▶️  Starting the {context.kind}")
-            runner.debug(f"Temporary workdir is {context.temp_workdir}")
-            context.setup_at = utcnow()
-            runner.setup(context)
-            with PluginTemplateOverlay(runner, context):
-                context.executed_at = utcnow()
-                result = runner.run(context, *args, **kwargs)
-        except Exception:
-            runner.error(f"❌  {context.kind} failed after {context.execution_delay:.2f}s")
-            raise
-        else:
-            runner.info(f"✔️  {context.kind} finished after {context.execution_delay:.2f}s")
-            return result
-        finally:
-            context.teardown_at = utcnow()
-            try:
-                runner.teardown(context)
-            except Exception as e:
-                # TODO Fix: exc_info=True is failing and does not show error message
-                runner.error(f"🚨 {context.kind} teardown failed because {e}")
-            context.finished_at = utcnow()
 
     def setup(self, *args, **kwargs) -> None:
         raise PluginAccessForbiddenError(self)
@@ -86,3 +38,39 @@ class RunnerProxy(wrapt.ObjectProxy):
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
+
+    def __call__(self, context: JobContext) -> _GeneratorContextManager[RunnerProxy, None, None]:
+        return self.contextmanager(context)
+
+    @contextmanager
+    def contextmanager(self, context: JobContext) -> Generator[RunnerProxy, Any, None]:
+        runner: Runner = self.__wrapped__
+
+        with PluginTemplateOverlay(runner, context):
+            try:
+                runner.info(f"▶️  Runner initialized by {context.name}")
+                runner.setup(context)
+                yield self
+            finally:
+                try:
+                    runner.teardown(context)
+                    runner.info(f"Runner released by {context.name}")
+                except Exception as e:
+                    runner.error(f"🚨 Runner cleanup failed for {context.name}: {e}")
+
+    def run(self, context: Context, *args, **kwargs) -> Any:
+        """Wraps Runner.run() with logging and error handling."""
+        try:
+            runner: Runner = self.__wrapped__
+            runner.info(f"▶️  Submiting execution of '{context.name}'")
+            result = runner.run(context, *args, **kwargs)
+        except Exception:
+            runner.error(
+                f"🚨 Failed execution of '{context.name}' in {context.execution_delay:.2f}s"
+            )
+            raise
+        else:
+            runner.info(
+                f"✅ Completed execution of '{context.name}' in {context.execution_delay:.2f}s"
+            )
+            return result

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import gettempdir
-from types import MappingProxyType as FrozenMapping
 from typing import Any
 
 from pendulum import DateTime
 
 from tiozin import config
+from tiozin.assembly.template_context_builder import TemplateContextBuilder
 from tiozin.utils.helpers import generate_id, utcnow
 
 _TEMP_DIR = Path(gettempdir())
@@ -20,19 +20,20 @@ class Context:
     """
     Base runtime execution context used by all execution scopes in Tiozin.
 
-    Context defines the common execution contract shared by JobContext,
-    RunnerContext, and StepContext. It provides identity, runtime metadata,
-    shared state, and timing information required during execution.
+    Context defines the common execution contract shared by JobContext and
+    StepContext. It provides identity, domain metadata, runtime state, and
+    timing information required during execution.
 
     This class represents infrastructure concerns only. It does not model
     business logic, data processing, or orchestration. Specialized contexts
-    extend it to add job-, runner-, or step-specific information.
+    extend it to add job- or step-specific information.
 
     In simple terms, Context answers:
     "What is executing, under which identity, and with which runtime state?"
 
     Context provides:
     - Execution identity (id, name, kind, plugin kind)
+    - Domain metadata (org, region, domain, layer, product, model)
     - Plugin options passed to the executing component
     - A shared template variable scope used during execution
     - A shared session dictionary for exchanging state across execution layers
@@ -53,6 +54,16 @@ class Context:
     kind: str
     plugin_kind: str
     options: Mapping[str, Any]
+
+    # ------------------
+    # Domain Metadata
+    # ------------------
+    org: str
+    region: str
+    domain: str
+    layer: str
+    product: str
+    model: str
 
     # ------------------
     # Templating
@@ -84,15 +95,8 @@ class Context:
             base_dir.mkdir(parents=True, exist_ok=True)
             self.temp_workdir = base_dir
 
-        self.template_vars = FrozenMapping(
-            {
-                **self.template_vars,
-                **{
-                    f.name: getattr(self, f.name)
-                    for f in fields(self)
-                    if f.metadata.get("template", True)
-                },
-            }
+        self.template_vars = (
+            TemplateContextBuilder().with_variables(self.template_vars).with_context(self).build()
         )
 
     # ------------------

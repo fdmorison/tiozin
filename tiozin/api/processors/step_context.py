@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tiozin.assembly.template_context_builder import TemplateContextBuilder
+
 from .context import Context
 from .job_context import JobContext
 
@@ -33,23 +35,20 @@ class StepContext(Context):
     single step execution within a job.
     """
 
-    # ------------------
-    # Parent Job
-    # ------------------
     job: JobContext
 
-    # ------------------
-    # Fundamentals
-    # ------------------
-    org: str
-    region: str
-    domain: str
-    layer: str
-    product: str
-    model: str
-
     def __post_init__(self) -> None:
+        self.session = self.job.session
+
         if self.temp_workdir is None:
             self.temp_workdir = self.job.temp_workdir / self.name
             self.temp_workdir.mkdir(parents=True, exist_ok=True)
+
+        self.template_vars = (
+            TemplateContextBuilder()
+            .with_defaults(self.job.template_vars)
+            .with_variables(self.template_vars)
+            .build()
+        )
+
         super().__post_init__()

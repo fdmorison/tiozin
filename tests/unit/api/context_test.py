@@ -15,6 +15,12 @@ def test_context_should_require_identity_fields():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={"key": "value"},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -43,6 +49,12 @@ def test_context_should_generate_run_id_automatically():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -61,6 +73,12 @@ def test_context_should_include_identity_fields_in_template_vars():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={"key": "value"},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -83,6 +101,12 @@ def test_context_should_exclude_session_from_template_vars():
         plugin_kind="TestPlugin",
         options={},
         session={"secret": "data"},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -98,6 +122,12 @@ def test_context_should_merge_custom_template_vars():
         plugin_kind="TestPlugin",
         options={},
         template_vars={"custom_var": "custom_value"},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -117,6 +147,12 @@ def test_context_template_vars_should_be_immutable():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -135,6 +171,12 @@ def test_context_should_have_null_timestamps_by_default():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -159,6 +201,12 @@ def test_context_delay_should_calculate_total_duration():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
     context.setup_at = pendulum.parse("2026-01-15T10:00:00+00:00")
     context.finished_at = pendulum.parse("2026-01-15T10:00:05+00:00")
@@ -179,6 +227,12 @@ def test_context_setup_delay_should_calculate_setup_duration():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
     context.setup_at = pendulum.parse("2026-01-15T10:00:00+00:00")
     context.executed_at = pendulum.parse("2026-01-15T10:00:02+00:00")
@@ -199,6 +253,12 @@ def test_context_execution_delay_should_calculate_execution_duration():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
     context.executed_at = pendulum.parse("2026-01-15T10:00:02+00:00")
     context.teardown_at = pendulum.parse("2026-01-15T10:00:10+00:00")
@@ -219,6 +279,12 @@ def test_context_teardown_delay_should_calculate_teardown_duration():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
     context.teardown_at = pendulum.parse("2026-01-15T10:00:10+00:00")
     context.finished_at = pendulum.parse("2026-01-15T10:00:11+00:00")
@@ -242,6 +308,12 @@ def test_context_should_create_temp_workdir_automatically():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -258,6 +330,12 @@ def test_context_temp_workdir_should_be_organized_by_name_and_run_id():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert
@@ -275,6 +353,12 @@ def test_context_temp_workdir_should_be_available_in_template_vars():
         kind="TestKind",
         plugin_kind="TestPlugin",
         options={},
+        org="acme",
+        region="latam",
+        domain="sales",
+        layer="raw",
+        product="orders",
+        model="daily",
     )
 
     # Assert

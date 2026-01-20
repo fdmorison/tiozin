@@ -16,7 +16,6 @@ from tiozin.family.tio_kernel import FileJobRegistry
 # ============================================================================
 # Access Tests
 # ============================================================================
-@pytest.mark.integration
 def test_get_should_read_from_public_s3_bucket():
     # Arrange
     path = "s3://1000genomes/i_dont_exist.yaml"

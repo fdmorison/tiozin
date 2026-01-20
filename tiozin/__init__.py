@@ -28,7 +28,7 @@ from tiozin.api import (
 from tiozin.api import Runner, Transform, Input, Output, Job
 
 # Auxiliary
-from tiozin.api import JobContext, StepContext, RunnerContext
+from tiozin.api import Context, JobContext, StepContext
 from tiozin.app import TiozinApp
 
 __all__ = [
@@ -52,8 +52,8 @@ __all__ = [
     "Output",
     "Job",
     # Auxiliary
+    "Context",
     "JobContext",
-    "RunnerContext",
     "StepContext",
     "TiozinApp",
 ]

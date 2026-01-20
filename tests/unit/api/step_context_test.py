@@ -13,7 +13,10 @@ def job_context() -> MagicMock:
     mock.session = {"shared": "data"}
     mock.template_vars = {
         "today": "2026-01-15",
+        "ds": "2026-01-15",
         "YYYY": "2026",
+        "MM": "01",
+        "DD": "15",
         "D": {0: "2026-01-15"},
     }
     return mock
@@ -91,12 +94,22 @@ def test_step_context_should_include_step_fields_in_template_vars(step_context: 
 
 def test_step_context_should_inherit_datetime_vars_from_job(step_context: StepContext):
     # Assert
-    actual = (
-        step_context.template_vars["today"],
-        step_context.template_vars["YYYY"],
-        step_context.template_vars["D"][0],
-    )
-    expected = ("2026-01-15", "2026", "2026-01-15")
+    actual = {
+        "today": step_context.template_vars["today"],
+        "YYYY": step_context.template_vars["YYYY"],
+        "MM": step_context.template_vars.get("MM"),
+        "DD": step_context.template_vars.get("DD"),
+        "ds": step_context.template_vars.get("ds"),
+        "D[0]": step_context.template_vars["D"][0],
+    }
+    expected = {
+        "today": "2026-01-15",
+        "YYYY": "2026",
+        "MM": "01",
+        "DD": "15",
+        "ds": "2026-01-15",
+        "D[0]": "2026-01-15",
+    }
     assert actual == expected
 
 
