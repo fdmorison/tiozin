@@ -28,6 +28,27 @@ class TiozinErrorMixin:
         self.message = (message or self.message).format(code=code, **options)
         super().__init__(self.message)
 
+    @classmethod
+    def raise_if(
+        cls,
+        condition: bool,
+        message: str | None = None,
+        *,
+        code: str | None = None,
+        **options,
+    ) -> None:
+        """
+        Guard method that raises this exception type if condition is True.
+
+        Example:
+            TiozinUnexpectedError.raise_if(
+                value is None,
+                "Expected value to be defined",
+            )
+        """
+        if bool(condition):
+            raise cls(message, code=code, **options)
+
     def to_dict(self) -> dict[str, Any]:
         result = {
             "code": self.code,
