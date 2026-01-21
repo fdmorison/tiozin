@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Self
 import pendulum
 
 from tiozin import env
+from tiozin.exceptions import TiozinUnexpectedError
 from tiozin.utils.helpers import utcnow
 from tiozin.utils.relative_date import RelativeDate
 
@@ -125,7 +126,17 @@ class TemplateContextBuilder:
         result |= self._variables
         result |= self._context
 
-        result["ENV"] = self._envvars
+        base_env = result.get("ENV") or {}
+
+        TiozinUnexpectedError.raise_if(
+            not isinstance(base_env, Mapping),
+            f"ENV must be a mapping, got {base_env!r}",
+        )
+
+        result["ENV"] = {
+            **base_env,
+            **self._envvars,
+        }
 
         if self._datetime:
             relative_date = RelativeDate(self._datetime)

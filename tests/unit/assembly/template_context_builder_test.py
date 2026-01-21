@@ -5,10 +5,11 @@ import pytest
 from assertpy import assert_that
 
 from tiozin.assembly.template_context_builder import TemplateContextBuilder
+from tiozin.exceptions import TiozinUnexpectedError
 from tiozin.utils.relative_date import RelativeDate
 
 # ============================================================================
-# Testing TemplateContextBuilder - Basic Build
+# Testing Basic Build
 # ============================================================================
 
 
@@ -51,7 +52,7 @@ def test_build_should_expose_relative_date_properties():
 
 
 # ============================================================================
-# Testing TemplateContextBuilder - with_relative_date
+# Testing with_relative_date
 # ============================================================================
 
 
@@ -91,7 +92,7 @@ def test_with_relative_date_should_reject_non_datetime_values():
 
 
 # ============================================================================
-# Testing TemplateContextBuilder - with_defaults
+# Testing with_defaults
 # ============================================================================
 
 
@@ -163,7 +164,7 @@ def test_build_should_merge_multiple_default_assignments():
 
 
 # ============================================================================
-# Testing TemplateContextBuilder - with_variables
+# Testing with_variables
 # ============================================================================
 
 
@@ -235,7 +236,7 @@ def test_build_should_override_previous_variable_value_for_same_key():
 
 
 # ============================================================================
-# Testing TemplateContextBuilder - with_context (dataclass)
+# Testing with_context (dataclass)
 # ============================================================================
 
 
@@ -309,7 +310,132 @@ def test_with_context_should_reject_non_dataclass_instances():
 
 
 # ============================================================================
-# Testing TemplateContextBuilder - Precedence
+# Testing with_envvars
+# ============================================================================
+def test_build_should_create_env_namespace_when_with_enabled(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("OS_VARIABLE", "foo")
+    builder = TemplateContextBuilder().with_envvars()
+
+    # Act
+    context = builder.build()
+
+    # Assert
+    actual = context.get("ENV")
+    expected = {
+        "OS_VARIABLE": "foo",
+    }
+    assert_that(expected).is_subset_of(actual)
+
+
+def test_builder_should_isolate_envvars_in_env_namespace(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("OS_VARIABLE", "from_os")
+    builder = (
+        TemplateContextBuilder()
+        .with_envvars()
+        .with_defaults({"OS_VARIABLE": "from_user"})
+        .with_variables({"OS_VARIABLE": "from_user"})
+    )
+
+    # Act
+    context = builder.build()
+
+    # Assert
+    actual = {
+        "OS_VARIABLE": context.get("OS_VARIABLE"),
+        "ENV": {
+            "OS_VARIABLE": context.get("ENV", {}).get("OS_VARIABLE"),
+        },
+    }
+    expected = {
+        "OS_VARIABLE": "from_user",
+        "ENV": {
+            "OS_VARIABLE": "from_os",
+        },
+    }
+    assert_that(expected).is_subset_of(actual)
+
+
+def test_build_should_merge_existing_env_with_loaded_envvars(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("OS_VARIABLE", "from_os")
+
+    builder = (
+        TemplateContextBuilder()
+        .with_variables(
+            {"ENV": {"USER_VARIABLE": "from_user"}},
+        )
+        .with_envvars()
+    )
+
+    # Act
+    context = builder.build()
+
+    # Assert
+    actual = context.get("ENV")
+    expected = {
+        "OS_VARIABLE": "from_os",
+        "USER_VARIABLE": "from_user",
+    }
+    assert_that(expected).is_subset_of(actual)
+
+
+def test_build_should_give_precedence_to_os_env_over_user_env(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("SHARED_KEY", "from_os")
+
+    builder = (
+        TemplateContextBuilder()
+        .with_variables(
+            {"ENV": {"SHARED_KEY": "from_user"}},
+        )
+        .with_envvars()
+    )
+
+    # Act
+    context = builder.build()
+
+    # Assert
+    actual = context.get("ENV", {}).get("SHARED_KEY")
+    expected = "from_os"
+    assert actual == expected
+
+
+def test_build_should_raise_if_env_is_not_a_mapping():
+    # Arrange
+    builder = (
+        TemplateContextBuilder()
+        .with_variables(
+            {"ENV": "not-a-mapping"},
+        )
+        .with_envvars()
+    )
+
+    # Act & Assert
+    with pytest.raises(TiozinUnexpectedError, match="ENV must be a mapping"):
+        builder.build()
+
+
+def test_with_envvars_should_be_idempotent(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("OS_VARIABLE", "foo")
+
+    builder = TemplateContextBuilder().with_envvars().with_envvars()
+
+    # Act
+    context = builder.build()
+
+    # Assert
+    actual = context.get("ENV")
+    expected = {
+        "OS_VARIABLE": "foo",
+    }
+    assert_that(expected).is_subset_of(actual)
+
+
+# ============================================================================
+# Testing Precedence
 # ============================================================================
 
 

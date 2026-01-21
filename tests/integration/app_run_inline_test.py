@@ -314,3 +314,93 @@ def test_app_should_render_temp_workdir_in_json_templates(_atexit, _signal, app:
 
     # Assert
     assert app.status.is_success()
+
+
+# ============================================================================
+# Inline Jobs – Template Environment Variables
+# ============================================================================
+@patch("tiozin.app.signal")
+@patch("tiozin.app.atexit")
+def test_app_should_render_envvars_in_yaml_templates(_atexit, _signal, app: TiozinApp, monkeypatch):
+    """
+    Environment variables should be accessible in templates via the ENV namespace.
+
+    This test verifies that OS-level environment variables are correctly
+    exposed and rendered inside inline YAML job definitions.
+    """
+    # Arrange
+    monkeypatch.setenv("TIOZIN_TEST_ENV", "from_env")
+
+    yaml_job = """
+        kind: LinearJob
+        name: envvar_yaml_demo
+        org: tiozin
+        region: latam
+        domain: analytics
+        product: reports
+        model: daily
+        layer: refined
+        runner:
+          kind: NoOpRunner
+          note: "{{ ENV.TIOZIN_TEST_ENV }}"
+        inputs:
+          - kind: NoOpInput
+            name: read_data
+        outputs:
+          - kind: NoOpOutput
+            name: write_data
+            destination: "{{ ENV.TIOZIN_TEST_ENV }}"
+    """
+
+    # Act
+    app.run(yaml_job)
+
+    # Assert
+    assert app.status.is_success()
+
+
+@patch("tiozin.app.signal")
+@patch("tiozin.app.atexit")
+def test_app_should_render_envvars_in_json_templates(_atexit, _signal, app: TiozinApp, monkeypatch):
+    """
+    Environment variables should be accessible in templates via the ENV namespace
+    when using inline JSON job definitions.
+    """
+    # Arrange
+    monkeypatch.setenv("TIOZIN_TEST_ENV", "from_env")
+
+    json_job = """
+        {
+            "kind": "LinearJob",
+            "name": "envvar_json_demo",
+            "org": "tiozin",
+            "region": "latam",
+            "domain": "analytics",
+            "product": "reports",
+            "model": "daily",
+            "layer": "refined",
+            "runner": {
+                "kind": "NoOpRunner",
+                "note": "{{ ENV.TIOZIN_TEST_ENV }}"
+            },
+            "inputs": [
+                {
+                    "kind": "NoOpInput",
+                    "name": "read_data"
+                }
+            ],
+            "outputs": [
+                {
+                    "kind": "NoOpOutput",
+                    "name": "write_data",
+                    "destination": "{{ ENV.TIOZIN_TEST_ENV }}"
+                }
+            ]
+        }
+    """
+
+    # Act
+    app.run(json_job)
+
+    # Assert
+    assert app.status.is_success()
