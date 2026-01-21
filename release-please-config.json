@@ -2,7 +2,12 @@
   "packages": {
     ".": {
       "release-type": "python",
-      "package-name": "tiozin"
+      "package-name": "tiozin",
+      "include-component-in-tag": false,
+      "extra-files": [
+        {"type": "generic", "path": "dist/*.whl"},
+        {"type": "generic", "path": "dist/*.tar.gz"}
+      ]
     }
   }
 }

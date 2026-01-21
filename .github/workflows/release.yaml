@@ -14,25 +14,10 @@ permissions:
   issues: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     outputs:
-      released: ${{ steps.rp.outputs.release_created }}
-      tag: ${{ steps.rp.outputs.tag_name }}
-
-    steps:
-      - name: Release Please
-        uses: googleapis/release-please-action@v4
-        id: rp
-        with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-  build:
-    needs: release
-    if: needs.release.outputs.released == 'true'
-    runs-on: ubuntu-latest
+      dist_uploaded: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,24 +27,48 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      - name: Set up uv
+      - name: Set up UV
         uses: astral-sh/setup-uv@v7
 
-      - name: Build package
+      - name: Build Package
         run: make build
 
-      - name: Upload artifacts
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.rp.outputs.release_created }}
+      tag: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Release Please
+        uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
   publish-pypi:
-    needs: [release, build]
+    needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
@@ -68,29 +77,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version-file: ".python-version"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Publish package
+      - name: Publish Package
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: uv publish --token $PYPI_API_TOKEN dist/*
-
-  publish-github:
-    needs: [release, build]
-    if: needs.release.outputs.released == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.release.outputs.tag }}
-          files: dist/*
