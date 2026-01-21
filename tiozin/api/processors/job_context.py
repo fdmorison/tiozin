@@ -66,7 +66,7 @@ class JobContext(Context):
         self.template_vars = (
             TemplateContextBuilder()
             .with_variables(self.template_vars)
-            .with_datetime(self.nominal_time)
+            .with_relative_date(self.nominal_time)
             .build()
         )
         super().__post_init__()
