@@ -1,6 +1,8 @@
 import pytest
 from pyspark.sql import SparkSession
 
+# noop: trigger patch release 1.2.1
+
 
 @pytest.fixture(scope="module")
 def spark_session():
