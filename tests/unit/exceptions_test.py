@@ -88,6 +88,16 @@ def test_tiozin_error_str_should_format_code_and_message():
     assert actual == expected
 
 
+def test_tiozin_error_raise_if_should_raise_when_condition_is_true():
+    # Arrange
+    condition = True
+    message = "Expected to raise the error"
+
+    # # Act & Assert
+    with pytest.raises(TiozinError, match=message):
+        TiozinError.raise_if(condition, message)
+
+
 def test_tiozin_unexpected_error_should_have_default_attributes():
     # Act
     error = TiozinUnexpectedError()

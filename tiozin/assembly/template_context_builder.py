@@ -40,7 +40,7 @@ class TemplateContextBuilder:
         self._context: dict[str, Any] = {}
         self._datetime = None
 
-    def with_datetime(self, nominal_date: datetime = None) -> Self:
+    def with_relative_date(self, nominal_date: datetime = None) -> Self:
         """
         Sets the base datetime used for relative date computations.
 

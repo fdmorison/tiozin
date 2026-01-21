@@ -186,6 +186,12 @@ wheels = [
 ]
 
 [[package]]
+name = "assertpy"
+version = "1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/39/720b5d4463612a40a166d00999cbb715fce3edaf08a9a7588ba5985699ec/assertpy-1.1.tar.gz", hash = "sha256:acc64329934ad71a3221de185517a43af33e373bb44dc05b5a9b174394ef4833", size = 25421, upload-time = "2020-07-19T14:39:02.462Z" }
+
+[[package]]
 name = "attrs"
 version = "25.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2201,6 +2207,7 @@ tio-spark = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "assertpy" },
     { name = "freezegun" },
     { name = "numpy" },
     { name = "pandas" },
@@ -2217,6 +2224,7 @@ lint = [
     { name = "ruff" },
 ]
 test = [
+    { name = "assertpy" },
     { name = "freezegun" },
     { name = "numpy" },
     { name = "pandas" },
@@ -2249,11 +2257,12 @@ provides-extras = ["aws", "gcp", "azure", "tio-spark"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "assertpy", specifier = "==1.1" },
     { name = "freezegun", specifier = "==1.5.5" },
-    { name = "numpy", specifier = "<2.0" },
-    { name = "pandas", specifier = ">=1.0.5" },
+    { name = "numpy", specifier = "==1.26.4" },
+    { name = "pandas", specifier = "==2.3.3" },
     { name = "pre-commit", specifier = "==4.3.0" },
-    { name = "pyarrow", specifier = ">=4.0.0" },
+    { name = "pyarrow", specifier = "==23.0.0" },
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "ruff", specifier = "==0.14.10" },
@@ -2265,10 +2274,11 @@ lint = [
     { name = "ruff", specifier = "==0.14.10" },
 ]
 test = [
+    { name = "assertpy", specifier = "==1.1" },
     { name = "freezegun", specifier = "==1.5.5" },
-    { name = "numpy", specifier = "<2.0" },
-    { name = "pandas", specifier = ">=1.0.5" },
-    { name = "pyarrow", specifier = ">=4.0.0" },
+    { name = "numpy", specifier = "==1.26.4" },
+    { name = "pandas", specifier = "==2.3.3" },
+    { name = "pyarrow", specifier = "==23.0.0" },
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "testcontainers", specifier = "==4.13.2" },
