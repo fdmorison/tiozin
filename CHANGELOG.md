@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.1...tiozin-v1.2.2) (2026-01-21)
+
+
+### Bug Fixes
+
+* Restore missing patch release after CI failures ([#92](https://github.com/fdmorison/tiozin/issues/92)) ([501e3b5](https://github.com/fdmorison/tiozin/commit/501e3b51005e9f6cd4f659b1de7df553ebb9b0ec))
+* trigger missing patch release after CI failures ([501e3b5](https://github.com/fdmorison/tiozin/commit/501e3b51005e9f6cd4f659b1de7df553ebb9b0ec))
+
 ## [1.2.1](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.0...tiozin-v1.2.1) (2026-01-21)
 
 
