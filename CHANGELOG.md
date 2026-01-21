@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.1](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.0...tiozin-v1.2.1) (2026-01-21)
+
+
+### Bug Fixes
+
+* align Release Please config with existing tag format ([#89](https://github.com/fdmorison/tiozin/issues/89)) ([2801e09](https://github.com/fdmorison/tiozin/commit/2801e094a28fc1dde39425eb7acdd2fbd42c5cfe))
+* ENV merging when building template context ([#86](https://github.com/fdmorison/tiozin/issues/86)) ([6edb301](https://github.com/fdmorison/tiozin/commit/6edb301c89b716b732d59f9eed7b4c0360cdc58e))
+* Immutable release issue by moving build before Release Please ([#83](https://github.com/fdmorison/tiozin/issues/83)) ([8794c06](https://github.com/fdmorison/tiozin/commit/8794c068df5c34da8c919bc1c1fcfd0387003cd4))
+* Restore missing patch release after CI failures ([#90](https://github.com/fdmorison/tiozin/issues/90)) ([82c48d5](https://github.com/fdmorison/tiozin/commit/82c48d5bbcba6ea8d6b522d3e33bf504cae4d145))
+* restructure workflow to attach assets before release ([8794c06](https://github.com/fdmorison/tiozin/commit/8794c068df5c34da8c919bc1c1fcfd0387003cd4))
+* trigger missing patch release after CI failures ([82c48d5](https://github.com/fdmorison/tiozin/commit/82c48d5bbcba6ea8d6b522d3e33bf504cae4d145))
+
 ## [1.2.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.1.0...tiozin-v1.2.0) (2026-01-20)
 
 
