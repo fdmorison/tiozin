@@ -1,4 +1,8 @@
-name: release
+name: Release Please
+
+concurrency:
+  group: release
+  cancel-in-progress: true
 
 on:
   workflow_dispatch:
@@ -12,12 +16,11 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      dist_uploaded: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,6 +75,11 @@ jobs:
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
