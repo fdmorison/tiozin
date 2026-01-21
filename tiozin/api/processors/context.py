@@ -96,7 +96,11 @@ class Context:
             self.temp_workdir = base_dir
 
         self.template_vars = (
-            TemplateContextBuilder().with_variables(self.template_vars).with_context(self).build()
+            TemplateContextBuilder()
+            .with_variables(self.template_vars)
+            .with_context(self)
+            .with_envvars()
+            .build()
         )
 
     # ------------------
