@@ -22,18 +22,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
-
-      - name: Set up UV
-        uses: astral-sh/setup-uv@v7
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
 
       - name: Build Package
         run: make build
@@ -51,34 +41,27 @@ jobs:
       released: ${{ steps.rp.outputs.release_created }}
       tag: ${{ steps.rp.outputs.tag_name }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
         with:
           fetch-depth: 0
 
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Release Please
+      - name: Release Please (draft)
         uses: googleapis/release-please-action@v4
         id: rp
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          draft: true
 
-  publish-pypi:
-    needs: release
+  deploy:
+    needs: [build, release]
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -86,15 +69,19 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
         with:
-          python-version-file: ".python-version"
+          tag_name: ${{ needs.release.outputs.tag }}
+          files: dist/*
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Publish Package
+      - name: Publish GitHub Release (undraft)
         env:
-          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-        run: uv publish --token $PYPI_API_TOKEN dist/*
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "${{ needs.release.outputs.tag }}" --draft=false
+
+      - name: Publish PyPI Package
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: make deploy
