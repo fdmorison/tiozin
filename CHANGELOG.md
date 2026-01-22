@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.2...tiozin-v1.3.0) (2026-01-22)
+
+
+### Features
+
+* **tio_spark:** Add SparkIcebergRunner ([#95](https://github.com/fdmorison/tiozin/issues/95)) ([05cae74](https://github.com/fdmorison/tiozin/commit/05cae74bf844c4f6e1a4193a53d807e699b1e9ab))
+
 ## [1.2.2](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.1...tiozin-v1.2.2) (2026-01-21)
 
 
