@@ -38,18 +38,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
+      - name: Setup environment
+        uses: fdmorison/tiozin/.github/actions/setup-env@main
 
       - name: Install Dependencies
         run: make install-dev

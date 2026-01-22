@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup environment
-        uses: ./.github/actions/setup-env
+        uses: fdmorison/tiozin/.github/actions/setup-env@main
 
       - name: Build Package
         run: make build
@@ -42,7 +42,7 @@ jobs:
       tag: ${{ steps.rp.outputs.tag_name }}
     steps:
       - name: Setup environment
-        uses: ./.github/actions/setup-env
+        uses: fdmorison/tiozin/.github/actions/setup-env@main
         with:
           fetch-depth: 0
 
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup environment
-        uses: ./.github/actions/setup-env
+        uses: fdmorison/tiozin/.github/actions/setup-env@main
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
