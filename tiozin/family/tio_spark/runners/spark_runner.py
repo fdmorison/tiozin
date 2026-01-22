@@ -40,6 +40,12 @@ class SparkRunner(Runner[SparkPlan]):
             Spark log level applied to the SparkContext (e.g. ``WARN``,
             ``INFO``).
 
+        jars_packages:
+            List of Maven coordinates to be downloaded and added to the
+            Spark classpath (e.g.
+            ``org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0``).
+            This is equivalent to setting ``spark.jars.packages``.
+
         **options:
             Spark configuration options passed directly to the
             ``SparkSession.builder`` (e.g. ``spark.executor.memory``).
@@ -49,6 +55,9 @@ class SparkRunner(Runner[SparkPlan]):
         ```python
         SparkRunner(
             log_level="WARN",
+            jars_packages=[
+                "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0"
+            ],
             spark.executor.memory="4g",
             spark.sql.shuffle.partitions="200",
         )
@@ -58,6 +67,8 @@ class SparkRunner(Runner[SparkPlan]):
         runner:
           type: SparkRunner
           log_level: WARN
+          jars_packages:
+            - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0
           spark.executor.memory: 4g
           spark.sql.shuffle.partitions: 200
         ```
@@ -66,10 +77,12 @@ class SparkRunner(Runner[SparkPlan]):
     def __init__(
         self,
         log_level: str = None,
+        jars_packages: list[str] = None,
         **options,
     ) -> None:
         super().__init__(**options)
         self.log_level = log_level or DEFAULT_LOGLEVEL
+        self.jars_packages = as_list(jars_packages, [])
         self._spark: SparkSession = None
 
     @property
@@ -86,6 +99,7 @@ class SparkRunner(Runner[SparkPlan]):
             builder.appName(context.name)
             .config("spark.sql.session.timeZone", str(config.app_timezone))
             .config("spark.sql.adaptive.enabled", "true")
+            .config("spark.jars.packages", ",".join(self.jars_packages))
         )
 
         for name, value in self.options.items():

@@ -22,3 +22,17 @@ SparkWriteMode = Literal[
     "errorifexists",
     "ignore",
 ]
+
+SparkIcebergCatalogType = Literal[
+    "hive",
+    "hadoop",
+    "rest",
+    "glue",
+    "jdbc",
+    "nessie",
+]
+
+SparkIcebergClass = Literal[
+    "org.apache.iceberg.spark.SparkCatalog",
+    "org.apache.iceberg.spark.SparkSessionCatalog",
+]
