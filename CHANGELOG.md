@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.3.0...tiozin-v1.4.0) (2026-01-22)
+
+
+### Features
+
+* trigger iceberg release ([c8a74e3](https://github.com/fdmorison/tiozin/commit/c8a74e38596aa013a371b6d061378d50c2b453f6))
+
 ## [1.3.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.2...tiozin-v1.3.0) (2026-01-22)
 
 
