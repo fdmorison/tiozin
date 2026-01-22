@@ -32,4 +32,4 @@ build:
 	@uv build
 
 deploy:
-	@uv publish --token $$PYPI_API_TOKEN
+	@uv publish

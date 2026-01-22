@@ -1,0 +1,33 @@
+name: "Setup environment"
+description: "Checkout repo, setup Python from pyproject.toml, setup uv, and restore caches"
+
+inputs:
+  fetch-depth:
+    description: "Git fetch depth"
+    default: "1"
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: pyproject.toml
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@v7
+
+    - name: Cache UV
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/uv
+          ~/.cache/pip
+        key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          uv-${{ runner.os }}-

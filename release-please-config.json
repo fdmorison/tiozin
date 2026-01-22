@@ -4,11 +4,7 @@
       "release-type": "python",
       "package-name": "tiozin",
       "include-component-in-tag": true,
-      "include-v-in-tag": true,
-      "extra-files": [
-        {"type": "generic", "path": "dist/*.whl"},
-        {"type": "generic", "path": "dist/*.tar.gz"}
-      ]
+      "include-v-in-tag": true
     }
   }
 }
