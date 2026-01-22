@@ -1,0 +1,44 @@
+kind: LinearJob
+name: example_iceberg_job
+description: |
+  Minimal example job demonstrating a Spark + Iceberg pipeline
+  using AWS Glue as the catalog.
+
+org: tiozin
+region: latam
+domain: marketing
+layer: refined
+product: users
+model: customers
+
+runner:
+  kind: SparkIcebergRunner
+  catalog_name: my_catalog
+  catalog_type: glue
+  jars_packages:
+    - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0
+    - software.amazon.awssdk:bundle:2.20.0
+  verbose: true
+
+inputs:
+  - kind: NoOpInput
+    name: load_raw_customers
+    layer: raw
+    table: "{{layer}}.{{product}}.{{model}}"
+    snapshot: "{{ DAY[-1] }}"
+    verbose: true
+
+transforms:
+  - kind: NoOpTransform
+    name: anonymize_pii
+    strategy: sha256
+    verbose: true
+
+outputs:
+  - kind: NoOpOutput
+    name: write_refined_customers
+    table: "{{layer}}.{{product}}.{{model}}"
+    mode: append
+    partition_by:
+      - ingestion_date
+    verbose: true

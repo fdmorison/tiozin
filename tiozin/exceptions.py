@@ -36,7 +36,7 @@ class TiozinErrorMixin:
         *,
         code: str | None = None,
         **options,
-    ) -> None:
+    ) -> Self:
         """
         Guard method that raises this exception type if condition is True.
 
@@ -48,6 +48,7 @@ class TiozinErrorMixin:
         """
         if bool(condition):
             raise cls(message, code=code, **options)
+        return cls
 
     def to_dict(self) -> dict[str, Any]:
         result = {
