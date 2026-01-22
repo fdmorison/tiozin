@@ -36,7 +36,6 @@ jobs:
 
   check:
     runs-on: ubuntu-latest
-
     steps:
       - name: Setup environment
         uses: fdmorison/tiozin/.github/actions/setup-env@main
@@ -53,7 +52,6 @@ jobs:
         run: make test
 
       - name: Validate release intent
-        if: ${{ !startsWith(github.head_ref, 'release-please--') }}
         run: |
           set -e
           VALID_RELEASE_COMMIT='^(feat|fix|perf|refactor)(\(.+\))?:'
