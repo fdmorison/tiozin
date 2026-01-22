@@ -18,6 +18,7 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version-file: pyproject.toml
+        check-latest: false
 
     - name: Set up UV
       uses: astral-sh/setup-uv@v7
