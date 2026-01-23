@@ -1,4 +1,7 @@
-from typing import Literal
+from typing import Literal, TypeAlias
+
+from pyspark.sql import DataFrame, DataFrameWriter
+from pyspark.sql.streaming.readwriter import DataStreamWriter
 
 SparkFileFormat = Literal[
     # Core / common
@@ -36,3 +39,5 @@ SparkIcebergClass = Literal[
     "org.apache.iceberg.spark.SparkCatalog",
     "org.apache.iceberg.spark.SparkSessionCatalog",
 ]
+
+SparkPlan: TypeAlias = DataFrame | DataFrameWriter | DataStreamWriter | None

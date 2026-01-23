@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from typing import TypeAlias
-
 from pyspark.sql import DataFrame, DataFrameWriter, SparkSession
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
 from tiozin import Context, Runner, config
-from tiozin.exceptions import JobError
+from tiozin.exceptions import JobError, NotInitializedError
 from tiozin.utils.helpers import as_list
 
-DEFAULT_LOGLEVEL = "WARN"
+from ..typehints import SparkPlan
 
-SparkPlan: TypeAlias = DataFrame | DataFrameWriter | DataStreamWriter | None
+DEFAULT_LOGLEVEL = "WARN"
 
 
 class SparkRunner(Runner[SparkPlan]):
@@ -36,9 +34,23 @@ class SparkRunner(Runner[SparkPlan]):
     https://spark.apache.org/docs/latest/
 
     Attributes:
+        master:
+            Spark master URL for cluster connection (e.g. ``local[*]``,
+            ``spark://host:7077``, ``yarn``). If not provided, Spark will
+            use the default configuration.
+
+        endpoint:
+            Spark Connect server endpoint for remote session (e.g.
+            ``sc://localhost:15002``). Enables client-server architecture
+            introduced in Spark 3.4+. Mutually exclusive with ``master``.
+
+        enable_hive_support:
+            When ``True``, enables Hive metastore integration for reading
+            and writing Hive tables. Defaults to ``False``.
+
         log_level:
             Spark log level applied to the SparkContext (e.g. ``WARN``,
-            ``INFO``).
+            ``INFO``). Defaults to ``WARN``.
 
         jars_packages:
             List of Maven coordinates to be downloaded and added to the
@@ -54,40 +66,65 @@ class SparkRunner(Runner[SparkPlan]):
 
         ```python
         SparkRunner(
+            master="local[*]",
+            enable_hive_support=True,
             log_level="WARN",
             jars_packages=[
                 "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0"
             ],
-            spark.executor.memory="4g",
-            spark.sql.shuffle.partitions="200",
         )
         ```
 
         ```yaml
         runner:
-          type: SparkRunner
+          kind: SparkRunner
+          master: local[*]
+          enable_hive_support: true
           log_level: WARN
           jars_packages:
             - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0
           spark.executor.memory: 4g
           spark.sql.shuffle.partitions: 200
         ```
+
+        Using Spark Connect:
+
+        ```yaml
+        runner:
+          kind: SparkRunner
+          endpoint: sc://localhost:15002
+        ```
     """
 
     def __init__(
         self,
+        master: str = None,
+        endpoint: str = None,
+        enable_hive_support: bool = False,
         log_level: str = None,
         jars_packages: list[str] = None,
         **options,
     ) -> None:
         super().__init__(**options)
+        self.master = master
+        self.endpoint = endpoint
+        self.enable_hive_support = enable_hive_support
         self.log_level = log_level or DEFAULT_LOGLEVEL
         self.jars_packages = as_list(jars_packages, [])
         self._spark: SparkSession = None
 
     @property
     def session(self) -> SparkSession:
-        """Returns the active SparkSession, or None if not started."""
+        """Returns the active SparkSession.
+
+        Raises:
+            NotInitializedError: If accessed before ``setup()`` has been called.
+        """
+        NotInitializedError.raise_if(
+            self._spark is None,
+            message="Spark session not initialized for {tiozin}",
+            tiozin=self,
+        )
         return self._spark
 
     def setup(self, context: Context) -> None:
@@ -101,6 +138,18 @@ class SparkRunner(Runner[SparkPlan]):
             .config("spark.sql.adaptive.enabled", "true")
             .config("spark.jars.packages", ",".join(self.jars_packages))
         )
+
+        if self.enable_hive_support:
+            self.info("🐝 Hive Support is enabled")
+            builder = builder.enableHiveSupport()
+
+        if self.master:
+            self.info(f"🔌 Connecting to the Spark Master at {self.master}")
+            builder = builder.master(self.master)
+
+        if self.endpoint:
+            self.info(f"🔌 Connecting to the Spark Connect server at {self.endpoint}")
+            builder = builder.remote(self.endpoint)
 
         for name, value in self.options.items():
             builder = builder.config(name, value)

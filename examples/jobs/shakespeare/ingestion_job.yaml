@@ -16,6 +16,9 @@ layer: raw
 
 runner:
   kind: SparkRunner
+  master: local[*]
+  enable_hive_support: true
+  log_level: WARN
 
 inputs:
   - kind: SparkFileInput
