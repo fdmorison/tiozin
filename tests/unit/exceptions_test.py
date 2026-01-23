@@ -12,6 +12,7 @@ from tiozin.exceptions import (
     JobNotFoundError,
     ManifestError,
     NotFoundError,
+    NotInitializedError,
     OperationTimeoutError,
     PluginAccessForbiddenError,
     PluginError,
@@ -574,3 +575,65 @@ def test_plugin_errors_should_be_catchable_as_plugin_error(error):
 def test_forbidden_errors_should_be_catchable_as_forbidden_error(error):
     with pytest.raises(ForbiddenError):
         raise error
+
+
+# ============================================================================
+# Testing NotInitializedError
+# ============================================================================
+def test_not_initialized_error_should_format_plugin_name_in_message():
+    # Arrange
+    class FakePlugin:
+        name = "FakeRunner"
+
+    plugin = FakePlugin()
+
+    # Act
+    error = NotInitializedError(tiozin=plugin)
+
+    # Assert
+    actual = error.message
+    expected = "FakeRunner was accessed before being initialized."
+    assert actual == expected
+
+
+def test_not_initialized_error_should_use_custom_message_when_provided():
+    # Arrange
+    class FakePlugin:
+        name = "FakeRunner"
+
+    plugin = FakePlugin()
+    custom_message = "Spark session not initialized for {tiozin}"
+
+    # Act
+    error = NotInitializedError(message=custom_message, tiozin=plugin)
+
+    # Assert
+    actual = error.message
+    expected = "Spark session not initialized for FakeRunner"
+    assert actual == expected
+
+
+def test_not_initialized_error_should_be_catchable_as_unexpected_error():
+    # Arrange
+    class FakePlugin:
+        name = "FakeRunner"
+
+    # Act & Assert
+    with pytest.raises(TiozinUnexpectedError):
+        raise NotInitializedError(tiozin=FakePlugin())
+
+
+def test_not_initialized_error_raise_if_should_raise_with_plugin_context():
+    # Arrange
+    class FakePlugin:
+        name = "FakeRunner"
+
+    plugin = FakePlugin()
+
+    # Act & Assert
+    with pytest.raises(NotInitializedError, match="FakeRunner"):
+        NotInitializedError.raise_if(
+            True,
+            message="Spark session not initialized for {tiozin}",
+            tiozin=plugin,
+        )

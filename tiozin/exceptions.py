@@ -1,10 +1,16 @@
-from typing import Any, Self
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Self
 
 from pydantic import ValidationError
 from ruamel.yaml.error import MarkedYAMLError
 from wrapt import ObjectProxy
 
 from .utils.messages import MessageTemplates
+
+if TYPE_CHECKING:
+    from tiozin import PlugIn
+
 
 RESOURCE = "resource"
 
@@ -346,4 +352,28 @@ class ProxyContractViolationError(TiozinUnexpectedError):
             proxy=proxy.__name__,
             wrapped=wrapped.__name__,
             base=base.__name__,
+        )
+
+
+class NotInitializedError(TiozinUnexpectedError):
+    """
+    Raised when a Tiozin plugin is accessed before its lifecycle has been properly initialized.
+
+    This error indicates a violation of the Tiozin runtime lifecycle contract, where a plugin method
+    or property is used before the corresponding `setup` phase has completed.
+
+    This is an internal service-level error that signals a bug in the framework or an invalid
+    execution order, not a user configuration issue
+    """
+
+    message = "{tiozin} was accessed before being initialized."
+
+    def __init__(
+        self, message: str = None, *, tiozin: PlugIn = None, code: str = None, **options
+    ) -> None:
+        super().__init__(
+            message=message,
+            code=code,
+            tiozin=tiozin.name if tiozin else "Plugin",
+            **options,
         )

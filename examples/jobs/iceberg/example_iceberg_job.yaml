@@ -18,7 +18,6 @@ runner:
   jars_packages:
     - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0
     - software.amazon.awssdk:bundle:2.20.0
-  verbose: true
 
 inputs:
   - kind: NoOpInput
