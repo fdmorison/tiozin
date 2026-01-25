@@ -28,4 +28,4 @@ TIO_LOG_JSON = _env.bool("TIO_LOG_JSON", False)
 TIO_LOG_JSON_ENSURE_ASCII = _env.bool("TIO_LOG_JSON_ENSURE_ASCII", False)
 
 # TIO_LOG_SHOW_LOCALS - Show local variables in exception tracebacks.
-TIO_LOG_SHOW_LOCALS = _env.bool("TIO_LOG_SHOW_LOCALS", True)
+TIO_LOG_SHOW_LOCALS = _env.bool("TIO_LOG_SHOW_LOCALS", False)
