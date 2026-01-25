@@ -118,6 +118,7 @@ def test_load_should_load_input_plugin(factory: PluginFactory, kind: str):
         schema_version=None,
         options={},
         verbose=False,
+        force_error=False,
     )
     assert actual == expected
 
@@ -159,6 +160,7 @@ def test_load_should_load_output_plugin(factory: PluginFactory, kind: str):
         model="daily",
         options={},
         verbose=False,
+        force_error=False,
     )
     assert actual == expected
 
@@ -200,6 +202,7 @@ def test_load_should_load_transform_plugin(factory: PluginFactory, kind: str):
         model="daily",
         options={},
         verbose=False,
+        force_error=False,
     )
     assert actual == expected
 
@@ -229,6 +232,7 @@ def test_load_should_load_runner_plugin(factory: PluginFactory, kind: str):
         description="test",
         streaming=False,
         verbose=False,
+        force_error=False,
         options={},
     )
     assert actual == expected

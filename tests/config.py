@@ -25,6 +25,7 @@ log_level_name = logging._levelToName[log_level]
 log_date_format = "iso"
 log_json = False
 log_json_ensure_ascii = False
+log_show_locals = False
 
 # ===============================================
 #           Plugins

@@ -4,9 +4,6 @@ import structlog
 
 from . import config
 
-CONSOLE_RENDERER = structlog.dev.ConsoleRenderer(colors=True)
-JSON_RENDERER = structlog.processors.JSONRenderer(ensure_ascii=config.log_json_ensure_ascii)
-
 
 def get_logger(name: str) -> logging.Logger:
     return structlog.get_logger(name)
@@ -19,6 +16,19 @@ def setup() -> None:
         handlers=[logging.StreamHandler()],
     )
 
+    structlog.reset_defaults()
+
+    console_renderer = structlog.dev.ConsoleRenderer(
+        colors=True,
+        exception_formatter=structlog.dev.RichTracebackFormatter(
+            show_locals=config.log_show_locals
+        ),
+    )
+
+    json_renderer = structlog.processors.JSONRenderer(
+        ensure_ascii=config.log_json_ensure_ascii,
+    )
+
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
@@ -26,7 +36,7 @@ def setup() -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.TimeStamper(fmt=config.log_date_format, utc=True),
             structlog.dev.set_exc_info,
-            JSON_RENDERER if config.log_json else CONSOLE_RENDERER,
+            json_renderer if config.log_json else console_renderer,
         ],
         wrapper_class=structlog.make_filtering_bound_logger(config.log_level),
         logger_factory=structlog.PrintLoggerFactory(),
