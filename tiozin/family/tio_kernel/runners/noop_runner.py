@@ -11,9 +11,10 @@ class NoOpRunner(Runner[Any]):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(self, verbose: bool = False, **options) -> None:
+    def __init__(self, verbose: bool = False, force_error: bool = False, **options) -> None:
         super().__init__(**options)
         self.verbose = verbose
+        self.force_error = force_error
 
     def setup(self, context: JobContext) -> None:
         if self.verbose:
@@ -25,6 +26,10 @@ class NoOpRunner(Runner[Any]):
             args.update(args.pop("options"))
             self.info("The run was skipped.")
             self.info("Properties:", **args)
+
+        if self.force_error:
+            raise RuntimeError("Forced error for testing purposes")
+
         return []
 
     def teardown(self, context: JobContext) -> None:

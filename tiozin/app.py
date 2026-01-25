@@ -6,7 +6,7 @@ from tiozin import Job, logs
 from tiozin.api import Loggable
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.assembly.registry_factory import RegistryFactory
-from tiozin.exceptions import TiozinError
+from tiozin.exceptions import TiozinError, TiozinUnexpectedError
 from tiozin.lifecycle import Lifecycle
 from tiozin.utils.app_status import AppStatus
 
@@ -123,11 +123,11 @@ class TiozinApp(Loggable):
             except TiozinError as e:
                 self.status = self.status.set_failure()
                 self.error(e.message)
-                raise SystemExit(1) from e
-            except Exception:
+                raise
+            except Exception as e:
                 self.status = self.status.set_failure()
                 identifier = self.current_job.name if self.current_job else str(job)
                 self.exception(f"Unexpected error while executing job `{identifier}`.")
-                raise
+                raise TiozinUnexpectedError("Job execution failed") from e
             finally:
                 self.current_job = None
