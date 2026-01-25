@@ -5,21 +5,18 @@
 
 ### Features
 
-* **tio_spark:** add Spark Connect, master and Hive support ([c7b0f42](https://github.com/fdmorison/tiozin/commit/c7b0f42e2c447f4fd646a2b1a3a05fd40f7084ed))
 * **tio_spark:** Add Spark Connect, master and Hive support to SparkRunner ([#102](https://github.com/fdmorison/tiozin/issues/102)) ([c7b0f42](https://github.com/fdmorison/tiozin/commit/c7b0f42e2c447f4fd646a2b1a3a05fd40f7084ed))
 
 
 ### Bug Fixes
 
 * **security:** Disable show_locals by default and cleanup CI/CD ([#105](https://github.com/fdmorison/tiozin/issues/105)) ([6a63736](https://github.com/fdmorison/tiozin/commit/6a63736bb48a3fc8ff31cf4b427e0bf81b80c81e))
-* **security:** prevent local variables from leaking in exception tracebacks ([b9bda04](https://github.com/fdmorison/tiozin/commit/b9bda040eb860df2b1715dc324e8abc9367289f0))
 * **security:** Prevent sensitive local variables from appearing in exception tracebacks ([#104](https://github.com/fdmorison/tiozin/issues/104)) ([b9bda04](https://github.com/fdmorison/tiozin/commit/b9bda040eb860df2b1715dc324e8abc9367289f0))
 
 
 ### Documentation
 
 * Sanitize Changelog ([#101](https://github.com/fdmorison/tiozin/issues/101)) ([9d63c88](https://github.com/fdmorison/tiozin/commit/9d63c88983c00178c87c02132bb9b986433c95b4))
-* sanitize notes in the changelog ([9d63c88](https://github.com/fdmorison/tiozin/commit/9d63c88983c00178c87c02132bb9b986433c95b4))
 
 ## [1.4.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.2.2...tiozin-v1.3.0) (2026-01-22)
 
