@@ -1,5 +1,6 @@
 # isort: skip_file
 # flake8: noqa
+from typing import TypeAlias
 
 from .loggable import Loggable as Loggable
 from .plugin import PlugIn as PlugIn
@@ -16,14 +17,12 @@ from .registries.setting_registry import SettingRegistry as SettingRegistry
 from .registries.transaction_registry import TransactionRegistry as TransactionRegistry
 
 from .processors.context import Context as Context
-
 from .processors.runner import Runner as Runner
-
-from .processors.step_context import StepContext as StepContext
 from .processors.input import Input as Input
 from .processors.transform import Transform as Transform
 from .processors.transform import CoTransform as CoTransform
 from .processors.output import Output as Output
-
-from .processors.job_context import JobContext as JobContext
 from .processors.job import Job as Job
+
+
+EtlStep: TypeAlias = Transform | Input | Output

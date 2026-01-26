@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, JobContext, Runner
+from tiozin.api import Context, Runner
 
 
 class NoOpRunner(Runner[Any]):
@@ -16,7 +16,7 @@ class NoOpRunner(Runner[Any]):
         self.verbose = verbose
         self.force_error = force_error
 
-    def setup(self, context: JobContext) -> None:
+    def setup(self, context: Context) -> None:
         if self.verbose:
             self.info("Setup skipped.")
 
@@ -32,6 +32,6 @@ class NoOpRunner(Runner[Any]):
 
         return []
 
-    def teardown(self, context: JobContext) -> None:
+    def teardown(self, context: Context) -> None:
         if self.verbose:
             self.info("Teardown skipped.")

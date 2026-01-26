@@ -15,8 +15,9 @@ from tiozin.assembly.job_proxy import JobProxy
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import merge_fields
 
+from .context import Context
+
 if TYPE_CHECKING:
-    from tiozin.api import JobContext
     from tiozin.assembly.job_builder import JobBuilder
 
 TData = TypeVar("TData")
@@ -122,12 +123,12 @@ class Job(PlugIn, Generic[TData]):
 
         return JobBuilder()
 
-    def setup(self, context: JobContext) -> None:
+    def setup(self, context: Context) -> None:
         return None
 
     @abstractmethod
-    def submit(self, context: JobContext) -> TData:
+    def submit(self, context: Context) -> TData:
         pass
 
-    def teardown(self, context: JobContext) -> None:
+    def teardown(self, context: Context) -> None:
         return None

@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import StepContext, Transform
+from tiozin.api import Context, Transform
 
 
 class NoOpTransform(Transform):
@@ -16,11 +16,11 @@ class NoOpTransform(Transform):
         self.verbose = verbose
         self.force_error = force_error
 
-    def setup(self, context: StepContext, *data: Any) -> None:
+    def setup(self, context: Context, *data: Any) -> None:
         if self.verbose:
             self.info("Setup skipped.")
 
-    def transform(self, context: StepContext, *data: Any) -> Any:
+    def transform(self, context: Context, *data: Any) -> Any:
         if self.verbose:
             args = self.to_dict(exclude={"description", "name"})
             args.update(args.pop("options"))
@@ -32,6 +32,6 @@ class NoOpTransform(Transform):
 
         return None
 
-    def teardown(self, context: StepContext, *data: Any) -> None:
+    def teardown(self, context: Context, *data: Any) -> None:
         if self.verbose:
             self.info("Teardown skipped.")

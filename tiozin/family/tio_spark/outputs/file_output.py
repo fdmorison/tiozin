@@ -11,7 +11,7 @@ from tiozin.utils.helpers import as_list
 from ..typehints import SparkFileFormat, SparkWriteMode
 
 if TYPE_CHECKING:
-    from tiozin.api import StepContext
+    from tiozin.api import Context
 
 
 class SparkFileOutput(Output[DataFrame]):
@@ -84,7 +84,7 @@ class SparkFileOutput(Output[DataFrame]):
         self.mode = mode or "overwrite"
         self.partition_by = as_list(partition_by)
 
-    def write(self, context: StepContext, data: DataFrame) -> DataFrameWriter:
+    def write(self, context: Context, data: DataFrame) -> DataFrameWriter:
         self.info(f"Writing {self.format} to {self.path}")
 
         writer = data.write.format(self.format).mode(self.mode)

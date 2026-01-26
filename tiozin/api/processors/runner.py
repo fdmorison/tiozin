@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from ...assembly import tioproxy
 from ...assembly.runner_proxy import RunnerProxy
 from .. import PlugIn
-
-if TYPE_CHECKING:
-    from tiozin import Context, JobContext
+from .context import Context
 
 T = TypeVar("T")
 
@@ -31,8 +29,8 @@ class Runner(PlugIn, Generic[T]):
            Use this to create sessions, connections, or shared resources.
 
         2. run(context, plan): Called to execute work. May be invoked:
-           - Lazily by the Job with a JobContext (after all steps complete)
-           - Eagerly by each Step with a StepContext (as steps execute)
+           - Lazily by the Job with a Context (after all steps complete)
+           - Eagerly by each Step with a Context (as steps execute)
 
         3. teardown(job_context): Called once when the Job releases the Runner.
            Use this to close sessions and release resources.
@@ -61,7 +59,7 @@ class Runner(PlugIn, Generic[T]):
         self.streaming = streaming
 
     @abstractmethod
-    def setup(self, context: JobContext) -> None:
+    def setup(self, context: Context) -> None:
         """Initialize the runner's resources (sessions, connections, etc.)."""
         pass
 
@@ -71,11 +69,11 @@ class Runner(PlugIn, Generic[T]):
         Execute the given plan using the caller's context.
 
         May be called multiple times during a job's lifecycle—either lazily
-        by the Job (with a JobContext) or eagerly by each Step (with a StepContext).
+        by the Job (with a Context) or eagerly by each Step (with a Context).
         The context identifies who is requesting the execution.
         """
 
     @abstractmethod
-    def teardown(self, context: JobContext) -> None:
+    def teardown(self, context: Context) -> None:
         """Release the runner's resources (close sessions, connections, etc.)."""
         pass

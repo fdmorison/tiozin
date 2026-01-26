@@ -5,7 +5,7 @@ from ...assembly import tioproxy
 from ...assembly.step_proxy import StepProxy
 from ...exceptions import RequiredArgumentError
 from .. import PlugIn
-from .step_context import StepContext
+from .context import Context
 
 TData = TypeVar("TData")
 
@@ -68,12 +68,12 @@ class Input(PlugIn, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, context: StepContext) -> None:
+    def setup(self, context: Context) -> None:
         return None
 
     @abstractmethod
-    def read(self, context: StepContext) -> TData:
+    def read(self, context: Context) -> TData:
         """Read data from source. Providers must implement."""
 
-    def teardown(self, context: StepContext) -> None:
+    def teardown(self, context: Context) -> None:
         return None

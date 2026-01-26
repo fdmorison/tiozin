@@ -1,53 +1,85 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
+import pytest
 from pyspark.sql import SparkSession
 from pyspark.testing import assertDataFrameEqual
 
-from tiozin.family.tio_spark.inputs.file_input import SparkFileInput
-
-# ============================================================================
-# Helpers
-# ============================================================================
-
-
-class DummyRunner:
-    def __init__(self, spark: SparkSession, streaming: bool = False):
-        self.session = spark
-        self.streaming = streaming
-
-
-class DummyJob:
-    def __init__(self, runner):
-        self.runner = runner
-
-
-class DummyContext:
-    def __init__(self, runner):
-        self.job = DummyJob(runner)
-
+from tiozin import Context
+from tiozin.family.tio_spark import SparkFileInput, SparkRunner
 
 BASE_PATH = "./tests/mocks/data"
+
+
+@pytest.fixture
+def runner(spark_session: SparkSession) -> SparkRunner:
+    runner = MagicMock(spec=SparkRunner)
+    runner.session = spark_session
+    runner.streaming = False
+    return runner
+
+
+@pytest.fixture
+def job_context(runner: SparkRunner) -> Context:
+    return Context(
+        # Identity
+        name="test",
+        kind="test",
+        plugin_kind="test",
+        # Domain Metadata
+        org="test",
+        region="test",
+        domain="test",
+        layer="test",
+        product="test",
+        model="test",
+        # Extra provider/plugin parameters
+        options={},
+        # Ownership
+        maintainer="test",
+        cost_center="test",
+        owner="test",
+        labels="test",
+        # Runtime
+        runner=runner,
+    )
+
+
+@pytest.fixture
+def step_context(job_context: Context) -> Context:
+    return Context(
+        # Job
+        parent=job_context,
+        # Identity
+        name="test",
+        kind="test",
+        plugin_kind="test",
+        # Domain Metadata
+        org="test",
+        region="test",
+        domain="test",
+        layer="test",
+        product="test",
+        model="test",
+        # Extra provider/plugin parameters
+        options={},
+    )
 
 
 # ============================================================================
 # Testing SparkFileInput - Core Behavior
 # ============================================================================
-
-
-def test_input_should_read_text_files(spark_session: SparkSession):
+def test_input_should_read_text_files(spark_session: SparkSession, step_context: Context):
     """Reads plain text files into a DataFrame."""
     # Arrange
     path = f"{BASE_PATH}/text/sample.txt"
-    context = DummyContext(
-        DummyRunner(spark_session),
-    )
 
     # Act
     result = SparkFileInput(
         name="test",
         path=path,
         format="text",
-    ).read(context)
+    ).read(step_context)
 
     # Assert
     actual = result
@@ -61,20 +93,17 @@ def test_input_should_read_text_files(spark_session: SparkSession):
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_input_should_read_json_files(spark_session: SparkSession):
+def test_input_should_read_json_files(spark_session: SparkSession, step_context: Context):
     """Reads JSON files into a DataFrame using Spark semantics."""
     # Arrange
     path = f"{BASE_PATH}/json/sample.json"
-    context = DummyContext(
-        DummyRunner(spark_session),
-    )
 
     # Act
     result = SparkFileInput(
         name="test",
         path=path,
         format="json",
-    ).read(context)
+    ).read(step_context)
 
     # Assert
     actual = result
@@ -91,15 +120,10 @@ def test_input_should_read_json_files(spark_session: SparkSession):
 # ============================================================================
 # Testing SparkFileInput - Reader Options
 # ============================================================================
-
-
-def test_input_should_apply_reader_options(spark_session: SparkSession):
+def test_input_should_apply_reader_options(step_context: Context):
     """Applies Spark reader options when loading files."""
     # Arrange
     path = f"{BASE_PATH}/json/sample.json"
-    context = DummyContext(
-        DummyRunner(spark_session),
-    )
 
     # Act
     actual = SparkFileInput(
@@ -107,7 +131,7 @@ def test_input_should_apply_reader_options(spark_session: SparkSession):
         path=path,
         format="json",
         inferSchema=True,
-    ).read(context)
+    ).read(step_context)
 
     # Assert
     # schema inference doesn't change the value, but ensures options are applied
@@ -119,14 +143,13 @@ def test_input_should_apply_reader_options(spark_session: SparkSession):
 # ============================================================================
 
 
-def test_input_should_include_input_file_metadata(spark_session: SparkSession):
+def test_input_should_include_input_file_metadata(
+    spark_session: SparkSession, step_context: Context
+):
     """Adds input file path and file name columns when enabled."""
     # Arrange
     path = f"{BASE_PATH}/text/sample.txt"
     absolute_path = Path(path).resolve()
-    context = DummyContext(
-        DummyRunner(spark_session),
-    )
 
     # Act
     result = SparkFileInput(
@@ -134,7 +157,7 @@ def test_input_should_include_input_file_metadata(spark_session: SparkSession):
         path=path,
         format="text",
         include_input_file=True,
-    ).read(context)
+    ).read(step_context)
 
     # Assert
     actual = result
@@ -155,22 +178,18 @@ def test_input_should_include_input_file_metadata(spark_session: SparkSession):
 # ============================================================================
 # Testing SparkFileInput - Streaming Mode
 # ============================================================================
-
-
-def test_input_should_use_streaming_reader_when_runner_is_streaming(spark_session: SparkSession):
+def test_input_should_use_streaming_reader_when_runner_is_streaming(step_context: Context):
     """Uses Spark readStream when the runner is in streaming mode."""
     # Arrange
     path = f"{BASE_PATH}/text/sample.txt"
-    context = DummyContext(
-        DummyRunner(spark_session, streaming=True),
-    )
+    step_context.job.runner.streaming = True
 
     # Act
     df = SparkFileInput(
         name="test",
         path=path,
         format="text",
-    ).read(context)
+    ).read(step_context)
 
     # Assert
     assert df.isStreaming is True

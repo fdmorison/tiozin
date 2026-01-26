@@ -8,7 +8,7 @@ from tiozin.exceptions import InvalidInputError
 from tiozin.utils import helpers, jinja
 
 if TYPE_CHECKING:
-    from tiozin.api import JobContext, RunnerContext, StepContext
+    from tiozin.api import Context, RunnerContext
 
 JINJA_ENV = jinja.create_jinja_environment()
 
@@ -46,7 +46,7 @@ class PluginTemplateOverlay:
           concurrently while an overlay is active
     """
 
-    def __init__(self, plugin: PlugIn, context: JobContext | StepContext | RunnerContext) -> None:
+    def __init__(self, plugin: PlugIn, context: Context | Context | RunnerContext) -> None:
         self._plugin = plugin
         self._context = context.template_vars
         self._templates: list[tuple] = []
