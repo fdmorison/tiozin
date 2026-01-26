@@ -54,7 +54,7 @@ jobs:
       - name: Validate release intent
         run: |
           set -e
-          VALID_RELEASE_COMMIT='^(feat|fix|perf|refactor)(\(.+\))?:'
+          VALID_RELEASE_COMMIT='^(feat|fix|perf|refactor)(\(.+\))?!?:'
           COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=%s)
 
           if ! echo "$COMMITS" | grep -Eq "$VALID_RELEASE_COMMIT"; then
