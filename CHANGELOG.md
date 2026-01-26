@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.5.0...tiozin-v2.0.0) (2026-01-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* unify JobContext and StepContext into single Context ([#106](https://github.com/fdmorison/tiozin/issues/106))
+
+### Features
+
+* unify JobContext and StepContext into single Context ([#106](https://github.com/fdmorison/tiozin/issues/106)) ([52aa652](https://github.com/fdmorison/tiozin/commit/52aa652269a46b4a15b8659c67c7efbe9bfef624))
+
 ## [1.5.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.4.0...tiozin-v1.5.0) (2026-01-25)
 
 
