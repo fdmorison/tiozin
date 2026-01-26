@@ -5,7 +5,7 @@ from ...assembly import tioproxy
 from ...assembly.step_proxy import StepProxy
 from ...exceptions import RequiredArgumentError
 from .. import PlugIn
-from .step_context import StepContext
+from .context import Context
 
 TData = TypeVar("TData")
 
@@ -58,14 +58,14 @@ class Output(PlugIn, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, context: StepContext, data: TData) -> None:
+    def setup(self, context: Context, data: TData) -> None:
         return None
 
     @abstractmethod
-    def write(self, context: StepContext, data: TData) -> TData:
+    def write(self, context: Context, data: TData) -> TData:
         """
         Write data to destination. Providers must implement.
         """
 
-    def teardown(self, context: StepContext, data: TData) -> None:
+    def teardown(self, context: Context, data: TData) -> None:
         return None

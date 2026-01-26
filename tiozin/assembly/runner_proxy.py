@@ -11,7 +11,7 @@ from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError
 
 if TYPE_CHECKING:
-    from tiozin import JobContext, Runner
+    from tiozin import Runner
 
 
 class RunnerProxy(wrapt.ObjectProxy):
@@ -39,11 +39,11 @@ class RunnerProxy(wrapt.ObjectProxy):
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
 
-    def __call__(self, context: JobContext) -> _GeneratorContextManager[RunnerProxy, None, None]:
+    def __call__(self, context: Context) -> _GeneratorContextManager[RunnerProxy, None, None]:
         return self.contextmanager(context)
 
     @contextmanager
-    def contextmanager(self, context: JobContext) -> Generator[RunnerProxy, Any, None]:
+    def contextmanager(self, context: Context) -> Generator[RunnerProxy, Any, None]:
         runner: Runner = self.__wrapped__
 
         with PluginTemplateOverlay(runner, context):

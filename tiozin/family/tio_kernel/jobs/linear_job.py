@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import CoTransform, Job, JobContext
+from tiozin.api import Context, CoTransform, Job
 from tiozin.utils.helpers import as_list
 
 
@@ -48,21 +48,21 @@ class LinearJob(Job[Any]):
     graphs may be supported by future implementations.
     """
 
-    def submit(self, context: JobContext) -> Any:
+    def submit(self, context: Context) -> Any:
         with self.runner(context):
             # Multiple datasets may be loaded
-            datasets = [input.execute(context) for input in self.inputs]
+            datasets = [input.read(context) for input in self.inputs]
 
             # Transformers run sequentially
             for t in self.transforms:
                 if isinstance(t, CoTransform):
-                    datasets = [t.execute(context, *as_list(datasets))]
+                    datasets = [t.transform(context, *as_list(datasets))]
                 else:
-                    datasets = [t.execute(context, d) for d in as_list(datasets)]
+                    datasets = [t.transform(context, d) for d in as_list(datasets)]
 
             # Each output writes the same datasets
             datasets = [
-                output.execute(context, dataset) for output in self.outputs for dataset in datasets
+                output.write(context, dataset) for output in self.outputs for dataset in datasets
             ]
 
             # The runner executes the final plan

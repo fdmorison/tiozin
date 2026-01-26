@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.api import StepContext
+from tiozin.api import Context
 from tiozin.assembly.plugin_template import PluginTemplateOverlay
-from tiozin.exceptions import PluginAccessForbiddenError, TiozinUnexpectedError
+from tiozin.exceptions import PluginAccessForbiddenError
 from tiozin.utils.helpers import utcnow
 
 if TYPE_CHECKING:
-    from tiozin import JobContext
+    from tiozin import EtlStep
 
 
 class StepProxy(wrapt.ObjectProxy):
@@ -26,7 +26,7 @@ class StepProxy(wrapt.ObjectProxy):
 
     Core responsibilities include:
     - Managing the execution lifecycle (setup, execute, teardown)
-    - Constructing and providing a StepContext from a JobContext
+    - Constructing and providing a Context from a Context
     - Propagating template variables and shared session state
     - Enforcing runtime constraints and access policies
     - Providing standardized logging, timing, and error handling
@@ -37,28 +37,24 @@ class StepProxy(wrapt.ObjectProxy):
     Step plugins.
     """
 
-    def execute(self, context: JobContext, *args, **kwargs) -> Any:
-        from tiozin import Input, Output, Transform
+    def setup(self, *args, **kwargs) -> None:
+        raise PluginAccessForbiddenError(self)
 
-        step: Transform | Input | Output = self.__wrapped__
+    def teardown(self, *args, **kwargs) -> None:
+        raise PluginAccessForbiddenError(self)
 
-        context = StepContext(
-            # Job
-            job=context,
-            # Identity
-            name=step.name,
-            kind=step.plugin_name,
-            plugin_kind=step.plugin_kind,
-            # Domain Metadata
-            org=step.org,
-            region=step.region,
-            domain=step.domain,
-            layer=step.layer,
-            product=step.product,
-            model=step.model,
-            # Extra provider/plugin parameters
-            options=step.options,
-        )
+    def read(self, context: Context) -> None:
+        return self._run("read", context)
+
+    def transform(self, context: Context, *args, **kwargs) -> None:
+        return self._run("transform", context, *args, **kwargs)
+
+    def write(self, context: Context, *args, **kwargs) -> None:
+        return self._run("write", context, *args, **kwargs)
+
+    def _run(self, method_name: str, context: Context, *args, **kwargs) -> Any:
+        step: EtlStep = self.__wrapped__
+        context = Context.from_step(step, parent=context)
 
         try:
             step.info(f"▶️  Starting to {context.plugin_kind} data")
@@ -67,20 +63,7 @@ class StepProxy(wrapt.ObjectProxy):
             step.setup(context, *args, **kwargs)
             with PluginTemplateOverlay(step, context):
                 context.executed_at = utcnow()
-                result = None
-                match step:
-                    case Input():
-                        result = step.read(context)
-                    case Transform():
-                        result = step.transform(context, *args, **kwargs)
-                    case Output():
-                        result = step.write(context, *args, **kwargs)
-                    case _:
-                        raise TiozinUnexpectedError(
-                            "Expected an Input, Transform, or Output step, "
-                            f"but received an instance of {type(step).__name__}. "
-                            "Only pipeline steps may be part of a Job."
-                        )
+                result = getattr(step, method_name)(context, *args, **kwargs)
         except Exception:
             step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
             raise
@@ -92,15 +75,8 @@ class StepProxy(wrapt.ObjectProxy):
             try:
                 step.teardown(context, *args, **kwargs)
             except Exception as e:
-                # TODO Fix: exc_info=True is failing and does not show error message
                 step.error(f"🚨 {context.kind} teardown failed because {e}")
             context.finished_at = utcnow()
-
-    def setup(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
-
-    def teardown(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)

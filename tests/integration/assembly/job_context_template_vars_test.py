@@ -2,13 +2,13 @@ from unittest.mock import MagicMock
 
 import pendulum
 
-from tiozin.api import JobContext
+from tiozin.api import Context
 
 
 def test_job_context_template_vars_should_include_fields_without_template_false():
     # Arrange
     runner = MagicMock()
-    job_context = JobContext(
+    job_context = Context(
         id="job-123",
         name="test_job",
         kind="Job",
@@ -60,7 +60,7 @@ def test_job_context_template_vars_should_include_fields_without_template_false(
 def test_job_context_template_vars_should_exclude_fields_with_template_false():
     # Arrange
     runner = MagicMock()
-    job_context = JobContext(
+    job_context = Context(
         id="job-123",
         name="test_job",
         kind="Job",

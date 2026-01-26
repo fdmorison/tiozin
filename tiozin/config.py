@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from tempfile import gettempdir
 from zoneinfo import ZoneInfo
 
 from single_source import get_version
@@ -21,6 +22,9 @@ app_version = artifact_version
 app_host = env.HOSTNAME
 app_description = "Tiozin, your friendly ETL framework"
 app_timezone = ZoneInfo("UTC")
+
+app_temp_workdir = Path(gettempdir()) / app_name
+app_temp_workdir.mkdir(parents=True, exist_ok=True)
 
 # ===============================================
 #           Logging

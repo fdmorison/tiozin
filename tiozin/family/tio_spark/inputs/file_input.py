@@ -11,7 +11,7 @@ from tiozin.exceptions import RequiredArgumentError
 from ..typehints import SparkFileFormat
 
 if TYPE_CHECKING:
-    from tiozin.api import StepContext
+    from tiozin.api import Context
 
 INPUT_FILE_PATH_COLUMN = "input_file_path"
 INPUT_FILE_NAME_COLUMN = "input_file_name"
@@ -79,7 +79,7 @@ class SparkFileInput(Input[DataFrame]):
         self.format = format or "parquet"
         self.include_input_file = include_input_file
 
-    def read(self, context: StepContext) -> DataFrame:
+    def read(self, context: Context) -> DataFrame:
         runner = context.job.runner
         spark: SparkSession = runner.session
         reader = spark.readStream if runner.streaming else spark.read

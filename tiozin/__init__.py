@@ -26,10 +26,10 @@ from tiozin.api import (
 )
 
 # Processors
-from tiozin.api import Runner, Transform, Input, Output, Job
+from tiozin.api import Runner, Transform, Input, Output, Job, EtlStep
 
 # Auxiliary
-from tiozin.api import Context, JobContext, StepContext
+from tiozin.api import Context
 from tiozin.app import TiozinApp
 
 __all__ = [
@@ -54,7 +54,6 @@ __all__ = [
     "Job",
     # Auxiliary
     "Context",
-    "JobContext",
-    "StepContext",
     "TiozinApp",
+    "EtlStep",
 ]

@@ -1,29 +1,70 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
+import pytest
 from pyspark.sql import SparkSession
 from pyspark.testing import assertDataFrameEqual
 
+from tiozin import Context
+from tiozin.family.tio_spark import SparkRunner
 from tiozin.family.tio_spark.outputs.file_output import SparkFileOutput
 
-# ============================================================================
-# Helpers
-# ============================================================================
+BASE_PATH = "./tests/mocks/data"
 
 
-class DummyRunner:
-    def __init__(self, spark: SparkSession, streaming: bool = False):
-        self.session = spark
-        self.streaming = streaming
+@pytest.fixture
+def runner(spark_session: SparkSession) -> SparkRunner:
+    runner = MagicMock(spec=SparkRunner)
+    runner.session = spark_session
+    runner.streaming = False
+    return runner
 
 
-class DummyJob:
-    def __init__(self, runner):
-        self.runner = runner
+@pytest.fixture
+def job_context(runner: SparkRunner) -> Context:
+    return Context(
+        # Identity
+        name="test",
+        kind="test",
+        plugin_kind="test",
+        # Domain Metadata
+        org="test",
+        region="test",
+        domain="test",
+        layer="test",
+        product="test",
+        model="test",
+        # Extra provider/plugin parameters
+        options={},
+        # Ownership
+        maintainer="test",
+        cost_center="test",
+        owner="test",
+        labels="test",
+        # Runtime
+        runner=runner,
+    )
 
 
-class DummyContext:
-    def __init__(self, runner):
-        self.job = DummyJob(runner)
+@pytest.fixture
+def step_context(job_context: Context) -> Context:
+    return Context(
+        # Job
+        job=job_context,
+        # Identity
+        name="test",
+        kind="test",
+        plugin_kind="test",
+        # Domain Metadata
+        org="test",
+        region="test",
+        domain="test",
+        layer="test",
+        product="test",
+        model="test",
+        # Extra provider/plugin parameters
+        options={},
+    )
 
 
 # ============================================================================
@@ -31,7 +72,9 @@ class DummyContext:
 # ============================================================================
 
 
-def test_output_should_write_files(spark_session: SparkSession, tmp_path: Path):
+def test_output_should_write_files(
+    spark_session: SparkSession, tmp_path: Path, step_context: Context
+):
     """Writes a DataFrame to disk using Parquet format."""
     # Arrange
     input_data = spark_session.createDataFrame(
@@ -42,7 +85,6 @@ def test_output_should_write_files(spark_session: SparkSession, tmp_path: Path):
         schema="word STRING, count INT",
     )
     output_path = tmp_path / "parquet"
-    context = DummyContext(DummyRunner(spark_session))
 
     # Act
     SparkFileOutput(
@@ -50,7 +92,7 @@ def test_output_should_write_files(spark_session: SparkSession, tmp_path: Path):
         path=str(output_path),
         format="parquet",
         mode="overwrite",
-    ).write(context, input_data).save()
+    ).write(step_context, input_data).save()
 
     # Assert
     actual = spark_session.read.parquet(str(output_path))
@@ -65,8 +107,7 @@ def test_output_should_write_files(spark_session: SparkSession, tmp_path: Path):
 
 
 def test_output_should_write_another_format_of_files(
-    spark_session: SparkSession,
-    tmp_path: Path,
+    spark_session: SparkSession, tmp_path: Path, step_context: Context
 ):
     """Writes a DataFrame to disk using JSON format."""
     # Arrange
@@ -78,7 +119,6 @@ def test_output_should_write_another_format_of_files(
         schema="value STRING",
     )
     output_path = tmp_path / "json"
-    context = DummyContext(DummyRunner(spark_session))
 
     # Act
     SparkFileOutput(
@@ -86,7 +126,7 @@ def test_output_should_write_another_format_of_files(
         path=str(output_path),
         format="json",
         mode="overwrite",
-    ).write(context, input_data).save()
+    ).write(step_context, input_data).save()
 
     # Assert
     actual = spark_session.read.json(str(output_path))
@@ -100,7 +140,9 @@ def test_output_should_write_another_format_of_files(
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_output_should_write_partitioned_data(spark_session: SparkSession, tmp_path: Path):
+def test_output_should_write_partitioned_data(
+    spark_session: SparkSession, tmp_path: Path, step_context: Context
+):
     """Writes partitioned data when partition_by is provided."""
     # Arrange
     input_data = spark_session.createDataFrame(
@@ -111,7 +153,6 @@ def test_output_should_write_partitioned_data(spark_session: SparkSession, tmp_p
         schema="date STRING, value STRING",
     )
     output_path = tmp_path / "partitioned"
-    context = DummyContext(DummyRunner(spark_session))
 
     # Act
     SparkFileOutput(
@@ -120,7 +161,7 @@ def test_output_should_write_partitioned_data(spark_session: SparkSession, tmp_p
         format="parquet",
         mode="overwrite",
         partition_by=["date"],
-    ).write(context, input_data).save()
+    ).write(step_context, input_data).save()
 
     # Assert
     actual = spark_session.read.parquet(str(output_path))
@@ -138,8 +179,7 @@ def test_output_should_write_partitioned_data(spark_session: SparkSession, tmp_p
 
 
 def test_output_should_apply_writer_options(
-    spark_session: SparkSession,
-    tmp_path: Path,
+    spark_session: SparkSession, tmp_path: Path, step_context: Context
 ):
     """Applies Spark writer options when writing files."""
     # Arrange
@@ -151,7 +191,6 @@ def test_output_should_apply_writer_options(
         schema="value STRING",
     )
     output_path = tmp_path / "compressed"
-    context = DummyContext(DummyRunner(spark_session))
 
     # Act
     SparkFileOutput(
@@ -160,7 +199,7 @@ def test_output_should_apply_writer_options(
         format="json",
         mode="overwrite",
         compression="gzip",
-    ).write(context, input_data).save()
+    ).write(step_context, input_data).save()
 
     # Assert
     actual = spark_session.read.json(str(output_path))

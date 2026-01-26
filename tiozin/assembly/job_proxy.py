@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.api import JobContext
+from tiozin.api import Context
 from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError
 from tiozin.utils.helpers import utcnow
@@ -26,7 +26,7 @@ class JobProxy(wrapt.ObjectProxy):
 
     Core responsibilities include:
     - Managing the execution lifecycle (setup, execute, teardown)
-    - Constructing and providing a JobContext for the Job execution
+    - Constructing and providing a Context for the Job execution
     - Initializing template variables and shared session state
     - Enforcing runtime constraints and access policies
     - Providing standardized logging, timing, and error handling
@@ -37,31 +37,15 @@ class JobProxy(wrapt.ObjectProxy):
     environment for Job plugins.
     """
 
+    def setup(self, *args, **kwargs) -> None:
+        raise PluginAccessForbiddenError(self)
+
+    def teardown(self, *args, **kwargs) -> None:
+        raise PluginAccessForbiddenError(self)
+
     def submit(self, *args, **kwargs) -> Any:
         job: Job = self.__wrapped__
-
-        context = JobContext(
-            # Identity
-            name=job.name,
-            kind=job.plugin_name,
-            plugin_kind=job.plugin_kind,
-            # Domain Metadata
-            org=job.org,
-            region=job.region,
-            domain=job.domain,
-            layer=job.layer,
-            product=job.product,
-            model=job.model,
-            # Extra provider/plugin parameters
-            options=job.options,
-            # Ownership
-            maintainer=job.maintainer,
-            cost_center=job.cost_center,
-            owner=job.owner,
-            labels=job.labels,
-            # Runtime
-            runner=job.runner,
-        )
+        context = Context.from_job(job)
 
         try:
             job.info(f"▶️  Starting {context.kind}")
@@ -82,15 +66,8 @@ class JobProxy(wrapt.ObjectProxy):
             try:
                 job.teardown(context)
             except Exception as e:
-                # TODO Fix: exc_info=True is failing and does not show error message
                 job.error(f"🚨 {context.kind} teardown failed because {e}")
             context.finished_at = utcnow()
-
-    def setup(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
-
-    def teardown(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)

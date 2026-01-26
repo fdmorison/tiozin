@@ -5,10 +5,13 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
+from pathlib import Path
 from typing import Any, TypeVar
 
 import pendulum
 from uuid_utils import uuid7
+
+from tiozin import config
 
 from .relative_date import RelativeDate
 
@@ -22,6 +25,22 @@ def utcnow() -> pendulum.DateTime:
     Returns Pendulum DateTime which prints in ISO 8601 format.
     """
     return pendulum.now("UTC")
+
+
+def create_temp_dir(*entries: str) -> Path:
+    """
+    Create a temporary working directory under the application temp root.
+
+    Each entry is treated as a path segment and appended in order, producing
+    a hierarchical directory structure. The directory is created if it does
+    not already exist.
+    """
+    path = config.app_temp_workdir
+    for key in entries:
+        if key:
+            path /= key
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def coerce_datetime(value) -> pendulum.DateTime:
