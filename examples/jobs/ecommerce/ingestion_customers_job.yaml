@@ -1,0 +1,45 @@
+kind: LinearJob
+name: ecommerce_customers_ingestion
+description: Ingests customer data from source to raw layer.
+
+owner: data@tiozin.com
+maintainer: tiozin
+
+org: tiozin
+region: europe
+domain: ecommerce
+layer: raw
+product: customers
+model: customers
+
+runner:
+  kind: SparkRunner
+
+inputs:
+  - kind: SparkFileInput
+    name: customers_source
+    description: Customer master data from source system.
+    path: examples/data/ecommerce/customers.csv
+    format: csv
+    header: true
+    inferSchema: true
+
+transforms:
+  - kind: SparkSqlTransform
+    name: metadata
+    description: Adds ingestion metadata
+    query: |-
+      SELECT
+          *,
+          '{{job.run_id}}'       AS _{{layer}}_run_id,
+          '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
+          current_timestamp()    AS _{{layer}}_created_at,
+          created_at             AS _source_created_at
+      FROM @self
+
+outputs:
+  - kind: SparkFileOutput
+    name: customers_raw
+    description: Raw customer data in parquet format.
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    format: parquet

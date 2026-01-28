@@ -1,0 +1,45 @@
+kind: LinearJob
+name: ecommerce_orders_ingestion
+description: Ingests order data from source to raw layer.
+
+owner: data@tiozin.com
+maintainer: tiozin
+
+org: tiozin
+region: europe
+domain: ecommerce
+layer: raw
+product: orders
+model: orders
+
+runner:
+  kind: SparkRunner
+
+inputs:
+  - kind: SparkFileInput
+    name: orders_source
+    description: Order transactions from source system.
+    path: examples/data/ecommerce/orders.csv
+    format: csv
+    header: true
+    inferSchema: true
+
+transforms:
+  - kind: SparkSqlTransform
+    name: metadata
+    description: Adds ingestion metadata
+    query: |-
+      SELECT
+          *,
+          '{{job.run_id}}'       AS _{{layer}}_run_id,
+          '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
+          current_timestamp()    AS _{{layer}}_created_at,
+          created_at             AS _source_created_at
+      FROM @self
+
+outputs:
+  - kind: SparkFileOutput
+    name: orders_raw
+    description: Raw order data in parquet format.
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    format: parquet
