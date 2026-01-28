@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from pyspark.sql import DataFrame, DataFrameWriter
 
-from tiozin.api import Output
+from tiozin.api import Context
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.helpers import as_list
 
+from .. import SparkOutput
 from ..typehints import SparkFileFormat, SparkWriteMode
 
-if TYPE_CHECKING:
-    from tiozin.api import Context
 
-
-class SparkFileOutput(Output[DataFrame]):
+class SparkFileOutput(SparkOutput):
     """
     Writes a Spark DataFrame to files using Spark.
 
@@ -78,7 +74,6 @@ class SparkFileOutput(Output[DataFrame]):
         RequiredArgumentError.raise_if_missing(
             path=path,
         )
-
         self.path = path
         self.format = format or "parquet"
         self.mode = mode or "overwrite"
