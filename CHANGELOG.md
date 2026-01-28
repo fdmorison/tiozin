@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v2.0.0...tiozin-v2.1.0) (2026-01-28)
+
+
+### Features
+
+* **tio_spark:** Introduce provider-level proxies and SQL-first Spark pipelines ([#108](https://github.com/fdmorison/tiozin/issues/108)) ([9a33fe9](https://github.com/fdmorison/tiozin/commit/9a33fe924af5a754b110511e148ea69b71220dfa))
+
 ## [2.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.5.0...tiozin-v2.0.0) (2026-01-26)
 
 
