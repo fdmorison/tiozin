@@ -1,0 +1,81 @@
+kind: LinearJob
+name: ecommerce_high_value_orders
+description: |
+  Joins customers with orders and filters high-value completed orders.
+  Demonstrates SparkSqlTransform with @self token and parameterized queries.
+
+owner: data@tiozin.com
+maintainer: tiozin
+
+org: tiozin
+region: europe
+domain: ecommerce
+layer: refined
+product: high_value_orders
+model: high_value_orders
+
+runner:
+  kind: SparkRunner
+
+inputs:
+  - kind: SparkFileInput
+    name: customers
+    description: Customer master data from raw layer.
+    path: .output/lake-ecommerce-raw/customers
+    format: parquet
+
+  - kind: SparkFileInput
+    name: orders
+    description: Order transactions from raw layer.
+    path: .output/lake-ecommerce-raw/orders
+    format: parquet
+
+transforms:
+  - kind: SparkSqlTransform
+    name: customer_orders
+    description: Enriches orders with customer information.
+    query: |-
+      SELECT
+          c.id AS customer_id,
+          c.name AS customer_name,
+          c.country,
+          o.id AS order_id,
+          o.total,
+          o.status,
+          o.created_at
+      FROM customers c
+      JOIN orders o ON c.id = o.customer_id
+
+  - kind: SparkSqlTransform
+    name: completed_orders
+    description: Keeps only successfully completed orders.
+    query: SELECT * FROM @self WHERE status = 'completed'
+
+  - kind: SparkSqlTransform
+    name: high_value_orders
+    description: Filters orders above the high-value threshold.
+    query: SELECT * FROM @self WHERE total > :min_total
+    args:
+      min_total: 500
+
+  - kind: SparkSqlTransform
+    name: metadata
+    description: Adds processing timestamp and segment classification.
+    query: |-
+      SELECT
+          *,
+          'high_value'           AS segment,
+          '{{job.run_id}}'       AS _{{layer}}_run_id,
+          '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
+          current_timestamp()    AS _{{layer}}_created_at,
+          created_at             AS _source_created_at
+      FROM @self
+
+outputs:
+  - kind: SparkFileOutput
+    name: high_value_orders_refined
+    description: High-value completed orders enriched with customer data.
+    format: parquet
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    partition_by:
+      - country

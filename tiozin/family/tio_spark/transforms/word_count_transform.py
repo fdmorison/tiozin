@@ -1,8 +1,10 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import explode, lower, split
 
-from tiozin import Context, Transform
+from tiozin import Context
 from tiozin.utils.helpers import as_list
+
+from .. import SparkTransform
 
 DEFAULT_SOURCE_COLUMN = "value"
 TOKEN_DELIMITER_RULE = r"[^0-9\p{L}']+"  # use \p{L} for Unicode characters
@@ -11,7 +13,7 @@ WORD_FIELD = "word"
 COUNT_FIELD = "count"
 
 
-class SparkWordCountTransform(Transform):
+class SparkWordCountTransform(SparkTransform):
     """
     Counts word occurrences in a Spark DataFrame column.
 

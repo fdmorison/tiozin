@@ -1,23 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import element_at, input_file_name, split
 
-from tiozin.api import Input
+from tiozin.api import Context
 from tiozin.exceptions import RequiredArgumentError
 
+from .. import SparkInput
 from ..typehints import SparkFileFormat
-
-if TYPE_CHECKING:
-    from tiozin.api import Context
 
 INPUT_FILE_PATH_COLUMN = "input_file_path"
 INPUT_FILE_NAME_COLUMN = "input_file_name"
 
 
-class SparkFileInput(Input[DataFrame]):
+class SparkFileInput(SparkInput):
     """
     Reads files into a Spark DataFrame using Spark.
 
@@ -81,7 +77,7 @@ class SparkFileInput(Input[DataFrame]):
 
     def read(self, context: Context) -> DataFrame:
         runner = context.job.runner
-        spark: SparkSession = runner.session
+        spark = self.spark
         reader = spark.readStream if runner.streaming else spark.read
 
         self.info(f"Reading {self.format} from {self.path}")

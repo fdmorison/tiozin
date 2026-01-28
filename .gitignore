@@ -57,3 +57,5 @@ main.py
 test.py
 output
 .output
+metastore_db
+spark-warehouse
