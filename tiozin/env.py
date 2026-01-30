@@ -1,10 +1,26 @@
 import logging
 import socket
+from pathlib import Path
 
 from environs import Env
 
+# ===============================================
+#           Load environment variables
+# ===============================================
+# System-wide
 _env = Env(expand_vars=True)
-_env.read_env()
+_env.read_env("/etc/tiozin/.env", recurse=False)
+
+# User-level
+_env.read_env(Path.home() / ".env", recurse=False)
+_env.read_env(Path.home() / ".config/tiozin/.env", recurse=False)
+
+# Container / mount
+_env.read_env("/config/.env", recurse=False)
+_env.read_env("/tiozin/.env", recurse=False)
+
+# Project-level (PWD + parents)
+_env.read_env(recurse=True)
 
 # ===============================================
 #           General
