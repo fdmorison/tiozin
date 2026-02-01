@@ -27,22 +27,17 @@ dependencies = [
   "uuid-utils ~=0.12",
   "typer ~=0.20",
   "ruamel-yaml ~=0.18",
-  "fsspec ~=2026.1",
   "wrapt ~=2.0.1",
   "jinja2 ~=3.1.6",
   "pendulum ~=3.1.0",
+  # Cloud-native filesystems (hyperscalers)
+  "fsspec ~=2026.1",
+  "s3fs ~=2026.1",
+  "gcsfs ~=2026.1",
+  "adlfs ~=2025.8",
 ]
 
 [project.optional-dependencies]
-aws = [
-  "s3fs ~=2026.1",
-]
-gcp = [
-  "gcsfs ~=2026.1",
-]
-azure = [
-  "adlfs ~=2025.8",
-]
 tio_spark = [
   "pyspark >=3.5.0,<4.0.0",
 ]
@@ -67,17 +62,13 @@ test = [
   "pandas ==2.3.3",
   "pyarrow ==23.0.0",
   "numpy ==1.26.4",
-  "tiozin[aws,gcp,tio_spark]",
+  "tiozin[tio_spark]",
 ]
 
 lint = [
   "ruff ==0.14.10",
   "pre-commit ==4.3.0",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [project.scripts]
 tiozin = "tiozin.cli:main"
@@ -95,8 +86,8 @@ url = "https://pypi.org/simple"
 default = true
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
-addopts = "--cov --cov-report term"
+testpaths = ["tests"]
+addopts = "--import-mode=importlib --cov --cov-report term"
 
 [tool.coverage.run]
 source = ["tiozin"]
@@ -104,6 +95,7 @@ omit = [
   "tiozin/env.py",
   "tiozin/config.py",
   "tiozin/logs.py",
+  "tiozin/**/__init__.py",
 ]
 
 [tool.coverage.report]
@@ -121,3 +113,14 @@ max-doc-length = 100
 
 [tool.ruff.lint.isort]
 known-first-party = ["tiozin"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+  "tiozin",
+  "README.md",
+  "pyproject.toml"
+]

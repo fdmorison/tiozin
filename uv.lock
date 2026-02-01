@@ -2178,12 +2178,15 @@ name = "tiozin"
 version = "2.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "adlfs" },
     { name = "environs" },
     { name = "fsspec" },
+    { name = "gcsfs" },
     { name = "jinja2" },
     { name = "pendulum" },
     { name = "pydantic" },
     { name = "ruamel-yaml" },
+    { name = "s3fs" },
     { name = "single-source" },
     { name = "structlog" },
     { name = "typer" },
@@ -2192,15 +2195,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-aws = [
-    { name = "s3fs" },
-]
-azure = [
-    { name = "adlfs" },
-]
-gcp = [
-    { name = "gcsfs" },
-]
 tio-spark = [
     { name = "pyspark" },
 ]
@@ -2217,7 +2211,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "testcontainers" },
-    { name = "tiozin", extra = ["aws", "gcp", "tio-spark"] },
+    { name = "tiozin", extra = ["tio-spark"] },
 ]
 lint = [
     { name = "pre-commit" },
@@ -2232,28 +2226,28 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "testcontainers" },
-    { name = "tiozin", extra = ["aws", "gcp", "tio-spark"] },
+    { name = "tiozin", extra = ["tio-spark"] },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "adlfs", marker = "extra == 'azure'", specifier = "~=2025.8" },
+    { name = "adlfs", specifier = "~=2025.8" },
     { name = "environs", specifier = "~=14.3" },
     { name = "fsspec", specifier = "~=2026.1" },
-    { name = "gcsfs", marker = "extra == 'gcp'", specifier = "~=2026.1" },
+    { name = "gcsfs", specifier = "~=2026.1" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "pendulum", specifier = "~=3.1.0" },
     { name = "pydantic", specifier = "~=2.12" },
     { name = "pyspark", marker = "extra == 'tio-spark'", specifier = ">=3.5.0,<4.0.0" },
     { name = "ruamel-yaml", specifier = "~=0.18" },
-    { name = "s3fs", marker = "extra == 'aws'", specifier = "~=2026.1" },
+    { name = "s3fs", specifier = "~=2026.1" },
     { name = "single-source", specifier = "~=0.4" },
     { name = "structlog", specifier = "~=25.5" },
     { name = "typer", specifier = "~=0.20" },
     { name = "uuid-utils", specifier = "~=0.12" },
     { name = "wrapt", specifier = "~=2.0.1" },
 ]
-provides-extras = ["aws", "gcp", "azure", "tio-spark"]
+provides-extras = ["tio-spark"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2267,7 +2261,7 @@ dev = [
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "ruff", specifier = "==0.14.10" },
     { name = "testcontainers", specifier = "==4.13.2" },
-    { name = "tiozin", extras = ["aws", "gcp", "tio-spark"] },
+    { name = "tiozin", extras = ["tio-spark"] },
 ]
 lint = [
     { name = "pre-commit", specifier = "==4.3.0" },
@@ -2282,7 +2276,7 @@ test = [
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "testcontainers", specifier = "==4.13.2" },
-    { name = "tiozin", extras = ["aws", "gcp", "tio-spark"] },
+    { name = "tiozin", extras = ["tio-spark"] },
 ]
 
 [[package]]
