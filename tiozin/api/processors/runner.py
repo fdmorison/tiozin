@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from ...assembly import tioproxy
 from ...assembly.runner_proxy import RunnerProxy
 from .. import PlugIn
 from .context import Context
 
-T = TypeVar("T")
+TPlan = TypeVar("TPlan")
+TSession = TypeVar("TSession")
+TOutput = TypeVar("TOutput")
 
 
 @tioproxy(RunnerProxy)
-class Runner(PlugIn, Generic[T]):
+class Runner(PlugIn, Generic[TPlan, TSession, TOutput]):
     """
     Execution backend for Tiozin pipelines.
 
@@ -58,13 +60,29 @@ class Runner(PlugIn, Generic[T]):
         super().__init__(name, description, **options)
         self.streaming = streaming
 
+    @property
+    @abstractmethod
+    def session(self) -> TSession:
+        """
+        Active execution session managed by this runner.
+
+        Exposes the underlying engine session created during `setup`
+        (e.g. SparkSession, DuckDBPyConnection).
+
+        The runner owns the session lifecycle; callers must not close or stop it directly.
+        Accessing this property before setup raises NotInitializedError.
+
+        For runners without a persistent engine session (e.g. Apache Beam), the session represents
+        the execution container used to build and run the pipeline (e.g. beam.Pipeline).
+        """
+
     @abstractmethod
     def setup(self, context: Context) -> None:
         """Initialize the runner's resources (sessions, connections, etc.)."""
         pass
 
     @abstractmethod
-    def run(self, context: Context, execution_plan: T) -> Any:
+    def run(self, context: Context, execution_plan: TPlan, **options) -> TOutput:
         """
         Execute the given plan using the caller's context.
 

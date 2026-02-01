@@ -11,8 +11,7 @@ import pendulum
 
 from tiozin import env
 from tiozin.exceptions import TiozinUnexpectedError
-from tiozin.utils.helpers import utcnow
-from tiozin.utils.relative_date import RelativeDate
+from tiozin.utils import RelativeDate, utcnow
 
 if TYPE_CHECKING:
     from tiozin import Context

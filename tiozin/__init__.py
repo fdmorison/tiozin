@@ -26,11 +26,14 @@ from tiozin.api import (
 )
 
 # Processors
-from tiozin.api import Runner, Transform, Input, Output, Job, EtlStep
+from tiozin.api import Runner, Transform, CoTransform, Input, Output, Job, EtlStep
 
 # Auxiliary
 from tiozin.api import Context
 from tiozin.app import TiozinApp
+
+# Utilities
+from tiozin.utils import active_session
 
 __all__ = [
     # Bases
@@ -49,6 +52,7 @@ __all__ = [
     # Processors
     "Runner",
     "Transform",
+    "CoTransform",
     "Input",
     "Output",
     "Job",
@@ -56,4 +60,6 @@ __all__ = [
     "Context",
     "TiozinApp",
     "EtlStep",
+    # Utils
+    "active_session",
 ]

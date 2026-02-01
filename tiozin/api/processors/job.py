@@ -13,7 +13,7 @@ from tiozin.api import (
 from tiozin.assembly import tioproxy
 from tiozin.assembly.job_proxy import JobProxy
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils.helpers import merge_fields
+from tiozin.utils.reflection import merge_fields
 
 from .context import Context
 

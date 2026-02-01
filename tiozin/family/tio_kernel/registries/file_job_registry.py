@@ -1,8 +1,7 @@
-import fsspec
-
 from tiozin.api import JobRegistry
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.exceptions import JobNotFoundError
+from tiozin.utils.io import read_text, write_text
 
 
 class FileJobRegistry(JobRegistry):
@@ -35,12 +34,8 @@ class FileJobRegistry(JobRegistry):
         """
         try:
             self.info(f"Reading job manifest from {identifier}")
-            with fsspec.open(
-                identifier,
-                mode="r",
-                **self.options,
-            ) as f:
-                return JobManifest.from_yaml_or_json(f.read())
+            content = read_text(identifier, **self.options)
+            return JobManifest.from_yaml_or_json(content)
         except FileNotFoundError as e:
             raise JobNotFoundError(identifier) from e
 
@@ -64,9 +59,4 @@ class FileJobRegistry(JobRegistry):
         else:
             raise ValueError(f"Unsupported manifest format: {identifier}")
 
-        with fsspec.open(
-            identifier,
-            mode="w",
-            **self.options,
-        ) as f:
-            f.write(data)
+        write_text(identifier, data, **self.options)

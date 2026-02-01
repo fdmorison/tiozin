@@ -6,7 +6,7 @@ from assertpy import assert_that
 
 from tiozin.assembly.template_context_builder import TemplateContextBuilder
 from tiozin.exceptions import TiozinUnexpectedError
-from tiozin.utils.relative_date import RelativeDate
+from tiozin.utils import RelativeDate
 
 # ============================================================================
 # Testing Basic Build

@@ -3,11 +3,11 @@ from typing import Any
 from pyspark.sql import DataFrame
 
 from tiozin import Context
+from tiozin.utils import bind_self_tokens, tio_alias, trim
 
 from .. import SparkCoTransform
 
 SELF_VIEW = "__self__"
-SELF_TOKEN = "@self"
 
 
 class SparkSqlTransform(SparkCoTransform):
@@ -61,22 +61,12 @@ class SparkSqlTransform(SparkCoTransform):
 
     def __init__(self, query: str, args: dict[str, Any] | list[Any] = None, **options) -> None:
         super().__init__(**options)
-        self.query = query
+        self.query = trim(query)
         self.args = args
 
-    def setup(self, context: Context, data: DataFrame, *others: DataFrame):
-        data.createOrReplaceTempView(SELF_VIEW)
-        data.createOrReplaceTempView(SELF_VIEW + "0")
-        for i, other in enumerate(others, start=1):
-            other.createOrReplaceTempView(f"{SELF_VIEW}{i}")
-
-    def transform(self, context: Context, data: DataFrame, *others: DataFrame) -> DataFrame:
-        query = self.query.replace(SELF_TOKEN, SELF_VIEW)
+    def transform(self, _: Context, data: DataFrame, *others: DataFrame) -> DataFrame:
+        query = bind_self_tokens(
+            self.query,
+            [tio_alias(data), *(tio_alias(other) for other in others)],
+        )
         return self.spark.sql(query, args=self.args)
-
-    def teardown(self, context: Context, data: DataFrame, *others: DataFrame):
-        spark = self.spark
-        for i, _ in enumerate(others, start=1):
-            spark.catalog.dropTempView(f"{SELF_VIEW}{i}")
-        spark.catalog.dropTempView(SELF_VIEW + "0")
-        spark.catalog.dropTempView(SELF_VIEW)

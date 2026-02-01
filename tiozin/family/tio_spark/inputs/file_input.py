@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import element_at, input_file_name, split
+from pyspark.sql.functions import (
+    col,
+    input_file_name,
+    lit,
+    regexp_replace,
+    split_part,
+    when,
+)
 
-from tiozin.api import Context
-from tiozin.exceptions import RequiredArgumentError
+from tiozin.api import Context, conventions
+from tiozin.exceptions import InvalidInputError, RequiredArgumentError
+from tiozin.utils import as_list, trim_lower
 
 from .. import SparkInput
 from ..typehints import SparkFileFormat
-
-INPUT_FILE_PATH_COLUMN = "input_file_path"
-INPUT_FILE_NAME_COLUMN = "input_file_name"
 
 
 class SparkFileInput(SparkInput):
@@ -32,7 +37,7 @@ class SparkFileInput(SparkInput):
         format:
             File format used for reading the data.
 
-        include_input_file:
+        include_file_metadata:
             Whether to include input file metadata columns in the DataFrame.
             When enabled, adds ``input_file_path`` and ``input_file_name``.
 
@@ -62,41 +67,72 @@ class SparkFileInput(SparkInput):
 
     def __init__(
         self,
-        path: str,
+        path: str | list[str] = None,
         format: SparkFileFormat = None,
-        include_input_file: bool = False,
+        include_file_metadata: bool = False,
         **options,
     ) -> None:
         super().__init__(**options)
         RequiredArgumentError.raise_if_missing(
             path=path,
         )
-        self.path = path
-        self.format = format or "parquet"
-        self.include_input_file = include_input_file
+        self.path = as_list(path)
+        self.format = trim_lower(format or "parquet")
+        self.include_file_metadata = include_file_metadata
 
     def read(self, context: Context) -> DataFrame:
-        runner = context.job.runner
-        spark = self.spark
-        reader = spark.readStream if runner.streaming else spark.read
-
         self.info(f"Reading {self.format} from {self.path}")
 
-        df = (
-            reader.format(self.format)
-            .options(**self.options)
-            .load(
-                self.path,
-            )
-        )
+        reader = self.spark.read
+        paths = self.path
+        is_streaming = context.runner.streaming
 
-        if self.include_input_file:
-            df = df.withColumn(
-                INPUT_FILE_PATH_COLUMN,
-                input_file_name(),
-            ).withColumn(
-                INPUT_FILE_NAME_COLUMN,
-                element_at(split(INPUT_FILE_PATH_COLUMN, "/"), -1),
+        if is_streaming:
+            InvalidInputError.raise_if(
+                len(self.path) != 1,
+                "Spark streaming file sources require exactly one directory path "
+                f"when streaming is enabled. Received: {self.path}",
+            )
+            paths = paths[0]
+            reader = self.spark.readStream
+
+        reader = reader.format(self.format).options(**self.options)
+        df = reader.load(paths)
+
+        if self.include_file_metadata:
+            filepath = input_file_name()
+            filename = split_part(filepath, lit("/"), lit(-1))
+            df = (
+                df.withColumn(
+                    conventions.FILESIZE_COLUMN,
+                    col("_metadata.file_size"),
+                )
+                .withColumn(
+                    conventions.DIRPATH_COLUMN,
+                    regexp_replace(filepath, "/[^/]+$", ""),
+                )
+                .withColumn(
+                    conventions.DIRNAME_COLUMN,
+                    split_part(filepath, lit("/"), lit(-2)),
+                )
+                .withColumn(
+                    conventions.FILENAME_COLUMN,
+                    filename,
+                )
+                .withColumn(
+                    conventions.FILESTEM_COLUMN,
+                    when(
+                        filename.contains("."),
+                        split_part(filename, lit("."), lit(-2)),
+                    ).otherwise(filename),
+                )
+                .withColumn(
+                    conventions.FILETYPE_COLUMN,
+                    when(
+                        filename.contains("."),
+                        split_part(filename, lit("."), lit(-1)),
+                    ).otherwise(lit("")),
+                )
             )
 
         return df
