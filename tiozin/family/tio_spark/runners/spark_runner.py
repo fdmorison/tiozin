@@ -5,14 +5,14 @@ from pyspark.sql.streaming.readwriter import DataStreamWriter
 
 from tiozin import Context, Runner, config
 from tiozin.exceptions import JobError, NotInitializedError
-from tiozin.utils.helpers import as_list
+from tiozin.utils import as_list, trim
 
 from ..typehints import SparkPlan
 
 DEFAULT_LOGLEVEL = "WARN"
 
 
-class SparkRunner(Runner[SparkPlan]):
+class SparkRunner(Runner[SparkPlan, SparkSession, None]):
     """
     Executes Tiozin pipelines using Apache Spark.
 
@@ -106,10 +106,10 @@ class SparkRunner(Runner[SparkPlan]):
         **options,
     ) -> None:
         super().__init__(**options)
-        self.master = master
-        self.endpoint = endpoint
+        self.master = trim(master)
+        self.endpoint = trim(endpoint)
         self.enable_hive_support = enable_hive_support
-        self.log_level = log_level or DEFAULT_LOGLEVEL
+        self.log_level = trim(log_level or DEFAULT_LOGLEVEL)
         self.jars_packages = as_list(jars_packages, [])
         self._spark: SparkSession = None
 
@@ -156,14 +156,13 @@ class SparkRunner(Runner[SparkPlan]):
 
         self._spark = builder.getOrCreate()
         self._spark.sparkContext.setLogLevel(self.log_level)
-        context.session["spark"] = self._spark
         self.info(f"🔥 SparkSession ready for {context.name}")
 
     def run(self, _: Context, execution_plan: SparkPlan) -> None:
         for result in as_list(execution_plan):
             match result:
                 case None:
-                    self.warning("Skipping: job was already run.")
+                    self.warning("Skipping the plan because it is empty or already executed.")
                 case DataFrame():
                     self.info("Running Spark DataFrame Action")
                     result.count()

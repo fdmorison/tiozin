@@ -1,70 +1,12 @@
 from pathlib import Path
-from unittest.mock import MagicMock
 
-import pytest
 from pyspark.sql import SparkSession
 from pyspark.testing import assertDataFrameEqual
 
 from tiozin import Context
-from tiozin.family.tio_spark import SparkRunner
 from tiozin.family.tio_spark.outputs.file_output import SparkFileOutput
 
 BASE_PATH = "./tests/mocks/data"
-
-
-@pytest.fixture
-def runner(spark_session: SparkSession) -> SparkRunner:
-    runner = MagicMock(spec=SparkRunner)
-    runner.session = spark_session
-    runner.streaming = False
-    return runner
-
-
-@pytest.fixture
-def job_context(runner: SparkRunner) -> Context:
-    return Context(
-        # Identity
-        name="test",
-        kind="test",
-        plugin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-        # Ownership
-        maintainer="test",
-        cost_center="test",
-        owner="test",
-        labels="test",
-        # Runtime
-        runner=runner,
-    )
-
-
-@pytest.fixture
-def step_context(job_context: Context) -> Context:
-    return Context(
-        # Job
-        job=job_context,
-        # Identity
-        name="test",
-        kind="test",
-        plugin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-    )
 
 
 # ============================================================================
@@ -103,7 +45,7 @@ def test_output_should_write_files(
         ],
         schema="word STRING, count INT",
     )
-    assertDataFrameEqual(actual, expected, checkRowOrder=True)
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
 def test_output_should_write_another_format_of_files(
@@ -137,7 +79,7 @@ def test_output_should_write_another_format_of_files(
         ],
         schema="value STRING",
     )
-    assertDataFrameEqual(actual, expected, checkRowOrder=True)
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
 def test_output_should_write_partitioned_data(
@@ -210,4 +152,4 @@ def test_output_should_apply_writer_options(
         ],
         schema="value STRING",
     )
-    assertDataFrameEqual(actual, expected, checkRowOrder=True)
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)

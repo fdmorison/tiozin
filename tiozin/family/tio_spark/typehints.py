@@ -3,6 +3,10 @@ from typing import Literal, TypeAlias
 from pyspark.sql import DataFrame, DataFrameWriter
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
+from .bases import SparkCoTransform, SparkInput, SparkOutput, SparkTransform
+
+SparkEtlStep: TypeAlias = SparkInput | SparkTransform | SparkCoTransform | SparkOutput
+
 SparkFileFormat = Literal[
     # Core / common
     "parquet",

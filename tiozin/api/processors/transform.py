@@ -94,12 +94,12 @@ class CoTransform(Transform[TData]):
         Requires at least 2 inputs. For single-dataset transforms, use Transform.
     """
 
-    def setup(self, context: Context, data: TData, other: TData, *others: TData) -> None:
+    def setup(self, context: Context, data: TData, *others: TData) -> None:
         return None
 
     @abstractmethod
-    def transform(self, context: Context, data: TData, other: TData, *others: TData) -> TData:
+    def transform(self, context: Context, data: TData, *others: TData) -> TData:
         """Apply cooperative transformation logic. Providers must implement."""
 
-    def teardown(self, context: Context, data: TData, other: TData, *others: TData) -> None:
+    def teardown(self, context: Context, data: TData, *others: TData) -> None:
         return None

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from pendulum import DateTime
 
 from tiozin.assembly.template_context_builder import TemplateContextBuilder
-from tiozin.utils.helpers import create_temp_dir, generate_id, utcnow
+from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner
@@ -117,10 +117,10 @@ class Context:
 
         if not parent:
             self.job = self.job or self
-            self.temp_workdir = create_temp_dir(self.name, self.run_id)
+            self.temp_workdir = create_local_temp_dir(self.name, self.run_id)
         else:
             self.job = parent.job
-            self.temp_workdir = create_temp_dir(parent.temp_workdir, self.name)
+            self.temp_workdir = create_local_temp_dir(parent.temp_workdir, self.name)
             self.runner = parent.runner
             self.session = parent.session
             self.maintainer = parent.maintainer

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import _GeneratorContextManager, contextmanager
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
 import wrapt
@@ -30,6 +31,8 @@ class RunnerProxy(wrapt.ObjectProxy):
     refer to the Runner base class for the public API contract.
     """
 
+    active_session: ContextVar = ContextVar("tiozin_active_session")
+
     def setup(self, *args, **kwargs) -> None:
         raise PluginAccessForbiddenError(self)
 
@@ -48,15 +51,19 @@ class RunnerProxy(wrapt.ObjectProxy):
 
         with PluginTemplateOverlay(runner, context):
             try:
-                runner.info(f"▶️  Runner initialized by {context.name}")
+                tio = runner.__tiometa__.provider.replace("_", " ").title()
+                runner.info(f"🚀 Powered by {tio}!")
+                runner.info(f"▶️  Runner initialized by '{context.name}'")
                 runner.setup(context)
+                token = self.active_session.set(runner.session)
                 yield self
             finally:
                 try:
+                    self.active_session.reset(token)
                     runner.teardown(context)
-                    runner.info(f"Runner released by {context.name}")
+                    runner.info(f"Runner released by '{context.name}'")
                 except Exception as e:
-                    runner.error(f"🚨 Runner cleanup failed for {context.name}: {e}")
+                    runner.error(f"🚨 Runner cleanup failed for '{context.name}': {e}")
 
     def run(self, context: Context, *args, **kwargs) -> Any:
         """Wraps Runner.run() with logging and error handling."""

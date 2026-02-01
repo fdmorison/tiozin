@@ -22,7 +22,7 @@ inputs:
   - kind: SparkFileInput
     name: load_poems
     layer: raw
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{product}}/date={{today}}/input_file_name={{model}}.txt
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{product}}/date={{today}}/filestem={{model}}
 
 transforms:
   - kind: SparkWordCountTransform

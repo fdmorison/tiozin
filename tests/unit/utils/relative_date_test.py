@@ -1,11 +1,7 @@
 import pendulum
 import pytest
 
-from tiozin.utils.relative_date import (
-    FilesystemDeepView,
-    FilesystemFlatView,
-    RelativeDate,
-)
+from tiozin.utils.relative_date import FilesystemDeepView, FilesystemFlatView, RelativeDate
 
 
 # ============================================================================

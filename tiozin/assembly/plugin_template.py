@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any
 
 from tiozin.api import PlugIn
 from tiozin.exceptions import InvalidInputError
-from tiozin.utils import helpers, jinja
+from tiozin.utils import jinja, reflection
 
 if TYPE_CHECKING:
-    from tiozin.api import Context, RunnerContext
+    from tiozin.api import Context
 
 JINJA_ENV = jinja.create_jinja_environment()
 
@@ -46,7 +46,7 @@ class PluginTemplateOverlay:
           concurrently while an overlay is active
     """
 
-    def __init__(self, plugin: PlugIn, context: Context | Context | RunnerContext) -> None:
+    def __init__(self, plugin: PlugIn, context: Context) -> None:
         self._plugin = plugin
         self._context = context.template_vars
         self._templates: list[tuple] = []
@@ -76,11 +76,11 @@ class PluginTemplateOverlay:
         for *path, field, template in self._templates:
             obj = self._plugin
             for key in path:
-                obj = helpers.get(obj, key)
+                obj = reflection.get(obj, key)
 
             try:
                 rendered = JINJA_ENV.from_string(template).render(self._context)
-                helpers.set_field(obj, field, rendered)
+                reflection.set_field(obj, field, rendered)
             except Exception as e:
                 raise InvalidInputError(f"Cannot render template {template} because {e}") from e
 
@@ -89,8 +89,8 @@ class PluginTemplateOverlay:
         for *path, field, original in self._templates:
             obj = self._plugin
             for key in path:
-                obj = helpers.get(obj, key)
-            helpers.set_field(obj, field, original)
+                obj = reflection.get(obj, key)
+            reflection.set_field(obj, field, original)
 
     def __enter__(self) -> PluginTemplateOverlay:
         self._render_templates()

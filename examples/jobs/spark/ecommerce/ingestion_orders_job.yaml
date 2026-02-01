@@ -1,25 +1,26 @@
 kind: LinearJob
-name: ecommerce_customers_ingestion
-description: Ingests customer data from source to raw layer.
+name: ecommerce_orders_ingestion
+description: Ingests order data from source to raw layer.
 
 owner: data@tiozin.com
 maintainer: tiozin
+cost_center: tio_scrooge
 
 org: tiozin
 region: europe
 domain: ecommerce
 layer: raw
-product: customers
-model: customers
+product: orders
+model: orders
 
 runner:
   kind: SparkRunner
 
 inputs:
   - kind: SparkFileInput
-    name: customers_source
-    description: Customer master data from source system.
-    path: examples/data/ecommerce/customers.csv
+    name: orders_source
+    description: Order transactions from source system.
+    path: examples/data/ecommerce/orders.csv
     format: csv
     header: true
     inferSchema: true
@@ -39,7 +40,7 @@ transforms:
 
 outputs:
   - kind: SparkFileOutput
-    name: customers_raw
-    description: Raw customer data in parquet format.
+    name: orders_raw
+    description: Raw order data in parquet format.
     path: .output/lake-{{domain}}-{{layer}}/{{product}}
     format: parquet

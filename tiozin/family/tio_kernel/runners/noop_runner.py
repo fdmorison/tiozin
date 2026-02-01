@@ -3,7 +3,7 @@ from typing import Any
 from tiozin.api import Context, Runner
 
 
-class NoOpRunner(Runner[Any]):
+class NoOpRunner(Runner[Any, None, list]):
     """
     No-op Tiozin Runner.
 
@@ -15,6 +15,10 @@ class NoOpRunner(Runner[Any]):
         super().__init__(**options)
         self.verbose = verbose
         self.force_error = force_error
+
+    @property
+    def session(self) -> None:
+        return None
 
     def setup(self, context: Context) -> None:
         if self.verbose:

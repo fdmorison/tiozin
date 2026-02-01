@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame, DataFrameWriter
 
 from tiozin.api import Context
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils.helpers import as_list
+from tiozin.utils import as_list, trim, trim_lower
 
 from .. import SparkOutput
 from ..typehints import SparkFileFormat, SparkWriteMode
@@ -64,7 +64,7 @@ class SparkFileOutput(SparkOutput):
 
     def __init__(
         self,
-        path: str,
+        path: str = None,
         format: SparkFileFormat = None,
         mode: SparkWriteMode = None,
         partition_by: list[str] = None,
@@ -74,9 +74,9 @@ class SparkFileOutput(SparkOutput):
         RequiredArgumentError.raise_if_missing(
             path=path,
         )
-        self.path = path
-        self.format = format or "parquet"
-        self.mode = mode or "overwrite"
+        self.path = trim(path)
+        self.format = trim_lower(format or "parquet")
+        self.mode = trim_lower(mode or "append")
         self.partition_by = as_list(partition_by)
 
     def write(self, context: Context, data: DataFrame) -> DataFrameWriter:
