@@ -1,0 +1,46 @@
+kind: LinearJob
+name: customers_ingestion_job
+description: Ingests customer data from source to raw layer.
+
+owner: data@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
+
+org: tiozin
+region: europe
+domain: ecommerce
+layer: raw
+product: customers
+model: customers
+
+runner:
+  kind: DuckdbRunner
+
+inputs:
+  - kind: DuckdbFileInput
+    name: customers_source
+    description: Customer master data from source system.
+    path: examples/data/ecommerce/customers.csv
+    format: csv
+    header: true
+
+transforms:
+  - kind: DuckdbSqlTransform
+    name: metadata
+    description: Adds ingestion metadata
+    query: |-
+      SELECT
+          *,
+          '{{job.run_id}}'       AS _{{layer}}_run_id,
+          '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
+          current_timestamp      AS _{{layer}}_created_at,
+          created_at             AS _source_created_at
+      FROM @self
+
+outputs:
+  - kind: DuckdbFileOutput
+    name: customers_raw
+    description: Raw customer data in parquet format.
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    format: parquet
+    mode: overwrite

@@ -1,0 +1,33 @@
+kind: LinearJob
+name: shakespeare_ingestion_job
+description: |
+  Ingests Shakespeare source texts to our data lake.
+
+owner: literature@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
+
+org: tiozin
+region: latam
+domain: literature
+product: shakespeare
+model: shakespeare
+layer: raw
+
+runner:
+  kind: DuckdbRunner
+
+inputs:
+  - kind: DuckdbFileInput
+    name: load_poems
+    path: examples/data/{{product}}/*.txt
+    format: text
+    include_file_metadata: true
+
+outputs:
+  - kind: DuckdbFileOutput
+    name: save_poems
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
+    mode: overwrite
+    partition_by:
+    - filestem
