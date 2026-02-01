@@ -1,69 +1,13 @@
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 from pyspark.sql import SparkSession
 from pyspark.testing import assertDataFrameEqual
 
 from tiozin import Context
-from tiozin.family.tio_spark import SparkFileInput, SparkRunner
+from tiozin.family.tio_spark import SparkFileInput
 
 BASE_PATH = "./tests/mocks/data"
-
-
-@pytest.fixture
-def runner(spark_session: SparkSession) -> SparkRunner:
-    runner = MagicMock(spec=SparkRunner)
-    runner.session = spark_session
-    runner.streaming = False
-    return runner
-
-
-@pytest.fixture
-def job_context(runner: SparkRunner) -> Context:
-    return Context(
-        # Identity
-        name="test",
-        kind="test",
-        plugin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-        # Ownership
-        maintainer="test",
-        cost_center="test",
-        owner="test",
-        labels="test",
-        # Runtime
-        runner=runner,
-    )
-
-
-@pytest.fixture
-def step_context(job_context: Context) -> Context:
-    return Context(
-        # Job
-        parent=job_context,
-        # Identity
-        name="test",
-        kind="test",
-        plugin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-    )
 
 
 # ============================================================================
@@ -143,33 +87,48 @@ def test_input_should_apply_reader_options(step_context: Context):
 # ============================================================================
 
 
+@pytest.mark.parametrize(
+    "filename,filestem,filesuffix",
+    [
+        ("sample", "sample", ""),
+        ("sample.txt", "sample", "txt"),
+    ],
+)
 def test_input_should_include_input_file_metadata(
-    spark_session: SparkSession, step_context: Context
+    filename: str,
+    filestem: str,
+    filesuffix: str,
+    spark_session: SparkSession,
+    step_context: Context,
 ):
     """Adds input file path and file name columns when enabled."""
     # Arrange
-    path = f"{BASE_PATH}/text/sample.txt"
-    absolute_path = Path(path).resolve()
+    path = f"{BASE_PATH}/text/{filename}"
+    dirpath = Path(path).resolve().parent
 
     # Act
     result = SparkFileInput(
         name="test",
         path=path,
         format="text",
-        include_input_file=True,
+        include_file_metadata=True,
     ).read(step_context)
 
     # Assert
     actual = result
     expected = spark_session.createDataFrame(
         [
-            ("hello world", f"file://{absolute_path}", "sample.txt"),
-            ("hello spark", f"file://{absolute_path}", "sample.txt"),
+            ("hello world", 24, f"file://{dirpath}", "text", filename, filestem, filesuffix),
+            ("hello spark", 24, f"file://{dirpath}", "text", filename, filestem, filesuffix),
         ],
         schema="""
-            value STRING,
-            input_file_path STRING,
-            input_file_name STRING
+            value    STRING,
+            filesize BIGINT,
+            dirpath  STRING,
+            dirname  STRING,
+            filename STRING,
+            filestem STRING,
+            filetype STRING
         """,
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=True)

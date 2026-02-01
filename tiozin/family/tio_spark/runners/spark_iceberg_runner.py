@@ -1,4 +1,5 @@
 from tiozin.exceptions import NotFoundError, RequiredArgumentError
+from tiozin.utils import trim, trim_lower
 
 from ..typehints import SparkIcebergCatalogType, SparkIcebergClass
 from .spark_runner import Context, SparkRunner
@@ -88,12 +89,12 @@ class SparkIcebergRunner(SparkRunner):
             f"Supported: {', '.join(self._CATALOG_TYPES)}",
         )
 
-        self.catalog_name = catalog_name
-        self.catalog_type = catalog_type
-        self.catalog_impl = catalog_impl
-        self.catalog_warehouse = catalog_warehouse
-        self.catalog_uri = catalog_uri
-        self.iceberg_class = iceberg_class or self._DEFAULT_SPARK_ICEBERG_CLASS
+        self.catalog_name = trim(catalog_name)
+        self.catalog_type = trim_lower(catalog_type)
+        self.catalog_impl = trim(catalog_impl)
+        self.catalog_warehouse = trim(catalog_warehouse)
+        self.catalog_uri = trim(catalog_uri)
+        self.iceberg_class = trim(iceberg_class or self._DEFAULT_SPARK_ICEBERG_CLASS)
 
     def setup(self, context: Context) -> None:
         if self.session:

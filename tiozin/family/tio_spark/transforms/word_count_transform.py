@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import explode, lower, split
 
 from tiozin import Context
-from tiozin.utils.helpers import as_list
+from tiozin.utils import as_list, trim
 
 from .. import SparkTransform
 
@@ -72,7 +72,7 @@ class SparkWordCountTransform(SparkTransform):
         **options,
     ) -> None:
         super().__init__(**options)
-        self.content_field = content_field or DEFAULT_SOURCE_COLUMN
+        self.content_field = trim(content_field or DEFAULT_SOURCE_COLUMN)
         self.lowercase = lowercase
         self.count_by = as_list(count_by, [])
 

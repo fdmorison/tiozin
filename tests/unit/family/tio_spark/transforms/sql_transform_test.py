@@ -4,6 +4,7 @@ from pyspark.sql import SparkSession
 from pyspark.testing import assertDataFrameEqual
 
 from tiozin.family.tio_spark import SparkSqlTransform
+from tiozin.utils.runtime import tio_alias
 
 # ============================================================================
 # Testing SparkSqlTransform - Core Behavior
@@ -116,13 +117,14 @@ def test_transform_should_bind_single_dataframe_as_self(spark_session: SparkSess
         ],
         schema="`id` INT, `total` DOUBLE",
     )
-    context = None
+    tio_alias(input, "input")
+    input.createOrReplaceTempView("input")
 
     # Act
     actual = SparkSqlTransform(
         name="sql_self",
         query="SELECT * FROM @self WHERE total > 80",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -151,6 +153,9 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
         ],
         schema="`id` INT, `name` STRING",
     )
+    tio_alias(customers, "customers")
+    customers.createOrReplaceTempView("customers")
+
     regions = spark_session.createDataFrame(
         [
             (1, "EU"),
@@ -158,7 +163,8 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
         ],
         schema="`id` INT, `region` STRING",
     )
-    context = None
+    tio_alias(regions, "regions")
+    regions.createOrReplaceTempView("regions")
 
     # Act
     actual = SparkSqlTransform(
@@ -168,7 +174,7 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
             FROM @self c
             JOIN @self1 r ON c.id = r.id
         """,
-    ).transform(context, customers, regions)
+    ).transform(None, customers, regions)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -195,13 +201,14 @@ def test_transform_should_execute_sql_on_empty_dataframe(spark_session: SparkSes
         [],
         schema="`id` INT, `name` STRING",
     )
-    context = None
+    tio_alias(input, "input")
+    input.createOrReplaceTempView("input")
 
     # Act
     actual = SparkSqlTransform(
         name="sql_empty_input",
         query="SELECT * FROM @self",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -227,14 +234,15 @@ def test_transform_should_accept_args_parameter(spark_session: SparkSession):
         ],
         schema="`id` INT, `name` STRING, `total` DOUBLE",
     )
-    context = None
+    tio_alias(input, "input")
+    input.createOrReplaceTempView("input")
 
     # Act
     actual = SparkSqlTransform(
         name="sql_args",
         query="SELECT * FROM @self WHERE total > :min_total",
         args={"min_total": 80.0},
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -260,13 +268,14 @@ def test_transform_should_remove_self_views_after_execution(spark_session: Spark
         [(1,), (2,)],
         schema="`value` INT",
     )
-    context = None
+    tio_alias(input, "input")
+    input.createOrReplaceTempView("input")
 
     # Act
     SparkSqlTransform(
         name="sql_cleanup",
         query="SELECT * FROM @self",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     with pytest.raises(AnalysisException):
@@ -313,14 +322,15 @@ def test_transform_should_fail_when_sql_is_invalid(spark_session: SparkSession):
         [(1,)],
         schema="`value` INT",
     )
-    context = None
+    tio_alias(input, "input")
+    input.createOrReplaceTempView("input")
 
     # Act / Assert
     with pytest.raises(AnalysisException):
         SparkSqlTransform(
             name="sql_invalid",
             query="SELECXXX * FROM @self",
-        ).transform(context, input)
+        ).transform(None, input)
 
 
 # ============================================================================

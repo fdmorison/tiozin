@@ -9,8 +9,8 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
-from tiozin.utils.helpers import try_get_public_setter
 
+from ..utils.reflection import try_get_public_setter
 from .plugin_factory import PluginFactory
 
 

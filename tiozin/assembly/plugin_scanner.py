@@ -7,7 +7,7 @@ from types import ModuleType
 from tiozin import config
 from tiozin.api import Loggable, PlugIn
 from tiozin.assembly.policies import ProviderNamePolicy
-from tiozin.utils import helpers
+from tiozin.utils import reflection
 
 
 class PluginScanner(Loggable):
@@ -38,7 +38,7 @@ class PluginScanner(Loggable):
                 continue
 
             # Provider must be a package
-            if not helpers.is_package(package):
+            if not reflection.is_package(package):
                 self.warning(
                     f"🧓 Skipping provider `{tio.name}` because it is not a package: {package}"
                 )
@@ -59,7 +59,7 @@ class PluginScanner(Loggable):
             try:
                 module = importlib.import_module(module_name)
                 for _, clazz in inspect.getmembers(module, inspect.isclass):
-                    if clazz.__module__ == module_name and helpers.is_plugin(clazz):
+                    if clazz.__module__ == module_name and reflection.is_plugin(clazz):
                         plugins.add(clazz)
             except ImportError:
                 # Plugins may have optional or environment-specific dependencies.

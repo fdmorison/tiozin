@@ -1,7 +1,7 @@
 from typing import Any
 
 from tiozin.api import Context, CoTransform, Job
-from tiozin.utils.helpers import as_list
+from tiozin.utils import as_list
 
 
 class LinearJob(Job[Any]):

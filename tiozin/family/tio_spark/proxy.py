@@ -1,45 +1,75 @@
+from typing import TYPE_CHECKING
+
 import wrapt
 from pyspark.sql import DataFrame
 
-from tiozin import Context, EtlStep
+from tiozin import Context
+from tiozin.utils.runtime import tio_alias
 
-from .typehints import SparkPlan
+if TYPE_CHECKING:
+    from .typehints import SparkEtlStep, SparkPlan
 
 
 class SparkStepProxy(wrapt.ObjectProxy):
     """
-    Proxy that adds Spark-specific, provider-level cross-cutting behavior to EtlSteps.
+    Spark-specific proxy for ETL steps.
 
-    Automatically registers DataFrames created by `read` and `transform` as temporary views named
-    after the step and aliases the DataFrame with the step name. Views are created once and reused
-    on subsequent calls.
+    This proxy layers Spark execution semantics on top of generic ETL steps, allowing them to
+    participate in SQL-first pipelines without leaking Spark-specific concerns into step
+    implementations.
 
-    Notes:
-        - Assumes that the step name is a valid Spark identifier.
-        - Idempotent: if the view already exists, it is reused silently by design.
+    The proxy is responsible for mediating how step results are exposed to the Spark execution
+    environment.
     """
-
-    def read(self, context: Context) -> DataFrame:
-        step: EtlStep = self.__wrapped__
-        df: DataFrame = step.read(context)
-        return self._create_view_if_not_exists(df)
-
-    def transform(self, context: Context, *data: DataFrame) -> DataFrame:
-        step: EtlStep = self.__wrapped__
-        df: DataFrame = step.transform(context, *data)
-        return self._create_view_if_not_exists(df)
-
-    def write(self, context: Context, data: DataFrame) -> SparkPlan:
-        step: EtlStep = self.__wrapped__
-        df_or_writer: SparkPlan = step.write(context, data)
-        return df_or_writer
-
-    def _create_view_if_not_exists(self, df: DataFrame) -> DataFrame:
-        if df is None:
-            return df
-        step: EtlStep = self.__wrapped__
-        df.createOrReplaceTempView(step.name)
-        return df.alias(step.name)
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
+
+    def read(self, context: Context) -> DataFrame:
+        """
+        Executes the input step and exposes its result as a Spark temporary view.
+
+        The resulting DataFrame is registered under the step name, making
+        it available for downstream SQL-based steps.
+        """
+        step: SparkEtlStep = self.__wrapped__
+        df: DataFrame = step.read(context)
+        return self._register_view(df)
+
+    def transform(self, context: Context, *data: DataFrame) -> DataFrame:
+        """
+        Executes the transform step and exposes its result as a Spark temporary view.
+
+        Registering the result allows subsequent steps to reference the
+        transformation by name in SQL queries.
+        """
+        step: SparkEtlStep = self.__wrapped__
+        df: DataFrame = step.transform(context, *data)
+        return self._register_view(df)
+
+    def write(self, context: Context, data: DataFrame) -> "SparkPlan":
+        """
+        Executes the output step.
+
+        Write steps that return a DataFrame are registered as views.
+        Non-DataFrame results (e.g. DataFrameWriter) are passed through
+        unchanged, as they represent terminal actions.
+        """
+        step: SparkEtlStep = self.__wrapped__
+        df_or_writer: SparkPlan = step.write(context, data)
+        return self._register_view(df_or_writer)
+
+    def _register_view(self, df: DataFrame) -> DataFrame:
+        """
+        Registers a DataFrame as a Spark temporary view using the step name.
+        """
+        if not isinstance(df, DataFrame):
+            return df
+
+        step: SparkEtlStep = self.__wrapped__
+        view_name = step.name
+
+        df.createOrReplaceTempView(view_name)
+        df = df.alias(view_name)
+        tio_alias(df, view_name)
+        return df

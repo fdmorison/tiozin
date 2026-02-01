@@ -9,7 +9,7 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
-from tiozin.utils import helpers
+from tiozin.utils import helpers, reflection
 
 from .plugin_scanner import PluginScanner
 
@@ -74,7 +74,7 @@ class PluginFactory(Loggable):
         """
         Register a new plugin from a given provider namespace (e.g. `tio_pandas`, `tio_spark`)
         """
-        if not helpers.is_plugin(plugin):
+        if not reflection.is_plugin(plugin):
             raise TypeError(f"{plugin} is not a Plugin.")
 
         if plugin in self._plugins:
