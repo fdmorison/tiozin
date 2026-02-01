@@ -41,11 +41,10 @@ dependencies = [
 tio_spark = [
   "pyspark >=3.5.0,<4.0.0",
 ]
-
-[project.urls]
-Homepage = "https://github.com/fdmorison/tiozin"
-Repository = "https://github.com/fdmorison/tiozin"
-Issues = "https://github.com/fdmorison/tiozin/issues"
+tio_duckdb = [
+  "pyspark >=3.5.0,<4.0.0",
+  "duckdb>=1.4.4,<2.0.0",
+]
 
 [dependency-groups]
 dev = [
@@ -62,7 +61,7 @@ test = [
   "pandas ==2.3.3",
   "pyarrow ==23.0.0",
   "numpy ==1.26.4",
-  "tiozin[tio_spark]",
+  "tiozin[tio_spark,tio_duckdb]",
 ]
 
 lint = [
@@ -76,6 +75,12 @@ tiozin = "tiozin.cli:main"
 [project.entry-points."tiozin.family"]
 tio_kernel = "tiozin.family.tio_kernel"
 tio_spark = "tiozin.family.tio_spark"
+tio_duckdb = "tiozin.family.tio_duckdb"
+
+[project.urls]
+Homepage = "https://github.com/fdmorison/tiozin"
+Repository = "https://github.com/fdmorison/tiozin"
+Issues = "https://github.com/fdmorison/tiozin/issues"
 
 [tool.uv]
 required-version = ">=0.8.1"

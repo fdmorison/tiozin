@@ -1,0 +1,36 @@
+kind: LinearJob
+name: refined_sonnets_job
+description: |
+  Pre-processes Shakespeare source texts and produces
+  word count metrics as a refined data product.
+
+owner: literature@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
+
+org: tiozin
+region: latam
+domain: literature
+product: shakespeare
+model: sonnets
+layer: refined
+
+runner:
+  kind: DuckdbRunner
+
+inputs:
+  - kind: DuckdbFileInput
+    name: load_poems
+    layer: raw
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{product}}/date={{today}}/filestem={{model}}
+
+transforms:
+  - kind: DuckdbWordCountTransform
+    name: word_count
+    content_field: value
+    lowercase: true
+
+outputs:
+  - kind: DuckdbFileOutput
+    name: save_word_counts
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{today}}
