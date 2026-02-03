@@ -148,7 +148,7 @@ def test_builder_should_read_blob_files(conn):
     # Assert
     actual = relation.fetchall()
     expected = [
-        (b"hello world",),
+        (b"hello world\n",),
     ]
     assert actual == expected
 
