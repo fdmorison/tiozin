@@ -10,10 +10,30 @@ DuckdbEtlStep: TypeAlias = DuckdbInput | DuckdbTransform | DuckdbCoTransform | D
 
 DuckdbConfig = dict[str, str | bool | int | float | list[str]] | None
 
-DuckdbFileFormat = Literal[
+DuckdbTiozinFileFormat = Literal[
+    # Standard DuckDB formats
     "parquet",
     "csv",
     "json",
+    "ndjson",
+    "text",
+    "blob",
+    "xlsx",
+    # Tiozin-specific formats
+    "tsv",
+    "jsonl",
+    "txt",
+    "auto_csv",
+    "auto_json",
+]
+
+DuckdbTiozinReadMode = Literal[
+    "relation",
+    "temp_view",
+    "view",
+    "table",
+    "temp_table",
+    "overwrite_table",
 ]
 
 DuckdbWriteMode = Literal[

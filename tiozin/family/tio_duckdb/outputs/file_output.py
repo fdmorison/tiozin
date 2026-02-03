@@ -7,7 +7,7 @@ from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, clear_dir, ensure_dir, trim_lower, trim_upper
 
 from .. import DuckdbOutput
-from ..typehints import DuckdbCompression, DuckdbFileFormat, DuckdbPlan, DuckdbWriteMode
+from ..typehints import DuckdbCompression, DuckdbPlan, DuckdbTiozinFileFormat, DuckdbWriteMode
 
 
 class DuckdbFileOutput(DuckdbOutput):
@@ -69,7 +69,7 @@ class DuckdbFileOutput(DuckdbOutput):
     def __init__(
         self,
         path: str = None,
-        format: DuckdbFileFormat = None,
+        format: DuckdbTiozinFileFormat = None,
         mode: DuckdbWriteMode = None,
         partition_by: list[str] = None,
         compression: DuckdbCompression = None,

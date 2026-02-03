@@ -22,9 +22,9 @@ class SparkFileInput(SparkInput):
     """
     Reads files into a Spark DataFrame using Spark.
 
-    This input reads data from disk or external storage in any format supported
-    by Spark, such as Parquet, CSV, JSON, etc. Read behavior and options follow
-    standard Spark semantics.
+    This input reads data from disk or external storage in any format supported by Spark, such as
+    Parquet, CSV, JSON, ORC, Avro, text, XML, and binaryFile. Read behavior and options follow
+    standard Spark semantics. When streaming is enabled, exactly one directory path is required.
 
     For advanced and format-specific options, refer to Spark documentation at:
 
@@ -32,14 +32,18 @@ class SparkFileInput(SparkInput):
 
     Attributes:
         path:
-            Path to the file or directory to read from.
+            Path (or list of paths) to the file or directory to read from.
 
         format:
-            File format used for reading the data.
+            File format used for reading the data. Defaults to ``"parquet"``.
 
-        include_file_metadata:
-            Whether to include input file metadata columns in the DataFrame.
-            When enabled, adds ``input_file_path`` and ``input_file_name``.
+        explode_filepath:
+            When enabled, expands the input file path into multiple semantic columns:
+            ``filesize``, ``dirpath``, ``dirname``, ``filepath``, ``filename``, ``filestem``,
+            and ``filetype``. While ``filesize`` is not derived directly from the file path, it
+            is considered part of the minimal file structural context provided by this option.
+            This option is intentionally scoped to file-level structure and does not include
+            format-specific metadata (e.g. Parquet metadata).
 
         **options:
             Additional Spark reader options passed directly to Spark.
@@ -50,7 +54,7 @@ class SparkFileInput(SparkInput):
         SparkFileInput(
             path="/data/events",
             format="json",
-            include_input_file=True,
+            explode_filepath=True,
             inferSchema=True,
         )
         ```
@@ -60,7 +64,7 @@ class SparkFileInput(SparkInput):
           - type: SparkFileInput
             path: /data/events
             format: json
-            include_input_file: true
+            explode_filepath: true
             inferSchema: true
         ```
     """
@@ -69,7 +73,7 @@ class SparkFileInput(SparkInput):
         self,
         path: str | list[str] = None,
         format: SparkFileFormat = None,
-        include_file_metadata: bool = False,
+        explode_filepath: bool = False,
         **options,
     ) -> None:
         super().__init__(**options)
@@ -78,7 +82,7 @@ class SparkFileInput(SparkInput):
         )
         self.path = as_list(path)
         self.format = trim_lower(format or "parquet")
-        self.include_file_metadata = include_file_metadata
+        self.explode_filepath = explode_filepath
 
     def read(self, context: Context) -> DataFrame:
         self.info(f"Reading {self.format} from {self.path}")
@@ -99,7 +103,7 @@ class SparkFileInput(SparkInput):
         reader = reader.format(self.format).options(**self.options)
         df = reader.load(paths)
 
-        if self.include_file_metadata:
+        if self.explode_filepath:
             filepath = input_file_name()
             filename = split_part(filepath, lit("/"), lit(-1))
             df = (
@@ -114,6 +118,10 @@ class SparkFileInput(SparkInput):
                 .withColumn(
                     conventions.DIRNAME_COLUMN,
                     split_part(filepath, lit("/"), lit(-2)),
+                )
+                .withColumn(
+                    conventions.FILEPATH_COLUMN,
+                    filepath,
                 )
                 .withColumn(
                     conventions.FILENAME_COLUMN,
