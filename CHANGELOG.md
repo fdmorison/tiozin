@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v2.0.0...tiozin-v2.1.0) (2026-02-03)
+
+
+### Features
+
+* **config:** Add deterministic .env resolution order ([#110](https://github.com/fdmorison/tiozin/issues/110)) ([03eb0d2](https://github.com/fdmorison/tiozin/commit/03eb0d2bf0b91d52cb159ea250bb2baffd3bc4b6))
+* **tio_duckdb:** Expand DuckdbFileInput to support advanced read scenarios ([#114](https://github.com/fdmorison/tiozin/issues/114)) ([976e286](https://github.com/fdmorison/tiozin/commit/976e286d6dded83e9f317e84d131c04fa789c909))
+* **tio_duckdb:** Tio DuckDB provider with Runner, Inputs, Outputs, SQL Transforms, and declarative job examples ([#113](https://github.com/fdmorison/tiozin/issues/113)) ([4a319a3](https://github.com/fdmorison/tiozin/commit/4a319a38ec3a93c160c0b12549da3c42e5e223f3))
+* **tio_spark:** Introduce provider-level proxies and SQL-first Spark pipelines ([#108](https://github.com/fdmorison/tiozin/issues/108)) ([9a33fe9](https://github.com/fdmorison/tiozin/commit/9a33fe924af5a754b110511e148ea69b71220dfa))
+
 ## [2.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.5.0...tiozin-v2.0.0) (2026-01-26)
 
 
