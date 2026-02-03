@@ -2,46 +2,61 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyRelation
 
-from tiozin.api import Context, conventions
-from tiozin.exceptions import InvalidInputError, RequiredArgumentError
+from tiozin.api import Context
+from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim_lower
 
 from .. import DuckdbInput
-from ..typehints import DuckdbFileFormat
+from ..assembly.read_builder import ReadBuilder
+from ..typehints import DuckdbTiozinFileFormat, DuckdbTiozinReadMode
 
 
 class DuckdbFileInput(DuckdbInput):
     """
     Reads files into a DuckDB relation using DuckDB.
 
-    This input reads data from disk or external storage in any format supported
-    by DuckDB, such as Parquet, CSV, JSON, or plain text. Read behavior and
-    options follow standard DuckDB semantics.
+    This input reads data from disk or external storage in any format supported by DuckDB,
+    such as Parquet, CSV, JSON, or plain text. Read behavior and options follow standard
+    DuckDB semantics.
+
+    The format maps directly to a DuckDB ``read_<format>()`` table function, so any format
+    supported by DuckDB (including extensions) works out of the box — e.g. ``"parquet"``,
+    ``"csv"``, ``"json"``, ``"text"``, ``"xlsx"``, ``"blob"``, etc.
+
+    Tiozin also provides convenience aliases that resolve to the appropriate DuckDB reader
+    with sensible defaults:
+
+    - tsv       → read_csv(delim='\\t')
+    - jsonl     → read_ndjson()
+    - txt       → read_text()
+    - auto_csv  → read_csv_auto()
+    - auto_json → read_json_auto()
 
     For advanced and format-specific options, refer to DuckDB documentation at:
 
     https://duckdb.org/docs/data/overview
 
     Attributes:
-        path:
-            Path or list of paths to the files or directories to read from.
-
-        format:
-            File format used for reading the data. Defaults to ``"parquet"``.
-
-        hive_partitioning:
-            Whether to interpret Hive-style partition directories
-            (``col=value/``). Defaults to ``True``. Not supported for the
-            ``"text"`` format.
-
-        include_file_metadata:
-            Whether to include input file metadata columns in the relation.
-            When enabled, adds ``filesize``, ``dirpath``, ``dirname``,
-            ``filename``, ``filestem``, and ``filesuffix``.
-
-        **options:
-            Additional DuckDB reader options passed directly to DuckDB.
-            Not supported for the ``"text"`` format.
+        path: Path or list of paths to the files or directories to read from.
+        format: File format used for reading the data. Defaults to ``"parquet"``. Maps to the
+            DuckDB ``read_<format>()`` table function. Accepts both native DuckDB formats and
+            Tiozin aliases.
+        hive_partitioning: Whether to interpret Hive-style partition directories
+            (``col=value/``). Defaults to ``True``.
+        union_by_name: Whether to unify schemas by column name when reading multiple files
+            with potentially different structures. Defaults to ``True``.
+        explode_filepath: When enabled, expands the input file path into multiple semantic
+            columns: ``dirpath``, ``dirname``, ``filepath``, ``filename``, ``filestem``, and
+            ``filetype``. For text and blob formats, also includes ``filesize``. While
+            ``filesize`` is not derived directly from the file path, it is considered part of
+            the minimal file structural context provided by this option. This option is
+            intentionally scoped to file-level structure and does not include format-specific
+            metadata (e.g. Parquet metadata).
+        mode: How the read result is materialized in DuckDB. Defaults to ``"relation"`` (lazy).
+            Other modes (``"table"``, ``"overwrite_table"``, ``"view"``, ``"temp_table"``,
+            ``"temp_view"``) register the result under the step name.
+        **options: Additional DuckDB reader options passed directly to the ``read_<format>()``
+            function as named parameters.
 
     Examples:
 
@@ -49,7 +64,7 @@ class DuckdbFileInput(DuckdbInput):
         DuckdbFileInput(
             path="/data/events",
             format="json",
-            include_file_metadata=True,
+            explode_filepath=True,
         )
         ```
 
@@ -58,16 +73,18 @@ class DuckdbFileInput(DuckdbInput):
           - type: DuckdbFileInput
             path: /data/events
             format: json
-            include_file_metadata: true
+            explode_filepath: true
         ```
     """
 
     def __init__(
         self,
         path: str | list[str] = None,
-        format: DuckdbFileFormat = None,
+        format: DuckdbTiozinFileFormat = None,
+        mode: DuckdbTiozinReadMode = None,
         hive_partitioning: bool = True,
-        include_file_metadata: bool = False,
+        union_by_name: bool = True,
+        explode_filepath: bool = False,
         **options,
     ) -> None:
         super().__init__(**options)
@@ -75,58 +92,25 @@ class DuckdbFileInput(DuckdbInput):
             path=path,
         )
         self.path = as_list(path)
-        self.format = trim_lower(format or "parquet")
+        self.format = trim_lower(format) or "parquet"
+        self.mode = trim_lower(mode) or "relation"
         self.hive_partitioning = hive_partitioning
-        self.include_file_metadata = include_file_metadata
+        self.union_by_name = union_by_name
+        self.explode_filepath = explode_filepath
 
     def read(self, _: Context) -> DuckDBPyRelation:
         self.info(f"Reading {self.format} from {self.path}")
 
-        match self.format:
-            case "csv":
-                relation = self.duckdb.read_csv(
-                    self.path,
-                    filename=self.include_file_metadata,
-                    hive_partitioning=self.hive_partitioning,
-                    **self.options,
-                )
-            case "parquet":
-                relation = self.duckdb.read_parquet(
-                    self.path,
-                    filename=self.include_file_metadata,
-                    hive_partitioning=self.hive_partitioning,
-                    **self.options,
-                )
-            case "json":
-                relation = self.duckdb.read_json(
-                    self.path,
-                    filename=self.include_file_metadata,
-                    hive_partitioning=self.hive_partitioning,
-                    **self.options,
-                )
-            case "text":
-                filemeta = "filename," if self.include_file_metadata else ""
-                relation = self.duckdb.sql(f"""
-                    SELECT {filemeta}content AS {conventions.CONTENT_COLUMN}
-                    FROM read_text({self.path})
-                """)
-
-            case _:
-                raise InvalidInputError(f"DuckDB does not support reading `{self.format}` inputs.")
-
-        if self.include_file_metadata:
-            relation = self.duckdb.sql(f"""
-            SELECT
-                * EXCLUDE (filename),
-                parse_dirpath(filename)                 AS {conventions.DIRPATH_COLUMN},
-                parse_filename(parse_dirpath(filename)) AS {conventions.DIRNAME_COLUMN},
-                parse_filename(filename)                AS {conventions.FILENAME_COLUMN},
-                parse_filename(filename, true)          AS {conventions.FILESTEM_COLUMN},
-                CASE
-                    WHEN strpos(parse_filename(filename), '.') = 0 THEN ''
-                    ELSE reverse(split_part(reverse(parse_filename(filename)), '.', 1))
-                END                                     AS {conventions.FILETYPE_COLUMN}
-            FROM relation
-            """)
+        relation = (
+            ReadBuilder(self.duckdb)
+            .mode(self.mode, self.name)
+            .format(self.format)
+            .path(self.path)
+            .with_hive_partitioning(self.hive_partitioning)
+            .with_union_by_name(self.union_by_name)
+            .with_explode_filepath(self.explode_filepath)
+            .options(**self.options)
+            .load()
+        )
 
         return relation
