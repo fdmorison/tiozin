@@ -50,8 +50,8 @@ def test_column_constant_should_have_expected_value(constant: str, expected: str
 # =============================================================================
 # Testing conventions - Column Name Uniqueness
 # =============================================================================
-def test_file_metadata_columns_should_be_unique():
-    """All file metadata column constants must map to distinct names."""
+def test_filepath_columns_should_be_unique():
+    """All filepath column constants must map to distinct names."""
     # Arrange
     columns = [
         conventions.CONTENT_COLUMN,
