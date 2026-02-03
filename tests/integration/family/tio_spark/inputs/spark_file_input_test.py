@@ -88,44 +88,64 @@ def test_input_should_apply_reader_options(step_context: Context):
 
 
 @pytest.mark.parametrize(
-    "filename,filestem,filesuffix",
+    "filename,filestem,filetype",
     [
         ("sample", "sample", ""),
         ("sample.txt", "sample", "txt"),
     ],
 )
-def test_input_should_include_input_file_metadata(
+def test_input_should_explode_filepath(
     filename: str,
     filestem: str,
-    filesuffix: str,
+    filetype: str,
     spark_session: SparkSession,
     step_context: Context,
 ):
-    """Adds input file path and file name columns when enabled."""
+    """Expands filepath into semantic columns when enabled."""
     # Arrange
     path = f"{BASE_PATH}/text/{filename}"
     dirpath = Path(path).resolve().parent
+    filepath = f"file://{dirpath}/{filename}"
 
     # Act
     result = SparkFileInput(
         name="test",
         path=path,
         format="text",
-        include_file_metadata=True,
+        explode_filepath=True,
     ).read(step_context)
 
     # Assert
     actual = result
     expected = spark_session.createDataFrame(
         [
-            ("hello world", 24, f"file://{dirpath}", "text", filename, filestem, filesuffix),
-            ("hello spark", 24, f"file://{dirpath}", "text", filename, filestem, filesuffix),
+            (
+                "hello world",
+                24,
+                f"file://{dirpath}",
+                "text",
+                filepath,
+                filename,
+                filestem,
+                filetype,
+            ),
+            (
+                "hello spark",
+                24,
+                f"file://{dirpath}",
+                "text",
+                filepath,
+                filename,
+                filestem,
+                filetype,
+            ),
         ],
         schema="""
             value    STRING,
             filesize BIGINT,
             dirpath  STRING,
             dirname  STRING,
+            filepath STRING,
             filename STRING,
             filestem STRING,
             filetype STRING

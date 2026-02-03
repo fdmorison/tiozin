@@ -25,7 +25,7 @@ inputs:
     name: load_poems
     path: examples/data/{{product}}
     format: text
-    include_file_metadata: true
+    explode_filepath: true
 
 outputs:
   - kind: SparkFileOutput

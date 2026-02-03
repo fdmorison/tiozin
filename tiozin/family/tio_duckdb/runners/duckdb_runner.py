@@ -10,8 +10,8 @@ from tiozin import Context, Runner
 from tiozin.exceptions import NotInitializedError, TiozinUnexpectedError
 from tiozin.utils import as_list, trim
 
+from ..assembly.utils import fetchall_as_pydict
 from ..typehints import DuckdbPlan
-from ..utils import fetchall_as_pydict
 
 DuckdbOutput = dict[str, list[dict[str, Any]]]
 
