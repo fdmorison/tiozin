@@ -79,3 +79,5 @@ outputs:
     format: parquet
     path: .output/lake-{{domain}}-{{layer}}/{{product}}
     mode: overwrite
+    partition_by:
+      - country
