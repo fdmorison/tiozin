@@ -56,27 +56,27 @@ class StepProxy(wrapt.ObjectProxy):
         step: EtlStep = self.__wrapped__
         context = Context.from_step(step, parent=context)
 
-        try:
-            step.info(f"▶️  Starting to {context.plugin_kind} data")
-            step.debug(f"Temporary workdir is {context.temp_workdir}")
-            context.setup_at = utcnow()
-            step.setup(context, *args, **kwargs)
-            with PluginTemplateOverlay(step, context):
+        with PluginTemplateOverlay(step, context):
+            try:
+                step.info(f"▶️  Starting to {context.plugin_kind} data")
+                step.debug(f"Temporary workdir is {context.temp_workdir}")
+                context.setup_at = utcnow()
+                step.setup(context, *args, **kwargs)
                 context.executed_at = utcnow()
                 result = getattr(step, method_name)(context, *args, **kwargs)
-        except Exception:
-            step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
-            raise
-        else:
-            step.info(f"{context.kind} finished in {context.execution_delay:.2f}s")
-            return result
-        finally:
-            context.teardown_at = utcnow()
-            try:
-                step.teardown(context, *args, **kwargs)
-            except Exception as e:
-                step.error(f"🚨 {context.kind} teardown failed because {e}")
-            context.finished_at = utcnow()
+            except Exception:
+                step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
+                raise
+            else:
+                step.info(f"{context.kind} finished in {context.execution_delay:.2f}s")
+                return result
+            finally:
+                context.teardown_at = utcnow()
+                try:
+                    step.teardown(context, *args, **kwargs)
+                except Exception as e:
+                    step.error(f"🚨 {context.kind} teardown failed because {e}")
+                context.finished_at = utcnow()
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
