@@ -49,21 +49,20 @@ class LinearJob(Job[Any]):
     """
 
     def submit(self, context: Context) -> Any:
-        with self.runner(context):
-            # Multiple datasets may be loaded
-            datasets = [input.read(context) for input in self.inputs]
+        # Multiple datasets may be loaded
+        datasets = [input.read(context) for input in self.inputs]
 
-            # Transformers run sequentially
-            for t in self.transforms:
-                if isinstance(t, CoTransform):
-                    datasets = [t.transform(context, *as_list(datasets))]
-                else:
-                    datasets = [t.transform(context, d) for d in as_list(datasets)]
+        # Transformers run sequentially
+        for t in self.transforms:
+            if isinstance(t, CoTransform):
+                datasets = [t.transform(context, *as_list(datasets))]
+            else:
+                datasets = [t.transform(context, d) for d in as_list(datasets)]
 
-            # Each output writes the same datasets
-            datasets = [
-                output.write(context, dataset) for output in self.outputs for dataset in datasets
-            ]
+        # Each output writes the same datasets
+        datasets = [
+            output.write(context, dataset) for output in self.outputs for dataset in datasets
+        ]
 
-            # The runner executes the final plan
-            return self.runner.run(context, datasets)
+        # The runner executes the final plan
+        return self.runner.run(context, datasets)
