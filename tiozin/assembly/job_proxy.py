@@ -54,7 +54,8 @@ class JobProxy(wrapt.ObjectProxy):
                 context.setup_at = utcnow()
                 job.setup(context)
                 context.executed_at = utcnow()
-                result = job.submit(context)
+                with job.runner(context):
+                    result = job.submit(context)
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
                 raise
