@@ -37,37 +37,37 @@ class JobProxy(wrapt.ObjectProxy):
     environment for Job plugins.
     """
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self, context: Context) -> None:
         raise PluginAccessForbiddenError(self)
 
-    def teardown(self, *args, **kwargs) -> None:
+    def teardown(self, context: Context) -> None:
         raise PluginAccessForbiddenError(self)
 
-    def submit(self, *args, **kwargs) -> Any:
+    def submit(self, context: Context = None) -> Any:
         job: Job = self.__wrapped__
-        context = Context.from_job(job)
+        context = context or Context.from_job(job)
 
-        try:
-            job.info(f"▶️  Starting {context.kind}")
-            job.debug(f"Temporary workdir is {context.temp_workdir}")
-            context.setup_at = utcnow()
-            job.setup(context)
-            with PluginTemplateOverlay(job, context):
-                context.executed_at = utcnow()
-                result = job.submit(context, *args, **kwargs)
-        except Exception:
-            job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
-            raise
-        else:
-            job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
-            return result
-        finally:
-            context.teardown_at = utcnow()
+        with PluginTemplateOverlay(job, context):
             try:
-                job.teardown(context)
-            except Exception as e:
-                job.error(f"🚨 {context.kind} teardown failed because {e}")
-            context.finished_at = utcnow()
+                job.info(f"▶️  Starting {context.kind}")
+                job.debug(f"Temporary workdir is {context.temp_workdir}")
+                context.setup_at = utcnow()
+                job.setup(context)
+                context.executed_at = utcnow()
+                result = job.submit(context)
+            except Exception:
+                job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
+                raise
+            else:
+                job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
+                return result
+            finally:
+                context.teardown_at = utcnow()
+                try:
+                    job.teardown(context)
+                except Exception as e:
+                    job.error(f"🚨 {context.kind} teardown failed because {e}")
+                context.finished_at = utcnow()
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
