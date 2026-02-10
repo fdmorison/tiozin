@@ -1,12 +1,12 @@
 import pytest
 
-from tests.stubs.runner import StubRunner
+from tests.stubs.runner import RunnerStub
 
 
 def test_runner_should_default_streaming_to_false():
     """Runner instances are non-streaming by default."""
     # Act
-    runner = StubRunner(name="stub")
+    runner = RunnerStub(name="stub")
 
     # Assert
     actual = runner.streaming
@@ -18,7 +18,7 @@ def test_runner_should_default_streaming_to_false():
 def test_runner_should_accept_streaming_parameter(streaming: bool):
     """Runner respects the streaming flag passed at construction."""
     # Act
-    runner = StubRunner(name="stub", streaming=streaming)
+    runner = RunnerStub(name="stub", streaming=streaming)
 
     # Assert
     actual = runner.streaming
