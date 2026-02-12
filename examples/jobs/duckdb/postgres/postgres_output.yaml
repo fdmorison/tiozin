@@ -1,0 +1,52 @@
+kind: LinearJob
+name: postgres_output_job
+description: |
+  Loads customer master data from CSV into PostgreSQL using DuckDB as the execution engine.
+  Demonstrates a simple EL pipeline with multiple outputs and environment-based credential
+  configuration via Jinja templates.
+
+owner: data@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
+
+org: tiozin
+region: europe
+domain: ecommerce
+layer: raw
+product: customers
+model: customers
+
+runner:
+  kind: DuckdbRunner
+
+inputs:
+  - kind: DuckdbFileInput
+    name: customers_source
+    description: Customer master dataset exported from the source system in CSV format.
+    path: examples/data/ecommerce/customers.csv
+    format: csv
+    header: true
+
+outputs:
+  - kind: DuckdbPostgresOutput
+    name: write_to_postgres
+    description: Loads the customer dataset into the PostgreSQL table public.customers.
+    mode: overwrite
+    schema: public
+    database: tiozin
+    table: customers
+    host: localhost
+    port: 5432
+    user: "{{ ENV.PGUSER | default('tiozin') }}"
+    password: "{{ ENV.PGPASSWORD | default('tiozin') }}"
+    pre_pgsql:
+      - CREATE INDEX IF NOT EXISTS idx_customers_email   ON public.customers(email)
+      - CREATE INDEX IF NOT EXISTS idx_customers_country ON public.customers(country)
+    post_pgsql:
+      - GRANT ALL ON public.customers TO postgres
+
+  - kind: DuckdbFileOutput
+    name: write_to_parquet
+    description: Writes the same dataset to Parquet for local lake storage.
+    mode: overwrite
+    path: .output/lake-{{domain}}-{{layer}}/postgres/{{model}}/{{fs.hour}}
