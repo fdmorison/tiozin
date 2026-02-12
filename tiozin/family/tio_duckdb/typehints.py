@@ -42,6 +42,12 @@ DuckdbWriteMode = Literal[
     "overwrite_or_ignore",
 ]
 
+DuckdbPostgresWriteMode = Literal[
+    "append",
+    "overwrite",
+    "truncate",
+]
+
 DuckdbCompression = Literal[
     "uncompressed",
     "snappy",
