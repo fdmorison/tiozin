@@ -4,6 +4,10 @@ description: |
   Minimal example job demonstrating a basic ETL pipeline
   using no-op operators.
 
+owner: tiozin@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
+
 org: tiozin
 region: latam
 domain: marketing
@@ -17,22 +21,19 @@ runner:
   kind: NoOpRunner
   streaming: false
   log_level: "{{ ENV.LOG_LEVEL }}"
-  verbose: true
 
 inputs:
   - kind: NoOpInput
-    name: load_customers
-    path: .output/lake-{{domain}}-raw/{{product}}/{{model}}/date={{ DAY[-1] }}
-    verbose: true
+    name: load_it
+    layer: raw
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{ DAY[-1] }}
 
 transforms:
   - kind: NoOpTransform
-    name: mask_pii_fields
+    name: do_something
     strategy: sha256
-    verbose: true
 
 outputs:
   - kind: NoOpOutput
-    name: save_customers
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/{{ DAY[-1].fsdeep }}
-    verbose: true
+    name: save_it
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/{{ today }}
