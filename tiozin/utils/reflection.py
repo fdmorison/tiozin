@@ -172,48 +172,6 @@ def try_set_field(obj: Mapping | Sequence | object, field: str | int, value: Any
         pass
 
 
-def merge_fields(source: Any, target: Any, *fields: str, force: bool = False) -> None:
-    """
-    Merge selected fields from source into target.
-
-    Supports both dicts and objects. By default, only fills missing or None values.
-    Use `force=True` to overwrite existing values.
-
-    Args:
-        source: Object or dict to read fields from.
-        target: Object or dict to write fields to.
-        *fields: Field names to merge.
-        force: If True, overwrites existing values. If False (default),
-               only sets missing or None fields.
-
-    Examples:
-        >>> source = {"name": "John", "age": 30}
-        >>> target = {"name": "Jane"}
-        >>> merge_fields(source, target, "age")
-        >>> target
-        {"name": "Jane", "age": 30}
-
-        >>> merge_fields(source, target, "name", force=True)
-        >>> target  # name overwritten
-        {"name": "John", "age": 30}
-    """
-    if source is None:
-        raise ValueError("Cannot merge fields from None source")
-
-    if target is None:
-        raise ValueError("Cannot merge fields into None target")
-
-    for field in fields:
-        value = get(source, field)
-
-        if not force:
-            target_value = try_get(target, field)
-            if target_value is not None:
-                continue
-
-        set_field(target, field, value)
-
-
 def try_get_public_setter(obj: Any, method_name: str) -> Callable | None:
     """
     Get a method if it's a valid public setter, otherwise return None.

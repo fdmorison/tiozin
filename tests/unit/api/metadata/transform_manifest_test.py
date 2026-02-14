@@ -1,7 +1,17 @@
 import pytest
 from pydantic import ValidationError
 
+from tiozin.api import Transform
 from tiozin.api.metadata.transform_manifest import TransformManifest
+
+
+def test_manifest_for_kind_should_return_transform_type():
+    # Act
+    actual = TransformManifest.for_kind()
+
+    # Assert
+    expected = Transform
+    assert actual == expected
 
 
 def test_manifest_should_accept_minimum_transform():

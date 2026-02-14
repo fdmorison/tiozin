@@ -6,7 +6,7 @@ import wrapt
 
 from tiozin.exceptions import ProxyContractViolationError
 
-TIOPROXY = "__tioproxy__"
+TIO_PROXY = "__tioproxy__"
 
 TClass = TypeVar("TClass", bound=type)
 
@@ -36,15 +36,15 @@ class ProxyMeta(ABCMeta):
     """
 
     def __call__(cls, *args, **kwargs):
-        wrapped_class = super().__call__(*args, **kwargs)
-        proxies = [proxy for clazz in cls.__mro__ for proxy in getattr(clazz, TIOPROXY, [])]
+        wrapped = super().__call__(*args, **kwargs)
+        proxies = [proxy for clazz in cls.__mro__ for proxy in getattr(clazz, TIO_PROXY, [])]
 
         for proxy_class in reversed(dict.fromkeys(proxies)):
             if not issubclass(proxy_class, wrapt.ObjectProxy):
-                raise ProxyContractViolationError(proxy_class, wrapped_class)
-            wrapped_class = proxy_class(wrapped_class)
+                raise ProxyContractViolationError(proxy_class, wrapped)
+            wrapped = proxy_class(wrapped)
 
-        return wrapped_class
+        return wrapped
 
 
 def tioproxy(proxy_class: type[wrapt.ObjectProxy]) -> Callable[[TClass], TClass]:
@@ -82,9 +82,9 @@ def tioproxy(proxy_class: type[wrapt.ObjectProxy]) -> Callable[[TClass], TClass]
         if not issubclass(proxy_class, wrapt.ObjectProxy):
             raise ProxyContractViolationError(proxy_class, wrapped_class)
 
-        proxies = list(getattr(wrapped_class, TIOPROXY, []))
+        proxies = list(getattr(wrapped_class, TIO_PROXY, []))
         proxies.append(proxy_class)
-        setattr(wrapped_class, TIOPROXY, proxies)
+        setattr(wrapped_class, TIO_PROXY, proxies)
 
         return wrapped_class
 

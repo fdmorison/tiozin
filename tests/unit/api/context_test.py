@@ -82,15 +82,16 @@ def test_context_should_generate_id_automatically():
     )
 
     # Assert
-    assert context.id is not None
-    assert len(context.id) > 0
+    actual = (context.id is not None, len(context.id) > 0)
+    expected = (True, True)
+    assert actual == expected
 
 
 def test_context_should_generate_run_id_automatically(job_context: Context):
     # Assert
-    actual = job_context.run_id
-    assert actual is not None
-    assert len(actual) > 0
+    actual = (job_context.run_id is not None, len(job_context.run_id) > 0)
+    expected = (True, True)
+    assert actual == expected
 
 
 # =============================================================================
@@ -251,17 +252,25 @@ def test_context_teardown_delay_should_calculate_teardown_duration(job_context: 
 # =============================================================================
 def test_context_should_create_temp_workdir_automatically(job_context: Context):
     # Assert
-    assert job_context.temp_workdir is not None
-    assert job_context.temp_workdir.exists()
-    assert job_context.temp_workdir.is_dir()
+    actual = (
+        job_context.temp_workdir is not None,
+        job_context.temp_workdir.exists(),
+        job_context.temp_workdir.is_dir(),
+    )
+    expected = (True, True, True)
+    assert actual == expected
 
 
 def test_context_temp_workdir_should_be_organized_by_name_and_run_id(job_context: Context):
     # Assert
-    actual = str(job_context.temp_workdir)
-    assert "/tiozin/" in actual
-    assert f"/{job_context.name}/" in actual
-    assert f"/{job_context.run_id}" in actual
+    path = str(job_context.temp_workdir)
+    actual = (
+        "/tiozin/" in path,
+        f"/{job_context.name}/" in path,
+        f"/{job_context.run_id}" in path,
+    )
+    expected = (True, True, True)
+    assert actual == expected
 
 
 def test_context_temp_workdir_should_be_in_template_vars(job_context: Context):
@@ -404,16 +413,13 @@ def test_context_should_inherit_nominal_time_from_parent(
 def test_context_should_have_own_identity_when_child(step_context: Context):
     # Assert
     actual = (
-        step_context.id,
+        step_context.id is not None,
         step_context.name,
         step_context.kind,
         step_context.plugin_kind,
     )
-    expected_name = "read_orders"
-    expected_kind = "NoOpInput"
-    expected_plugin_kind = "read"
-    assert step_context.id is not None
-    assert actual[1:] == (expected_name, expected_kind, expected_plugin_kind)
+    expected = (True, "read_orders", "NoOpInput", "read")
+    assert actual == expected
 
 
 def test_context_should_have_own_run_id_when_child(step_context: Context, job_context: Context):
@@ -444,12 +450,9 @@ def test_context_child_temp_workdir_should_be_subdirectory_of_parent(
     step_context: Context, job_context: Context
 ):
     # Assert
-    actual_parent = step_context.temp_workdir.parent
-    actual_name = step_context.temp_workdir.name
-    expected_parent = job_context.temp_workdir
-    expected_name = step_context.name
-    assert actual_parent == expected_parent
-    assert actual_name == expected_name
+    actual = (step_context.temp_workdir.parent, step_context.temp_workdir.name)
+    expected = (job_context.temp_workdir, step_context.name)
+    assert actual == expected
 
 
 def test_context_without_parent_should_have_no_runner():

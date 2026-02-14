@@ -22,32 +22,7 @@ TEST_TAXONOMY = {
 }
 
 
-def test_builder_should_build_job_from_fluent_interface():
-    # Arrange
-    builder = JobBuilder()
-
-    # Act
-    job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .transforms({"kind": "NoOpTransform", "name": "transform_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
-        .build()
-    )
-
-    # Assert
-    assert isinstance(job, LinearJob)
-
-
-def test_builder_should_build_from_job_manifest():
+def test_builder_should_accept_job_manifest():
     # Arrange
     manifest = JobManifest(
         kind="LinearJob",
@@ -78,30 +53,74 @@ def test_builder_should_build_from_job_manifest():
     assert True
 
 
-def test_builder_should_build_from_plugin_manifests():
+def test_builder_should_accept_plugin_dicts():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner(
+            {
+                "kind": "NoOpRunner",
+            }
+        )
+        .with_inputs(
+            {
+                "kind": "NoOpInput",
+                "name": "read_something",
+            }
+        )
+        .with_transforms(
+            {
+                "kind": "NoOpTransform",
+                "name": "transform_something",
+            }
+        )
+        .with_outputs(
+            {
+                "kind": "NoOpOutput",
+                "name": "write_something",
+            }
+        )
+        .build()
+    )
+
+    # Assert
+    assert isinstance(job, LinearJob)
+
+
+def test_builder_should_accept_plugin_manifests():
     # Arrange
     builder = JobBuilder()
 
     # Act
     (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner(
             RunnerManifest(kind="NoOpRunner"),
         )
-        .inputs(
+        .with_inputs(
             InputManifest(kind="NoOpInput", name="read_something"),
         )
-        .transforms(
+        .with_transforms(
             TransformManifest(kind="NoOpTransform", name="transform_something"),
         )
-        .outputs(
+        .with_outputs(
             OutputManifest(kind="NoOpOutput", name="write_something"),
         )
         .build()
@@ -111,64 +130,31 @@ def test_builder_should_build_from_plugin_manifests():
     assert True
 
 
-def test_builder_should_build_from_plugin_instances():
+def test_builder_should_accept_plugin_objects():
     # Arrange
     builder = JobBuilder()
 
     # Act
     (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner(
             NoOpRunner(),
         )
-        .inputs(
+        .with_inputs(
             NoOpInput(name="read_something", **TEST_TAXONOMY),
         )
-        .transforms(
+        .with_transforms(
             NoOpTransform(name="transform_something", **TEST_TAXONOMY),
         )
-        .outputs(
+        .with_outputs(
             NoOpOutput(name="write_something", **TEST_TAXONOMY),
-        )
-        .build()
-    )
-
-    # Assert
-    assert True
-
-
-def test_builder_should_build_from_plugin_dicts():
-    # Arrange
-    builder = JobBuilder()
-
-    # Act
-    (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner(
-            {"kind": "NoOpRunner"},
-        )
-        .inputs(
-            {"kind": "NoOpInput", "name": "read_something", **TEST_TAXONOMY},
-        )
-        .transforms(
-            {"kind": "NoOpTransform", "name": "transform_something", **TEST_TAXONOMY},
-        )
-        .outputs(
-            {"kind": "NoOpOutput", "name": "write_something", **TEST_TAXONOMY},
         )
         .build()
     )
@@ -183,20 +169,20 @@ def test_builder_should_accept_multiple_inputs():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs(
             {"kind": "NoOpInput", "name": "input1"},
             {"kind": "NoOpInput", "name": "input2"},
         )
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -210,21 +196,21 @@ def test_builder_should_accept_multiple_transforms():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .transforms(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_transforms(
             {"kind": "NoOpTransform", "name": "transform1"},
             {"kind": "NoOpTransform", "name": "transform2"},
         )
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -238,17 +224,17 @@ def test_builder_should_accept_multiple_outputs():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs(
             {"kind": "NoOpOutput", "name": "output1"},
             {"kind": "NoOpOutput", "name": "output2"},
         )
@@ -265,19 +251,19 @@ def test_builder_should_set_labels():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .label("env", "dev")
-        .label("team", "data")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_label("env", "dev")
+        .with_label("team", "data")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -291,18 +277,18 @@ def test_builder_should_set_labels_dict():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .labels({"env": "dev", "team": "data"})
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_labels({"env": "dev", "team": "data"})
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -316,29 +302,28 @@ def test_builder_should_set_optional_fields():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .description("A test job")
-        .owner("team-data")
-        .maintainer("team-platform")
-        .cost_center("engineering")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_description("A test job")
+        .with_owner("team-data")
+        .with_maintainer("team-platform")
+        .with_cost_center("engineering")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
     # Assert
-    assert job.description == "A test job"
-    assert job.owner == "team-data"
-    assert job.maintainer == "team-platform"
-    assert job.cost_center == "engineering"
+    actual = (job.description, job.owner, job.maintainer, job.cost_center)
+    expected = ("A test job", "team-data", "team-platform", "engineering")
+    assert actual == expected
 
 
 def test_builder_should_handle_unplanned_fields():
@@ -347,18 +332,18 @@ def test_builder_should_handle_unplanned_fields():
 
     # Act
     (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
-        .set("custom_field", "custom_value")
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .with_field("custom_field", "custom_value")
         .build()
     )
 
@@ -372,7 +357,7 @@ def test_builder_should_reject_invalid_runner_type():
 
     # Act & Assert
     with pytest.raises(InvalidInputError, match="Invalid runner definition"):
-        builder.runner(12345)
+        builder.with_runner(12345)
 
 
 def test_builder_should_reject_invalid_input_type():
@@ -381,7 +366,7 @@ def test_builder_should_reject_invalid_input_type():
 
     # Act & Assert
     with pytest.raises(InvalidInputError, match="Invalid input definition"):
-        builder.inputs("invalid")
+        builder.with_inputs("invalid")
 
 
 def test_builder_should_reject_invalid_transform_type():
@@ -390,7 +375,7 @@ def test_builder_should_reject_invalid_transform_type():
 
     # Act & Assert
     with pytest.raises(InvalidInputError, match="Invalid transform definition"):
-        builder.transforms(12345)
+        builder.with_transforms(12345)
 
 
 def test_builder_should_reject_invalid_output_type():
@@ -399,7 +384,7 @@ def test_builder_should_reject_invalid_output_type():
 
     # Act & Assert
     with pytest.raises(InvalidInputError, match="Invalid output definition"):
-        builder.outputs(None)
+        builder.with_outputs(None)
 
 
 def test_builder_should_propagate_taxonomy_to_inputs():
@@ -408,17 +393,17 @@ def test_builder_should_propagate_taxonomy_to_inputs():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("europe")
-        .domain("marketing")
-        .product("user_events")
-        .model("order_completed")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("europe")
+        .with_domain("marketing")
+        .with_product("user_events")
+        .with_model("order_completed")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -449,17 +434,17 @@ def test_builder_should_propagate_taxonomy_to_outputs():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("europe")
-        .domain("marketing")
-        .product("user_events")
-        .model("order_completed")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("europe")
+        .with_domain("marketing")
+        .with_product("user_events")
+        .with_model("order_completed")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -490,18 +475,18 @@ def test_builder_should_propagate_taxonomy_to_transforms():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("europe")
-        .domain("marketing")
-        .product("user_events")
-        .model("order_completed")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .transforms({"kind": "NoOpTransform", "name": "transform_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("europe")
+        .with_domain("marketing")
+        .with_product("user_events")
+        .with_model("order_completed")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_transforms({"kind": "NoOpTransform", "name": "transform_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -532,16 +517,16 @@ def test_builder_should_not_overwrite_input_taxonomy_when_already_set():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("europe")
-        .domain("marketing")
-        .product("user_events")
-        .model("order_completed")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("europe")
+        .with_domain("marketing")
+        .with_product("user_events")
+        .with_model("order_completed")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs(
             {
                 "kind": "NoOpInput",
                 "name": "read_something",
@@ -553,7 +538,7 @@ def test_builder_should_not_overwrite_input_taxonomy_when_already_set():
                 "layer": "custom_layer",
             }
         )
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -584,17 +569,17 @@ def test_builder_should_not_overwrite_output_taxonomy_when_already_set():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("europe")
-        .domain("marketing")
-        .product("user_events")
-        .model("order_completed")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("europe")
+        .with_domain("marketing")
+        .with_product("user_events")
+        .with_model("order_completed")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs(
             {
                 "kind": "NoOpOutput",
                 "name": "write_something",
@@ -636,17 +621,17 @@ def test_builder_should_not_overwrite_transform_taxonomy_when_already_set():
 
     # Act
     job = (
-        builder.kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("europe")
-        .domain("marketing")
-        .product("user_events")
-        .model("order_completed")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .transforms(
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("europe")
+        .with_domain("marketing")
+        .with_product("user_events")
+        .with_model("order_completed")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_transforms(
             {
                 "kind": "NoOpTransform",
                 "name": "transform_something",
@@ -658,7 +643,7 @@ def test_builder_should_not_overwrite_transform_taxonomy_when_already_set():
                 "layer": "custom_layer",
             }
         )
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
         .build()
     )
 
@@ -687,17 +672,17 @@ def test_builder_should_fail_when_used_twice():
     # Arrange
     builder = (
         JobBuilder()
-        .kind("LinearJob")
-        .name("test_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("quality")
-        .product("test_cases")
-        .model("some_case")
-        .layer("test")
-        .runner({"kind": "NoOpRunner"})
-        .inputs({"kind": "NoOpInput", "name": "read_something"})
-        .outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_layer("test")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
     )
 
     # Act/Assert

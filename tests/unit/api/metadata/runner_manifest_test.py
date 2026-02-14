@@ -3,7 +3,17 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from tiozin.api import Runner
 from tiozin.api.metadata.runner_manifest import RunnerManifest
+
+
+def test_manifest_for_kind_should_return_runner_type():
+    # Act
+    actual = RunnerManifest.for_kind()
+
+    # Assert
+    expected = Runner
+    assert actual == expected
 
 
 def test_manifest_should_accept_minimum_runner():
