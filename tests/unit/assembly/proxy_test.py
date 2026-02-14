@@ -2,7 +2,7 @@ import pytest
 import wrapt
 
 from tiozin.assembly.job_proxy import JobProxy
-from tiozin.assembly.proxying import TIOPROXY, ProxyMeta, tioproxy
+from tiozin.assembly.proxying import TIO_PROXY, ProxyMeta, tioproxy
 from tiozin.assembly.runner_proxy import RunnerProxy
 from tiozin.assembly.step_proxy import StepProxy
 from tiozin.exceptions import PluginAccessForbiddenError
@@ -141,7 +141,7 @@ def test_tioproxy_should_not_modify_parent_proxy_list_when_child_is_decorated():
     class Parent(metaclass=ProxyMeta):
         pass
 
-    parent_proxies = list(getattr(Parent, TIOPROXY, []))
+    parent_proxies = list(getattr(Parent, TIO_PROXY, []))
 
     # Act
     @tioproxy(ChildProxy)
@@ -150,7 +150,7 @@ def test_tioproxy_should_not_modify_parent_proxy_list_when_child_is_decorated():
 
     # Assert
     expected = parent_proxies
-    actual = getattr(Parent, TIOPROXY, [])
+    actual = getattr(Parent, TIO_PROXY, [])
     assert actual == expected
 
 
@@ -166,6 +166,6 @@ def test_tioproxy_should_include_parent_proxies_when_child_is_decorated():
         pass
 
     # Assert
-    actual = set(getattr(Child, TIOPROXY, []))
+    actual = set(getattr(Child, TIO_PROXY, []))
     expected = {ParentProxy, ChildProxy}
     assert actual == expected

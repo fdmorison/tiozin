@@ -1,22 +1,24 @@
+from __future__ import annotations
+
+from collections import defaultdict
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Loggable, Output, PlugIn, Runner, Transform
-from tiozin.api.metadata.job_manifest import (
-    InputManifest,
-    Manifest,
-    OutputManifest,
-    RunnerManifest,
-    TransformManifest,
+from tiozin.api import Loggable, PlugIn
+from tiozin.api.metadata.job_manifest import Manifest
+from tiozin.exceptions import (
+    AmbiguousPluginError,
+    InvalidInputError,
+    PluginKindError,
+    PluginNotFoundError,
 )
-from tiozin.exceptions import AmbiguousPluginError, PluginNotFoundError, TiozinUnexpectedError
-from tiozin.utils import helpers, reflection
+from tiozin.utils import reflection
 
 from .plugin_scanner import PluginScanner
 
 T = TypeVar("T", bound=PlugIn)
 
 
-class PluginFactory(Loggable):
+class PluginRegistry(Loggable):
     """
     The PluginFactory loads each provider package and scans it to automatically discover
     all plugin classes defined inside it, such as Inputs, Outputs, Transforms, Runners,
@@ -62,11 +64,14 @@ class PluginFactory(Loggable):
 
     def __init__(self) -> None:
         super().__init__()
-        self._index: dict[str, type[PlugIn] | set[type[PlugIn]]] = {}
+        self._index: dict[str, set[type[PlugIn]]] = defaultdict(set)
         self._plugins: set[type[PlugIn]] = set()
 
-    def setup(self) -> None:
-        for plugins in PluginScanner().scan().values():
+        self.info("Waking up the Tios and Tias...")
+        tios = PluginScanner().scan()
+
+        self.info("Summoning Tiozins to work...")
+        for plugins in tios.values():
             for plugin in plugins:
                 self.register(plugin)
 
@@ -74,20 +79,22 @@ class PluginFactory(Loggable):
         """
         Register a new plugin from a given provider namespace (e.g. `tio_pandas`, `tio_spark`)
         """
-        if not reflection.is_plugin(plugin):
-            raise TypeError(f"{plugin} is not a Plugin.")
+        InvalidInputError.raise_if(
+            not reflection.is_plugin(plugin),
+            f"{plugin} is not a Plugin.",
+        )
 
         if plugin in self._plugins:
             return
 
         metadata = plugin.__tiometa__
-        self._index.setdefault(metadata.name, set()).add(plugin)
-        self._index[metadata.uri] = plugin
-        self._index[metadata.tio_path] = plugin
-        self._index[metadata.python_path] = plugin
+        self._index[metadata.name].add(plugin)
+        self._index[metadata.uri].add(plugin)
+        self._index[metadata.tio_path].add(plugin)
+        self._index[metadata.python_path].add(plugin)
         self._plugins.add(plugin)
 
-    def load_plugin(self, kind: str, plugin_kind: type[T] | None = None, **args) -> PlugIn | T:
+    def load(self, kind: str, **args) -> PlugIn:
         """
         Resolve and loads a plugin by kind.
 
@@ -98,8 +105,7 @@ class PluginFactory(Loggable):
 
         Args:
             kind: The Plugin identifier.
-            plugin_kind: Restricts search to Input, Output, Transform, Runner, or Registry.
-            **args: Plugin arguments forwarded to the plugin constructor.
+            **args: Plugin arguments to be injected in the plugin constructor.
 
         Raises:
             PluginNotFoundError: If the plugin does not exist or does not match the requested role.
@@ -108,58 +114,58 @@ class PluginFactory(Loggable):
         Returns:
             A new instance of the resolved plugin.
         """
-        candidates = helpers.as_list(self._index.get(kind))
+        candidates = self._index.get(kind)
 
-        if not candidates:
-            raise PluginNotFoundError(kind)
-
-        if len(candidates) > 1:
-            raise AmbiguousPluginError(kind, [p.__tiometa__.tio_path for p in candidates])
-
-        plugin = candidates[0]
-        plugin_name = plugin.__tiometa__.name
-
-        if plugin_kind and not issubclass(plugin, plugin_kind):
-            raise PluginNotFoundError(kind, detail=f"{plugin_name} is not a {plugin_kind}.")
-
-        plugin_instance = plugin(**args)
-        self.info(
-            f"Loading {plugin_name} with args",
-            **plugin_instance.to_dict(exclude={"description", "kind"}, exclude_none=True),
+        PluginNotFoundError.raise_if(
+            not candidates,
+            plugin_name=kind,
         )
-        return plugin_instance
 
-    def load_job(self, kind: str, **args) -> Job:
-        """
-        Load and instantiate a Job plugin by kind.
+        AmbiguousPluginError.raise_if(
+            len(candidates) > 1,
+            plugin_name=kind,
+            candidates=[p.__tiometa__.tio_path for p in candidates],
+        )
 
-        This method resolves the Job plugin associated with the given kind and
-        returns a new Job instance using the provided arguments.
+        plugin = next(iter(candidates))
+        params = args.copy()
+        params.pop("description", None)
+        self.info("🧝 Tiozin joined the pipeline", kind=kind, **params)
+        return plugin(**args)
+
+    def safe_load(self, kind: str, plugin_kind: type[T], **args) -> T:
         """
-        return self.load_plugin(kind, Job, **args)
+        Instantiates one plugin from kind and arguments, then checks types.
+        """
+        plugin: T = self.load(kind, **args)
+
+        PluginKindError.raise_if(
+            not isinstance(plugin, plugin_kind),
+            plugin_name=plugin.plugin_name,
+            plugin_kind=plugin_kind,
+        )
+
+        return plugin
 
     def load_manifest(self, manifest: Manifest | PlugIn) -> PlugIn:
         """
-        Load and instantiate a job step from a manifest.
-
-        This method resolves and instantiates the appropriate operator plugin
-        (Input, Output, Transform, or Runner) based on the manifest type.
-        If an operator instance is provided, it is returned unchanged.
+        Instantiates one plugin from a manifest definition.
         """
         if isinstance(manifest, PlugIn):
             return manifest
 
-        args = manifest.model_dump()
-        kind = args.pop("kind")
+        PluginKindError.raise_if(
+            not manifest.for_kind(),
+            f"Unsupported manifest {type(manifest).__name__} does not specify a Plugin Kind",
+        )
 
-        match manifest:
-            case RunnerManifest():
-                return self.load_plugin(kind, Runner, **args)
-            case InputManifest():
-                return self.load_plugin(kind, Input, **args)
-            case TransformManifest():
-                return self.load_plugin(kind, Transform, **args)
-            case OutputManifest():
-                return self.load_plugin(kind, Output, **args)
-            case _:
-                raise TiozinUnexpectedError(f"Unsupported manifest: {type(manifest).__name__}")
+        plugin = self.safe_load(
+            kind=manifest.kind,
+            plugin_kind=manifest.for_kind(),
+            **manifest.model_dump(exclude="kind"),
+        )
+
+        return plugin
+
+
+plugin_registry = PluginRegistry()

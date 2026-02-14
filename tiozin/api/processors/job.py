@@ -13,7 +13,6 @@ from tiozin.api import (
 from tiozin.assembly import tioproxy
 from tiozin.assembly.job_proxy import JobProxy
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils.reflection import merge_fields
 
 from .context import Context
 
@@ -113,9 +112,10 @@ class Job(PlugIn, Generic[TData]):
         self.inputs = inputs or []
         self.transforms = transforms or []
         self.outputs = outputs or []
-
-        for step in self.inputs + self.transforms + self.outputs:
-            merge_fields(self, step, "org", "region", "domain", "product", "model", "layer")
+        self.steps = self.inputs + self.transforms + self.outputs
+        self.tios: set[str] = frozenset(
+            [tiozin.plugin_provider for tiozin in [self, self.runner] + self.steps]
+        )
 
     @staticmethod
     def builder() -> JobBuilder:

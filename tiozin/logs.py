@@ -20,6 +20,7 @@ def setup() -> None:
 
     console_renderer = structlog.dev.ConsoleRenderer(
         colors=True,
+        sort_keys=False,
         exception_formatter=structlog.dev.RichTracebackFormatter(
             show_locals=config.log_show_locals
         ),

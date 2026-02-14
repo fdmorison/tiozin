@@ -24,3 +24,14 @@ def test_runner_should_accept_streaming_parameter(streaming: bool):
     actual = runner.streaming
     expected = streaming
     assert actual == expected
+
+
+def test_runner_should_expose_session_property():
+    """Runner exposes a session property for the active execution session."""
+    # Act
+    runner = RunnerStub(name="stub")
+
+    # Assert
+    actual = runner.session
+    expected = None
+    assert actual == expected

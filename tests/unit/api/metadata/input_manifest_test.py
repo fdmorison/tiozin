@@ -1,7 +1,17 @@
 import pytest
 from pydantic import ValidationError
 
+from tiozin.api import Input
 from tiozin.api.metadata.input_manifest import InputManifest
+
+
+def test_manifest_for_kind_should_return_input_type():
+    # Act
+    actual = InputManifest.for_kind()
+
+    # Assert
+    expected = Input
+    assert actual == expected
 
 
 def test_manifest_should_accept_minimum_input():

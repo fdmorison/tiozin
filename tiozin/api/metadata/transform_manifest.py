@@ -23,3 +23,9 @@ class TransformManifest(Manifest):
     product: str | None = Field(None, description=docs.TRANSFORM_PRODUCT)
     model: str | None = Field(None, description=docs.TRANSFORM_MODEL)
     layer: str | None = Field(None, description=docs.TRANSFORM_LAYER)
+
+    @classmethod
+    def for_kind(cls) -> type:
+        from tiozin import Transform
+
+        return Transform

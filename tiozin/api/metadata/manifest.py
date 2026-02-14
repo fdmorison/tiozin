@@ -28,6 +28,13 @@ class Manifest(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     @classmethod
+    def for_kind(cls) -> type:
+        """
+        Returns the resource type expected to be built from this manifest.
+        """
+        return None
+
+    @classmethod
     def model_validate(cls, obj, **kwargs) -> None:
         try:
             return super().model_validate(obj, **kwargs)

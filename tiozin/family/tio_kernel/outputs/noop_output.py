@@ -11,21 +11,20 @@ class NoOpOutput(Output):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(self, verbose: bool = False, force_error: bool = False, **options) -> None:
+    def __init__(self, verbose: bool = True, force_error: bool = False, **options) -> None:
         super().__init__(**options)
         self.verbose = verbose
         self.force_error = force_error
 
     def setup(self, context: Context, *data: Any) -> None:
         if self.verbose:
-            self.info("Setup skipped.")
+            self.info("Tiozin is preparing output")
 
     def write(self, context: Context, data: Any) -> Any:
         if self.verbose:
-            args = self.to_dict(exclude={"description", "name"})
+            args = self.to_dict(exclude="name")
             args.update(args.pop("options"))
-            self.info("The write was skipped.")
-            self.info("Properties:", **args)
+            self.info("Tiozin is writing output data", **args)
 
         if self.force_error:
             raise RuntimeError("Forced error for testing purposes")
@@ -34,4 +33,4 @@ class NoOpOutput(Output):
 
     def teardown(self, context: Context, *data: Any) -> None:
         if self.verbose:
-            self.info("Teardown skipped.")
+            self.info("Tiozin is finishing output lifecycle")

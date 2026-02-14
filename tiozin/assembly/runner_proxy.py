@@ -51,9 +51,7 @@ class RunnerProxy(wrapt.ObjectProxy):
 
         with PluginTemplateOverlay(runner, context):
             try:
-                tio = runner.__tiometa__.provider.replace("_", " ").title()
-                runner.info(f"🚀 Powered by {tio}!")
-                runner.info(f"▶️  Runner initialized by '{context.name}'")
+                runner.info(f"▶️  Runner initialized for '{context.name}'")
                 runner.setup(context)
                 token = self.active_session.set(runner.session)
                 yield self
@@ -61,7 +59,7 @@ class RunnerProxy(wrapt.ObjectProxy):
                 try:
                     self.active_session.reset(token)
                     runner.teardown(context)
-                    runner.info(f"Runner released by '{context.name}'")
+                    runner.info(f"Runner released for '{context.name}'")
                 except Exception as e:
                     runner.error(f"🚨 Runner cleanup failed for '{context.name}': {e}")
 
@@ -69,7 +67,7 @@ class RunnerProxy(wrapt.ObjectProxy):
         """Wraps Runner.run() with logging and error handling."""
         try:
             runner: Runner = self.__wrapped__
-            runner.info(f"▶️  Submiting execution of '{context.name}'")
+            runner.info(f"▶️  Running '{context.name}'")
             result = runner.run(context, *args, **kwargs)
         except Exception:
             runner.error(

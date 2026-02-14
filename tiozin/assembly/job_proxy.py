@@ -7,7 +7,7 @@ import wrapt
 from tiozin.api import Context
 from tiozin.assembly.plugin_template import PluginTemplateOverlay
 from tiozin.exceptions import PluginAccessForbiddenError
-from tiozin.utils import utcnow
+from tiozin.utils import human_join, utcnow
 
 if TYPE_CHECKING:
     from tiozin import Job
@@ -49,7 +49,8 @@ class JobProxy(wrapt.ObjectProxy):
 
         with PluginTemplateOverlay(job, context):
             try:
-                job.info(f"▶️  Starting {context.kind}")
+                tios = [t.replace("_", " ").title() for t in job.tios]
+                job.info(f"🚀 {context.kind} is starting — {human_join(tios)} on duty")
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
                 job.setup(context)
