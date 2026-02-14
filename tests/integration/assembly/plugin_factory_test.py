@@ -122,7 +122,7 @@ def test_load_should_load_input_plugin(factory: PluginRegistry, kind: str):
         schema_subject=None,
         schema_version=None,
         options={},
-        verbose=False,
+        verbose=True,
         force_error=False,
     )
     assert actual == expected
@@ -164,7 +164,7 @@ def test_load_should_load_output_plugin(factory: PluginRegistry, kind: str):
         product="revenue",
         model="daily",
         options={},
-        verbose=False,
+        verbose=True,
         force_error=False,
     )
     assert actual == expected
@@ -206,7 +206,7 @@ def test_load_should_load_transform_plugin(factory: PluginRegistry, kind: str):
         product="revenue",
         model="daily",
         options={},
-        verbose=False,
+        verbose=True,
         force_error=False,
     )
     assert actual == expected
@@ -236,7 +236,7 @@ def test_load_should_load_runner_plugin(factory: PluginRegistry, kind: str):
         name="test_runner",
         description="test",
         streaming=False,
-        verbose=False,
+        verbose=True,
         force_error=False,
         options={},
     )
