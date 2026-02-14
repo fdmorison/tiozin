@@ -11,7 +11,7 @@ class NoOpRunner(Runner[Any, None, list]):
     Useful for testing or when metric tracking is disabled.
     """
 
-    def __init__(self, verbose: bool = False, force_error: bool = False, **options) -> None:
+    def __init__(self, verbose: bool = True, force_error: bool = False, **options) -> None:
         super().__init__(**options)
         self.verbose = verbose
         self.force_error = force_error
@@ -22,14 +22,13 @@ class NoOpRunner(Runner[Any, None, list]):
 
     def setup(self, context: Context) -> None:
         if self.verbose:
-            self.info("Setup skipped.")
+            self.info("Tiozin is preparing runner")
 
     def run(self, context: Context, execution_plan: Any) -> Any:
         if self.verbose:
-            args = self.to_dict(exclude={"description", "name"})
+            args = self.to_dict()
             args.update(args.pop("options"))
-            self.info("The run was skipped.")
-            self.info("Properties:", **args)
+            self.info("Tiozin is executing runner plan", **args)
 
         if self.force_error:
             raise RuntimeError("Forced error for testing purposes")
@@ -38,4 +37,4 @@ class NoOpRunner(Runner[Any, None, list]):
 
     def teardown(self, context: Context) -> None:
         if self.verbose:
-            self.info("Teardown skipped.")
+            self.info("Tiozin is finishing runner lifecycle")

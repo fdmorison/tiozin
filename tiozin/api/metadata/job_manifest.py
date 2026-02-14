@@ -44,3 +44,9 @@ class JobManifest(Manifest):
         default_factory=list, description=docs.JOB_TRANSFORMS
     )
     outputs: list[OutputManifest] | None = Field(default_factory=list, description=docs.JOB_OUTPUTS)
+
+    @classmethod
+    def for_kind(cls) -> type:
+        from tiozin import Job
+
+        return Job

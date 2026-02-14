@@ -19,6 +19,7 @@ from tiozin.utils.helpers import (
     trim_lower,
     trim_upper,
     utcnow,
+    human_join,
 )
 
 # Filesystem I/O
@@ -54,6 +55,7 @@ __all__ = [
     "trim_lower",
     "trim_upper",
     "utcnow",
+    "human_join",
     # Filesystem I/O
     "clear_dir",
     "create_local_temp_dir",

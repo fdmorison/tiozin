@@ -9,7 +9,15 @@ import pendulum
 import pytest
 from pendulum import UTC
 
-from tiozin.utils import RelativeDate, as_flat_list, as_list, coerce_datetime, default, utcnow
+from tiozin.utils import (
+    RelativeDate,
+    as_flat_list,
+    as_list,
+    coerce_datetime,
+    default,
+    human_join,
+    utcnow,
+)
 
 
 # ============================================================================
@@ -428,3 +436,51 @@ def test_coerce_datetime_should_raise_when_invalid_type():
     # Act/Assert
     with pytest.raises(TypeError, match="Expected RelativeDate, datetime or ISO string"):
         coerce_datetime(12345)
+
+
+# ============================================================================
+# Testing human_join()
+# ============================================================================
+def test_human_join_should_return_single_item_as_is():
+    # Act
+    actual = human_join(["Alice"])
+
+    # Assert
+    expected = "Alice"
+    assert actual == expected
+
+
+def test_human_join_should_join_two_items_with_and():
+    # Act
+    actual = human_join(["Alice", "Bob"])
+
+    # Assert
+    expected = "Alice and Bob"
+    assert actual == expected
+
+
+def test_human_join_should_join_three_items_with_commas_and_and():
+    # Act
+    actual = human_join(["Alice", "Bob", "Charlie"])
+
+    # Assert
+    expected = "Alice, Bob and Charlie"
+    assert actual == expected
+
+
+def test_human_join_should_join_many_items_with_commas_and_and():
+    # Act
+    actual = human_join(["a", "b", "c", "d", "e"])
+
+    # Assert
+    expected = "a, b, c, d and e"
+    assert actual == expected
+
+
+def test_human_join_should_accept_any_iterable():
+    # Act
+    actual = human_join(("x", "y", "z"))
+
+    # Assert
+    expected = "x, y and z"
+    assert actual == expected

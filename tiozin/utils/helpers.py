@@ -235,3 +235,34 @@ def as_flat_list(*values: T) -> list[T]:
             result.append(item)
 
     return result
+
+
+def human_join(items: list[str]) -> str:
+    """
+    Join a list of strings into a human-readable sentence.
+
+    Uses commas between items and "and" before the last item,
+    following natural English formatting.
+
+    Args:
+        items: Strings to join. Must contain at least one item.
+
+    Returns:
+        A single string with items joined in human-readable form.
+
+    Examples:
+        >>> human_join(["Alice"])
+        "Alice"
+        >>> human_join(["Alice", "Bob"])
+        "Alice and Bob"
+        >>> human_join(["Alice", "Bob", "Charlie"])
+        "Alice, Bob and Charlie"
+    """
+    items = list(items)
+    return (
+        items[0]
+        if len(items) == 1
+        else " and ".join(items)
+        if len(items) == 2
+        else f"{', '.join(items[:-1])} and {items[-1]}"
+    )

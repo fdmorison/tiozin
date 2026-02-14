@@ -42,8 +42,9 @@ def test_to_dict_should_exclude_fields_when_requested():
     result = plugin.to_dict(exclude={"name", "org"})
 
     # Assert
-    assert "name" not in result
-    assert "org" not in result
+    actual = ("name" not in result, "org" not in result)
+    expected = (True, True)
+    assert actual == expected
 
 
 def test_to_dict_should_include_none_by_default():
@@ -106,9 +107,9 @@ def test_to_dict_should_apply_both_filters_when_requested():
     )
 
     # Assert
-    assert "org" not in result
-    assert "region" not in result
-    assert "description" not in result
+    actual = ("org" not in result, "region" not in result, "description" not in result)
+    expected = (True, True, True)
+    assert actual == expected
 
 
 def test_to_dict_should_return_new_dict_each_call():

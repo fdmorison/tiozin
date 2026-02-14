@@ -1,7 +1,7 @@
-from typing import Any, Self
+from typing import Any, Self, TypeAlias
 
 from tiozin import logs
-from tiozin.api import Input, Job, JobManifest, Output, Runner, Transform
+from tiozin.api import EtlStep, Input, Job, JobManifest, Output, PlugIn, Runner, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     OutputManifest,
@@ -9,9 +9,15 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
+from tiozin.utils.helpers import trim
+from tiozin.utils.reflection import try_get_public_setter
 
-from ..utils.reflection import try_get_public_setter
-from .plugin_factory import PluginFactory
+from .plugin_factory import plugin_registry
+
+InputDefinition: TypeAlias = dict[str, Any] | InputManifest | Input
+OutputDefinition: TypeAlias = dict[str, Any] | OutputManifest | Output
+TransformDefinition: TypeAlias = dict[str, Any] | TransformManifest | Transform
+RunnerDefinition: TypeAlias = dict[str, Any] | RunnerManifest | Runner
 
 
 class JobBuilder:
@@ -26,16 +32,12 @@ class JobBuilder:
         self._built = False
         self._logger = logs.get_logger(type(self).__name__)
 
-        # identity
+        # Identity
         self._kind: str | None = None
         self._name: str | None = None
         self._description: str | None = None
-        self._owner: str | None = None
-        self._maintainer: str | None = None
-        self._cost_center: str | None = None
-        self._labels: dict[str, str] = {}
 
-        # taxonomy
+        # Domain
         self._org: str | None = None
         self._region: str | None = None
         self._domain: str | None = None
@@ -43,7 +45,13 @@ class JobBuilder:
         self._model: str | None = None
         self._layer: str | None = None
 
-        # pipeline
+        # Governance
+        self._owner: str | None = None
+        self._maintainer: str | None = None
+        self._cost_center: str | None = None
+        self._labels: dict[str, str] = {}
+
+        # Runtime ETL
         self._runner: RunnerManifest | Runner | None = None
         self._inputs: list[InputManifest | Input] = []
         self._transforms: list[TransformManifest | Transform] = []
@@ -52,113 +60,114 @@ class JobBuilder:
         # Job runtime options (provider-specific)
         self._options: dict[str, Any] = {}
 
-    def kind(self, kind: str) -> Self:
-        self._kind = kind
+    def with_kind(self, kind: str) -> Self:
+        self._kind = trim(kind)
         return self
 
-    def name(self, name: str) -> Self:
-        self._name = name
+    def with_name(self, name: str) -> Self:
+        self._name = trim(name)
         return self
 
-    def description(self, description: str) -> Self:
-        self._description = description
+    def with_description(self, description: str) -> Self:
+        self._description = trim(description)
         return self
 
-    def owner(self, owner: str) -> Self:
-        self._owner = owner
+    def with_owner(self, owner: str) -> Self:
+        self._owner = trim(owner)
         return self
 
-    def maintainer(self, maintainer: str) -> Self:
+    def with_maintainer(self, maintainer: str) -> Self:
         self._maintainer = maintainer
         return self
 
-    def cost_center(self, cost_center: str) -> Self:
-        self._cost_center = cost_center
+    def with_cost_center(self, cost_center: str) -> Self:
+        self._cost_center = trim(cost_center)
         return self
 
-    def label(self, key: str, value: str) -> Self:
-        self._labels[key] = value
+    def with_label(self, key: str, value: str) -> Self:
+        self._labels[key] = trim(value)
         return self
 
-    def labels(self, labels: dict[str, str]) -> Self:
+    def with_labels(self, labels: dict[str, str]) -> Self:
         self._labels.update(labels)
         return self
 
-    def org(self, org: str) -> Self:
-        self._org = org
+    def with_org(self, org: str) -> Self:
+        self._org = trim(org)
         return self
 
-    def region(self, region: str) -> Self:
-        self._region = region
+    def with_region(self, region: str) -> Self:
+        self._region = trim(region)
         return self
 
-    def domain(self, domain: str) -> Self:
-        self._domain = domain
+    def with_domain(self, domain: str) -> Self:
+        self._domain = trim(domain)
         return self
 
-    def product(self, product: str) -> Self:
-        self._product = product
+    def with_product(self, product: str) -> Self:
+        self._product = trim(product)
         return self
 
-    def model(self, model: str) -> Self:
-        self._model = model
+    def with_model(self, model: str) -> Self:
+        self._model = trim(model)
         return self
 
-    def layer(self, layer: str) -> Self:
-        self._layer = layer
+    def with_layer(self, layer: str) -> Self:
+        self._layer = trim(layer)
         return self
 
-    def runner(self, runner: Runner | RunnerManifest | dict[str, Any]) -> Self:
-        if isinstance(runner, (Runner, RunnerManifest)):
-            self._runner = runner
-        elif isinstance(runner, dict):
-            self._runner = RunnerManifest.model_validate(runner)
-        else:
-            raise InvalidInputError(f"Invalid runner definition: {type(runner)}")
+    def with_runner(self, runner: RunnerDefinition) -> Self:
+        match runner:
+            case dict():
+                self._runner = RunnerManifest.model_validate(runner)
+            case Runner() | RunnerManifest():
+                self._runner = runner
+            case _:
+                raise InvalidInputError(f"Invalid runner definition: {type(runner)}")
 
         return self
 
-    def inputs(self, *values: Input | InputManifest | dict[str, Any]) -> Self:
+    def with_inputs(self, *values: InputDefinition) -> Self:
         for value in values:
             match value:
-                case Input() | InputManifest():
-                    operator = value
                 case dict():
-                    operator = InputManifest.model_validate(value)
+                    definition = InputManifest.model_validate(value)
+                case Input() | InputManifest():
+                    definition = value
                 case _:
                     raise InvalidInputError(f"Invalid input definition: {type(value)}")
-            self._inputs.append(operator)
+            self._inputs.append(definition)
 
         return self
 
-    def transforms(self, *values: Transform | TransformManifest | dict[str, Any]) -> Self:
+    def with_transforms(self, *values: TransformDefinition) -> Self:
         for value in values:
             match value:
-                case Transform() | TransformManifest():
-                    operator = value
                 case dict():
-                    operator = TransformManifest.model_validate(value)
+                    definition = TransformManifest.model_validate(value)
+                case Transform() | TransformManifest():
+                    definition = value
                 case _:
                     raise InvalidInputError(f"Invalid transform definition: {type(value)}")
-            self._transforms.append(operator)
+            self._transforms.append(definition)
 
         return self
 
-    def outputs(self, *values: Output | OutputManifest | dict[str, Any]) -> Self:
+    def with_outputs(self, *values: OutputDefinition) -> Self:
         for value in values:
             match value:
-                case Output() | OutputManifest():
-                    operator = value
                 case dict():
-                    operator = OutputManifest.model_validate(value)
+                    definition = OutputManifest.model_validate(value)
+                case Output() | OutputManifest():
+                    definition = value
                 case _:
                     raise InvalidInputError(f"Invalid output definition: {type(value)}")
-            self._outputs.append(operator)
+            self._outputs.append(definition)
 
         return self
 
-    def set(self, field: str, value: Any) -> Self:
-        setter = try_get_public_setter(self, field)
+    def with_field(self, field: str, value: Any) -> Self:
+        setter = try_get_public_setter(self, f"with_{field}")
 
         if setter is not None:
             if isinstance(value, list):
@@ -170,39 +179,49 @@ class JobBuilder:
 
     def from_manifest(self, manifest: JobManifest) -> Self:
         for field in JobManifest.model_fields:
-            self.set(field, getattr(manifest, field))
+            self.with_field(field, getattr(manifest, field))
 
         self._options.update(manifest.model_extra)
         return self
+
+    def _build_step(
+        self, manifest: TransformManifest | OutputManifest | InputManifest | PlugIn
+    ) -> EtlStep:
+        manifest.org = manifest.org or self._org
+        manifest.region = manifest.region or self._region
+        manifest.domain = manifest.domain or self._domain
+        manifest.product = manifest.product or self._product
+        manifest.model = manifest.model or self._model
+        manifest.layer = manifest.layer or self._layer
+        return plugin_registry.load_manifest(manifest)
 
     def build(self) -> Job:
         if self._built:
             raise TiozinUnexpectedError("The builder can only be used once")
 
-        plugin_factory = PluginFactory()
-        plugin_factory.setup()
-
-        job = plugin_factory.load_job(
+        job = plugin_registry.safe_load(
+            plugin_kind=Job,
             # identity
             kind=self._kind,
             name=self._name,
             description=self._description,
+            # Governance
             owner=self._owner,
             maintainer=self._maintainer,
             cost_center=self._cost_center,
             labels=self._labels,
-            # taxonomy
+            # Domain
             org=self._org,
             region=self._region,
             domain=self._domain,
             product=self._product,
             model=self._model,
             layer=self._layer,
-            # pipeline
-            runner=plugin_factory.load_manifest(self._runner),
-            inputs=[plugin_factory.load_manifest(m) for m in self._inputs],
-            transforms=[plugin_factory.load_manifest(m) for m in self._transforms],
-            outputs=[plugin_factory.load_manifest(m) for m in self._outputs],
+            # Pipeline
+            runner=plugin_registry.load_manifest(self._runner),
+            inputs=[self._build_step(m) for m in self._inputs],
+            transforms=[self._build_step(m) for m in self._transforms],
+            outputs=[self._build_step(m) for m in self._outputs],
             **self._options,
         )
 

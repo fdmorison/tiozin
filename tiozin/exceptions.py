@@ -39,8 +39,6 @@ class TiozinErrorMixin:
         cls,
         condition: bool,
         message: str | None = None,
-        *,
-        code: str | None = None,
         **options,
     ) -> Self:
         """
@@ -53,7 +51,10 @@ class TiozinErrorMixin:
             )
         """
         if bool(condition):
-            raise cls(message, code=code, **options)
+            args = {}
+            if message:
+                args["message"] = message
+            raise cls(**args, **options)
         return cls
 
     def to_dict(self) -> dict[str, Any]:
@@ -242,10 +243,13 @@ class AmbiguousPluginError(PluginError, ConflictError):
 class PluginKindError(PluginError, InvalidInputError):
     message = "Plugin '{plugin_name}' cannot be used as '{plugin_kind}'."
 
-    def __init__(self, plugin_name: str, plugin_kind: type) -> None:
+    def __init__(
+        self, message: str = None, plugin_name: str = None, plugin_kind: type = None
+    ) -> None:
         super().__init__(
+            message,
             plugin_name=plugin_name,
-            plugin_kind=plugin_kind.__name__,
+            plugin_kind=plugin_kind.__name__ if plugin_kind else None,
         )
 
 

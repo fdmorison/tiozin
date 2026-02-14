@@ -62,28 +62,28 @@ def test_app_should_run_programmatic_job_with_dicts(_atexit, _signal, app: Tiozi
     # Arrange
     job = (
         Job.builder()
-        .kind("LinearJob")
-        .name("builder_dict_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("sales")
-        .product("orders")
-        .model("daily_summary")
-        .layer("refined")
-        .runner({"kind": "NoOpRunner"})
-        .inputs(
+        .with_kind("LinearJob")
+        .with_name("builder_dict_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("sales")
+        .with_product("orders")
+        .with_model("daily_summary")
+        .with_layer("refined")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs(
             {
                 "kind": "NoOpInput",
                 "name": "read_orders",
             }
         )
-        .transforms(
+        .with_transforms(
             {
                 "kind": "NoOpTransform",
                 "name": "aggregate",
             }
         )
-        .outputs(
+        .with_outputs(
             {
                 "kind": "NoOpOutput",
                 "name": "write_summary",
@@ -114,32 +114,32 @@ def test_app_should_run_programmatic_job_with_manifests(_atexit, _signal, app: T
     # Arrange
     job = (
         Job.builder()
-        .kind("LinearJob")
-        .name("builder_manifest_job")
-        .org("tiozin")
-        .region("latam")
-        .domain("sales")
-        .product("orders")
-        .model("daily_summary")
-        .layer("refined")
-        .runner(
+        .with_kind("LinearJob")
+        .with_name("builder_manifest_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("sales")
+        .with_product("orders")
+        .with_model("daily_summary")
+        .with_layer("refined")
+        .with_runner(
             RunnerManifest(
                 kind="NoOpRunner",
             ),
         )
-        .inputs(
+        .with_inputs(
             InputManifest(
                 kind="NoOpInput",
                 name="read_orders",
             )
         )
-        .transforms(
+        .with_transforms(
             TransformManifest(
                 kind="NoOpTransform",
                 name="aggregate",
             )
         )
-        .outputs(
+        .with_outputs(
             OutputManifest(
                 kind="NoOpOutput",
                 name="write_summary",
@@ -174,29 +174,29 @@ def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal,
     # Arrange
     job = (
         Job.builder()
-        .kind("LinearJob")
-        .name("maintenance_cleanup_job")
-        .description(
+        .with_kind("LinearJob")
+        .with_name("maintenance_cleanup_job")
+        .with_description(
             "Periodic maintenance job responsible for cleaning up obsolete data, "
             "validating data sources, and emitting operational reports."
         )
-        .owner("data-platform")
-        .maintainer("oncall-data-eng")
-        .cost_center("cc-analytics-001")
-        .labels(
+        .with_owner("data-platform")
+        .with_maintainer("oncall-data-eng")
+        .with_cost_center("cc-analytics-001")
+        .with_labels(
             {
                 "job_type": "maintenance",
                 "criticality": "low",
                 "schedule": "weekly",
             }
         )
-        .org("tiozin")
-        .region("latam")
-        .domain("platform")
-        .product("data-platform")
-        .model("maintenance")
-        .layer("raw")
-        .runner(
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("platform")
+        .with_product("data-platform")
+        .with_model("maintenance")
+        .with_layer("raw")
+        .with_runner(
             NoOpRunner(
                 description="Executes the job in maintenance mode with minimal retries.",
                 execution_mode="maintenance",
@@ -204,7 +204,7 @@ def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal,
                 timeout_minutes=30,
             )
         )
-        .inputs(
+        .with_inputs(
             NoOpInput(
                 name="scan_raw_storage",
                 description="Scans raw storage to identify obsolete or invalid data.",
@@ -212,7 +212,7 @@ def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal,
                 recursive=True,
             )
         )
-        .transforms(
+        .with_transforms(
             NoOpTransform(
                 name="cleanup_obsolete_files",
                 description="Removes obsolete files based on retention policy.",
@@ -225,7 +225,7 @@ def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal,
                 fail_on_error=False,
             ),
         )
-        .outputs(
+        .with_outputs(
             NoOpOutput(
                 name="emit_maintenance_report",
                 description="Emits a summary report with maintenance actions and metrics.",
@@ -344,21 +344,21 @@ def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _sign
     # Arrange
     job = (
         Job.builder()
-        .kind("LinearJob")
-        .name("temp_workdir_demo")
-        .org("tiozin")
-        .region("latam")
-        .domain("analytics")
-        .product("reports")
-        .model("daily")
-        .layer("refined")
-        .runner(
+        .with_kind("LinearJob")
+        .with_name("temp_workdir_demo")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("analytics")
+        .with_product("reports")
+        .with_model("daily")
+        .with_layer("refined")
+        .with_runner(
             RunnerManifest(
                 kind="NoOpRunner",
                 workspace="{{ temp_workdir }}/runner_workspace",
             )
         )
-        .inputs(
+        .with_inputs(
             InputManifest(
                 kind="NoOpInput",
                 name="download_data",
@@ -366,7 +366,7 @@ def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _sign
                 output_path="{{ job.temp_workdir }}/downloaded.csv",
             )
         )
-        .transforms(
+        .with_transforms(
             TransformManifest(
                 kind="NoOpTransform",
                 name="process_data",
@@ -375,7 +375,7 @@ def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _sign
                 output_path="{{ job.temp_workdir }}/processed.parquet",
             )
         )
-        .outputs(
+        .with_outputs(
             OutputManifest(
                 kind="NoOpOutput",
                 name="upload_results",
