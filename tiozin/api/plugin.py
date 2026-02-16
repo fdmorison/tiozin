@@ -101,10 +101,6 @@ class PlugIn(Loggable, metaclass=TioProxyMeta):
     def plugin_python_path(cls) -> str:
         return cls.__tiometa__.python_path
 
-    @classproperty
-    def plugin_proxies(cls) -> list:
-        return cls.tio_proxies
-
     @property
     def uri(self) -> str:
         if self.plugin_uri.endswith(self.name):

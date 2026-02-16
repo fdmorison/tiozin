@@ -6,7 +6,7 @@ import wrapt
 
 from tiozin.exceptions import DuplicateProxyDecoratorError, ProxyContractViolationError
 
-TIO_PROXIES = "__tio_proxies__"
+TIO_PROXY = "__tioproxy__"
 
 
 TClass = TypeVar("TClass", bound=type)
@@ -21,13 +21,13 @@ class TioProxyMeta(ABCMeta):
     """
 
     @property
-    def tio_proxies(cls) -> list[type[wrapt.ObjectProxy]]:
-        return list(getattr(cls, TIO_PROXIES, []))
+    def tioproxy(cls) -> list[type[wrapt.ObjectProxy]]:
+        return list(getattr(cls, TIO_PROXY, []))
 
     def __call__(cls, *args, **kwargs) -> Any | wrapt.ObjectProxy:
         wrapped = super().__call__(*args, **kwargs)
 
-        for proxy_class in reversed(cls.tio_proxies):
+        for proxy_class in reversed(cls.tioproxy):
             wrapped = proxy_class(wrapped)
 
         return wrapped
@@ -73,17 +73,17 @@ def tioproxy(*proxy_classes: type[wrapt.ObjectProxy]) -> Callable[[TClass], TCla
     """
 
     def decorator(wrapped_class: TClass) -> TClass:
-        if TIO_PROXIES in wrapped_class.__dict__:
+        if TIO_PROXY in wrapped_class.__dict__:
             raise DuplicateProxyDecoratorError(wrapped_class)
 
         for proxy_class in proxy_classes:
             if not issubclass(proxy_class, wrapt.ObjectProxy):
                 raise ProxyContractViolationError(proxy_class, wrapped_class)
 
-        proxies = list(getattr(wrapped_class, TIO_PROXIES, []))
+        proxies = list(getattr(wrapped_class, TIO_PROXY, []))
         proxies.extend(proxy_classes)
         unique_proxies = list(dict.fromkeys(proxies))
-        setattr(wrapped_class, TIO_PROXIES, unique_proxies)
+        setattr(wrapped_class, TIO_PROXY, unique_proxies)
 
         return wrapped_class
 

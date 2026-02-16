@@ -25,7 +25,7 @@ def test_tioproxy_should_register_proxy():
         pass
 
     # Assert
-    actual = Subject.tio_proxies
+    actual = Subject.tioproxy
     expected = [AlphaProxy]
     assert actual == expected
 
@@ -39,7 +39,7 @@ def test_tioproxy_should_accept_multiple_proxies():
         pass
 
     # Assert
-    actual = Subject.tio_proxies
+    actual = Subject.tioproxy
     expected = [AlphaProxy, BetaProxy]
     assert actual == expected
 
@@ -88,7 +88,7 @@ def test_tioproxy_should_inherit_parent_proxies():
         pass
 
     # Assert
-    actual = Child.tio_proxies
+    actual = Child.tioproxy
     expected = [AlphaProxy, BetaProxy]
     assert actual == expected
 
@@ -107,7 +107,7 @@ def test_tioproxy_should_not_mutate_parent():
         pass
 
     # Assert
-    actual = Parent.tio_proxies
+    actual = Parent.tioproxy
     expected = [AlphaProxy]
     assert actual == expected
 
@@ -126,7 +126,7 @@ def test_tioproxy_should_deduplicate_from_parent():
         pass
 
     # Assert
-    actual = Child.tio_proxies
+    actual = Child.tioproxy
     expected = [AlphaProxy]
     assert actual == expected
 
