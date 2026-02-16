@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from ...assembly import tioproxy
-from ...assembly.step_proxy import StepProxy
+from tiozin.compose import StepProxy, tioproxy
+
 from ...exceptions import RequiredArgumentError
 from .. import PlugIn
 from .context import Context

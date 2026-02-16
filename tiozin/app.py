@@ -5,7 +5,7 @@ from threading import RLock
 from tiozin import Job, logs
 from tiozin.api import Loggable
 from tiozin.api.metadata.job_manifest import JobManifest
-from tiozin.assembly.registry_factory import RegistryFactory
+from tiozin.compose.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinError, TiozinUnexpectedError
 from tiozin.lifecycle import Lifecycle
 from tiozin.utils.app_status import AppStatus

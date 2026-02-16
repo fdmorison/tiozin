@@ -7,7 +7,7 @@ from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim_lower
 
 from .. import DuckdbInput
-from ..assembly.read_builder import ReadBuilder
+from ..compose.assembly.read_builder import ReadBuilder
 from ..typehints import DuckdbTiozinFileFormat, DuckdbTiozinReadMode
 
 

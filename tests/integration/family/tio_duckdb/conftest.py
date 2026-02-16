@@ -4,7 +4,7 @@ import duckdb
 import pytest
 from duckdb import DuckDBPyConnection
 
-from tiozin.assembly.runner_proxy import RunnerProxy
+from tiozin.compose import RunnerProxy
 
 
 @pytest.fixture(scope="session", autouse=True)

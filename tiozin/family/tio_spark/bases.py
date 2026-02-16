@@ -1,9 +1,8 @@
 from pyspark.sql import DataFrame, SparkSession
 
-from tiozin import CoTransform, Input, Output, Transform, active_session
-from tiozin.assembly import tioproxy
+from tiozin import CoTransform, Input, Output, Transform, active_session, tioproxy
 
-from .proxy import SparkStepProxy
+from .compose.proxies.step_proxy import SparkStepProxy
 
 
 class SparkStepMixin:
