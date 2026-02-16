@@ -359,6 +359,22 @@ class ProxyContractViolationError(TiozinUnexpectedError):
         )
 
 
+class DuplicateProxyDecoratorError(TiozinUnexpectedError):
+    """
+    Raised when @tioproxy is applied more than once to the same class.
+
+    Use @tioproxy(ProxyA, ProxyB) to register multiple proxies in a single call.
+    """
+
+    message = (
+        "Class `{cls}` already has @tioproxy applied. "
+        "Use @tioproxy(ProxyA, ProxyB) to register multiple proxies."
+    )
+
+    def __init__(self, cls: type) -> None:
+        super().__init__(cls=cls.__name__)
+
+
 class NotInitializedError(TiozinUnexpectedError):
     """
     Raised when a Tiozin plugin is accessed before its lifecycle has been properly initialized.
