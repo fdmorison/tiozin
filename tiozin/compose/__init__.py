@@ -8,6 +8,7 @@ from .proxies.tioproxy import tioproxy
 from .proxies.meta import ProxyMeta
 
 from .templating.context_builder import TemplateContextBuilder
+from .classproperty import classproperty
 
 if TYPE_CHECKING:
     from .assembly.job_builder import JobBuilder as JobBuilder
@@ -57,4 +58,6 @@ __all__ = [
     "PluginTemplateOverlay",
     "TemplateContextBuilder",
     "RelativeDate",
+    # Other
+    "classproperty",
 ]

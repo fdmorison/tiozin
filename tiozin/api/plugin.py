@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from tiozin import config
 from tiozin.api import Loggable
-from tiozin.compose import ProxyMeta
+from tiozin.compose import ProxyMeta, classproperty
 
 
 class PlugIn(Loggable, metaclass=ProxyMeta):
@@ -73,33 +73,33 @@ class PlugIn(Loggable, metaclass=ProxyMeta):
 
         return config.plugin_provider_unknown
 
-    @property
-    def plugin_name(self) -> str:
-        return self.__tiometa__.name
+    @classproperty
+    def plugin_name(cls) -> str:
+        return cls.__tiometa__.name
 
-    @property
-    def plugin_kind(self) -> str:
-        return self.__tiometa__.kind
+    @classproperty
+    def plugin_kind(cls) -> str:
+        return cls.__tiometa__.kind
 
-    @property
-    def plugin_kind_class(self) -> type[PlugIn]:
-        return self.__tiometa__.kind_class
+    @classproperty
+    def plugin_kind_class(cls) -> type[PlugIn]:
+        return cls.__tiometa__.kind_class
 
-    @property
-    def plugin_provider(self) -> str:
-        return self.__tiometa__.provider
+    @classproperty
+    def plugin_provider(cls) -> str:
+        return cls.__tiometa__.provider
 
-    @property
-    def plugin_uri(self) -> str:
-        return self.__tiometa__.uri
+    @classproperty
+    def plugin_uri(cls) -> str:
+        return cls.__tiometa__.uri
 
-    @property
-    def plugin_tio_path(self) -> str:
-        return self.__tiometa__.tio_path
+    @classproperty
+    def plugin_tio_path(cls) -> str:
+        return cls.__tiometa__.tio_path
 
-    @property
-    def plugin_python_path(self) -> str:
-        return self.__tiometa__.python_path
+    @classproperty
+    def plugin_python_path(cls) -> str:
+        return cls.__tiometa__.python_path
 
     @property
     def uri(self) -> str:
