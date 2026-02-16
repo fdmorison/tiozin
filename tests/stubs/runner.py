@@ -11,7 +11,7 @@ class RunnerStub(Runner):
 
     @property
     def session(self) -> None:
-        return None
+        return {}
 
     def setup(self, context: Context) -> None:
         self.captured_setup = self.path

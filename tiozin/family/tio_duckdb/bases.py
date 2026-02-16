@@ -1,12 +1,11 @@
 from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
-from tiozin import CoTransform, Input, Output, Transform, active_session
-from tiozin.assembly import tioproxy
+from tiozin import CoTransform, Input, Output, Transform, active_session, tioproxy
 
-from .proxy import DuckdbStepProxy
+from .compose.proxies.step_proxy import DuckdbStepProxy
 
 
-class StepMixin:
+class DuckdbStepMixin:
     """
     Mixin that provides cross-cutting, engine-specific behavior for execution steps.
 
@@ -41,7 +40,7 @@ class StepMixin:
 
 
 @tioproxy(DuckdbStepProxy)
-class DuckdbInput(StepMixin, Input[DuckDBPyRelation]):
+class DuckdbInput(DuckdbStepMixin, Input[DuckDBPyRelation]):
     """
     Base class for DuckDB input steps.
 
@@ -51,7 +50,7 @@ class DuckdbInput(StepMixin, Input[DuckDBPyRelation]):
 
 
 @tioproxy(DuckdbStepProxy)
-class DuckdbTransform(StepMixin, Transform[DuckDBPyRelation]):
+class DuckdbTransform(DuckdbStepMixin, Transform[DuckDBPyRelation]):
     """
     Base class for single-input DuckDB transform steps.
 
@@ -62,7 +61,7 @@ class DuckdbTransform(StepMixin, Transform[DuckDBPyRelation]):
 
 
 @tioproxy(DuckdbStepProxy)
-class DuckdbCoTransform(StepMixin, CoTransform[DuckDBPyRelation]):
+class DuckdbCoTransform(DuckdbStepMixin, CoTransform[DuckDBPyRelation]):
     """
     Base class for multi-input DuckDB transform steps.
 
@@ -72,7 +71,7 @@ class DuckdbCoTransform(StepMixin, CoTransform[DuckDBPyRelation]):
 
 
 @tioproxy(DuckdbStepProxy)
-class DuckdbOutput(StepMixin, Output[DuckDBPyRelation]):
+class DuckdbOutput(DuckdbStepMixin, Output[DuckDBPyRelation]):
     """
     Base class for DuckDB output steps.
 

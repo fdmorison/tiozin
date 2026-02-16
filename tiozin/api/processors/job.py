@@ -10,14 +10,13 @@ from tiozin.api import (
     Runner,
     Transform,
 )
-from tiozin.assembly import tioproxy
-from tiozin.assembly.job_proxy import JobProxy
+from tiozin.compose import JobProxy, tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
 from .context import Context
 
 if TYPE_CHECKING:
-    from tiozin.assembly.job_builder import JobBuilder
+    from tiozin.compose import JobBuilder
 
 TData = TypeVar("TData")
 
@@ -119,7 +118,7 @@ class Job(PlugIn, Generic[TData]):
 
     @staticmethod
     def builder() -> JobBuilder:
-        from tiozin.assembly.job_builder import JobBuilder
+        from tiozin.compose import JobBuilder
 
         return JobBuilder()
 

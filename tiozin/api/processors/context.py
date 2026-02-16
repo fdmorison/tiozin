@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
-from tiozin.assembly.template_context_builder import TemplateContextBuilder
+from tiozin.compose.templating.context_builder import TemplateContextBuilder
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 if TYPE_CHECKING:

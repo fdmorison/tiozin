@@ -1,116 +1,84 @@
-from pathlib import Path
+import pytest
 
-from pytest import MonkeyPatch
-
+from tests.config import app_temp_workdir
 from tiozin.utils.io import create_local_temp_dir
 
 
 # ============================================================================
 # Testing create_local_temp_dir()
 # ============================================================================
-def test_create_local_temp_dir_should_create_directory_with_single_entry(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-):
-    # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-
+def test_create_local_temp_dir_should_create_directory():
     # Act
-    result = create_local_temp_dir("my_job")
+    dir = create_local_temp_dir("my_job")
 
     # Assert
-    actual = result
-    expected = tmp_path / "my_job"
-    assert actual == expected
-    assert actual.exists()
-    assert actual.is_dir()
-
-
-def test_create_local_temp_dir_should_create_nested_directory_with_multiple_entries(
-    tmp_path, monkeypatch
-):
-    # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-
-    # Act
-    result = create_local_temp_dir("job_name", "run_id", "step_name")
-
-    # Assert
-    actual = result
-    expected = tmp_path / "job_name" / "run_id" / "step_name"
-    assert actual == expected
-    assert actual.exists()
-    assert actual.is_dir()
-
-
-def test_create_local_temp_dir_should_skip_empty_entries(tmp_path: Path, monkeypatch: MonkeyPatch):
-    # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-
-    # Act
-    result = create_local_temp_dir("job_name", "", "step_name")
-
-    # Assert
-    actual = result
-    expected = tmp_path / "job_name" / "step_name"
+    actual = (
+        dir,
+        dir.is_dir(),
+    )
+    expected = (
+        app_temp_workdir / "my_job",
+        True,
+    )
     assert actual == expected
 
 
-def test_create_local_temp_dir_should_skip_none_entries(tmp_path: Path, monkeypatch: MonkeyPatch):
-    # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-
+def test_create_local_temp_dir_should_create_subdirectories():
     # Act
-    result = create_local_temp_dir("job_name", None, "step_name")
+    dir = create_local_temp_dir("job_name", "run_id", "step_name")
 
     # Assert
-    actual = result
-    expected = tmp_path / "job_name" / "step_name"
+    actual = (
+        dir,
+        dir.is_dir(),
+    )
+    expected = (
+        app_temp_workdir / "job_name" / "run_id" / "step_name",
+        True,
+    )
     assert actual == expected
 
 
-def test_create_local_temp_dir_should_return_base_path_when_no_entries(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-):
-    # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-
+@pytest.mark.parametrize(
+    "entry",
+    ["", None],
+)
+def test_create_local_temp_dir_should_skip_unset_entries(entry: str):
     # Act
-    result = create_local_temp_dir()
+    create_local_temp_dir("job_name", entry, "step_name")
 
     # Assert
-    actual = result
-    expected = tmp_path
+    expected = app_temp_workdir / "job_name" / "step_name"
+    assert expected.exists()
+
+
+def test_create_local_temp_dir_should_return_app_temp_dir_when_no_entries():
+    # Act
+    dir = create_local_temp_dir()
+
+    # Assert
+    actual = dir
+    expected = app_temp_workdir
     assert actual == expected
 
 
-def test_create_local_temp_dir_should_be_idempotent(tmp_path: Path, monkeypatch: MonkeyPatch):
-    # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-
+def test_create_local_temp_dir_should_be_idempotent():
     # Act
-    first_call = create_local_temp_dir("my_job", "run_123")
-    second_call = create_local_temp_dir("my_job", "run_123")
+    create_local_temp_dir("my_job", "run_123")
+    create_local_temp_dir("my_job", "run_123")
 
     # Assert
-    actual = first_call
-    expected = second_call
-    assert actual == expected
-    assert actual.exists()
+    expected = app_temp_workdir / "my_job" / "run_123"
+    assert expected.exists()
 
 
-def test_create_local_temp_dir_should_accept_path_as_first_entry(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-):
+def test_create_local_temp_dir_should_accept_path_as_first_entry():
     # Arrange
-    monkeypatch.setattr("tiozin.utils.helpers.config.app_temp_workdir", tmp_path)
-    base_path = tmp_path / "existing_job"
-    base_path.mkdir()
+    base_path = app_temp_workdir / "existing_job"
 
     # Act
-    result = create_local_temp_dir(base_path, "step_name")
+    create_local_temp_dir(base_path, "step_name")
 
     # Assert
-    actual = result
     expected = base_path / "step_name"
-    assert actual == expected
-    assert actual.exists()
+    assert expected.exists()

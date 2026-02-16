@@ -5,15 +5,12 @@ from enum import Enum
 from fractions import Fraction
 from typing import Any
 
-import pendulum
 import pytest
 from pendulum import UTC
 
 from tiozin.utils import (
-    RelativeDate,
     as_flat_list,
     as_list,
-    coerce_datetime,
     default,
     human_join,
     utcnow,
@@ -369,73 +366,6 @@ def test_utcnow_should_return_current_time():
 
     # Assert
     assert before <= result <= after
-
-
-# ============================================================================
-# Testing coerce_datetime()
-# ============================================================================
-def test_coerce_datetime_should_return_none_when_none():
-    # Act
-    actual = coerce_datetime(None)
-
-    # Assert
-    expected = None
-    assert actual == expected
-
-
-def test_coerce_datetime_should_return_dt_from_relative_date():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-    rd = RelativeDate(dt)
-
-    # Act
-    actual = coerce_datetime(rd)
-
-    # Assert
-    expected = dt
-    assert actual == expected
-
-
-def test_coerce_datetime_should_return_pendulum_datetime_unchanged():
-    # Arrange
-    dt = pendulum.parse("2026-01-17T10:30:45+00:00")
-
-    # Act
-    actual = coerce_datetime(dt)
-
-    # Assert
-    assert actual is dt
-
-
-def test_coerce_datetime_should_convert_datetime_to_pendulum():
-    # Arrange
-    dt = datetime(2026, 1, 17, 10, 30, 45)
-
-    # Act
-    actual = coerce_datetime(dt)
-
-    # Assert
-    assert isinstance(actual, pendulum.DateTime)
-    assert actual.year == 2026
-    assert actual.month == 1
-    assert actual.day == 17
-
-
-def test_coerce_datetime_should_parse_iso_string():
-    # Act
-    actual = coerce_datetime("2026-01-17T10:30:45+00:00")
-
-    # Assert
-    assert isinstance(actual, pendulum.DateTime)
-    assert actual.year == 2026
-    assert actual.month == 1
-    assert actual.day == 17
-
-
-def test_coerce_datetime_should_raise_when_invalid_type():
-    # Act/Assert
-    with pytest.raises(TypeError, match="Expected RelativeDate, datetime or ISO string"):
-        coerce_datetime(12345)
 
 
 # ============================================================================

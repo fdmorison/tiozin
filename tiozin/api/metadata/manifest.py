@@ -8,8 +8,8 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
+from tiozin.compose.reflection import try_get
 from tiozin.exceptions import ManifestError
-from tiozin.utils.reflection import try_get
 
 _yaml = YAML(typ="safe")
 _yaml.allow_duplicate_keys = False

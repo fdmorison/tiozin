@@ -6,8 +6,6 @@ from pydantic import ValidationError
 from ruamel.yaml.error import MarkedYAMLError
 from wrapt import ObjectProxy
 
-from .utils.messages import MessageTemplates
-
 if TYPE_CHECKING:
     from tiozin import PlugIn
 
@@ -179,6 +177,8 @@ class ManifestError(JobError, InvalidInputError):
 
     @classmethod
     def from_pydantic(cls, error: ValidationError, name: str = None) -> Self:
+        from .utils.messages import MessageTemplates
+
         messages = MessageTemplates.format_friendly_message(error)
         messages = ". ".join(messages)
         return cls(message=messages, name=name or "manifest")

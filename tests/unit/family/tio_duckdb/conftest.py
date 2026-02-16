@@ -7,7 +7,7 @@ import pytest
 from duckdb import DuckDBPyConnection
 
 from tiozin import Context
-from tiozin.assembly.runner_proxy import RunnerProxy
+from tiozin.compose import RunnerProxy
 from tiozin.family.tio_duckdb import DuckdbRunner
 
 
