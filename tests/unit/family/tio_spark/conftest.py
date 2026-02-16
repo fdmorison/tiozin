@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pyspark.sql import SparkSession
 
-from tiozin.assembly.runner_proxy import RunnerProxy
+from tiozin.compose import RunnerProxy
 
 
 @pytest.fixture(scope="session", autouse=True)

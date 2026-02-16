@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from tiozin import config
 from tiozin.api import Loggable
-from tiozin.assembly import ProxyMeta
+from tiozin.compose import ProxyMeta
 
 
 class PlugIn(Loggable, metaclass=ProxyMeta):

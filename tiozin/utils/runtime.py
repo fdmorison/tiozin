@@ -45,7 +45,7 @@ def active_session() -> Any:
     Raises:
         NotInitializedError: If called outside of an active runner scope.
     """
-    from tiozin.assembly.runner_proxy import RunnerProxy
+    from tiozin.compose import RunnerProxy
     from tiozin.exceptions import NotInitializedError
 
     try:

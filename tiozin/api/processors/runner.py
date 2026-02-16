@@ -3,8 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from ...assembly import tioproxy
-from ...assembly.runner_proxy import RunnerProxy
+from tiozin.compose import RunnerProxy, tioproxy
+
 from .. import PlugIn
 from .context import Context
 
