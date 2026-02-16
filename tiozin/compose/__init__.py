@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .proxies.tioproxy import tioproxy
-from .proxies.meta import ProxyMeta
+from .proxies.tioproxy import tioproxy, TioProxyMeta
 
 from .templating.context_builder import TemplateContextBuilder
+from .classproperty import classproperty
 
 if TYPE_CHECKING:
     from .assembly.job_builder import JobBuilder as JobBuilder
@@ -49,7 +49,7 @@ __all__ = [
     "PluginScanner",
     # Proxy
     "tioproxy",
-    "ProxyMeta",
+    "TioProxyMeta",
     "JobProxy",
     "RunnerProxy",
     "StepProxy",
@@ -57,4 +57,6 @@ __all__ = [
     "PluginTemplateOverlay",
     "TemplateContextBuilder",
     "RelativeDate",
+    # Other
+    "classproperty",
 ]

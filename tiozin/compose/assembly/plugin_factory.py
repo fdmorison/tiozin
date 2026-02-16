@@ -87,11 +87,10 @@ class PluginRegistry(Loggable):
         if plugin in self._plugins:
             return
 
-        metadata = plugin.__tiometa__
-        self._index[metadata.name].add(plugin)
-        self._index[metadata.uri].add(plugin)
-        self._index[metadata.tio_path].add(plugin)
-        self._index[metadata.python_path].add(plugin)
+        self._index[plugin.plugin_name].add(plugin)
+        self._index[plugin.plugin_uri].add(plugin)
+        self._index[plugin.plugin_tio_path].add(plugin)
+        self._index[plugin.plugin_python_path].add(plugin)
         self._plugins.add(plugin)
 
     def load(self, kind: str, **args) -> PlugIn:
@@ -124,7 +123,7 @@ class PluginRegistry(Loggable):
         AmbiguousPluginError.raise_if(
             len(candidates) > 1,
             plugin_name=kind,
-            candidates=[p.__tiometa__.tio_path for p in candidates],
+            candidates=[p.plugin_tio_path for p in candidates],
         )
 
         plugin = next(iter(candidates))

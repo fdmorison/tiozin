@@ -1,4 +1,19 @@
+from tiozin.compose import StepProxy
 from tiozin.family.tio_kernel import NoOpInput
+
+
+# ============================================================================
+# Testing PlugIn.tioproxy
+# ============================================================================
+def test_tioproxy_should_return_registered_proxies():
+    """tioproxy returns the proxy list registered via @tioproxy."""
+
+    # Act
+    actual = NoOpInput.tioproxy
+
+    # Assert
+    expected = [StepProxy]
+    assert actual == expected
 
 
 # ============================================================================
