@@ -2,7 +2,7 @@ import pytest
 import wrapt
 
 from tiozin.compose import ProxyMeta, tioproxy
-from tiozin.exceptions import ProxyContractViolationError
+from tiozin.exceptions import DuplicateProxyDecoratorError, ProxyContractViolationError
 
 
 class AlphaProxy(wrapt.ObjectProxy):
@@ -30,18 +30,17 @@ def test_tioproxy_should_register_proxy():
     assert actual == expected
 
 
-def test_tioproxy_should_stack_proxies():
-    """Stacking @tioproxy accumulates proxies in top-to-bottom declaration order."""
+def test_tioproxy_should_accept_multiple_proxies():
+    """@tioproxy(A, B) registers proxies in the given parameter order."""
 
     # Act
-    @tioproxy(AlphaProxy)
-    @tioproxy(BetaProxy)
+    @tioproxy(AlphaProxy, BetaProxy)
     class Subject(metaclass=ProxyMeta):
         pass
 
     # Assert
     actual = Subject.__tioproxy__
-    expected = [BetaProxy, AlphaProxy]
+    expected = [AlphaProxy, BetaProxy]
     assert actual == expected
 
 
@@ -56,6 +55,18 @@ def test_tioproxy_should_reject_invalid_class():
     with pytest.raises(ProxyContractViolationError):
 
         @tioproxy(NotAProxy)
+        class Subject(metaclass=ProxyMeta):
+            pass
+
+
+def test_tioproxy_should_reject_duplicate_decorator():
+    """@tioproxy raises if applied more than once to the same class."""
+
+    # Act & Assert
+    with pytest.raises(DuplicateProxyDecoratorError):
+
+        @tioproxy(BetaProxy)
+        @tioproxy(AlphaProxy)
         class Subject(metaclass=ProxyMeta):
             pass
 
