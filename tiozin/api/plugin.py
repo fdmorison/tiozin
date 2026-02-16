@@ -5,10 +5,10 @@ from typing import Any, ClassVar
 
 from tiozin import config
 from tiozin.api import Loggable
-from tiozin.compose import ProxyMeta, classproperty
+from tiozin.compose import TioProxyMeta, classproperty
 
 
-class PlugIn(Loggable, metaclass=ProxyMeta):
+class PlugIn(Loggable, metaclass=TioProxyMeta):
     """
     Base class for resources that can be discovered and loaded as plugins.
 
@@ -100,6 +100,10 @@ class PlugIn(Loggable, metaclass=ProxyMeta):
     @classproperty
     def plugin_python_path(cls) -> str:
         return cls.__tiometa__.python_path
+
+    @classproperty
+    def plugin_proxies(cls) -> list:
+        return cls.tio_proxies
 
     @property
     def uri(self) -> str:
