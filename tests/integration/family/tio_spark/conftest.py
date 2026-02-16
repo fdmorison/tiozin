@@ -41,7 +41,7 @@ def job_context(runner: SparkRunner) -> Context:
         # Identity
         name="test",
         kind="test",
-        plugin_kind="test",
+        tiozin_kind="test",
         # Domain Metadata
         org="test",
         region="test",
@@ -69,7 +69,7 @@ def step_context(job_context: Context) -> Context:
         # Identity
         name="test",
         kind="test",
-        plugin_kind="test",
+        tiozin_kind="test",
         # Domain Metadata
         org="test",
         region="test",

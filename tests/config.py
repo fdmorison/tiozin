@@ -35,6 +35,6 @@ log_show_locals = False
 # ===============================================
 #           Plugins
 # ===============================================
-plugin_provider_group = "tiozin.family"
-plugin_provider_prefixes = ["tio_", "tia_"]
-plugin_provider_unknown = "tio_unknown"
+tiozin_provider_group = "tiozin.family"
+tiozin_provider_prefixes = ["tio_", "tia_"]
+tiozin_provider_unknown = "tio_unknown"

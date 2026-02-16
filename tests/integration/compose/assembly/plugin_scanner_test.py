@@ -2,7 +2,7 @@ from importlib.metadata import EntryPoint
 
 import pytest
 
-from tiozin.compose import PluginScanner
+from tiozin.compose import TiozinScanner
 from tiozin.family import tio_kernel
 from tiozin.family.tio_kernel import (
     FileJobRegistry,
@@ -15,13 +15,13 @@ from tiozin.family.tio_kernel import (
 
 @pytest.fixture
 def scanner():
-    return PluginScanner()
+    return TiozinScanner()
 
 
 # ============================================================================
 # _scan_providers()
 # ============================================================================
-def test_scan_providers_should_find_providers(scanner: PluginScanner):
+def test_scan_providers_should_find_providers(scanner: TiozinScanner):
     # Arrange
     entrypoint = EntryPoint(
         name="tio_kernel",
@@ -30,7 +30,7 @@ def test_scan_providers_should_find_providers(scanner: PluginScanner):
     )
 
     # Act
-    providers = scanner._scan_providers()
+    providers = scanner._scan_tios()
 
     # Assert
     actual = providers
@@ -41,9 +41,9 @@ def test_scan_providers_should_find_providers(scanner: PluginScanner):
 # ============================================================================
 # _scan_plugins()
 # ============================================================================
-def test_scan_plugins_should_find_tio_kernel_plugins(scanner: PluginScanner):
+def test_scan_plugins_should_find_tio_kernel_plugins(scanner: TiozinScanner):
     # Act
-    plugins = scanner._scan_plugins(tio_kernel)
+    plugins = scanner._scan_tiozins(tio_kernel)
 
     # Assert
     actual = set(plugins)
@@ -60,7 +60,7 @@ def test_scan_plugins_should_find_tio_kernel_plugins(scanner: PluginScanner):
 # ============================================================================
 # scan()
 # ============================================================================
-def test_scan_should_return_plugins_grouped_by_provider(scanner: PluginScanner):
+def test_scan_should_return_plugins_grouped_by_provider(scanner: TiozinScanner):
     # Act
     result = scanner.scan()
 

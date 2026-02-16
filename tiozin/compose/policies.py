@@ -42,7 +42,7 @@ class PolicyResult:
 
 
 class ProviderNamePolicy:
-    prefixes = tuple(config.plugin_provider_prefixes)
+    prefixes = tuple(config.tiozin_provider_prefixes)
 
     @classmethod
     def eval(cls, provider: EntryPoint) -> PolicyResult:

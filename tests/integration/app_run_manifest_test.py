@@ -93,7 +93,7 @@ def test_app_should_run_job_from_manifest_with_dicts(_atexit, _signal, app: Tioz
 
 
 # ============================================================================
-# JobManifest – Typed Plugin Manifests
+# JobManifest – Typed Tiozin Manifests
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")

@@ -3,7 +3,7 @@
 from typing import TypeAlias
 
 from .loggable import Loggable as Loggable
-from .plugin import PlugIn as PlugIn
+from .tiozin import Tiozin as Tiozin
 from .registry import Registry as Registry
 
 from .metadata.job_manifest import JobManifest as JobManifest

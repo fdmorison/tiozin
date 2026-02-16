@@ -20,7 +20,7 @@ def job_context(fake_taxonomy: dict) -> Context:
     return Context(
         name="test_job",
         kind="LinearJob",
-        plugin_kind="job",
+        tiozin_kind="job",
         **fake_taxonomy,
         options={},
     )
@@ -31,7 +31,7 @@ def input_context(fake_taxonomy: dict, job_context: Context) -> Context:
     return Context(
         name="test_input",
         kind="TestInput",
-        plugin_kind="Input",
+        tiozin_kind="Input",
         parent=job_context,
         **fake_taxonomy,
         options={},
@@ -43,7 +43,7 @@ def transform_context(fake_taxonomy: dict, job_context: Context) -> Context:
     return Context(
         name="test_transform",
         kind="TestTransform",
-        plugin_kind="Transform",
+        tiozin_kind="Transform",
         parent=job_context,
         **fake_taxonomy,
         options={},
@@ -55,7 +55,7 @@ def output_context(fake_taxonomy: dict, job_context: Context) -> Context:
     return Context(
         name="test_output",
         kind="TestOutput",
-        plugin_kind="Output",
+        tiozin_kind="Output",
         parent=job_context,
         **fake_taxonomy,
         options={},

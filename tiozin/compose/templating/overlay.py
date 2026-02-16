@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
-from tiozin.api import PlugIn
+from tiozin.api import Tiozin
 from tiozin.exceptions import InvalidInputError
 
 from .. import reflection
@@ -17,42 +17,36 @@ JINJA_ENV = filters.create_jinja_environment()
 TEMPLATE_PATTERN = re.compile(r"\{\{[^}]*\}\}")
 
 
-class PluginTemplateOverlay:
+class TiozinTemplateOverlay:
     """
-    Context manager that temporarily interpolates string attributes of a plugin.
+    Temporarily renders Jinja templates found in string attributes of a Tiozin
+    plugin and restores the original values afterwards.
 
-    During the execution scope, all string attributes of the plugin that contain
-    template placeholders are resolved using a runtime context. Once the context
-    is exited, the plugin is restored to its original state, allowing the same
-    plugin instance to be safely reused across executions.
+    Any ``{{ ... }}`` placeholders in public attributes are rendered using
+    ``context.template_vars``. This includes nested dicts, lists, and child
+    Tiozin plugins. When the overlay exits, all attributes are restored to
+    their original template strings.
 
-    Args:
-        plugin: Plugin instance whose attributes will be temporarily interpolated.
-        context: Runtime values used to resolve template placeholders.
+    This makes it possible to use templated configuration values during
+    execution without mutating the plugin permanently.
 
-    Example:
-        >>> plugin = MyOutput(path="./data/{{domain}}/{{date}}")
-        >>> context = {"domain": "sales", "date": "2024-01-15"}
-        >>> with PluginTemplateOverlay(plugin, context):
-        ...     print(plugin.path)  # "./data/sales/2024-01-15"
-        >>> print(plugin.path)  # "./data/{{domain}}/{{date}}" (restored)
+    Example::
 
-    Notes:
-        - Only public attributes (not starting with '_') are considered
-        - Recursively traverses nested dicts, lists, tuples, and PlugIn instances
-        - Immutable sequences (tuples) are not modified, but mutable objects
-          within them (dicts, lists) are processed
-        - Resolution happens only within the execution scope
-        - The original plugin state is always restored on exit
-        - Not thread-safe: a plugin instance must not be accessed or modified
-          concurrently while an overlay is active
+        output = MyOutput(path="./data/{{domain}}/{{date}}")
+
+        with TiozinTemplateOverlay(output, context):
+            print(output.path)  # "./data/sales/2024-01-15"
+
+        print(output.path)  # "./data/{{domain}}/{{date}}"
+
+    Not thread-safe.
     """
 
-    def __init__(self, plugin: PlugIn, context: Context) -> None:
-        self._plugin = plugin
+    def __init__(self, tiozin: Tiozin, context: Context) -> None:
+        self._tiozin = tiozin
         self._context = context.template_vars
         self._templates: list[tuple] = []
-        self._scan_templates(self._plugin)
+        self._scan_templates(self._tiozin)
 
     def _scan_templates(self, obj: Any, *parents) -> None:
         match obj:
@@ -68,7 +62,7 @@ class PluginTemplateOverlay:
             case dict():
                 for field, value in obj.items():
                     self._scan_templates(value, *parents, field)
-            case PlugIn() if isinstance(obj, self._plugin.plugin_kind_class):
+            case Tiozin() if isinstance(obj, self._tiozin.tiozin_kind_class):
                 for field, value in vars(obj).items():
                     if not field.startswith("_"):
                         self._scan_templates(value, *parents, field)
@@ -76,7 +70,7 @@ class PluginTemplateOverlay:
     def _render_templates(self) -> None:
         """Render each templated field by resolving placeholders with context values."""
         for *path, field, template in self._templates:
-            obj = self._plugin
+            obj = self._tiozin
             for key in path:
                 obj = reflection.get(obj, key)
 
@@ -89,12 +83,12 @@ class PluginTemplateOverlay:
     def _restore_templates(self) -> None:
         """Restore each rendered field back to its original template string."""
         for *path, field, original in self._templates:
-            obj = self._plugin
+            obj = self._tiozin
             for key in path:
                 obj = reflection.get(obj, key)
             reflection.set_field(obj, field, original)
 
-    def __enter__(self) -> PluginTemplateOverlay:
+    def __enter__(self) -> TiozinTemplateOverlay:
         self._render_templates()
         return self
 

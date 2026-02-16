@@ -25,7 +25,7 @@ check:
 	@uv run ruff check .
 	@uv run ruff format --check
 
-test:
+test: clean
 	@uv run pytest -vvv .
 
 build:

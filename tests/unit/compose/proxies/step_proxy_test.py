@@ -24,13 +24,13 @@ def transform():
 
 
 @pytest.mark.parametrize(
-    "plugin",
+    "tiozin",
     [input(), transform(), output()],
     ids=["Input", "Transform", "Output"],
 )
-def test_proxy_should_forbid_setup_access(plugin: NoOpInput | NoOpTransform | NoOpOutput):
+def test_proxy_should_forbid_setup_access(tiozin: NoOpInput | NoOpTransform | NoOpOutput):
     # Arrange
-    proxy = StepProxy(plugin)
+    proxy = StepProxy(tiozin)
 
     # Act/Assert
     with pytest.raises(PluginAccessForbiddenError):
@@ -38,13 +38,13 @@ def test_proxy_should_forbid_setup_access(plugin: NoOpInput | NoOpTransform | No
 
 
 @pytest.mark.parametrize(
-    "plugin",
+    "tiozin",
     [input(), transform(), output()],
     ids=["Input", "Transform", "Output"],
 )
-def test_proxy_should_forbid_teardown_access(plugin: NoOpInput | NoOpTransform | NoOpOutput):
+def test_proxy_should_forbid_teardown_access(tiozin: NoOpInput | NoOpTransform | NoOpOutput):
     # Arrange
-    proxy = StepProxy(plugin)
+    proxy = StepProxy(tiozin)
 
     # Act/Assert
     with pytest.raises(PluginAccessForbiddenError):
