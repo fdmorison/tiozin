@@ -7,7 +7,7 @@ from ruamel.yaml.error import MarkedYAMLError
 from wrapt import ObjectProxy
 
 if TYPE_CHECKING:
-    from tiozin import PlugIn
+    from tiozin import Tiozin
 
 
 RESOURCE = "resource"
@@ -210,56 +210,56 @@ class SchemaNotFoundError(SchemaError, NotFoundError):
 
 
 # ============================================================================
-# Layer 3: Domain Exceptions - Plugin
+# Layer 3: Domain Exceptions - Tiozin Plugin
 # ============================================================================
 class PluginError(TiozinError):
-    message = "The plugin discovery, resolution or load failed."
+    message = "The Tiozin plugin discovery, resolution or load failed."
 
 
 class PluginNotFoundError(PluginError, NotFoundError):
-    message = "Plugin `{plugin_name}` not found."
+    message = "Tiozin `{tiozin_name}` not found."
     detail = "Ensure its provider is installed and loads correctly via entry points"
 
-    def __init__(self, plugin_name: str, detail: str = None) -> None:
+    def __init__(self, tiozin_name: str, detail: str = None) -> None:
         detail = detail or self.detail
-        super().__init__(f"{self.message} {detail}.", plugin_name=plugin_name)
+        super().__init__(f"{self.message} {detail}.", tiozin_name=tiozin_name)
 
 
 class AmbiguousPluginError(PluginError, ConflictError):
     message = (
-        "The plugin name '{plugin_name}' matches multiple registered plugins. "
+        "The Tiozin name '{tiozin_name}' matches multiple registered Tiozin plugins. "
         "Available provider-qualified options are: {candidates}. "
         "You can disambiguate by specifying the provider-qualified name "
         "or the fully qualified Python class path."
     )
 
-    def __init__(self, plugin_name: str, candidates: list[str] = None) -> None:
+    def __init__(self, tiozin_name: str, candidates: list[str] = None) -> None:
         super().__init__(
-            plugin_name=plugin_name,
+            tiozin_name=tiozin_name,
             candidates=", ".join(candidates or []),
         )
 
 
 class PluginKindError(PluginError, InvalidInputError):
-    message = "Plugin '{plugin_name}' cannot be used as '{plugin_kind}'."
+    message = "Tiozin '{tiozin_name}' cannot be used as '{tiozin_kind}'."
 
     def __init__(
-        self, message: str = None, plugin_name: str = None, plugin_kind: type = None
+        self, message: str = None, tiozin_name: str = None, tiozin_kind: type = None
     ) -> None:
         super().__init__(
             message,
-            plugin_name=plugin_name,
-            plugin_kind=plugin_kind.__name__ if plugin_kind else None,
+            tiozin_name=tiozin_name,
+            tiozin_kind=tiozin_kind.__name__ if tiozin_kind else None,
         )
 
 
 class PluginAccessForbiddenError(PluginError, ForbiddenError):
     """
-    Raised when access to a plugin's lifecycle methods is attempted outside of
+    Raised when access to a Tiozin plugin's lifecycle methods is attempted outside of
     Tiozin's runtime control.
 
     This error indicates an attempt to directly invoke setup or teardown on a
-    plugin, which are exclusively managed by the Tiozin runtime.
+    Tiozin plugin, which are exclusively managed by the Tiozin runtime.
     """
 
     message = (
@@ -379,8 +379,8 @@ class NotInitializedError(TiozinUnexpectedError):
     """
     Raised when a Tiozin plugin is accessed before its lifecycle has been properly initialized.
 
-    This error indicates a violation of the Tiozin runtime lifecycle contract, where a plugin method
-    or property is used before the corresponding `setup` phase has completed.
+    This error indicates a violation of the Tiozin runtime lifecycle contract, where a Tiozin plugin
+    method or property is used before the corresponding `setup` phase has completed.
 
     This is an internal service-level error that signals a bug in the framework or an invalid
     execution order, not a user configuration issue
@@ -389,11 +389,11 @@ class NotInitializedError(TiozinUnexpectedError):
     message = "{tiozin} was accessed before being initialized."
 
     def __init__(
-        self, message: str = None, *, tiozin: PlugIn = None, code: str = None, **options
+        self, message: str = None, *, tiozin: Tiozin = None, code: str = None, **options
     ) -> None:
         super().__init__(
             message=message,
             code=code,
-            tiozin=tiozin.name if tiozin else "Plugin",
+            tiozin=tiozin.name if tiozin else "Tiozin",
             **options,
         )

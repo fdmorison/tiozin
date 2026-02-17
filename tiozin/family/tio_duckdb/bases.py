@@ -11,7 +11,7 @@ class DuckdbStepMixin:
 
     This mixin acts as an extension point for features that are common across multiple
     step implementations of the same engine, but should not be handled by individual
-    plugins.
+    Tiozin plugins.
 
     Typical responsibilities include:
     - Capturing and handling generic parameters declared in YAML definitions

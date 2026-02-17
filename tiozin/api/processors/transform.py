@@ -4,14 +4,14 @@ from typing import Generic, TypeVar
 from tiozin.compose import StepProxy, tioproxy
 
 from ...exceptions import RequiredArgumentError
-from .. import PlugIn
+from .. import Tiozin
 from .context import Context
 
 TData = TypeVar("TData")
 
 
 @tioproxy(StepProxy)
-class Transform(PlugIn, Generic[TData]):
+class Transform(Tiozin, Generic[TData]):
     """
     Defines a data transformation that modifies or enriches data.
 

@@ -37,8 +37,8 @@ log_json_ensure_ascii = env.TIO_LOG_JSON_ENSURE_ASCII
 log_show_locals = env.TIO_LOG_SHOW_LOCALS
 
 # ===============================================
-#           Plugins
+#           Tiozin Plugins
 # ===============================================
-plugin_provider_group = "tiozin.family"
-plugin_provider_prefixes = ["tio_", "tia_"]
-plugin_provider_unknown = "tio_unknown"
+tiozin_provider_group = "tiozin.family"
+tiozin_provider_prefixes = ["tio_", "tia_"]
+tiozin_provider_unknown = "tio_unknown"

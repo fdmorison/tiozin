@@ -10,7 +10,7 @@ class SparkStepMixin:
     Mixin that provides cross-cutting, engine-specific behavior for Spark execution steps.
 
     This mixin acts as an extension point for features that are common across multiple
-    Spark step implementations, but should not be handled by individual plugins.
+    Spark step implementations, but should not be handled by individual Tiozin plugins.
 
     Typical responsibilities include:
     - Capturing and handling generic parameters declared in YAML definitions

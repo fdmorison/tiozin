@@ -11,24 +11,24 @@ from tests.stubs.output import OutputStub
 from tests.stubs.runner import RunnerStub
 from tests.stubs.transform import StubTransform
 from tiozin import Context
-from tiozin.compose import PluginTemplateOverlay
+from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import InvalidInputError
 from tiozin.family.tio_kernel import NoOpInput
 
 
 # ============================================================================
-# Testing PluginTemplateOverlay - Basic Functionality
+# Testing TiozinTemplateOverlay - Basic Functionality
 # ============================================================================
 def test_overlay_should_render_and_restore_single_template():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{domain}}"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{domain}}"
     context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.path
-    restored = plugin.path
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.path
+    restored = tiozin.path
 
     # Assert
     actual = (
@@ -44,15 +44,15 @@ def test_overlay_should_render_and_restore_single_template():
 
 def test_overlay_should_render_and_restore_multiple_templates():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{domain}}/{{date}}"
-    plugin.name = "{{prefix}}_output"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{domain}}/{{date}}"
+    tiozin.name = "{{prefix}}_output"
     context = MagicMock(template_vars={"domain": "sales", "date": "2024-01-15", "prefix": "test"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = (plugin.path, plugin.name)
-    restored = (plugin.path, plugin.name)
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = (tiozin.path, tiozin.name)
+    restored = (tiozin.path, tiozin.name)
 
     # Assert
     actual = (
@@ -74,15 +74,15 @@ def test_overlay_should_render_and_restore_multiple_templates():
 
 def test_overlay_should_not_modify_non_template_strings():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/sales"
-    plugin.name = "output"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/sales"
+    tiozin.name = "output"
     context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = (plugin.path, plugin.name)
-    restored = (plugin.path, plugin.name)
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = (tiozin.path, tiozin.name)
+    restored = (tiozin.path, tiozin.name)
 
     # Assert
     actual = (
@@ -104,14 +104,14 @@ def test_overlay_should_not_modify_non_template_strings():
 
 def test_overlay_should_not_modify_private_attributes():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin._private = "{{domain}}"
+    tiozin = NoOpInput(name="test")
+    tiozin._private = "{{domain}}"
     context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin._private
-    restored = plugin._private
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin._private
+    restored = tiozin._private
 
     # Assert
     actual = (
@@ -127,14 +127,14 @@ def test_overlay_should_not_modify_private_attributes():
 
 def test_overlay_should_render_and_restore_nested_dict_templates():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.config = {"path": "./data/{{domain}}", "region": "{{region}}"}
+    tiozin = NoOpInput(name="test")
+    tiozin.config = {"path": "./data/{{domain}}", "region": "{{region}}"}
     context = MagicMock(template_vars={"domain": "sales", "region": "us-east"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = dict(plugin.config)
-    restored = plugin.config
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = dict(tiozin.config)
+    restored = tiozin.config
 
     # Assert
     actual = (
@@ -156,17 +156,17 @@ def test_overlay_should_render_and_restore_nested_dict_templates():
 
 def test_overlay_should_render_and_restore_nested_list_templates():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.paths = [
+    tiozin = NoOpInput(name="test")
+    tiozin.paths = [
         "./{{env}}/data",
         "./output/{{domain}}",
     ]
     context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = list(plugin.paths)
-    restored = plugin.paths
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = list(tiozin.paths)
+    restored = tiozin.paths
 
     # Assert
     actual = (
@@ -186,17 +186,17 @@ def test_overlay_should_render_and_restore_nested_list_templates():
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_nested_plugins():
+def test_overlay_should_render_and_restore_nested_tiozins():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.inner = NoOpInput(name="inner")
-    plugin.inner.path = "{{domain}}/inner"
+    tiozin = NoOpInput(name="test")
+    tiozin.inner = NoOpInput(name="inner")
+    tiozin.inner.path = "{{domain}}/inner"
     context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.inner.path
-    restored = plugin.inner.path
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.inner.path
+    restored = tiozin.inner.path
 
     # Assert
     actual = (
@@ -212,18 +212,18 @@ def test_overlay_should_render_and_restore_nested_plugins():
 
 def test_overlay_should_restore_on_exception():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.name = "{{value}}"
+    tiozin = NoOpInput(name="test")
+    tiozin.name = "{{value}}"
     context = MagicMock(template_vars={"value": "resolved"})
 
     # Act
     try:
-        with PluginTemplateOverlay(plugin, context):
-            rendered = plugin.name
+        with TiozinTemplateOverlay(tiozin, context):
+            rendered = tiozin.name
             raise ValueError("Simulated error")
     except ValueError:
         pass
-    restored = plugin.name
+    restored = tiozin.name
 
     # Assert
     actual = (
@@ -239,28 +239,28 @@ def test_overlay_should_restore_on_exception():
 
 def test_overlay_should_raise_error_on_missing_variable():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{missing}}"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{missing}}"
     context = MagicMock(template_vars={"other": "value"})
 
     # Act & Assert
     with pytest.raises(InvalidInputError):
-        with PluginTemplateOverlay(plugin, context):
+        with TiozinTemplateOverlay(tiozin, context):
             pass
 
 
 def test_overlay_should_render_and_restore_templates_with_multiple_variables():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{domain}}/{{year}}-{{month}}-{{day}}/file.txt"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{domain}}/{{year}}-{{month}}-{{day}}/file.txt"
     context = MagicMock(
         template_vars={"domain": "sales", "year": "2024", "month": "01", "day": "15"}
     )
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.path
-    restored = plugin.path
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.path
+    restored = tiozin.path
 
     # Assert
     actual = (
@@ -276,14 +276,14 @@ def test_overlay_should_render_and_restore_templates_with_multiple_variables():
 
 def test_overlay_should_not_modify_strings_when_context_is_empty():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/static"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/static"
     context = MagicMock()
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.path
-    restored = plugin.path
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.path
+    restored = tiozin.path
 
     # Assert
     actual = (
@@ -299,8 +299,8 @@ def test_overlay_should_not_modify_strings_when_context_is_empty():
 
 def test_overlay_should_render_and_restore_deeply_nested_structures():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.config = {
+    tiozin = NoOpInput(name="test")
+    tiozin.config = {
         "level1": {
             "level2": ["./{{a}}", "./{{b}}"],
         }
@@ -308,9 +308,9 @@ def test_overlay_should_render_and_restore_deeply_nested_structures():
     context = MagicMock(template_vars={"a": "foo", "b": "bar"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = copy.deepcopy(plugin.config)
-    restored = plugin.config
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = copy.deepcopy(tiozin.config)
+    restored = tiozin.config
 
     # Assert
     actual = (
@@ -338,14 +338,14 @@ def test_overlay_should_render_and_restore_deeply_nested_structures():
 )
 def test_overlay_should_not_modify_non_string_values(value):
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.value = value
+    tiozin = NoOpInput(name="test")
+    tiozin.value = value
     context = MagicMock()
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.value
-    restored = plugin.value
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.value
+    restored = tiozin.value
 
     # Assert
     actual = (
@@ -361,17 +361,17 @@ def test_overlay_should_not_modify_non_string_values(value):
 
 def test_overlay_should_not_modify_immutable_tuple_with_templates():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.paths = (
+    tiozin = NoOpInput(name="test")
+    tiozin.paths = (
         "./{{env}}/data",
         "./output/{{domain}}",
     )
     context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.paths
-    restored = plugin.paths
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.paths
+    restored = tiozin.paths
 
     # Assert
     actual = (
@@ -393,14 +393,14 @@ def test_overlay_should_not_modify_immutable_tuple_with_templates():
 
 def test_overlay_should_not_modify_immutable_frozenset_with_templates():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.tags = frozenset(["{{env}}", "{{domain}}"])
+    tiozin = NoOpInput(name="test")
+    tiozin.tags = frozenset(["{{env}}", "{{domain}}"])
     context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.tags
-    restored = plugin.tags
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.tags
+    restored = tiozin.tags
 
     # Assert
     actual = (
@@ -416,8 +416,8 @@ def test_overlay_should_not_modify_immutable_frozenset_with_templates():
 
 def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tuple():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.data = (
+    tiozin = NoOpInput(name="test")
+    tiozin.data = (
         {"path": "./data/{{domain}}"},
         ["./{{env}}/data", "./output/{{region}}"],
         "static_value",
@@ -425,9 +425,9 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
     context = MagicMock(template_vars={"domain": "sales", "env": "prod", "region": "us-east"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = copy.deepcopy(plugin.data)
-    restored = plugin.data
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = copy.deepcopy(tiozin.data)
+    restored = tiozin.data
 
     # Assert
     actual = (
@@ -451,16 +451,16 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
 
 def test_overlay_should_restore_templates_after_each_sequential_overlay():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{domain}}"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{domain}}"
 
     # Act
-    with PluginTemplateOverlay(plugin, MagicMock(template_vars={"domain": "sales"})):
-        rendered_1 = plugin.path
+    with TiozinTemplateOverlay(tiozin, MagicMock(template_vars={"domain": "sales"})):
+        rendered_1 = tiozin.path
 
-    with PluginTemplateOverlay(plugin, MagicMock(template_vars={"domain": "finance"})):
-        rendered_2 = plugin.path
-    restored = plugin.path
+    with TiozinTemplateOverlay(tiozin, MagicMock(template_vars={"domain": "finance"})):
+        rendered_2 = tiozin.path
+    restored = tiozin.path
 
     # Assert
     actual = (
@@ -478,14 +478,14 @@ def test_overlay_should_restore_templates_after_each_sequential_overlay():
 
 def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{domain|upper}}"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{domain|upper}}"
     context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.path
-    restored = plugin.path
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.path
+    restored = tiozin.path
 
     # Assert
     actual = (
@@ -501,14 +501,14 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
 
 def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
     # Arrange
-    plugin = NoOpInput(name="test")
-    plugin.path = "./data/{{ domain ~ '/' ~ date }}"
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{ domain ~ '/' ~ date }}"
     context = MagicMock(template_vars={"domain": "sales", "date": "2024-01-15"})
 
     # Act
-    with PluginTemplateOverlay(plugin, context):
-        rendered = plugin.path
-    restored = plugin.path
+    with TiozinTemplateOverlay(tiozin, context):
+        rendered = tiozin.path
+    restored = tiozin.path
 
     # Assert
     actual = (
@@ -523,7 +523,7 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
 
 
 # ============================================================================
-# Testing PluginTemplateOverlay - rendering across all execution phases.
+# Testing TiozinTemplateOverlay - rendering across all execution phases.
 # ============================================================================
 
 

@@ -10,7 +10,7 @@ import wrapt
 from tiozin.api import Context
 from tiozin.exceptions import PluginAccessForbiddenError
 
-from .. import PluginTemplateOverlay
+from .. import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
     from tiozin import Runner
@@ -28,7 +28,7 @@ class RunnerProxy(wrapt.ObjectProxy):
     Direct calls to setup() and teardown() are blocked; use the context
     manager interface instead: `with runner(context) as r: ...`
 
-    This is an internal implementation detail. Plugin developers should
+    This is an internal implementation detail. Tiozin developers should
     refer to the Runner base class for the public API contract.
     """
 
@@ -50,7 +50,7 @@ class RunnerProxy(wrapt.ObjectProxy):
     def contextmanager(self, context: Context) -> Generator[RunnerProxy, Any, None]:
         runner: Runner = self.__wrapped__
 
-        with PluginTemplateOverlay(runner, context):
+        with TiozinTemplateOverlay(runner, context):
             try:
                 runner.info(f"▶️  Runner initialized for '{context.name}'")
                 runner.setup(context)

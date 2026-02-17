@@ -251,12 +251,12 @@ def test_plugin_not_found_error_should_format_plugin_name_in_message():
     plugin_name = "my_plugin"
 
     # Act
-    error = PluginNotFoundError(plugin_name=plugin_name)
+    error = PluginNotFoundError(tiozin_name=plugin_name)
 
     # Assert
     actual = error.message
     expected = (
-        "Plugin `my_plugin` not found. "
+        "Tiozin `my_plugin` not found. "
         "Ensure its provider is installed and loads correctly via entry points."
     )
     assert actual == expected
@@ -268,12 +268,12 @@ def test_ambiguous_plugin_error_should_format_plugin_name_and_candidates_in_mess
     candidates = ["provider1.my_plugin", "provider2.my_plugin"]
 
     # Act
-    error = AmbiguousPluginError(plugin_name=plugin_name, candidates=candidates)
+    error = AmbiguousPluginError(tiozin_name=plugin_name, candidates=candidates)
 
     # Assert
     actual = error.message
     expected = (
-        "The plugin name 'my_plugin' matches multiple registered plugins. "
+        "The Tiozin name 'my_plugin' matches multiple registered Tiozin plugins. "
         "Available provider-qualified options are: provider1.my_plugin, provider2.my_plugin. "
         "You can disambiguate by specifying the provider-qualified name "
         "or the fully qualified Python class path."
@@ -286,7 +286,7 @@ def test_ambiguous_plugin_error_should_handle_empty_candidates_list():
     plugin_name = "my_plugin"
 
     # Act
-    error = AmbiguousPluginError(plugin_name=plugin_name, candidates=[])
+    error = AmbiguousPluginError(tiozin_name=plugin_name, candidates=[])
 
     # Assert
     actual = "" in error.message
@@ -294,17 +294,17 @@ def test_ambiguous_plugin_error_should_handle_empty_candidates_list():
     assert actual == expected
 
 
-def test_plugin_kind_error_should_format_plugin_name_and_kind_in_message():
+def test_tiozin_kind_error_should_format_plugin_name_and_kind_in_message():
     # Arrange
     plugin_name = "my_plugin"
-    plugin_kind = dict
+    tiozin_kind = dict
 
     # Act
-    error = PluginKindError(plugin_name=plugin_name, plugin_kind=plugin_kind)
+    error = PluginKindError(tiozin_name=plugin_name, tiozin_kind=tiozin_kind)
 
     # Assert
     actual = error.message
-    expected = "Plugin 'my_plugin' cannot be used as 'dict'."
+    expected = "Tiozin 'my_plugin' cannot be used as 'dict'."
     assert actual == expected
 
 
@@ -474,9 +474,9 @@ def test_raise_if_missing_should_raise_error_when_field_is_not_excluded():
         SchemaViolationError(),
         SchemaNotFoundError(subject="x"),
         PluginError(),
-        PluginNotFoundError(plugin_name="x"),
-        PluginKindError(plugin_name="x", plugin_kind=object),
-        AmbiguousPluginError(plugin_name="x"),
+        PluginNotFoundError(tiozin_name="x"),
+        PluginKindError(tiozin_name="x", tiozin_kind=object),
+        AmbiguousPluginError(tiozin_name="x"),
         AlreadyRunningError(),
         AlreadyFinishedError(),
         PolicyViolationError(policy=object),
@@ -516,7 +516,7 @@ def test_schema_errors_should_be_catchable_as_schema_error(error):
     "error",
     [
         JobNotFoundError(job_name="test"),
-        PluginNotFoundError(plugin_name="test"),
+        PluginNotFoundError(tiozin_name="test"),
     ],
 )
 def test_errors_should_be_catchable_as_not_found(error):
@@ -528,7 +528,7 @@ def test_errors_should_be_catchable_as_not_found(error):
     "error",
     [
         JobAlreadyExistsError(job_name="x"),
-        AmbiguousPluginError(plugin_name="x"),
+        AmbiguousPluginError(tiozin_name="x"),
         AlreadyRunningError(),
         AlreadyFinishedError(),
     ],
@@ -542,7 +542,7 @@ def test_errors_should_be_catchable_as_conflict(error):
     "error",
     [
         ManifestError(message="x", name="y"),
-        PluginKindError(plugin_name="x", plugin_kind=object),
+        PluginKindError(tiozin_name="x", tiozin_kind=object),
         SchemaViolationError(),
         PolicyViolationError(policy=object),
     ],
@@ -555,9 +555,9 @@ def test_errors_should_be_catchable_as_invalid_input(error):
 @pytest.mark.parametrize(
     "error",
     [
-        PluginNotFoundError(plugin_name="x"),
-        AmbiguousPluginError(plugin_name="x"),
-        PluginKindError(plugin_name="x", plugin_kind=object),
+        PluginNotFoundError(tiozin_name="x"),
+        AmbiguousPluginError(tiozin_name="x"),
+        PluginKindError(tiozin_name="x", tiozin_kind=object),
         PluginAccessForbiddenError(plugin=object()),
     ],
 )

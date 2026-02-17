@@ -12,7 +12,7 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.api.metadata.manifest import Manifest
-from tiozin.compose import PluginRegistry
+from tiozin.compose import TiozinRegistry
 from tiozin.exceptions import (
     AmbiguousPluginError,
     InvalidInputError,
@@ -31,17 +31,17 @@ OBJ_2025_01_02T12_00_00Z = datetime.fromisoformat(ISO_2025_01_02T12_00_00Z)
 
 
 @pytest.fixture
-def factory() -> PluginRegistry:
-    return PluginRegistry()
+def factory() -> TiozinRegistry:
+    return TiozinRegistry()
 
 
-def test_register_should_fail_when_registering_non_plugin(factory: PluginRegistry):
+def test_register_should_fail_when_registering_non_plugin(factory: TiozinRegistry):
     # Act/Assert
-    with pytest.raises(InvalidInputError, match="is not a Plugin"):
-        factory.register(plugin=12345)
+    with pytest.raises(InvalidInputError, match="is not a Tiozin"):
+        factory.register(tiozin=12345)
 
 
-def test_register_should_index_plugin_by_multiple_keys(factory: PluginRegistry):
+def test_register_should_index_plugin_by_multiple_keys(factory: TiozinRegistry):
     # Assert
     actual = (
         factory._index.get("NoOpInput"),
@@ -58,7 +58,7 @@ def test_register_should_index_plugin_by_multiple_keys(factory: PluginRegistry):
     assert actual == expected
 
 
-def test_register_should_group_plugins_with_same_name(factory: PluginRegistry):
+def test_register_should_group_plugins_with_same_name(factory: TiozinRegistry):
     # Arrange
     class CustomTransform(NoOpTransform):
         pass
@@ -92,9 +92,9 @@ def test_register_should_group_plugins_with_same_name(factory: PluginRegistry):
     ],
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_input_plugin(factory: PluginRegistry, kind: str):
+def test_load_should_load_input_plugin(factory: TiozinRegistry, kind: str):
     # Act
-    plugin = factory.load(
+    tiozin = factory.load(
         kind,
         name="test_input",
         description="test",
@@ -107,7 +107,7 @@ def test_load_should_load_input_plugin(factory: PluginRegistry, kind: str):
     )
 
     # Assert
-    actual = vars(plugin)
+    actual = vars(tiozin)
     expected = dict(
         kind="NoOpInput",
         name="test_input",
@@ -137,9 +137,9 @@ def test_load_should_load_input_plugin(factory: PluginRegistry, kind: str):
     ],
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_output_plugin(factory: PluginRegistry, kind: str):
+def test_load_should_load_output_plugin(factory: TiozinRegistry, kind: str):
     # Act
-    plugin = factory.load(
+    tiozin = factory.load(
         kind,
         name="test_output",
         description="test",
@@ -152,7 +152,7 @@ def test_load_should_load_output_plugin(factory: PluginRegistry, kind: str):
     )
 
     # Assert
-    actual = vars(plugin)
+    actual = vars(tiozin)
     expected = dict(
         kind="NoOpOutput",
         name="test_output",
@@ -179,9 +179,9 @@ def test_load_should_load_output_plugin(factory: PluginRegistry, kind: str):
     ],
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_transform_plugin(factory: PluginRegistry, kind: str):
+def test_load_should_load_transform_plugin(factory: TiozinRegistry, kind: str):
     # Act
-    plugin = factory.load(
+    tiozin = factory.load(
         kind,
         name="test_transform",
         description="test",
@@ -194,7 +194,7 @@ def test_load_should_load_transform_plugin(factory: PluginRegistry, kind: str):
     )
 
     # Assert
-    actual = vars(plugin)
+    actual = vars(tiozin)
     expected = dict(
         kind="NoOpTransform",
         name="test_transform",
@@ -221,16 +221,16 @@ def test_load_should_load_transform_plugin(factory: PluginRegistry, kind: str):
     ],
 )
 @freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_runner_plugin(factory: PluginRegistry, kind: str):
+def test_load_should_load_runner_plugin(factory: TiozinRegistry, kind: str):
     # Act
-    plugin = factory.load(
+    tiozin = factory.load(
         kind,
         name="test_runner",
         description="test",
     )
 
     # Assert
-    actual = vars(plugin)
+    actual = vars(tiozin)
     expected = dict(
         kind="NoOpRunner",
         name="test_runner",
@@ -251,12 +251,12 @@ def test_load_should_load_runner_plugin(factory: PluginRegistry, kind: str):
         "tiozin.family.tio_kernel.registries.file_job_registry.FileJobRegistry",
     ],
 )
-def test_load_should_load_registry_plugin(factory: PluginRegistry, kind: str):
+def test_load_should_load_registry_plugin(factory: TiozinRegistry, kind: str):
     # Act
-    plugin = factory.load(kind)
+    tiozin = factory.load(kind)
 
     # Assert
-    actual = vars(plugin)
+    actual = vars(tiozin)
     expected = dict(
         kind="FileJobRegistry",
         name="FileJobRegistry",
@@ -267,13 +267,13 @@ def test_load_should_load_registry_plugin(factory: PluginRegistry, kind: str):
     assert actual == expected
 
 
-def test_load_should_fail_when_plugin_not_found(factory: PluginRegistry):
+def test_load_should_fail_when_plugin_not_found(factory: TiozinRegistry):
     # Act/Assert
     with pytest.raises(PluginNotFoundError):
         factory.load("NonExistentPlugin")
 
 
-def test_load_should_fail_when_multiple_plugins_with_same_name(factory: PluginRegistry):
+def test_load_should_fail_when_multiple_plugins_with_same_name(factory: TiozinRegistry):
     # Arrange
     class AmbiguousInput(NoOpInput):
         pass
@@ -293,11 +293,11 @@ def test_load_should_fail_when_multiple_plugins_with_same_name(factory: PluginRe
 # ============================================================================
 # safe_load()
 # ============================================================================
-def test_safe_load_should_return_typed_plugin(factory: PluginRegistry):
+def test_safe_load_should_return_typed_plugin(factory: TiozinRegistry):
     # Act
-    plugin = factory.safe_load(
+    tiozin = factory.safe_load(
         kind="NoOpInput",
-        plugin_kind=Input,
+        tiozin_kind=Input,
         name="test",
         org="acme",
         region="us",
@@ -308,17 +308,23 @@ def test_safe_load_should_return_typed_plugin(factory: PluginRegistry):
     )
 
     # Assert
-    actual = (isinstance(plugin, Input), isinstance(plugin, NoOpInput))
-    expected = (True, True)
+    actual = (
+        isinstance(tiozin, Input),
+        isinstance(tiozin, NoOpInput),
+    )
+    expected = (
+        True,
+        True,
+    )
     assert actual == expected
 
 
-def test_safe_load_should_fail_when_plugin_kind_does_not_match(factory: PluginRegistry):
+def test_safe_load_should_fail_when_tiozin_kind_does_not_match(factory: TiozinRegistry):
     # Act/Assert
     with pytest.raises(PluginKindError):
         factory.safe_load(
             kind="NoOpInput",
-            plugin_kind=Runner,
+            tiozin_kind=Runner,
             name="test",
             org="acme",
             region="us",
@@ -332,9 +338,9 @@ def test_safe_load_should_fail_when_plugin_kind_does_not_match(factory: PluginRe
 # ============================================================================
 # load_manifest()
 # ============================================================================
-def test_load_manifest_should_return_plugin_as_is(factory: PluginRegistry):
+def test_load_manifest_should_return_plugin_as_is(factory: TiozinRegistry):
     # Arrange
-    plugin = NoOpInput(
+    tiozin = NoOpInput(
         name="test",
         description="test",
         org="acme",
@@ -346,10 +352,10 @@ def test_load_manifest_should_return_plugin_as_is(factory: PluginRegistry):
     )
 
     # Act
-    result = factory.load_manifest(plugin)
+    result = factory.load_manifest(tiozin)
 
     # Assert
-    assert result is plugin
+    assert result is tiozin
 
 
 @pytest.mark.parametrize(
@@ -362,7 +368,7 @@ def test_load_manifest_should_return_plugin_as_is(factory: PluginRegistry):
     ],
 )
 def test_load_manifest_should_load_plugin_from_manifest(
-    factory: PluginRegistry, plugin_class: type, manifest_class: type
+    factory: TiozinRegistry, plugin_class: type, manifest_class: type
 ):
     # Arrange
     manifest = manifest_class(
@@ -378,13 +384,13 @@ def test_load_manifest_should_load_plugin_from_manifest(
     )
 
     # Act
-    plugin = factory.load_manifest(manifest)
+    tiozin = factory.load_manifest(manifest)
 
     # Assert
-    assert isinstance(plugin, plugin_class)
+    assert isinstance(tiozin, plugin_class)
 
 
-def test_load_manifest_should_fail_when_manifest_has_no_plugin_kind(factory: PluginRegistry):
+def test_load_manifest_should_fail_when_manifest_has_no_tiozin_kind(factory: TiozinRegistry):
     # Arrange
     class UnsupportedManifest(Manifest):
         pass

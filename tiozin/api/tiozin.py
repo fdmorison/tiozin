@@ -8,11 +8,11 @@ from tiozin.api import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
 
 
-class PlugIn(Loggable, metaclass=TioProxyMeta):
+class Tiozin(Loggable, metaclass=TioProxyMeta):
     """
-    Base class for resources that can be discovered and loaded as plugins.
+    Base class for all Tiozin plugins.
 
-    Provides plugin metadata and discovery capabilities for resources that are
+    Provides metadata and discovery capabilities for Tiozin plugins that are
     dynamically loaded by the framework. Used by Jobs, Inputs, Transforms,
     Outputs, Runners, and Registries.
     """
@@ -21,7 +21,7 @@ class PlugIn(Loggable, metaclass=TioProxyMeta):
     class Metadata:
         name: str
         kind: str
-        kind_class: type[PlugIn]
+        kind_class: type[Tiozin]
         provider: str
         uri: str
         tio_path: str
@@ -35,77 +35,77 @@ class PlugIn(Loggable, metaclass=TioProxyMeta):
         description: str = None,
         **options,
     ) -> None:
-        self.kind = self.plugin_name
+        self.kind = self.tiozin_name
         self.name = name or self.kind
         self.description = description
         self.options = options
 
-    def __init_subclass__(plugin, **kwargs) -> None:
+    def __init_subclass__(tiozin, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
-        name = plugin.__name__
-        kind_class = plugin._detect_category()
+        name = tiozin.__name__
+        kind_class = tiozin._detect_category()
         kind = kind_class.__name__
-        provider = plugin._detect_provider()
-        plugin.__tiometa__ = PlugIn.Metadata(
+        provider = tiozin._detect_provider()
+        tiozin.__tiometa__ = Tiozin.Metadata(
             name=name,
             kind=kind,
             kind_class=kind_class,
             provider=provider,
             uri=f"tiozin://{provider}/{kind.lower()}/{name}",
             tio_path=f"{provider}:{name}",
-            python_path=f"{plugin.__module__}.{plugin.__qualname__}",
+            python_path=f"{tiozin.__module__}.{tiozin.__qualname__}",
         )
 
     @classmethod
-    def _detect_category(plugin) -> type:
-        for clazz in reversed(plugin.__mro__):
-            if clazz is not PlugIn and issubclass(clazz, PlugIn):
+    def _detect_category(tiozin) -> type:
+        for clazz in reversed(tiozin.__mro__):
+            if clazz is not Tiozin and issubclass(clazz, Tiozin):
                 return clazz
 
     @classmethod
-    def _detect_provider(plugin) -> str:
-        module_path: list[str] = plugin.__module__.split(".")
-        prefixes = tuple(config.plugin_provider_prefixes)
+    def _detect_provider(tiozin) -> str:
+        module_path: list[str] = tiozin.__module__.split(".")
+        prefixes = tuple(config.tiozin_provider_prefixes)
 
         for part in module_path:
             if part.startswith(prefixes):
                 return part
 
-        return config.plugin_provider_unknown
+        return config.tiozin_provider_unknown
 
     @classproperty
-    def plugin_name(cls) -> str:
+    def tiozin_name(cls) -> str:
         return cls.__tiometa__.name
 
     @classproperty
-    def plugin_kind(cls) -> str:
+    def tiozin_kind(cls) -> str:
         return cls.__tiometa__.kind
 
     @classproperty
-    def plugin_kind_class(cls) -> type[PlugIn]:
+    def tiozin_kind_class(cls) -> type[Tiozin]:
         return cls.__tiometa__.kind_class
 
     @classproperty
-    def plugin_provider(cls) -> str:
+    def tiozin_provider(cls) -> str:
         return cls.__tiometa__.provider
 
     @classproperty
-    def plugin_uri(cls) -> str:
+    def tiozin_uri(cls) -> str:
         return cls.__tiometa__.uri
 
     @classproperty
-    def plugin_tio_path(cls) -> str:
+    def tiozin_tio_path(cls) -> str:
         return cls.__tiometa__.tio_path
 
     @classproperty
-    def plugin_python_path(cls) -> str:
+    def tiozin_python_path(cls) -> str:
         return cls.__tiometa__.python_path
 
     @property
     def uri(self) -> str:
-        if self.plugin_uri.endswith(self.name):
-            return self.plugin_uri
-        return f"{self.plugin_uri}/{self.name}"
+        if self.tiozin_uri.endswith(self.name):
+            return self.tiozin_uri
+        return f"{self.tiozin_uri}/{self.name}"
 
     def setup(self, *args, **kwargs) -> None:
         """

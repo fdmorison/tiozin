@@ -236,30 +236,30 @@ def is_package(obj: Any) -> bool:
     return inspect.ismodule(obj) and hasattr(obj, "__path__")
 
 
-def is_plugin(plugin: Any) -> bool:
+def is_tiozin(clazz: Any) -> bool:
     """
-    Check if an object is a valid plugin class.
+    Check if an object is a valid Tiozin plugin class.
 
-    A valid plugin is a class that:
-    - Inherits from PlugIn
-    - Is not the PlugIn base class itself
+    A valid Tiozin plugin is a class that:
+    - Inherits from Tiozin
+    - Is not the Tiozin base class itself
 
     Args:
-        plugin: The object to check.
+        clazz: The object to check.
 
     Returns:
-        True if the object is a valid plugin class, False otherwise.
+        True if the object is a valid Tiozin plugin class, False otherwise.
 
     Examples:
-        >>> from tiozin.api import PlugIn
-        >>> class MyPlugin(PlugIn): pass
-        >>> is_plugin(MyPlugin)
+        >>> from tiozin.api import Tiozin
+        >>> class MyTiozin(Tiozin): pass
+        >>> is_tiozin(MyTiozin)
         False  # Direct inheritance not allowed
-        >>> class BasePlugin(PlugIn): pass
-        >>> class MyActualPlugin(BasePlugin): pass
-        >>> is_plugin(MyActualPlugin)
+        >>> class BaseTiozin(Tiozin): pass
+        >>> class MyActualTiozin(BaseTiozin): pass
+        >>> is_tiozin(MyActualTiozin)
         True
     """
-    from tiozin.api import PlugIn
+    from tiozin.api import Tiozin
 
-    return inspect.isclass(plugin) and issubclass(plugin, PlugIn) and plugin is not PlugIn
+    return inspect.isclass(clazz) and issubclass(clazz, Tiozin) and clazz is not Tiozin

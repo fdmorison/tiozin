@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 from tiozin.api import (
     Input,
     Output,
-    PlugIn,
     Runner,
+    Tiozin,
     Transform,
 )
 from tiozin.compose import JobProxy, tioproxy
@@ -22,7 +22,7 @@ TData = TypeVar("TData")
 
 
 @tioproxy(JobProxy)
-class Job(PlugIn, Generic[TData]):
+class Job(Tiozin, Generic[TData]):
     """
     Defines a complete data pipeline.
 
@@ -112,9 +112,9 @@ class Job(PlugIn, Generic[TData]):
         self.transforms = transforms or []
         self.outputs = outputs or []
         self.steps = self.inputs + self.transforms + self.outputs
-        self.tios: set[str] = frozenset(
-            [tiozin.plugin_provider for tiozin in [self, self.runner] + self.steps]
-        )
+
+        tiozins: list[Tiozin] = [self, self.runner, *self.steps]
+        self.tios: frozenset[str] = frozenset(t.tiozin_provider for t in tiozins)
 
     @staticmethod
     def builder() -> JobBuilder:

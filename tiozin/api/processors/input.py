@@ -4,14 +4,14 @@ from typing import Generic, TypeVar
 from tiozin.compose import StepProxy, tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
-from .. import PlugIn
+from .. import Tiozin
 from .context import Context
 
 TData = TypeVar("TData")
 
 
 @tioproxy(StepProxy)
-class Input(PlugIn, Generic[TData]):
+class Input(Tiozin, Generic[TData]):
     """
     Defines a data source that ingests data into the pipeline.
 

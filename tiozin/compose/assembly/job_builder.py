@@ -1,7 +1,7 @@
 from typing import Any, Self, TypeAlias
 
 from tiozin import logs
-from tiozin.api import EtlStep, Input, Job, JobManifest, Output, PlugIn, Runner, Transform
+from tiozin.api import EtlStep, Input, Job, JobManifest, Output, Runner, Tiozin, Transform
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     OutputManifest,
@@ -12,7 +12,7 @@ from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
 from tiozin.utils.helpers import trim
 
 from ..reflection import try_get_public_setter
-from .plugin_factory import plugin_registry
+from .tiozin_registry import tiozin_registry
 
 InputDefinition: TypeAlias = dict[str, Any] | InputManifest | Input
 OutputDefinition: TypeAlias = dict[str, Any] | OutputManifest | Output
@@ -24,7 +24,7 @@ class JobBuilder:
     """
     Builds a Job through an explicit fluent interface.
 
-    The builder accumulates declarative manifests or concrete plugin instances
+    The builder accumulates declarative manifests or concrete Tiozin plugin instances
     and resolves everything only when build() is called.
     """
 
@@ -185,7 +185,7 @@ class JobBuilder:
         return self
 
     def _build_step(
-        self, manifest: TransformManifest | OutputManifest | InputManifest | PlugIn
+        self, manifest: TransformManifest | OutputManifest | InputManifest | Tiozin
     ) -> EtlStep:
         manifest.org = manifest.org or self._org
         manifest.region = manifest.region or self._region
@@ -193,14 +193,14 @@ class JobBuilder:
         manifest.product = manifest.product or self._product
         manifest.model = manifest.model or self._model
         manifest.layer = manifest.layer or self._layer
-        return plugin_registry.load_manifest(manifest)
+        return tiozin_registry.load_manifest(manifest)
 
     def build(self) -> Job:
         if self._built:
             raise TiozinUnexpectedError("The builder can only be used once")
 
-        job = plugin_registry.safe_load(
-            plugin_kind=Job,
+        job = tiozin_registry.safe_load(
+            tiozin_kind=Job,
             # identity
             kind=self._kind,
             name=self._name,
@@ -218,7 +218,7 @@ class JobBuilder:
             model=self._model,
             layer=self._layer,
             # Pipeline
-            runner=plugin_registry.load_manifest(self._runner),
+            runner=tiozin_registry.load_manifest(self._runner),
             inputs=[self._build_step(m) for m in self._inputs],
             transforms=[self._build_step(m) for m in self._transforms],
             outputs=[self._build_step(m) for m in self._outputs],

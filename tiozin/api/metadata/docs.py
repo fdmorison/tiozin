@@ -1,7 +1,7 @@
 """Documentation strings for manifest fields."""
 
 # Common fields
-KIND = "Type of plugin, e.g., 'spark', 'kafka', 'bigquery'"
+KIND = "Type of Tiozin plugin, e.g., 'spark', 'kafka', 'bigquery'"
 
 # RunnerManifest
 RUNNER_NAME = "Unique identifier for this runner (optional)"

@@ -33,10 +33,10 @@ class Context:
     "What is executing, under which identity, and with which runtime state?"
 
     Context provides:
-    - Execution identity (id, name, kind, plugin kind)
+    - Execution identity (id, name, kind, tiozin kind)
     - Domain metadata (org, region, domain, layer, product, model)
     - Ownership information (maintainer, cost_center, owner, labels)
-    - Plugin options passed to the executing component
+    - Tiozin plugin options passed to the executing component
     - A shared template variable scope used during execution
     - A shared session dictionary for exchanging state across execution layers
     - A reference to the Runner executing the job
@@ -63,7 +63,7 @@ class Context:
     id: str = field(default_factory=generate_id)
     name: str
     kind: str
-    plugin_kind: str
+    tiozin_kind: str
     options: Mapping[str, Any]
 
     maintainer: str = None
@@ -145,8 +145,8 @@ class Context:
             parent=parent,
             # Identity
             name=step.name,
-            kind=step.plugin_name,
-            plugin_kind=step.plugin_kind,
+            kind=step.tiozin_name,
+            tiozin_kind=step.tiozin_kind,
             # Domain Metadata
             org=step.org,
             region=step.region,
@@ -154,7 +154,7 @@ class Context:
             layer=step.layer,
             product=step.product,
             model=step.model,
-            # Extra provider/plugin parameters
+            # Extra Tio/Tiozin parameters
             options=step.options,
         )
 
@@ -165,8 +165,8 @@ class Context:
             parent=None,
             # Identity
             name=job.name,
-            kind=job.plugin_name,
-            plugin_kind=job.plugin_kind,
+            kind=job.tiozin_name,
+            tiozin_kind=job.tiozin_kind,
             # Domain Metadata
             org=job.org,
             region=job.region,
@@ -181,7 +181,7 @@ class Context:
             labels=job.labels,
             # Runtime
             runner=job.runner,
-            # Extra provider/plugin parameters
+            # Extra Tio/Tiozin parameters
             options=job.options,
         )
 
