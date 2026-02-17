@@ -45,27 +45,33 @@ class StepProxy(wrapt.ObjectProxy):
     def teardown(self, *args, **kwargs) -> None:
         raise PluginAccessForbiddenError(self)
 
-    def read(self, context: Context) -> None:
-        return self._run("read", context)
+    def read(self) -> None:
+        return self._run("read")
 
-    def transform(self, context: Context, *args, **kwargs) -> None:
-        return self._run("transform", context, *args, **kwargs)
+    def transform(self, *args, **kwargs) -> None:
+        return self._run("transform", *args, **kwargs)
 
-    def write(self, context: Context, *args, **kwargs) -> None:
-        return self._run("write", context, *args, **kwargs)
+    def write(self, *args, **kwargs) -> None:
+        return self._run("write", *args, **kwargs)
 
-    def _run(self, method_name: str, context: Context, *args, **kwargs) -> Any:
+    def _run(self, method_name: str, *args, **kwargs) -> Any:
         step: EtlStep = self.__wrapped__
-        context = Context.from_step(step, parent=context)
 
-        with TiozinTemplateOverlay(step, context):
+        context = (
+            current.for_child_step(step)
+            if (current := Context.current(required=False))
+            else Context.for_step(step)
+        )
+
+        with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
                 step.info(f"▶️  Starting to {context.tiozin_kind} data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
-                step.setup(context, *args, **kwargs)
+                step.setup(*args, **kwargs)
                 context.executed_at = utcnow()
-                result = getattr(step, method_name)(context, *args, **kwargs)
+                execute = getattr(step, method_name)
+                result = execute(*args, **kwargs)
             except Exception:
                 step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
                 raise
@@ -75,7 +81,7 @@ class StepProxy(wrapt.ObjectProxy):
             finally:
                 context.teardown_at = utcnow()
                 try:
-                    step.teardown(context, *args, **kwargs)
+                    step.teardown(*args, **kwargs)
                 except Exception as e:
                     step.error(f"🚨 {context.kind} teardown failed because {e}")
                 context.finished_at = utcnow()

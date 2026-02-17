@@ -2,7 +2,6 @@ from typing import Any
 
 from duckdb import DuckDBPyRelation
 
-from tiozin import Context
 from tiozin.exceptions import InvalidInputError
 from tiozin.utils import bind_self_tokens, trim
 
@@ -86,9 +85,7 @@ class DuckdbSqlTransform(DuckdbCoTransform):
         self.query = trim(query)
         self.args = args or {}
 
-    def transform(
-        self, context: Context, data: DuckDBPyRelation, *others: DuckDBPyRelation
-    ) -> DuckDBPyRelation:
+    def transform(self, data: DuckDBPyRelation, *others: DuckDBPyRelation) -> DuckDBPyRelation:
         query = bind_self_tokens(
             self.query,
             [data.alias, *(other.alias for other in others)],

@@ -1,4 +1,6 @@
-from tiozin import Context, Runner
+from typing import Any
+
+from tiozin import Runner
 
 
 class RunnerStub(Runner):
@@ -8,16 +10,17 @@ class RunnerStub(Runner):
         self.captured_setup = None
         self.captured_run = None
         self.captured_teardown = None
+        self._session = None
 
     @property
-    def session(self) -> None:
-        return {}
+    def session(self) -> Any:
+        return self._session
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         self.captured_setup = self.path
 
-    def run(self, context: Context, execution_plan: str, **options) -> None:
+    def run(self, execution_plan: str, **options) -> None:
         self.captured_run = self.path
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         self.captured_teardown = self.path

@@ -3,8 +3,6 @@ from typing import TYPE_CHECKING
 import wrapt
 from duckdb import DuckDBPyRelation
 
-from tiozin import Context
-
 if TYPE_CHECKING:
     from ...typehints import DuckdbEtlStep, DuckdbPlan
 
@@ -24,7 +22,7 @@ class DuckdbStepProxy(wrapt.ObjectProxy):
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
 
-    def read(self, context: Context) -> DuckDBPyRelation:
+    def read(self) -> DuckDBPyRelation:
         """
         Executes the input step and exposes its result as a DuckDB view.
 
@@ -32,10 +30,10 @@ class DuckdbStepProxy(wrapt.ObjectProxy):
         it available for downstream SQL-based steps.
         """
         step: DuckdbEtlStep = self.__wrapped__
-        relation: DuckDBPyRelation = step.read(context)
+        relation: DuckDBPyRelation = step.read()
         return self._register_view(relation)
 
-    def transform(self, context: Context, *data: DuckDBPyRelation) -> DuckDBPyRelation:
+    def transform(self, *data: DuckDBPyRelation) -> DuckDBPyRelation:
         """
         Executes the transform step and exposes its result as a DuckDB view.
 
@@ -43,10 +41,10 @@ class DuckdbStepProxy(wrapt.ObjectProxy):
         transformation by name in SQL queries.
         """
         step: DuckdbEtlStep = self.__wrapped__
-        relation: DuckDBPyRelation = step.transform(context, *data)
+        relation: DuckDBPyRelation = step.transform(*data)
         return self._register_view(relation)
 
-    def write(self, context: Context, data: DuckDBPyRelation) -> "DuckdbPlan":
+    def write(self, data: DuckDBPyRelation) -> "DuckdbPlan":
         """
         Executes the output step.
 
@@ -55,7 +53,7 @@ class DuckdbStepProxy(wrapt.ObjectProxy):
         (such as COPY statements) in the relational namespace.
         """
         step: DuckdbEtlStep = self.__wrapped__
-        relation_or_command: DuckdbPlan = step.write(context, data)
+        relation_or_command: DuckdbPlan = step.write(data)
         return self._register_view(relation_or_command)
 
     def _register_view(self, relation: DuckDBPyRelation) -> DuckDBPyRelation:

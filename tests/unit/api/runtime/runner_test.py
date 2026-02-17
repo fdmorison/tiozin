@@ -1,6 +1,6 @@
 import pytest
 
-from tests.stubs.runner import RunnerStub
+from tests.stubs import RunnerStub
 
 
 def test_runner_should_default_streaming_to_false():
@@ -33,5 +33,5 @@ def test_runner_should_expose_session_property():
 
     # Assert
     actual = runner.session
-    expected = {}
+    expected = None
     assert actual == expected

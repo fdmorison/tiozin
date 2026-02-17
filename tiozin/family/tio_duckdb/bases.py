@@ -1,6 +1,6 @@
 from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
-from tiozin import CoTransform, Input, Output, Transform, active_session, tioproxy
+from tiozin import CoTransform, Input, Output, Transform, tioproxy
 
 from .compose.proxies.step_proxy import DuckdbStepProxy
 
@@ -36,7 +36,10 @@ class DuckdbStepMixin:
         Raises:
             NotInitializedError: If accessed outside of an active runner scope.
         """
-        return active_session()
+        from . import DuckdbRunner
+
+        runner: DuckdbRunner = self.context.runner
+        return runner.session
 
 
 @tioproxy(DuckdbStepProxy)

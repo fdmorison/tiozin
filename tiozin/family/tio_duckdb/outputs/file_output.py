@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyRelation
 
-from tiozin.api import Context
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, clear_dir, ensure_dir, trim_lower, trim_upper
 
@@ -85,7 +84,7 @@ class DuckdbFileOutput(DuckdbOutput):
         self.partition_by = as_list(partition_by, [])
         self.compression = trim_lower(compression or "snappy")
 
-    def write(self, _: Context, data: DuckDBPyRelation) -> DuckdbPlan:
+    def write(self, data: DuckDBPyRelation) -> DuckdbPlan:
         """
         Builds a ``COPY TO`` statement that writes the relation using a data-lake-style layout.
 

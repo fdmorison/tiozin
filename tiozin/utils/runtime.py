@@ -34,29 +34,6 @@ def tio_alias(obj: Any, value: str | None = None) -> str:
     return getattr(obj, _TIO_ALIAS, None)
 
 
-def active_session() -> Any:
-    """
-    Returns the session associated with the currently active runner.
-
-    The active session is managed by the runner execution scope and is propagated via
-    context-local state, making it safe to use across threads, async tasks, and nested
-    runner executions.
-
-    Raises:
-        NotInitializedError: If called outside of an active runner scope.
-    """
-    from tiozin.compose import RunnerProxy
-    from tiozin.exceptions import NotInitializedError
-
-    try:
-        return RunnerProxy.active_session.get()
-    except LookupError:
-        raise NotInitializedError(
-            "No active runner session found. "
-            "Ensure you are calling this method within a runner execution scope."
-        ) from None
-
-
 def bind_self_tokens(sql: str, inputs: Sequence[str | None]) -> str:
     """
     Resolve ``@self`` tokens in a SQL query to concrete input identifiers.

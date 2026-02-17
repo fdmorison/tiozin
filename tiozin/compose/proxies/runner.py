@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import _GeneratorContextManager, contextmanager
-from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.api import Context
 from tiozin.exceptions import PluginAccessForbiddenError
 
 from .. import TiozinTemplateOverlay
@@ -32,8 +30,6 @@ class RunnerProxy(wrapt.ObjectProxy):
     refer to the Runner base class for the public API contract.
     """
 
-    active_session: ContextVar = ContextVar("tiozin_active_session")
-
     def setup(self, *args, **kwargs) -> None:
         raise PluginAccessForbiddenError(self)
 
@@ -43,33 +39,33 @@ class RunnerProxy(wrapt.ObjectProxy):
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
 
-    def __call__(self, context: Context) -> _GeneratorContextManager[RunnerProxy, None, None]:
-        return self.contextmanager(context)
+    def __call__(self) -> _GeneratorContextManager[RunnerProxy, None, None]:
+        return self.activate()
 
     @contextmanager
-    def contextmanager(self, context: Context) -> Generator[RunnerProxy, Any, None]:
+    def activate(self) -> Generator[RunnerProxy, None, None]:
         runner: Runner = self.__wrapped__
+        context = runner.context
 
-        with TiozinTemplateOverlay(runner, context):
+        with TiozinTemplateOverlay(runner, context.template_vars):
             try:
                 runner.info(f"▶️  Runner initialized for '{context.name}'")
-                runner.setup(context)
-                token = self.active_session.set(runner.session)
+                runner.setup()
                 yield self
             finally:
                 try:
-                    self.active_session.reset(token)
-                    runner.teardown(context)
+                    runner.teardown()
                     runner.info(f"Runner released for '{context.name}'")
                 except Exception as e:
                     runner.error(f"🚨 Runner cleanup failed for '{context.name}': {e}")
 
-    def run(self, context: Context, *args, **kwargs) -> Any:
+    def run(self, *args, **kwargs) -> Any:
         """Wraps Runner.run() with logging and error handling."""
+        runner: Runner = self.__wrapped__
+        context = runner.context
         try:
-            runner: Runner = self.__wrapped__
             runner.info(f"▶️  Running '{context.name}'")
-            result = runner.run(context, *args, **kwargs)
+            result = runner.run(*args, **kwargs)
         except Exception:
             runner.error(
                 f"🚨 Failed execution of '{context.name}' in {context.execution_delay:.2f}s"

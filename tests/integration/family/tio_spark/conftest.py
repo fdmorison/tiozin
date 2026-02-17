@@ -1,18 +1,16 @@
 import uuid
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 from pyspark.sql import SparkSession
 
+from tests.stubs import JobStub, RunnerStub
 from tiozin import Context
-from tiozin.compose import RunnerProxy
-from tiozin.family.tio_spark import SparkRunner
 
 
 @pytest.fixture(scope="session", autouse=True)
-def spark_session(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, Any, None]:
+def spark(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, Any, None]:
     builder: SparkSession.Builder = SparkSession.builder
     spark = (
         builder.appName("test")
@@ -21,62 +19,23 @@ def spark_session(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSe
         .config("spark.sql.warehouse.dir", tmp_path_factory.mktemp(str(uuid.uuid4())))
         .getOrCreate()
     )
-    token = RunnerProxy.active_session.set(spark)
     yield spark
-    RunnerProxy.active_session.reset(token)
     spark.stop()
 
 
-@pytest.fixture
-def runner(spark_session: SparkSession) -> SparkRunner:
-    runner = MagicMock(spec=SparkRunner)
-    runner.streaming = False
-    runner.streaming = False
-    return runner
+@pytest.fixture(autouse=True)
+def spark_runner_stub(runner_stub: RunnerStub, spark: SparkSession) -> RunnerStub:
+    runner_stub._session = spark
+    return runner_stub
 
 
-@pytest.fixture
-def job_context(runner: SparkRunner) -> Context:
-    return Context(
-        # Identity
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-        # Ownership
-        maintainer="test",
-        cost_center="test",
-        owner="test",
-        labels="test",
-        # Runtime
-        runner=runner,
-    )
+@pytest.fixture(autouse=True)
+def spark_job_stub(job_stub: JobStub, spark_runner_stub: RunnerStub) -> JobStub:
+    job_stub.runner = spark_runner_stub
+    return job_stub
 
 
-@pytest.fixture
-def step_context(job_context: Context) -> Context:
-    return Context(
-        # Job
-        parent=job_context,
-        # Identity
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-    )
+@pytest.fixture(autouse=True)
+def spark_session(spark_job_stub: JobStub) -> Generator[Any, Any, None]:
+    with Context.for_job(spark_job_stub) as context:
+        yield context.runner.session

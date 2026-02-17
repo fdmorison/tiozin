@@ -1,6 +1,6 @@
 from duckdb import DuckDBPyRelation
 
-from tiozin.api import Context, conventions
+from tiozin.api import conventions
 from tiozin.utils import as_list
 
 from .. import DuckdbTransform
@@ -80,7 +80,7 @@ class DuckdbWordCountTransform(DuckdbTransform):
         self.lowercase = lowercase
         self.count_by = as_list(count_by, [])
 
-    def transform(self, _: Context, data: DuckDBPyRelation) -> DuckDBPyRelation:
+    def transform(self, data: DuckDBPyRelation) -> DuckDBPyRelation:
         text = f"lower({self.content_field})" if self.lowercase else self.content_field
 
         group = ", ".join(self.count_by) + "," if self.count_by else ""

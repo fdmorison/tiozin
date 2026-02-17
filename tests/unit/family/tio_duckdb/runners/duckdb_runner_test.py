@@ -3,7 +3,6 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from tiozin.api.processors.context import Context
 from tiozin.exceptions import NotInitializedError, TiozinUnexpectedError
 from tiozin.family.tio_duckdb.runners.duckdb_runner import DuckdbRunner
 
@@ -63,10 +62,10 @@ def test_session_should_raise_not_initialized_error_before_setup():
 
 
 def test_session_should_return_connection_after_setup(
-    runner_with_session: DuckdbRunner,
+    duckdb_runner: DuckdbRunner,
 ):
     # Act
-    actual = runner_with_session.session
+    actual = duckdb_runner.session
 
     # Assert
     assert isinstance(actual, duckdb.DuckDBPyConnection)
@@ -75,37 +74,37 @@ def test_session_should_return_connection_after_setup(
 # =============================================================================
 # Testing DuckdbRunner - Setup
 # =============================================================================
-def test_setup_should_use_in_memory_database_by_default(context: Context):
+def test_setup_should_use_in_memory_database_by_default():
     # Arrange
     runner: DuckdbRunner = DuckdbRunner().__wrapped__
 
     # Act
-    runner.setup(context)
+    runner.setup()
 
     # Assert
     actual = runner.session.sql("PRAGMA database_list").fetchone()[1]
     expected = "memory"
     assert actual == expected
-    runner.teardown(context)
+    runner.teardown()
 
 
-def test_setup_should_be_idempotent(context: Context):
+def test_setup_should_be_idempotent():
     # Arrange
     runner: DuckdbRunner = DuckdbRunner(database=":memory:").__wrapped__
-    runner.setup(context)
+    runner.setup()
     first_session = runner.session
 
     # Act
-    runner.setup(context)
+    runner.setup()
 
     # Assert
     actual = runner.session
     expected = first_session
     assert actual is expected
-    runner.teardown(context)
+    runner.teardown()
 
 
-def test_setup_should_attach_external_databases(context: Context, tmp_path: Path):
+def test_setup_should_attach_external_databases(tmp_path: Path):
     # Arrange
     ext_db_path = str(tmp_path / "external.duckdb")
     duckdb.connect(str(ext_db_path)).close()
@@ -114,7 +113,7 @@ def test_setup_should_attach_external_databases(context: Context, tmp_path: Path
     ).__wrapped__
 
     # Act
-    runner.setup(context)
+    runner.setup()
 
     # Assert
     actual = [
@@ -122,10 +121,10 @@ def test_setup_should_attach_external_databases(context: Context, tmp_path: Path
     ]
     expected = ext_db_path
     assert expected in actual
-    runner.teardown(context)
+    runner.teardown()
 
 
-def test_setup_should_load_extensions(context: Context):
+def test_setup_should_load_extensions():
     # Arrange
     runner: DuckdbRunner = DuckdbRunner(
         database=":memory:",
@@ -133,7 +132,7 @@ def test_setup_should_load_extensions(context: Context):
     ).__wrapped__
 
     # Act
-    runner.setup(context)
+    runner.setup()
 
     # Assert
     actual = runner.session.sql(
@@ -141,33 +140,33 @@ def test_setup_should_load_extensions(context: Context):
     ).fetchone()[0]
     expected = True
     assert actual == expected
-    runner.teardown(context)
+    runner.teardown()
 
 
 # =============================================================================
 # Testing DuckdbRunner - Teardown
 # =============================================================================
-def test_teardown_should_close_connection(context: Context):
+def test_teardown_should_close_connection():
     # Arrange
     runner = DuckdbRunner(database=":memory:").__wrapped__
-    runner.setup(context)
+    runner.setup()
 
     # Act
-    runner.teardown(context)
+    runner.teardown()
 
     # Assert
     with pytest.raises(NotInitializedError):
         _ = runner.session
 
 
-def test_teardown_should_be_idempotent(context: Context):
+def test_teardown_should_be_idempotent():
     # Arrange
     runner = DuckdbRunner(database=":memory:").__wrapped__
-    runner.setup(context)
+    runner.setup()
 
     # Act
-    runner.teardown(context)
-    runner.teardown(context)
+    runner.teardown()
+    runner.teardown()
 
     # Assert (no error raised)
     assert True
@@ -176,13 +175,13 @@ def test_teardown_should_be_idempotent(context: Context):
 # =============================================================================
 # Testing DuckdbRunner - Run
 # =============================================================================
-def test_run_should_execute_relation(runner_with_session: DuckdbRunner, context: Context):
+def test_run_should_execute_relation(duckdb_runner: DuckdbRunner):
     # Arrange
-    conn = runner_with_session.session
+    conn = duckdb_runner.session
     relation = conn.sql("SELECT 1 AS id, 'Alice' AS name")
 
     # Act
-    result = runner_with_session.run(context, relation)
+    result = duckdb_runner.run(relation)
 
     # Assert
     actual = result[relation.alias]
@@ -190,39 +189,37 @@ def test_run_should_execute_relation(runner_with_session: DuckdbRunner, context:
     assert actual == expected
 
 
-def test_run_should_execute_sql_string(runner_with_session: DuckdbRunner, context: Context):
+def test_run_should_execute_sql_string(duckdb_runner: DuckdbRunner):
     # Arrange
     query = "SELECT 42 AS answer"
 
     # Act
-    result = runner_with_session.run(context, query)
+    result = duckdb_runner.run(query)
 
     # Assert
-    actual = result[context.name]
+    actual = result[duckdb_runner.context.name]
     expected = [{"answer": 42}]
     assert actual == expected
 
 
-def test_run_should_execute_sql_string_with_params(
-    runner_with_session: DuckdbRunner, context: Context
-):
+def test_run_should_execute_sql_string_with_params(duckdb_runner: DuckdbRunner):
     # Arrange
     query = "SELECT $val AS answer"
     params = {"val": 99}
 
     # Act
-    result = runner_with_session.run(context, query, params=params)
+    result = duckdb_runner.run(query, params=params)
 
     # Assert
-    actual = result[context.name]
+    actual = result[duckdb_runner.context.name]
     expected = [{"answer": 99}]
     assert actual == expected
 
 
 @pytest.mark.parametrize("plan", ["", [None]])
-def test_run_should_skip_empty_plan(runner_with_session: DuckdbRunner, context: Context, plan):
+def test_run_should_skip_empty_plan(duckdb_runner: DuckdbRunner, plan):
     # Act
-    actual = runner_with_session.run(context, plan)
+    actual = duckdb_runner.run(plan)
 
     # Assert
     expected = {}
@@ -230,21 +227,21 @@ def test_run_should_skip_empty_plan(runner_with_session: DuckdbRunner, context: 
 
 
 def test_run_should_raise_error_for_unsupported_plan_type(
-    runner_with_session: DuckdbRunner, context: Context
+    duckdb_runner: DuckdbRunner,
 ):
     # Act / Assert
     with pytest.raises(TiozinUnexpectedError, match="Unsupported DuckDB plan"):
-        runner_with_session.run(context, 12345)
+        duckdb_runner.run(12345)
 
 
-def test_run_should_execute_multiple_plans(runner_with_session: DuckdbRunner, context: Context):
+def test_run_should_execute_multiple_plans(duckdb_runner: DuckdbRunner):
     # Arrange
-    conn = runner_with_session.session
+    conn = duckdb_runner.session
     plan1 = conn.sql("SELECT 1 AS id").set_alias("plan1")
     plan2 = conn.sql("SELECT 2 AS id").set_alias("plan2")
 
     # Act
-    result = runner_with_session.run(context, [plan1, plan2])
+    result = duckdb_runner.run([plan1, plan2])
 
     # Assert
     actual = result

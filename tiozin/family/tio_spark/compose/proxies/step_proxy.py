@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 import wrapt
 from pyspark.sql import DataFrame
 
-from tiozin import Context
 from tiozin.utils.runtime import tio_alias
 
 if TYPE_CHECKING:
@@ -25,7 +24,7 @@ class SparkStepProxy(wrapt.ObjectProxy):
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
 
-    def read(self, context: Context) -> DataFrame:
+    def read(self) -> DataFrame:
         """
         Executes the input step and exposes its result as a Spark temporary view.
 
@@ -33,10 +32,10 @@ class SparkStepProxy(wrapt.ObjectProxy):
         it available for downstream SQL-based steps.
         """
         step: SparkEtlStep = self.__wrapped__
-        df: DataFrame = step.read(context)
+        df: DataFrame = step.read()
         return self._register_view(df)
 
-    def transform(self, context: Context, *data: DataFrame) -> DataFrame:
+    def transform(self, *data: DataFrame) -> DataFrame:
         """
         Executes the transform step and exposes its result as a Spark temporary view.
 
@@ -44,10 +43,10 @@ class SparkStepProxy(wrapt.ObjectProxy):
         transformation by name in SQL queries.
         """
         step: SparkEtlStep = self.__wrapped__
-        df: DataFrame = step.transform(context, *data)
+        df: DataFrame = step.transform(*data)
         return self._register_view(df)
 
-    def write(self, context: Context, data: DataFrame) -> "SparkPlan":
+    def write(self, data: DataFrame) -> "SparkPlan":
         """
         Executes the output step.
 
@@ -56,7 +55,7 @@ class SparkStepProxy(wrapt.ObjectProxy):
         unchanged, as they represent terminal actions.
         """
         step: SparkEtlStep = self.__wrapped__
-        df_or_writer: SparkPlan = step.write(context, data)
+        df_or_writer: SparkPlan = step.write(data)
         return self._register_view(df_or_writer)
 
     def _register_view(self, df: DataFrame) -> DataFrame:
