@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping
+from contextvars import ContextVar, Token
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 from types import MappingProxyType as FrozenMapping
@@ -15,6 +16,12 @@ from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner
+
+
+_current_context: ContextVar[Context | None] = ContextVar(
+    "tiozin_current_context",
+    default=None,
+)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -76,6 +83,49 @@ class Context:
     shared: dict[str, Any] = field(default_factory=dict, metadata={"template": False})
     template_vars: Mapping[str, Any] = field(init=False, metadata={"template": False})
     temp_workdir: Path = field(init=False)
+
+    _tokens: list[Token] = field(
+        init=False,
+        repr=False,
+        default_factory=list,
+        metadata={"template": False},
+    )
+
+    # ==================================================
+    # Active Context Management
+    # ==================================================
+
+    def __enter__(self) -> Context:
+        """
+        Activate this Context as the current execution scope.
+
+        Context is reentrant and supports nested activation. Each
+        __enter__ call pushes a new ContextVar token onto an internal
+        stack, and __exit__ restores the previous scope accordingly.
+        """
+        token = _current_context.set(self)
+        self._tokens.append(token)
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        """
+        Deactivate the current execution scope and restore the previous one.
+
+        Supports nested scopes by popping the most recent activation token.
+        """
+        if not self._tokens:
+            return
+        token = self._tokens.pop()
+        _current_context.reset(token)
+
+    @staticmethod
+    def current() -> Context:
+        ctx = _current_context.get()
+        TiozinUnexpectedError.raise_if(
+            ctx is None,
+            "Tiozin has no active execution context",
+        )
+        return ctx
 
     # ==================================================
     # Factories
