@@ -7,9 +7,8 @@ import pytest
 from assertpy import assert_that
 from freezegun import freeze_time
 
-from tests.stubs.input import InputStub
-from tests.stubs.job import JobStub
-from tiozin.api.processors.context import Context
+from tests.stubs import InputStub, JobStub
+from tiozin import Context
 from tiozin.compose import RelativeDate
 from tiozin.exceptions import TiozinUnexpectedError
 

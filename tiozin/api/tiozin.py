@@ -7,7 +7,7 @@ from tiozin import config
 from tiozin.api import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
 
-from .processors.context import Context
+from .runtime.context import Context
 
 
 class Tiozin(Loggable, metaclass=TioProxyMeta):

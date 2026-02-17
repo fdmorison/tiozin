@@ -1,6 +1,6 @@
 import pytest
 
-from tests.stubs.runner import RunnerStub
+from tests.stubs import RunnerStub
 
 
 def test_runner_should_default_streaming_to_false():

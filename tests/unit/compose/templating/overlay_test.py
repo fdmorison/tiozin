@@ -4,12 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from tests.stubs.input import InputStub
-from tests.stubs.job import JobStub
-from tests.stubs.output import OutputStub
-from tests.stubs.runner import RunnerStub
-from tests.stubs.transform import TransformStub
-from tiozin.api.processors.context import Context
+from tests.stubs import InputStub, JobStub, OutputStub, RunnerStub, TransformStub
+from tiozin import Context
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import InvalidInputError
 from tiozin.family.tio_kernel import NoOpInput
