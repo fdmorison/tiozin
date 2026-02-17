@@ -9,7 +9,7 @@ Public API for building data pipelines with Tiozin.
 """
 
 # Bases
-from tiozin.api import Registry, PlugIn
+from tiozin.api import Registry, Tiozin
 
 # Metadata
 from tiozin.api import JobManifest
@@ -37,7 +37,7 @@ from tiozin.compose import tioproxy
 
 __all__ = [
     # Bases
-    "PlugIn",
+    "Tiozin",
     "Registry",
     # Metadata
     "JobManifest",

@@ -8,7 +8,7 @@ from tiozin.api import Context
 from tiozin.exceptions import PluginAccessForbiddenError
 from tiozin.utils import human_join, utcnow
 
-from .. import PluginTemplateOverlay
+from .. import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
     from tiozin import Job
@@ -18,9 +18,9 @@ class JobProxy(wrapt.ObjectProxy):
     """
     Runtime proxy that enriches a Job with Tiozin's core capabilities.
 
-    The JobProxy adds cross-cutting runtime features—such as templating, logging,
-    context creation, and lifecycle control—to provider-defined Job implementations,
-    without modifying the original plugin.
+    The JobProxy adds cross-cutting runtime features, such as templating, logging,
+    context creation, and lifecycle control, to Tio-defined Job implementations,
+    without modifying the original Tiozin plugin.
 
     The wrapped Job remains unaware of the proxy and is expected to focus exclusively
     on assembling and coordinating its steps, rather than managing runtime concerns.
@@ -35,7 +35,7 @@ class JobProxy(wrapt.ObjectProxy):
     This proxy belongs to Tiozin's runtime layer and is not an orchestration mechanism.
     It does not schedule jobs, manage dependencies between jobs, or perform distributed
     orchestration. Its responsibility is to provide a consistent and safe execution
-    environment for Job plugins.
+    environment for Job Tiozin plugins.
     """
 
     def setup(self, context: Context) -> None:
@@ -48,7 +48,7 @@ class JobProxy(wrapt.ObjectProxy):
         job: Job = self.__wrapped__
         context = context or Context.from_job(job)
 
-        with PluginTemplateOverlay(job, context):
+        with TiozinTemplateOverlay(job, context):
             try:
                 tios = [t.replace("_", " ").title() for t in job.tios]
                 job.info(f"🚀 {context.kind} is starting — {human_join(tios)} on duty")

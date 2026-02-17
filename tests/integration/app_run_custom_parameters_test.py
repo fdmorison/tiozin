@@ -1,5 +1,5 @@
 """
-Integration tests for TiozinApp - Plugin Custom Parameters.
+Integration tests for TiozinApp - Tiozin Custom Parameters.
 
 These tests demonstrate that Tiozin plugins can receive arbitrary
 custom parameters beyond `kind` and `name`.
@@ -28,7 +28,7 @@ def app():
 
 
 # ============================================================================
-# Plugin Parameters – Runner
+# Tiozin Parameters – Runner
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
@@ -68,7 +68,7 @@ def test_app_should_run_job_with_custom_runner_parameters(_atexit, _signal, app:
 
 
 # ============================================================================
-# Plugin Parameters – Input
+# Tiozin Parameters – Input
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
@@ -108,7 +108,7 @@ def test_app_should_run_job_with_custom_input_parameters(_atexit, _signal, app: 
 
 
 # ============================================================================
-# Plugin Parameters – Transform
+# Tiozin Parameters – Transform
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
@@ -154,7 +154,7 @@ def test_app_should_run_job_with_custom_transform_parameters(_atexit, _signal, a
 
 
 # ============================================================================
-# Plugin Parameters – Output
+# Tiozin Parameters – Output
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
@@ -197,7 +197,7 @@ def test_app_should_run_job_with_custom_output_parameters(_atexit, _signal, app:
 
 
 # ============================================================================
-# Plugin Parameters – All Components Combined
+# Tiozin Parameters – All Components Combined
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")

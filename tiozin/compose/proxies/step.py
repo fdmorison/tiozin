@@ -8,7 +8,7 @@ from tiozin.api import Context
 from tiozin.exceptions import PluginAccessForbiddenError
 from tiozin.utils import utcnow
 
-from .. import PluginTemplateOverlay
+from .. import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
     from tiozin import EtlStep
@@ -18,12 +18,13 @@ class StepProxy(wrapt.ObjectProxy):
     """
     Runtime proxy that enriches a Step with Tiozin's core capabilities.
 
-    The StepProxy adds cross-cutting runtime features—such as templating, logging,
-    context propagation, and lifecycle control—to provider-defined Input, Transform,
-    and Output implementations, without modifying the original plugin.
+    The StepProxy adds cross-cutting runtime features such as templating, logging, context
+    propagation, and lifecycle control to Input, Transform, and Output implementations without
+    modifying the original class. This is the recommended way to implement features
+    in a Tio provider.
 
-    The wrapped Step remains unaware of the proxy and is expected to focus exclusively
-    on its domain-specific data logic.
+    The wrapped Step remains unaware of the proxy and is expected to focus exclusively on
+    domain-specific ETL logic, while the proxy handles boilerplate concerns.
 
     Core responsibilities include:
     - Managing the execution lifecycle (setup, execute, teardown)
@@ -57,9 +58,9 @@ class StepProxy(wrapt.ObjectProxy):
         step: EtlStep = self.__wrapped__
         context = Context.from_step(step, parent=context)
 
-        with PluginTemplateOverlay(step, context):
+        with TiozinTemplateOverlay(step, context):
             try:
-                step.info(f"▶️  Starting to {context.plugin_kind} data")
+                step.info(f"▶️  Starting to {context.tiozin_kind} data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
                 step.setup(context, *args, **kwargs)

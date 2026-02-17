@@ -11,22 +11,22 @@ from .classproperty import classproperty
 
 if TYPE_CHECKING:
     from .assembly.job_builder import JobBuilder as JobBuilder
-    from .assembly.plugin_factory import PluginRegistry as PluginRegistry
-    from .assembly.plugin_scanner import PluginScanner as PluginScanner
+    from .assembly.tiozin_registry import TiozinRegistry as TiozinRegistry
+    from .assembly.tiozin_scanner import TiozinScanner as TiozinScanner
     from .proxies.job import JobProxy as JobProxy
     from .proxies.runner import RunnerProxy as RunnerProxy
     from .proxies.step import StepProxy as StepProxy
-    from .templating.overlay import PluginTemplateOverlay as PluginTemplateOverlay
+    from .templating.overlay import TiozinTemplateOverlay as TiozinTemplateOverlay
     from .templating.relative_date import RelativeDate as RelativeDate
 
 _DEFERRED = {
     "JobBuilder": ".assembly.job_builder",
-    "PluginRegistry": ".assembly.plugin_factory",
-    "PluginScanner": ".assembly.plugin_scanner",
+    "TiozinRegistry": ".assembly.tiozin_registry",
+    "TiozinScanner": ".assembly.tiozin_scanner",
     "JobProxy": ".proxies.job",
     "RunnerProxy": ".proxies.runner",
     "StepProxy": ".proxies.step",
-    "PluginTemplateOverlay": ".templating.overlay",
+    "TiozinTemplateOverlay": ".templating.overlay",
     "RelativeDate": ".templating.relative_date",
 }
 
@@ -45,8 +45,8 @@ def __getattr__(name: str):
 __all__ = [
     # Assembly
     "JobBuilder",
-    "PluginRegistry",
-    "PluginScanner",
+    "TiozinRegistry",
+    "TiozinScanner",
     # Proxy
     "tioproxy",
     "TioProxyMeta",
@@ -54,7 +54,7 @@ __all__ = [
     "RunnerProxy",
     "StepProxy",
     # Templating
-    "PluginTemplateOverlay",
+    "TiozinTemplateOverlay",
     "TemplateContextBuilder",
     "RelativeDate",
     # Other

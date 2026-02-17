@@ -4,7 +4,7 @@
 """
 Tiozin Utilities
 
-Public API for common utilities used across Tiozin providers and plugins.
+Public API for common utilities used across Tio providers and Tiozin plugins.
 """
 
 # Helpers

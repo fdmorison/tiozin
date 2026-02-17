@@ -5,7 +5,7 @@ from typing import Generic, TypeVar
 
 from tiozin.compose import RunnerProxy, tioproxy
 
-from .. import PlugIn
+from .. import Tiozin
 from .context import Context
 
 TPlan = TypeVar("TPlan")
@@ -14,7 +14,7 @@ TOutput = TypeVar("TOutput")
 
 
 @tioproxy(RunnerProxy)
-class Runner(PlugIn, Generic[TPlan, TSession, TOutput]):
+class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
     """
     Execution backend for Tiozin pipelines.
 

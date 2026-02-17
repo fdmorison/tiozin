@@ -15,7 +15,7 @@ def job_context() -> Context:
     return Context(
         name="daily_orders",
         kind="LinearJob",
-        plugin_kind="job",
+        tiozin_kind="job",
         org="acme",
         region="latam",
         domain="sales",
@@ -40,7 +40,7 @@ def step_context(job_context: Context) -> Context:
         parent=job_context,
         name="read_orders",
         kind="NoOpInput",
-        plugin_kind="read",
+        tiozin_kind="read",
         org="acme",
         region="latam",
         domain="sales",
@@ -59,7 +59,7 @@ def test_context_should_have_identity_fields(job_context: Context):
     actual = (
         job_context.name,
         job_context.kind,
-        job_context.plugin_kind,
+        job_context.tiozin_kind,
         job_context.options,
     )
     expected = ("daily_orders", "LinearJob", "job", {"retry": 3})
@@ -71,7 +71,7 @@ def test_context_should_generate_id_automatically():
     context = Context(
         name="test",
         kind="test",
-        plugin_kind="test",
+        tiozin_kind="test",
         org="test",
         region="test",
         domain="test",
@@ -137,7 +137,7 @@ def test_context_should_default_nominal_time_to_now():
     context = Context(
         name="test",
         kind="test",
-        plugin_kind="test",
+        tiozin_kind="test",
         org="test",
         region="test",
         domain="test",
@@ -160,7 +160,7 @@ def test_context_should_accept_custom_nominal_time():
     context = Context(
         name="test",
         kind="test",
-        plugin_kind="test",
+        tiozin_kind="test",
         org="test",
         region="test",
         domain="test",
@@ -289,7 +289,7 @@ def test_context_should_include_identity_fields_in_template_vars(job_context: Co
         job_context.template_vars["id"],
         job_context.template_vars["name"],
         job_context.template_vars["kind"],
-        job_context.template_vars["plugin_kind"],
+        job_context.template_vars["tiozin_kind"],
     )
     expected = (job_context.id, "daily_orders", "LinearJob", "job")
     assert actual == expected
@@ -317,7 +317,7 @@ def test_context_should_include_relative_date_vars_in_template_vars():
     context = Context(
         name="test",
         kind="test",
-        plugin_kind="test",
+        tiozin_kind="test",
         org="test",
         region="test",
         domain="test",
@@ -346,7 +346,7 @@ def test_context_template_vars_should_include_fields_without_template_false(job_
         "id",
         "name",
         "kind",
-        "plugin_kind",
+        "tiozin_kind",
         "options",
         "run_id",
         "setup_at",
@@ -449,7 +449,7 @@ def test_context_should_have_own_identity_when_child(step_context: Context):
         step_context.id is not None,
         step_context.name,
         step_context.kind,
-        step_context.plugin_kind,
+        step_context.tiozin_kind,
     )
     expected = (True, "read_orders", "NoOpInput", "read")
     assert actual == expected
@@ -493,7 +493,7 @@ def test_context_without_parent_should_have_no_runner():
     context = Context(
         name="standalone",
         kind="NoOpInput",
-        plugin_kind="read",
+        tiozin_kind="read",
         org="test",
         region="test",
         domain="test",
@@ -516,8 +516,8 @@ def test_from_job_should_create_context_from_job_plugin():
     # Arrange
     job = MagicMock()
     job.name = "etl_orders"
-    job.plugin_name = "LinearJob"
-    job.plugin_kind = "job"
+    job.tiozin_name = "LinearJob"
+    job.tiozin_kind = "job"
     job.org = "acme"
     job.region = "latam"
     job.domain = "sales"
@@ -538,7 +538,7 @@ def test_from_job_should_create_context_from_job_plugin():
     actual = (
         context.name,
         context.kind,
-        context.plugin_kind,
+        context.tiozin_kind,
         context.org,
         context.maintainer,
         context.runner,
@@ -558,8 +558,8 @@ def test_from_step_should_create_context_from_step_plugin():
     # Arrange
     step = MagicMock()
     step.name = "read_orders"
-    step.plugin_name = "NoOpInput"
-    step.plugin_kind = "read"
+    step.tiozin_name = "NoOpInput"
+    step.tiozin_kind = "read"
     step.org = "acme"
     step.region = "latam"
     step.domain = "sales"
@@ -575,7 +575,7 @@ def test_from_step_should_create_context_from_step_plugin():
     actual = (
         context.name,
         context.kind,
-        context.plugin_kind,
+        context.tiozin_kind,
         context.org,
     )
     expected = ("read_orders", "NoOpInput", "read", "acme")
@@ -587,7 +587,7 @@ def test_from_step_should_link_to_parent_when_provided():
     parent = Context(
         name="parent_job",
         kind="LinearJob",
-        plugin_kind="job",
+        tiozin_kind="job",
         org="acme",
         region="latam",
         domain="sales",
@@ -599,8 +599,8 @@ def test_from_step_should_link_to_parent_when_provided():
     )
     step = MagicMock()
     step.name = "read_orders"
-    step.plugin_name = "NoOpInput"
-    step.plugin_kind = "read"
+    step.tiozin_name = "NoOpInput"
+    step.tiozin_kind = "read"
     step.org = "acme"
     step.region = "latam"
     step.domain = "sales"
@@ -622,8 +622,8 @@ def test_as_step_context_should_create_child_context(job_context: Context):
     # Arrange
     step = MagicMock()
     step.name = "write_orders"
-    step.plugin_name = "NoOpOutput"
-    step.plugin_kind = "write"
+    step.tiozin_name = "NoOpOutput"
+    step.tiozin_kind = "write"
     step.org = "acme"
     step.region = "latam"
     step.domain = "sales"
