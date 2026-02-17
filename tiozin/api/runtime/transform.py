@@ -5,7 +5,6 @@ from tiozin.compose import StepProxy, tioproxy
 
 from ...exceptions import RequiredArgumentError
 from .. import Tiozin
-from .context import Context
 
 TData = TypeVar("TData")
 
@@ -57,14 +56,14 @@ class Transform(Tiozin, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, context: Context, data: TData) -> None:
+    def setup(self, data: TData) -> None:
         return None
 
     @abstractmethod
-    def transform(self, context: Context, data: TData) -> TData:
+    def transform(self, data: TData) -> TData:
         """Apply transformation logic. Providers must implement."""
 
-    def teardown(self, context: Context, data: TData) -> None:
+    def teardown(self, data: TData) -> None:
         return None
 
 
@@ -78,15 +77,15 @@ class CoTransform(Transform[TData]):
 
     Examples:
             class JoinCustomers(CoTransform):
-                def transform(self, context, orders, customers):
+                def transform(self, orders, customers):
                     return orders.join(customers, on='customer_id', how='inner')
 
             class UnionAll(CoTransform):
-                def transform(self, context, *datasets):
+                def transform(self, *datasets):
                     return datasets[0].unionByName(*datasets[1:])
 
             class EnrichOrders(CoTransform):
-                def transform(self, context, orders, products, customers):
+                def transform(self, orders, products, customers):
                     return orders.join(products, on='product_id')
                                  .join(customers, on='customer_id')
 
@@ -94,12 +93,12 @@ class CoTransform(Transform[TData]):
         Requires at least 2 inputs. For single-dataset transforms, use Transform.
     """
 
-    def setup(self, context: Context, data: TData, *others: TData) -> None:
+    def setup(self, data: TData, *others: TData) -> None:
         return None
 
     @abstractmethod
-    def transform(self, context: Context, data: TData, *others: TData) -> TData:
+    def transform(self, data: TData, *others: TData) -> TData:
         """Apply cooperative transformation logic. Providers must implement."""
 
-    def teardown(self, context: Context, data: TData, *others: TData) -> None:
+    def teardown(self, data: TData, *others: TData) -> None:
         return None

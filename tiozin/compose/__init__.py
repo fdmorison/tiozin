@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from .proxies.tioproxy import tioproxy, TioProxyMeta
 
-from .templating.context_builder import TemplateContextBuilder
 from .classproperty import classproperty
 
 if TYPE_CHECKING:
@@ -55,7 +54,6 @@ __all__ = [
     "StepProxy",
     # Templating
     "TiozinTemplateOverlay",
-    "TemplateContextBuilder",
     "RelativeDate",
     # Other
     "classproperty",

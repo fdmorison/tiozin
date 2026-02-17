@@ -61,7 +61,6 @@ def test_output_should_return_copy_sql_for_parquet(
     ).set_alias("data")
     duckdb_session.register("data", data)
     output_path = str(tmp_path / "parquet")
-    context = None
 
     # Act
     actual = DuckdbFileOutput(
@@ -69,7 +68,7 @@ def test_output_should_return_copy_sql_for_parquet(
         path=output_path,
         format="parquet",
         mode="overwrite",
-    ).write(context, data)
+    ).write(data)
 
     # Assert
     expected = (
@@ -91,7 +90,6 @@ def test_output_should_return_copy_sql_for_json(duckdb_session: DuckDBPyConnecti
     ).set_alias("json_data")
     duckdb_session.register("json_data", data)
     output_path = str(tmp_path / "json")
-    context = None
 
     # Act
     actual = DuckdbFileOutput(
@@ -100,7 +98,7 @@ def test_output_should_return_copy_sql_for_json(duckdb_session: DuckDBPyConnecti
         format="json",
         mode="overwrite",
         compression="uncompressed",
-    ).write(context, data)
+    ).write(data)
 
     # Assert
     expected = (
@@ -127,7 +125,6 @@ def test_output_should_return_copy_sql_for_partitioned_data(
     """).set_alias("partitioned")
     duckdb_session.register("partitioned", data)
     output_path = str(tmp_path / "partitioned")
-    context = None
 
     # Act
     actual = DuckdbFileOutput(
@@ -136,7 +133,7 @@ def test_output_should_return_copy_sql_for_partitioned_data(
         format="parquet",
         mode="overwrite",
         partition_by=["date"],
-    ).write(context, data)
+    ).write(data)
 
     # Assert
     expected = (

@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, Runner
+from tiozin.api import Runner
 
 
 class NoOpRunner(Runner[Any, None, list]):
@@ -20,11 +20,11 @@ class NoOpRunner(Runner[Any, None, list]):
     def session(self) -> None:
         return None
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         if self.verbose:
             self.info("Tiozin is preparing runner")
 
-    def run(self, context: Context, execution_plan: Any) -> Any:
+    def run(self, execution_plan: Any) -> Any:
         if self.verbose:
             args = self.to_dict()
             args.update(args.pop("options"))
@@ -35,6 +35,6 @@ class NoOpRunner(Runner[Any, None, list]):
 
         return []
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         if self.verbose:
             self.info("Tiozin is finishing runner lifecycle")

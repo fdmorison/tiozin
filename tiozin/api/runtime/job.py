@@ -13,8 +13,6 @@ from tiozin.api import (
 from tiozin.compose import JobProxy, tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
-from .context import Context
-
 if TYPE_CHECKING:
     from tiozin.compose import JobBuilder
 
@@ -122,12 +120,12 @@ class Job(Tiozin, Generic[TData]):
 
         return JobBuilder()
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         return None
 
     @abstractmethod
-    def submit(self, context: Context) -> TData:
+    def submit(self) -> TData:
         pass
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         return None

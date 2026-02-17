@@ -6,7 +6,7 @@ from typing import Any
 import duckdb
 from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
-from tiozin import Context, Runner
+from tiozin import Runner
 from tiozin.exceptions import NotInitializedError, TiozinUnexpectedError
 from tiozin.utils import as_list, trim
 
@@ -97,14 +97,14 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
         )
         return self._conn
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         """Opens the DuckDB connection, loads extensions, and attaches external databases."""
         if self._conn:
             return
 
         # Initialize main database
         self._conn = duckdb.connect(
-            self.database or f":memory:{context.job.name}",
+            self.database or f":memory:{self.context.job.name}",
             read_only=self.read_only,
             config=self.options,
         )
@@ -125,7 +125,6 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
 
     def run(
         self,
-        context: Context,
         execution_plan: DuckdbPlan,
         params: list | dict[str, Any] = None,
         alias: str = None,
@@ -148,7 +147,7 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
         """
         results = {}
         params = params or options
-        alias = alias or context.name
+        alias = alias or self.context.name
 
         for i, plan in enumerate(as_list(execution_plan)):
             plan_alias = alias if not i else f"{alias}_{i}"
@@ -171,7 +170,7 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
 
         return results
 
-    def teardown(self, _: Context) -> None:
+    def teardown(self) -> None:
         """Closes the DuckDB connection and releases resources."""
         if not self._conn:
             return

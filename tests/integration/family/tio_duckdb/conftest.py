@@ -1,16 +1,34 @@
 from collections.abc import Generator
+from typing import Any
 
 import duckdb
 import pytest
 from duckdb import DuckDBPyConnection
 
-from tiozin.compose import RunnerProxy
+from tests.stubs import JobStub, RunnerStub
+from tiozin import Context
 
 
 @pytest.fixture(scope="session", autouse=True)
-def duckdb_session() -> Generator[DuckDBPyConnection, None, None]:
+def duckdb_conn() -> Generator[DuckDBPyConnection, Any, None]:
     conn = duckdb.connect(":memory:")
-    token = RunnerProxy.active_session.set(conn)
     yield conn
-    RunnerProxy.active_session.reset(token)
     conn.close()
+
+
+@pytest.fixture(autouse=True)
+def duckdb_runner_stub(runner_stub: RunnerStub, duckdb_conn: DuckDBPyConnection) -> RunnerStub:
+    runner_stub._session = duckdb_conn
+    return runner_stub
+
+
+@pytest.fixture(autouse=True)
+def duckdb_job_stub(job_stub: JobStub, duckdb_runner_stub: RunnerStub) -> JobStub:
+    job_stub.runner = duckdb_runner_stub
+    return job_stub
+
+
+@pytest.fixture(autouse=True)
+def duckdb_session(duckdb_job_stub: JobStub) -> Generator[Any, Any, None]:
+    with Context.for_job(duckdb_job_stub) as context:
+        yield context.runner.session

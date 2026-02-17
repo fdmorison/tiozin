@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, Input
+from tiozin.api import Input
 
 
 class NoOpInput(Input):
@@ -16,11 +16,11 @@ class NoOpInput(Input):
         self.verbose = verbose
         self.force_error = force_error
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         if self.verbose:
             self.info("Tiozin is preparing input")
 
-    def read(self, context: Context) -> Any:
+    def read(self) -> Any:
         if self.verbose:
             args = self.to_dict(exclude="name")
             args.update(args.pop("options"))
@@ -31,6 +31,6 @@ class NoOpInput(Input):
 
         return None
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         if self.verbose:
             self.info("Tiozin is finishing input lifecycle")

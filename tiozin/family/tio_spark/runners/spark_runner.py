@@ -3,7 +3,7 @@ from __future__ import annotations
 from pyspark.sql import DataFrame, DataFrameWriter, SparkSession
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
-from tiozin import Context, Runner, config
+from tiozin import Runner, config
 from tiozin.exceptions import JobError, NotInitializedError
 from tiozin.utils import as_list, trim
 
@@ -127,13 +127,13 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
         )
         return self._spark
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         if self._spark:
             return
 
         builder: SparkSession.Builder = SparkSession.builder
         builder = (
-            builder.appName(context.name)
+            builder.appName(self.context.name)
             .config("spark.sql.session.timeZone", str(config.app_timezone))
             .config("spark.sql.adaptive.enabled", "true")
             .config("spark.jars.packages", ",".join(self.jars_packages))
@@ -156,9 +156,9 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
 
         self._spark = builder.getOrCreate()
         self._spark.sparkContext.setLogLevel(self.log_level)
-        self.info(f"🔥 SparkSession ready for {context.name}")
+        self.info(f"🔥 SparkSession ready for {self.context.name}")
 
-    def run(self, _: Context, execution_plan: SparkPlan) -> None:
+    def run(self, execution_plan: SparkPlan) -> None:
         for result in as_list(execution_plan):
             match result:
                 case None:
@@ -176,7 +176,7 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
                     raise JobError(f"Unsupported Spark plan: {type(result)}")
         return None
 
-    def teardown(self, _: Context) -> None:
+    def teardown(self) -> None:
         if self._spark:
             self._spark.stop()
             self.info("SparkSession stopped")

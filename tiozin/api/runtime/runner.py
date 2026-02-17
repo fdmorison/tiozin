@@ -6,7 +6,6 @@ from typing import Generic, TypeVar
 from tiozin.compose import RunnerProxy, tioproxy
 
 from .. import Tiozin
-from .context import Context
 
 TPlan = TypeVar("TPlan")
 TSession = TypeVar("TSession")
@@ -22,28 +21,20 @@ class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
     the lifecycle of job execution: environment setup, pipeline processing, and
     resource cleanup.
 
-    The Runner does not own its own context. Instead, it receives the context from
-    whoever invokes it—typically a Job or a Step. This design keeps the Runner
-    stateless and reusable across different execution scopes.
+    The Runner does not own its own context. It accesses the active execution
+    scope via ``Context.current()`` when needed. This keeps the Runner stateless
+    and reusable across different execution scopes.
 
     Lifecycle:
-        1. setup(job_context): Called once when the Job initializes the Runner.
+        1. setup(): Called once when the Job initializes the Runner.
            Use this to create sessions, connections, or shared resources.
 
-        2. run(context, plan): Called to execute work. May be invoked:
-           - Lazily by the Job with a Context (after all steps complete)
-           - Eagerly by each Step with a Context (as steps execute)
+        2. run(plan): Called to execute work. May be invoked:
+           - Lazily by the Job (after all steps complete)
+           - Eagerly by each Step (as steps execute)
 
-        3. teardown(job_context): Called once when the Job releases the Runner.
+        3. teardown(): Called once when the Job releases the Runner.
            Use this to close sessions and release resources.
-
-    Usage:
-        with runner(job_context) as runner:
-            # Steps may call runner.run(step_context, ...) eagerly
-            for step in steps:
-                step.execute(runner)
-            # Or Job calls runner.run(job_context, ...) lazily at the end
-            runner.run(job_context, accumulated_plan)
 
     Attributes:
         streaming: Indicates whether this runner executes streaming workloads.
@@ -77,21 +68,22 @@ class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
         """
 
     @abstractmethod
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         """Initialize the runner's resources (sessions, connections, etc.)."""
         pass
 
     @abstractmethod
-    def run(self, context: Context, execution_plan: TPlan, **options) -> TOutput:
+    def run(self, execution_plan: TPlan, **options) -> TOutput:
         """
-        Execute the given plan using the caller's context.
+        Execute the given plan.
 
         May be called multiple times during a job's lifecycle—either lazily
-        by the Job (with a Context) or eagerly by each Step (with a Context).
-        The context identifies who is requesting the execution.
+        by the Job (after all steps complete) or eagerly by each Step
+        (as steps execute). Use ``Context.current()`` to identify the
+        active execution scope.
         """
 
     @abstractmethod
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         """Release the runner's resources (close sessions, connections, etc.)."""
         pass
