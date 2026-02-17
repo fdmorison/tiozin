@@ -26,8 +26,36 @@ _current_context: ContextVar[Context | None] = ContextVar(
 
 @dataclass(slots=True, kw_only=True)
 class Context:
+    """
+    Represents the execution scope of a job or step.
+
+    Context stores identity, domain, governance, runner, and runtime state
+    for the current execution.
+
+    It works as a standard Python context manager. When activated with
+    `with context:`, it becomes the active execution scope and can be
+    accessed anywhere in the call stack.
+
+    Creating a context:
+
+        context = Context.for_job(job)
+        context = Context.for_step(step)
+        child = context.for_child_step(step)
+
+    Context activation (handled automatically by proxies):
+
+        with context:
+            ...
+
+    Accessing the active context inside a plugin:
+
+        ctx = self.context                     # raises if not active; recommended
+        ctx = Context.current()                # raises if not active
+        ctx = Context.current(required=False)  # returns None if not active
+    """
+
     # ==================================================
-    # Root reference (controlado nas factories)
+    # Root reference (set by factory methods)
     # ==================================================
     job: Context = field(init=False, repr=False)
 
