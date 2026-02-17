@@ -34,7 +34,9 @@ def test_for_job_should_create_job_context(
     context = Context.for_job(job_stub)
 
     # Assert
-    actual = {f.name: getattr(context, f.name) for f in fields(context)}
+    actual = {
+        f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
+    }
     expected = {
         # Root reference
         "job": context,
@@ -76,7 +78,9 @@ def test_for_step_should_create_step_context(
     context = Context.for_step(input_stub)
 
     # Assert
-    actual = {f.name: getattr(context, f.name) for f in fields(context)}
+    actual = {
+        f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
+    }
     expected = {
         # Root reference
         "job": None,
@@ -121,7 +125,9 @@ def test_for_child_step_should_create_step_context_with_job_information(
     context = job_context.for_child_step(input_stub)
 
     # Assert
-    actual = {f.name: getattr(context, f.name) for f in fields(context)}
+    actual = {
+        f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
+    }
     expected = {
         # Root reference
         "job": job_context,

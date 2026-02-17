@@ -1,7 +1,6 @@
 import copy
 import logging
 from datetime import datetime
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,14 +18,13 @@ from tiozin.family.tio_kernel import NoOpInput
 # ============================================================================
 # Testing TiozinTemplateOverlay - Basic Functionality
 # ============================================================================
-def test_overlay_should_render_and_restore_single_template():
+def test_overlay_should_render_and_restore_single_template(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/{{domain}}"
-    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.path
     restored = tiozin.path
 
@@ -36,21 +34,20 @@ def test_overlay_should_render_and_restore_single_template():
         restored,
     )
     expected = (
-        "./data/sales",
+        "./data/ecommerce",
         "./data/{{domain}}",
     )
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_multiple_templates():
+def test_overlay_should_render_and_restore_multiple_templates(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
-    tiozin.path = "./data/{{domain}}/{{date}}"
-    tiozin.name = "{{prefix}}_output"
-    context = MagicMock(template_vars={"domain": "sales", "date": "2024-01-15", "prefix": "test"})
+    tiozin.path = "./data/{{domain}}/{{layer}}"
+    tiozin.name = "{{product}}_output"
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = (tiozin.path, tiozin.name)
     restored = (tiozin.path, tiozin.name)
 
@@ -61,26 +58,25 @@ def test_overlay_should_render_and_restore_multiple_templates():
     )
     expected = (
         (
-            "./data/sales/2024-01-15",
-            "test_output",
+            "./data/ecommerce/raw",
+            "sales_output",
         ),
         (
-            "./data/{{domain}}/{{date}}",
-            "{{prefix}}_output",
+            "./data/{{domain}}/{{layer}}",
+            "{{product}}_output",
         ),
     )
     assert actual == expected
 
 
-def test_overlay_should_not_modify_non_template_strings():
+def test_overlay_should_not_modify_non_template_strings(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/sales"
     tiozin.name = "output"
-    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = (tiozin.path, tiozin.name)
     restored = (tiozin.path, tiozin.name)
 
@@ -102,14 +98,13 @@ def test_overlay_should_not_modify_non_template_strings():
     assert actual == expected
 
 
-def test_overlay_should_not_modify_private_attributes():
+def test_overlay_should_not_modify_private_attributes(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin._private = "{{domain}}"
-    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin._private
     restored = tiozin._private
 
@@ -125,14 +120,13 @@ def test_overlay_should_not_modify_private_attributes():
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_nested_dict_templates():
+def test_overlay_should_render_and_restore_nested_dict_templates(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.config = {"path": "./data/{{domain}}", "region": "{{region}}"}
-    context = MagicMock(template_vars={"domain": "sales", "region": "us-east"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = dict(tiozin.config)
     restored = tiozin.config
 
@@ -143,8 +137,8 @@ def test_overlay_should_render_and_restore_nested_dict_templates():
     )
     expected = (
         {
-            "path": "./data/sales",
-            "region": "us-east",
+            "path": "./data/ecommerce",
+            "region": "latam",
         },
         {
             "path": "./data/{{domain}}",
@@ -154,17 +148,16 @@ def test_overlay_should_render_and_restore_nested_dict_templates():
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_nested_list_templates():
+def test_overlay_should_render_and_restore_nested_list_templates(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.paths = [
-        "./{{env}}/data",
+        "./{{layer}}/data",
         "./output/{{domain}}",
     ]
-    context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = list(tiozin.paths)
     restored = tiozin.paths
 
@@ -175,26 +168,25 @@ def test_overlay_should_render_and_restore_nested_list_templates():
     )
     expected = (
         [
-            "./prod/data",
-            "./output/sales",
+            "./raw/data",
+            "./output/ecommerce",
         ],
         [
-            "./{{env}}/data",
+            "./{{layer}}/data",
             "./output/{{domain}}",
         ],
     )
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_nested_tiozins():
+def test_overlay_should_render_and_restore_nested_tiozins(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.inner = NoOpInput(name="inner")
     tiozin.inner.path = "{{domain}}/inner"
-    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.inner.path
     restored = tiozin.inner.path
 
@@ -204,21 +196,20 @@ def test_overlay_should_render_and_restore_nested_tiozins():
         restored,
     )
     expected = (
-        "sales/inner",
+        "ecommerce/inner",
         "{{domain}}/inner",
     )
     assert actual == expected
 
 
-def test_overlay_should_restore_on_exception():
+def test_overlay_should_restore_on_exception(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
-    tiozin.name = "{{value}}"
-    context = MagicMock(template_vars={"value": "resolved"})
+    tiozin.name = "{{domain}}"
 
     # Act
     try:
-        with TiozinTemplateOverlay(tiozin, context):
+        with TiozinTemplateOverlay(tiozin, fake_domain):
             rendered = tiozin.name
             raise ValueError("Simulated error")
     except ValueError:
@@ -231,34 +222,32 @@ def test_overlay_should_restore_on_exception():
         restored,
     )
     expected = (
-        "resolved",
-        "{{value}}",
+        "ecommerce",
+        "{{domain}}",
     )
     assert actual == expected
 
 
-def test_overlay_should_raise_error_on_missing_variable():
+def test_overlay_should_raise_error_on_missing_variable(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/{{missing}}"
-    context = MagicMock(template_vars={"other": "value"})
 
     # Act & Assert
     with pytest.raises(InvalidInputError):
-        with TiozinTemplateOverlay(tiozin, context):
+        with TiozinTemplateOverlay(tiozin, fake_domain):
             pass
 
 
-def test_overlay_should_render_and_restore_templates_with_multiple_variables():
+def test_overlay_should_render_and_restore_templates_with_multiple_variables(
+    fake_domain: dict,
+):
     # Arrange
     tiozin = NoOpInput(name="test")
-    tiozin.path = "./data/{{domain}}/{{year}}-{{month}}-{{day}}/file.txt"
-    context = MagicMock(
-        template_vars={"domain": "sales", "year": "2024", "month": "01", "day": "15"}
-    )
+    tiozin.path = "./data/{{domain}}/{{layer}}/{{product}}/file.txt"
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.path
     restored = tiozin.path
 
@@ -268,20 +257,19 @@ def test_overlay_should_render_and_restore_templates_with_multiple_variables():
         restored,
     )
     expected = (
-        "./data/sales/2024-01-15/file.txt",
-        "./data/{{domain}}/{{year}}-{{month}}-{{day}}/file.txt",
+        "./data/ecommerce/raw/sales/file.txt",
+        "./data/{{domain}}/{{layer}}/{{product}}/file.txt",
     )
     assert actual == expected
 
 
-def test_overlay_should_not_modify_strings_when_context_is_empty():
+def test_overlay_should_not_modify_strings_when_no_template_vars():
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/static"
-    context = MagicMock()
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin):
         rendered = tiozin.path
     restored = tiozin.path
 
@@ -297,18 +285,17 @@ def test_overlay_should_not_modify_strings_when_context_is_empty():
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_deeply_nested_structures():
+def test_overlay_should_render_and_restore_deeply_nested_structures(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.config = {
         "level1": {
-            "level2": ["./{{a}}", "./{{b}}"],
+            "level2": ["./{{domain}}", "./{{layer}}"],
         }
     }
-    context = MagicMock(template_vars={"a": "foo", "b": "bar"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = copy.deepcopy(tiozin.config)
     restored = tiozin.config
 
@@ -320,12 +307,12 @@ def test_overlay_should_render_and_restore_deeply_nested_structures():
     expected = (
         {
             "level1": {
-                "level2": ["./foo", "./bar"],
+                "level2": ["./ecommerce", "./raw"],
             }
         },
         {
             "level1": {
-                "level2": ["./{{a}}", "./{{b}}"],
+                "level2": ["./{{domain}}", "./{{layer}}"],
             }
         },
     )
@@ -340,10 +327,9 @@ def test_overlay_should_not_modify_non_string_values(value):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.value = value
-    context = MagicMock()
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin):
         rendered = tiozin.value
     restored = tiozin.value
 
@@ -359,17 +345,16 @@ def test_overlay_should_not_modify_non_string_values(value):
     assert actual == expected
 
 
-def test_overlay_should_not_modify_immutable_tuple_with_templates():
+def test_overlay_should_not_modify_immutable_tuple_with_templates(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.paths = (
-        "./{{env}}/data",
+        "./{{layer}}/data",
         "./output/{{domain}}",
     )
-    context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.paths
     restored = tiozin.paths
 
@@ -380,25 +365,24 @@ def test_overlay_should_not_modify_immutable_tuple_with_templates():
     )
     expected = (
         (
-            "./{{env}}/data",
+            "./{{layer}}/data",
             "./output/{{domain}}",
         ),
         (
-            "./{{env}}/data",
+            "./{{layer}}/data",
             "./output/{{domain}}",
         ),
     )
     assert actual == expected
 
 
-def test_overlay_should_not_modify_immutable_frozenset_with_templates():
+def test_overlay_should_not_modify_immutable_frozenset_with_templates(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
-    tiozin.tags = frozenset(["{{env}}", "{{domain}}"])
-    context = MagicMock(template_vars={"env": "prod", "domain": "sales"})
+    tiozin.tags = frozenset(["{{layer}}", "{{domain}}"])
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.tags
     restored = tiozin.tags
 
@@ -408,24 +392,25 @@ def test_overlay_should_not_modify_immutable_frozenset_with_templates():
         restored,
     )
     expected = (
-        frozenset(["{{env}}", "{{domain}}"]),
-        frozenset(["{{env}}", "{{domain}}"]),
+        frozenset(["{{layer}}", "{{domain}}"]),
+        frozenset(["{{layer}}", "{{domain}}"]),
     )
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tuple():
+def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tuple(
+    fake_domain: dict,
+):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.data = (
         {"path": "./data/{{domain}}"},
-        ["./{{env}}/data", "./output/{{region}}"],
+        ["./{{layer}}/data", "./output/{{region}}"],
         "static_value",
     )
-    context = MagicMock(template_vars={"domain": "sales", "env": "prod", "region": "us-east"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = copy.deepcopy(tiozin.data)
     restored = tiozin.data
 
@@ -436,29 +421,32 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
     )
     expected = (
         (
-            {"path": "./data/sales"},
-            ["./prod/data", "./output/us-east"],
+            {"path": "./data/ecommerce"},
+            ["./raw/data", "./output/latam"],
             "static_value",
         ),
         (
             {"path": "./data/{{domain}}"},
-            ["./{{env}}/data", "./output/{{region}}"],
+            ["./{{layer}}/data", "./output/{{region}}"],
             "static_value",
         ),
     )
     assert actual == expected
 
 
-def test_overlay_should_restore_templates_after_each_sequential_overlay():
+def test_overlay_should_restore_templates_after_each_sequential_overlay(
+    fake_domain: dict,
+):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/{{domain}}"
+    other_domain = {**fake_domain, "domain": "finance"}
 
     # Act
-    with TiozinTemplateOverlay(tiozin, MagicMock(template_vars={"domain": "sales"})):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered_1 = tiozin.path
 
-    with TiozinTemplateOverlay(tiozin, MagicMock(template_vars={"domain": "finance"})):
+    with TiozinTemplateOverlay(tiozin, other_domain):
         rendered_2 = tiozin.path
     restored = tiozin.path
 
@@ -469,21 +457,22 @@ def test_overlay_should_restore_templates_after_each_sequential_overlay():
         restored,
     )
     expected = (
-        "./data/sales",
+        "./data/ecommerce",
         "./data/finance",
         "./data/{{domain}}",
     )
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
+def test_overlay_should_render_and_restore_templates_with_jinja2_filters(
+    fake_domain: dict,
+):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/{{domain|upper}}"
-    context = MagicMock(template_vars={"domain": "sales"})
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.path
     restored = tiozin.path
 
@@ -493,20 +482,21 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_filters():
         restored,
     )
     expected = (
-        "./data/SALES",
+        "./data/ECOMMERCE",
         "./data/{{domain|upper}}",
     )
     assert actual == expected
 
 
-def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
+def test_overlay_should_render_and_restore_templates_with_jinja2_expressions(
+    fake_domain: dict,
+):
     # Arrange
     tiozin = NoOpInput(name="test")
-    tiozin.path = "./data/{{ domain ~ '/' ~ date }}"
-    context = MagicMock(template_vars={"domain": "sales", "date": "2024-01-15"})
+    tiozin.path = "./data/{{ domain ~ '/' ~ layer }}"
 
     # Act
-    with TiozinTemplateOverlay(tiozin, context):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.path
     restored = tiozin.path
 
@@ -516,8 +506,8 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
         restored,
     )
     expected = (
-        "./data/sales/2024-01-15",
-        "./data/{{ domain ~ '/' ~ date }}",
+        "./data/ecommerce/raw",
+        "./data/{{ domain ~ '/' ~ layer }}",
     )
     assert actual == expected
 

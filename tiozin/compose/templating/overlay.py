@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any
+from collections.abc import Mapping
+from typing import Any
 
 from tiozin.api import Tiozin
 from tiozin.exceptions import InvalidInputError
 
 from .. import reflection
 from . import filters
-
-if TYPE_CHECKING:
-    from tiozin.api import Context
 
 JINJA_ENV = filters.create_jinja_environment()
 
@@ -34,7 +32,7 @@ class TiozinTemplateOverlay:
 
         output = MyOutput(path="./data/{{domain}}/{{date}}")
 
-        with TiozinTemplateOverlay(output, context):
+        with TiozinTemplateOverlay(output):
             print(output.path)  # "./data/sales/2024-01-15"
 
         print(output.path)  # "./data/{{domain}}/{{date}}"
@@ -42,9 +40,9 @@ class TiozinTemplateOverlay:
     Not thread-safe.
     """
 
-    def __init__(self, tiozin: Tiozin, context: Context) -> None:
+    def __init__(self, tiozin: Tiozin, template_vars: Mapping[str, Any] = None) -> None:
         self._tiozin = tiozin
-        self._context = context.template_vars
+        self._context = template_vars or {}
         self._templates: list[tuple] = []
         self._scan_templates(self._tiozin)
 

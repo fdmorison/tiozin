@@ -48,7 +48,7 @@ class JobProxy(wrapt.ObjectProxy):
         job: Job = self.__wrapped__
         context = context or Context.for_job(job)
 
-        with TiozinTemplateOverlay(job, context):
+        with context, TiozinTemplateOverlay(job, context.template_vars):
             try:
                 tios = [t.replace("_", " ").title() for t in job.tios]
                 job.info(f"🚀 {context.kind} is starting — {human_join(tios)} on duty")

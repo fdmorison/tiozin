@@ -50,7 +50,7 @@ class RunnerProxy(wrapt.ObjectProxy):
     def contextmanager(self, context: Context) -> Generator[RunnerProxy, Any, None]:
         runner: Runner = self.__wrapped__
 
-        with TiozinTemplateOverlay(runner, context):
+        with context, TiozinTemplateOverlay(runner, context.template_vars):
             try:
                 runner.info(f"▶️  Runner initialized for '{context.name}'")
                 runner.setup(context)

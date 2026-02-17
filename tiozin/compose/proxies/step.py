@@ -58,7 +58,7 @@ class StepProxy(wrapt.ObjectProxy):
         step: EtlStep = self.__wrapped__
         context = context.for_child_step(step) if context else Context.for_step(step)
 
-        with TiozinTemplateOverlay(step, context):
+        with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
                 step.info(f"▶️  Starting to {context.tiozin_kind} data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
