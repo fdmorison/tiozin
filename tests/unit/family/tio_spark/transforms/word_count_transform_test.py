@@ -20,12 +20,11 @@ def test_transform_should_count_words(spark_session: SparkSession):
         ],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -51,12 +50,11 @@ def test_transform_should_return_empty_dataframe_when_input_is_empty(
         [],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -84,12 +82,11 @@ def test_transform_should_normalize_words_to_lowercase(
         ],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -117,13 +114,12 @@ def test_transform_should_preserve_case_when_lowercase_is_disabled(
         ],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
         lowercase=False,
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -155,12 +151,11 @@ def test_transform_should_remove_punctuation(
         ],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -189,12 +184,11 @@ def test_transform_should_preserve_apostrophes(
         ],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -224,12 +218,11 @@ def test_transform_should_handle_unicode_characters(
         ],
         schema="`value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -261,13 +254,12 @@ def test_transform_should_count_words_grouped_by_single_column(
         ],
         schema="`doc_id` STRING, `value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
         count_by="doc_id",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -300,13 +292,12 @@ def test_transform_should_count_words_grouped_by_multiple_columns(
         ],
         schema="`play` STRING, `act` STRING, `value` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
         name="test",
         count_by=["play", "act"],
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -339,7 +330,6 @@ def test_transform_should_apply_all_parameters(
         ],
         schema="`doc_id` STRING, `text` STRING",
     )
-    context = None
 
     # Act
     actual = SparkWordCountTransform(
@@ -347,7 +337,7 @@ def test_transform_should_apply_all_parameters(
         content_field="text",
         count_by="doc_id",
         lowercase=False,
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(

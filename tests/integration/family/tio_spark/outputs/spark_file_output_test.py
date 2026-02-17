@@ -15,7 +15,7 @@ BASE_PATH = "./tests/mocks/data"
 
 
 def test_output_should_write_files(
-    spark_session: SparkSession, tmp_path: Path, step_context: Context
+    spark_session: SparkSession, tmp_path: Path, output_context: Context
 ):
     """Writes a DataFrame to disk using Parquet format."""
     # Arrange
@@ -34,7 +34,7 @@ def test_output_should_write_files(
         path=str(output_path),
         format="parquet",
         mode="overwrite",
-    ).write(step_context, input_data).save()
+    ).write(output_context, input_data).save()
 
     # Assert
     actual = spark_session.read.parquet(str(output_path))
@@ -49,7 +49,7 @@ def test_output_should_write_files(
 
 
 def test_output_should_write_another_format_of_files(
-    spark_session: SparkSession, tmp_path: Path, step_context: Context
+    spark_session: SparkSession, tmp_path: Path, output_context: Context
 ):
     """Writes a DataFrame to disk using JSON format."""
     # Arrange
@@ -68,7 +68,7 @@ def test_output_should_write_another_format_of_files(
         path=str(output_path),
         format="json",
         mode="overwrite",
-    ).write(step_context, input_data).save()
+    ).write(output_context, input_data).save()
 
     # Assert
     actual = spark_session.read.json(str(output_path))
@@ -83,7 +83,7 @@ def test_output_should_write_another_format_of_files(
 
 
 def test_output_should_write_partitioned_data(
-    spark_session: SparkSession, tmp_path: Path, step_context: Context
+    spark_session: SparkSession, tmp_path: Path, output_context: Context
 ):
     """Writes partitioned data when partition_by is provided."""
     # Arrange
@@ -103,7 +103,7 @@ def test_output_should_write_partitioned_data(
         format="parquet",
         mode="overwrite",
         partition_by=["date"],
-    ).write(step_context, input_data).save()
+    ).write(output_context, input_data).save()
 
     # Assert
     actual = spark_session.read.parquet(str(output_path))
@@ -121,7 +121,7 @@ def test_output_should_write_partitioned_data(
 
 
 def test_output_should_apply_writer_options(
-    spark_session: SparkSession, tmp_path: Path, step_context: Context
+    spark_session: SparkSession, tmp_path: Path, output_context: Context
 ):
     """Applies Spark writer options when writing files."""
     # Arrange
@@ -141,7 +141,7 @@ def test_output_should_apply_writer_options(
         format="json",
         mode="overwrite",
         compression="gzip",
-    ).write(step_context, input_data).save()
+    ).write(output_context, input_data).save()
 
     # Assert
     actual = spark_session.read.json(str(output_path))

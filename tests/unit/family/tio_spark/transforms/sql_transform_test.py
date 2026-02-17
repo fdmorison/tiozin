@@ -29,13 +29,12 @@ def test_transform_should_execute_sql_using_existing_view(spark_session: SparkSe
         schema="`id` INT, `name` STRING",
     )
     input.createOrReplaceTempView("customers")
-    context = None
 
     # Act
     actual = SparkSqlTransform(
         name="sql_existing_view",
         query="SELECT * FROM customers",
-    ).transform(context, input)
+    ).transform(None, input)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -77,7 +76,6 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
     )
     customers.createOrReplaceTempView("customers")
     orders.createOrReplaceTempView("orders")
-    context = None
 
     # Act
     actual = SparkSqlTransform(
@@ -88,7 +86,7 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
             JOIN orders o
               ON c.id = o.customer_id
         """,
-    ).transform(context, customers)
+    ).transform(None, customers)
 
     # Assert
     expected = spark_session.createDataFrame(
@@ -300,14 +298,13 @@ def test_transform_should_fail_when_referenced_view_does_not_exist(spark_session
         [(1,)],
         schema="`value` INT",
     )
-    context = None
 
     # Act / Assert
     with pytest.raises(AnalysisException):
         SparkSqlTransform(
             name="sql_missing_view",
             query="SELECT * FROM does_not_exist",
-        ).transform(context, input)
+        ).transform(None, input)
 
 
 def test_transform_should_fail_when_sql_is_invalid(spark_session: SparkSession):
@@ -373,13 +370,12 @@ def test_transform_should_shadow_existing_table_with_step_view(spark_session: Sp
         schema="`id` INT, `name` STRING",
     )
     viewdata.createOrReplaceTempView("shadowed")
-    context = None
 
     # Act
     result = SparkSqlTransform(
         name="sql_shadowing",
         query="SELECT * FROM shadowed",
-    ).transform(context, viewdata)
+    ).transform(None, viewdata)
 
     # Assert
     actual = result

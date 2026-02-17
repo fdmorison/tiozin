@@ -9,7 +9,7 @@ from tests.stubs.input import InputStub
 from tests.stubs.job import JobStub
 from tests.stubs.output import OutputStub
 from tests.stubs.runner import RunnerStub
-from tests.stubs.transform import StubTransform
+from tests.stubs.transform import TransformStub
 from tiozin import Context
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import InvalidInputError
@@ -527,11 +527,11 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_expressions():
 # ============================================================================
 
 
-def test_overlay_should_render_job_templates_across_all_phases(fake_taxonomy: dict):
+def test_overlay_should_render_job_templates_across_all_phases(fake_domain: dict):
     # Arrange
     job = JobStub(
         name="test",
-        **fake_taxonomy,
+        **fake_domain,
         runner=RunnerStub(),
         inputs=[InputStub(name="test")],
     )
@@ -576,10 +576,10 @@ def test_overlay_should_render_runner_templates_across_all_phases(job_context: C
 
 
 def test_overlay_should_render_input_templates_across_all_phases(
-    fake_taxonomy: dict, job_context: Context
+    fake_domain: dict, job_context: Context
 ):
     # Arrange
-    step = InputStub(name="test", **fake_taxonomy)
+    step = InputStub(name="test", **fake_domain)
 
     # Act
     step.read(job_context)
@@ -599,10 +599,10 @@ def test_overlay_should_render_input_templates_across_all_phases(
 
 
 def test_overlay_should_render_transform_templates_across_all_phases(
-    fake_taxonomy: dict, job_context: Context
+    fake_domain: dict, job_context: Context
 ):
     # Arrange
-    step = StubTransform(name="test", **fake_taxonomy)
+    step = TransformStub(name="test", **fake_domain)
     data = {}
 
     # Act
@@ -623,10 +623,10 @@ def test_overlay_should_render_transform_templates_across_all_phases(
 
 
 def test_overlay_should_render_output_templates_across_all_phases(
-    fake_taxonomy: dict, job_context: Context
+    fake_domain: dict, job_context: Context
 ):
     # Arrange
-    step = OutputStub(name="test", **fake_taxonomy)
+    step = OutputStub(name="test", **fake_domain)
     data = {}
 
     # Act

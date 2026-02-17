@@ -1,641 +1,398 @@
-from unittest.mock import MagicMock
+from dataclasses import fields
+from pathlib import Path
+from unittest.mock import ANY
 
 import pendulum
 import pytest
+from assertpy import assert_that
+from freezegun import freeze_time
 
+from tests.stubs.input import InputStub
+from tests.stubs.job import JobStub
 from tiozin.api.processors.context import Context
+from tiozin.compose import RelativeDate
+from tiozin.exceptions import TiozinUnexpectedError
+
+FAKE_UUID = "01968e6a-0000-7000-8000-000000000001"
+FROZEN_TIME = "2026-06-15T12:00:00+00:00"
+FROZEN_TIME_OBJ = pendulum.parse(FROZEN_TIME)
 
 
 # =============================================================================
-# Fixtures
+# Testing Factories
 # =============================================================================
-@pytest.fixture
-def job_context() -> Context:
-    """Creates a root context (job-level) with all fields populated."""
-    return Context(
-        name="daily_orders",
-        kind="LinearJob",
-        tiozin_kind="job",
-        org="acme",
-        region="latam",
-        domain="sales",
-        layer="raw",
-        product="orders",
-        model="daily",
-        options={"retry": 3},
-        maintainer="team-data",
-        cost_center="cc-123",
-        owner="alice@acme.com",
-        labels={"env": "prod"},
-        runner=MagicMock(),
-        nominal_time=pendulum.parse("2026-01-15T00:00:00+00:00"),
-        session={"shared": "data"},
-    )
 
 
-@pytest.fixture
-def step_context(job_context: Context) -> Context:
-    """Creates a child context (step-level) with a parent."""
-    return Context(
-        parent=job_context,
-        name="read_orders",
-        kind="NoOpInput",
-        tiozin_kind="read",
-        org="acme",
-        region="latam",
-        domain="sales",
-        layer="raw",
-        product="orders",
-        model="daily",
-        options={"path": "/data/orders"},
-    )
+@freeze_time(FROZEN_TIME)
+def test_for_job_should_create_job_context(
+    job_stub: JobStub, fake_domain: dict, fake_governance: dict
+):
+    # Job
+    job = job_stub
 
-
-# =============================================================================
-# Testing Context - Identity Fields
-# =============================================================================
-def test_context_should_have_identity_fields(job_context: Context):
-    # Assert
-    actual = (
-        job_context.name,
-        job_context.kind,
-        job_context.tiozin_kind,
-        job_context.options,
-    )
-    expected = ("daily_orders", "LinearJob", "job", {"retry": 3})
-    assert actual == expected
-
-
-def test_context_should_generate_id_automatically():
     # Act
-    context = Context(
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        options={},
-    )
+    context = Context.for_job(job_stub)
 
     # Assert
-    actual = (context.id is not None, len(context.id) > 0)
-    expected = (True, True)
+    actual = {f.name: getattr(context, f.name) for f in fields(context)}
+    expected = {
+        # Root reference
+        "job": context,
+        # Identity
+        "name": job.name,
+        "kind": job.kind,
+        "tiozin_kind": job.tiozin_kind,
+        # Domain / Governance
+        **fake_domain,
+        **fake_governance,
+        # Tiozin arguments
+        "options": job.options,
+        # Runtime Identity
+        "run_id": ANY,
+        "run_attempt": 1,
+        "nominal_time": FROZEN_TIME_OBJ,
+        # Runtime Lifecycle
+        "runner": job.runner,
+        "setup_at": None,
+        "executed_at": None,
+        "teardown_at": None,
+        "finished_at": None,
+        # Infra
+        "temp_workdir": Path(f"/tmp/tiozin/{job.name}/{context.run_id}"),
+        "template_vars": ANY,
+        "shared": {},
+    }
     assert actual == expected
 
 
-def test_context_should_generate_run_id_automatically(job_context: Context):
-    # Assert
-    actual = (job_context.run_id is not None, len(job_context.run_id) > 0)
-    expected = (True, True)
-    assert actual == expected
-
-
-# =============================================================================
-# Testing Context - Domain Metadata
-# =============================================================================
-def test_context_should_have_domain_metadata(job_context: Context):
-    # Assert
-    actual = (
-        job_context.org,
-        job_context.region,
-        job_context.domain,
-        job_context.layer,
-        job_context.product,
-        job_context.model,
-    )
-    expected = ("acme", "latam", "sales", "raw", "orders", "daily")
-    assert actual == expected
-
-
-# =============================================================================
-# Testing Context - Ownership
-# =============================================================================
-def test_context_should_have_ownership_fields(job_context: Context):
-    # Assert
-    actual = (
-        job_context.maintainer,
-        job_context.cost_center,
-        job_context.owner,
-        job_context.labels,
-    )
-    expected = ("team-data", "cc-123", "alice@acme.com", {"env": "prod"})
-    assert actual == expected
-
-
-# =============================================================================
-# Testing Context - Nominal Time
-# =============================================================================
-def test_context_should_default_nominal_time_to_now():
+@freeze_time(FROZEN_TIME)
+def test_for_step_should_create_step_context(
+    input_stub: InputStub, fake_domain: dict, fake_governance: dict
+):
     # Arrange
-    before = pendulum.now("UTC")
+    step = input_stub
 
     # Act
-    context = Context(
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        options={},
-    )
+    context = Context.for_step(input_stub)
 
     # Assert
-    after = pendulum.now("UTC")
-    assert before <= context.nominal_time <= after
+    actual = {f.name: getattr(context, f.name) for f in fields(context)}
+    expected = {
+        # Root reference
+        "job": None,
+        # Identity
+        "name": step.name,
+        "kind": step.kind,
+        "tiozin_kind": step.tiozin_kind,
+        # Domain / Governance
+        **fake_domain,
+        # Governance inheritance
+        "maintainer": None,
+        "cost_center": None,
+        "owner": None,
+        "labels": {},
+        # Tiozin arguments
+        "options": step.options,
+        # Runtime Identity
+        "run_id": ANY,
+        "run_attempt": 1,
+        "nominal_time": FROZEN_TIME_OBJ,
+        # Runtime Lifecycle
+        "runner": None,
+        "setup_at": None,
+        "executed_at": None,
+        "teardown_at": None,
+        "finished_at": None,
+        # Infra
+        "temp_workdir": Path(f"/tmp/tiozin/{step.name}/{context.run_id}"),
+        "template_vars": ANY,
+        "shared": {},
+    }
+    assert actual == expected
 
 
-def test_context_should_accept_custom_nominal_time():
+def test_for_child_step_should_create_step_context_with_job_information(
+    job_context: Context, input_stub: InputStub, fake_domain: dict
+):
     # Arrange
-    custom_time = pendulum.parse("2026-06-15T12:00:00+00:00")
+    step = input_stub
 
     # Act
-    context = Context(
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        options={},
-        nominal_time=custom_time,
-    )
+    context = job_context.for_child_step(input_stub)
 
     # Assert
-    actual = context.nominal_time
-    expected = custom_time
+    actual = {f.name: getattr(context, f.name) for f in fields(context)}
+    expected = {
+        # Root reference
+        "job": job_context,
+        # Identity
+        "name": step.name,
+        "kind": step.kind,
+        "tiozin_kind": step.tiozin_kind,
+        # Domain / Governance
+        "org": job_context.org,
+        "region": job_context.region,
+        "domain": job_context.domain,
+        "layer": job_context.layer,
+        "product": job_context.product,
+        "model": job_context.model,
+        # Governance inheritance
+        "maintainer": job_context.maintainer,
+        "cost_center": job_context.cost_center,
+        "owner": job_context.owner,
+        "labels": job_context.labels,
+        # Tiozin arguments
+        "options": step.options,
+        # Runtime Identity
+        "run_id": f"{job_context.run_id}_{step.name}",
+        "run_attempt": 1,
+        "nominal_time": job_context.nominal_time,
+        # Runtime Lifecycle
+        "runner": job_context.runner,
+        "setup_at": None,
+        "executed_at": None,
+        "teardown_at": None,
+        "finished_at": None,
+        # Infra
+        "temp_workdir": Path(f"/tmp/tiozin/{job_context.name}/{job_context.run_id}/{step.name}"),
+        "template_vars": ANY,
+        "shared": job_context.shared,
+    }
     assert actual == expected
 
 
 # =============================================================================
-# Testing Context - Runtime Timestamps
+# Testing Context - Lifecycle Delays
 # =============================================================================
-def test_context_should_have_null_timestamps_by_default(job_context: Context):
-    # Assert
-    actual = (
-        job_context.setup_at,
-        job_context.executed_at,
-        job_context.teardown_at,
-        job_context.finished_at,
-    )
-    expected = (None, None, None, None)
-    assert actual == expected
 
 
-# =============================================================================
-# Testing Context - Timing Helpers
-# =============================================================================
-def test_context_delay_should_calculate_total_duration(job_context: Context):
-    # Arrange
-    job_context.setup_at = pendulum.parse("2026-01-15T10:00:00+00:00")
-    job_context.finished_at = pendulum.parse("2026-01-15T10:00:05+00:00")
-
-    # Act
-    actual = job_context.delay
-
-    # Assert
-    expected = 5.0
-    assert actual == expected
-
-
-def test_context_setup_delay_should_calculate_setup_duration(job_context: Context):
+def test_context_should_calculate_lifecycle_delays(job_context: Context):
     # Arrange
     job_context.setup_at = pendulum.parse("2026-01-15T10:00:00+00:00")
     job_context.executed_at = pendulum.parse("2026-01-15T10:00:02+00:00")
-
-    # Act
-    actual = job_context.setup_delay
-
-    # Assert
-    expected = 2.0
-    assert actual == expected
-
-
-def test_context_execution_delay_should_calculate_execution_duration(job_context: Context):
-    # Arrange
-    job_context.executed_at = pendulum.parse("2026-01-15T10:00:02+00:00")
-    job_context.teardown_at = pendulum.parse("2026-01-15T10:00:10+00:00")
-
-    # Act
-    actual = job_context.execution_delay
-
-    # Assert
-    expected = 8.0
-    assert actual == expected
-
-
-def test_context_teardown_delay_should_calculate_teardown_duration(job_context: Context):
-    # Arrange
     job_context.teardown_at = pendulum.parse("2026-01-15T10:00:10+00:00")
     job_context.finished_at = pendulum.parse("2026-01-15T10:00:11+00:00")
 
     # Act
-    actual = job_context.teardown_delay
+    result = (
+        job_context.delay,
+        job_context.setup_delay,
+        job_context.execution_delay,
+        job_context.teardown_delay,
+    )
 
     # Assert
-    expected = 1.0
+    actual = result
+    expected = (
+        11.0,
+        2.0,
+        8.0,
+        1.0,
+    )
     assert actual == expected
 
 
 # =============================================================================
-# Testing Context - Temporary Storage
+# Testing Context._build_template_vars
 # =============================================================================
-def test_context_should_create_temp_workdir_automatically(job_context: Context):
-    # Assert
-    actual = (
-        job_context.temp_workdir is not None,
-        job_context.temp_workdir.exists(),
-        job_context.temp_workdir.is_dir(),
-    )
-    expected = (True, True, True)
-    assert actual == expected
 
 
-def test_context_temp_workdir_should_be_organized_by_name_and_run_id(job_context: Context):
-    # Assert
-    path = str(job_context.temp_workdir)
-    actual = (
-        "/tiozin/" in path,
-        f"/{job_context.name}/" in path,
-        f"/{job_context.run_id}" in path,
-    )
-    expected = (True, True, True)
-    assert actual == expected
-
-
-def test_context_temp_workdir_should_be_in_template_vars(job_context: Context):
-    # Assert
-    actual = job_context.template_vars["temp_workdir"]
-    expected = job_context.temp_workdir
-    assert actual == expected
-
-
-# =============================================================================
-# Testing Context - Template Variables
-# =============================================================================
-def test_context_should_include_identity_fields_in_template_vars(job_context: Context):
-    # Assert
-    actual = (
-        job_context.template_vars["id"],
-        job_context.template_vars["name"],
-        job_context.template_vars["kind"],
-        job_context.template_vars["tiozin_kind"],
-    )
-    expected = (job_context.id, "daily_orders", "LinearJob", "job")
-    assert actual == expected
-
-
-def test_context_should_include_domain_metadata_in_template_vars(job_context: Context):
-    # Assert
-    actual = (
-        job_context.template_vars["org"],
-        job_context.template_vars["region"],
-        job_context.template_vars["domain"],
-        job_context.template_vars["layer"],
-        job_context.template_vars["product"],
-        job_context.template_vars["model"],
-    )
-    expected = ("acme", "latam", "sales", "raw", "orders", "daily")
-    assert actual == expected
-
-
-def test_context_should_include_relative_date_vars_in_template_vars():
-    # Arrange
-    nominal_time = pendulum.parse("2026-06-15T12:00:00+00:00")
-
+def test_build_template_vars_should_exclude_fields_with_template_false(job_context: Context):
     # Act
-    context = Context(
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        options={},
-        nominal_time=nominal_time,
-    )
+    result = job_context._build_template_vars()
 
     # Assert
-    actual = (
-        str(context.template_vars["today"]),
-        context.template_vars["YYYY"],
-        context.template_vars["MM"],
-        context.template_vars["DD"],
-        context.template_vars["ds"],
-    )
-    expected = ("2026-06-15", "2026", "06", "15", "2026-06-15")
-    assert actual == expected
-
-
-def test_context_template_vars_should_include_fields_without_template_false(job_context: Context):
-    # Assert
-    expected = {
-        "id",
-        "name",
-        "kind",
-        "tiozin_kind",
-        "options",
-        "run_id",
+    excluded = {
+        "runner",
+        "shared",
+        "template_vars",
         "setup_at",
         "executed_at",
         "teardown_at",
         "finished_at",
-        "temp_workdir",
-        "org",
-        "region",
-        "domain",
-        "layer",
-        "product",
-        "model",
-        "maintainer",
-        "cost_center",
-        "owner",
-        "labels",
-        "nominal_time",
     }
-    actual = {k for k in expected if k in job_context.template_vars}
-    assert actual == expected
-
-
-def test_context_template_vars_should_exclude_fields_with_template_false(job_context: Context):
-    # Assert
-    excluded = {"runner", "template_vars", "session"}
-    actual = {k for k in excluded if k in job_context.template_vars}
+    actual = excluded.intersection(result.keys())
     expected = set()
     assert actual == expected
 
 
-def test_context_template_vars_should_be_immutable(job_context: Context):
-    # Assert
-    with pytest.raises(TypeError):
-        job_context.template_vars["new_key"] = "value"
-
-
-# =============================================================================
-# Testing Context - Parent/Child Hierarchy
-# =============================================================================
-def test_context_should_reference_itself_as_job_when_root(job_context: Context):
-    # Assert
-    actual = job_context.job
-    expected = job_context
-    assert actual is expected
-
-
-def test_context_should_reference_parent_job_when_child(
-    step_context: Context, job_context: Context
+def test_build_template_vars_should_include_relative_date(
+    job_context: Context,
 ):
+    # Act
+    result = job_context._build_template_vars()
+
     # Assert
-    actual = step_context.job
-    expected = job_context
-    assert actual is expected
-
-
-def test_context_should_inherit_session_from_parent(step_context: Context, job_context: Context):
-    # Assert
-    actual = step_context.session
-    expected = job_context.session
-    assert actual is expected
-
-
-def test_context_should_inherit_runner_from_parent(step_context: Context, job_context: Context):
-    # Assert
-    actual = step_context.runner
-    expected = job_context.runner
-    assert actual is expected
-
-
-def test_context_should_inherit_ownership_from_parent(step_context: Context, job_context: Context):
-    # Assert
-    actual = (
-        step_context.maintainer,
-        step_context.cost_center,
-        step_context.owner,
-        step_context.labels,
-    )
-    expected = (
-        job_context.maintainer,
-        job_context.cost_center,
-        job_context.owner,
-        job_context.labels,
-    )
+    actual = isinstance(result["DAY"], RelativeDate)
+    expected = True
     assert actual == expected
 
 
-def test_context_should_inherit_nominal_time_from_parent(
-    step_context: Context, job_context: Context
+def test_build_template_vars_should_expose_correct_relative_date_values(
+    job_context: Context,
 ):
-    # Assert
-    actual = step_context.nominal_time
-    expected = job_context.nominal_time
-    assert actual == expected
+    # Act
+    result = job_context._build_template_vars()
 
-
-def test_context_should_have_own_identity_when_child(step_context: Context):
-    # Assert
-    actual = (
-        step_context.id is not None,
-        step_context.name,
-        step_context.kind,
-        step_context.tiozin_kind,
-    )
-    expected = (True, "read_orders", "NoOpInput", "read")
-    assert actual == expected
-
-
-def test_context_should_have_own_run_id_when_child(step_context: Context, job_context: Context):
-    # Assert
-    assert step_context.run_id != job_context.run_id
-
-
-def test_context_should_inherit_datetime_vars_from_parent(step_context: Context):
     # Assert
     actual = {
-        "today": str(step_context.template_vars["today"]),
-        "YYYY": step_context.template_vars["YYYY"],
-        "MM": step_context.template_vars["MM"],
-        "DD": step_context.template_vars["DD"],
-        "ds": step_context.template_vars["ds"],
+        "ds": result["ds"],
+        "iso": result["iso"],
+        "YYYY": result["YYYY"],
+        "MM": result["MM"],
+        "DD": result["DD"],
     }
     expected = {
-        "today": "2026-01-15",
-        "YYYY": "2026",
-        "MM": "01",
-        "DD": "15",
-        "ds": "2026-01-15",
+        "ds": job_context.nominal_time.format("YYYY-MM-DD"),
+        "iso": job_context.nominal_time.to_iso8601_string(),
+        "YYYY": job_context.nominal_time.format("YYYY"),
+        "MM": job_context.nominal_time.format("MM"),
+        "DD": job_context.nominal_time.format("DD"),
     }
     assert actual == expected
 
 
-def test_context_child_temp_workdir_should_be_subdirectory_of_parent(
-    step_context: Context, job_context: Context
-):
-    # Assert
-    actual = (step_context.temp_workdir.parent, step_context.temp_workdir.name)
-    expected = (job_context.temp_workdir, step_context.name)
-    assert actual == expected
-
-
-def test_context_without_parent_should_have_no_runner():
-    # Act
-    context = Context(
-        name="standalone",
-        kind="NoOpInput",
-        tiozin_kind="read",
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        options={},
-    )
-
-    # Assert
-    actual = context.runner
-    expected = None
-    assert actual == expected
-
-
-# =============================================================================
-# Testing Context - Factory Methods
-# =============================================================================
-def test_from_job_should_create_context_from_job_plugin():
+def test_build_template_vars_should_override_base_with_context_fields(job_context: Context):
     # Arrange
-    job = MagicMock()
-    job.name = "etl_orders"
-    job.tiozin_name = "LinearJob"
-    job.tiozin_kind = "job"
-    job.org = "acme"
-    job.region = "latam"
-    job.domain = "sales"
-    job.layer = "raw"
-    job.product = "orders"
-    job.model = "daily"
-    job.options = {"retry": 3}
-    job.maintainer = "team-data"
-    job.cost_center = "cc-123"
-    job.owner = "alice@acme.com"
-    job.labels = {"env": "prod"}
-    job.runner = MagicMock()
+    base = {
+        "name": "overridden_name",
+        "custom_key": "custom_value",
+    }
 
     # Act
-    context = Context.from_job(job)
+    result = job_context._build_template_vars(base=base)
 
     # Assert
     actual = (
-        context.name,
-        context.kind,
-        context.tiozin_kind,
-        context.org,
-        context.maintainer,
-        context.runner,
+        result["name"],
+        result["custom_key"],
     )
     expected = (
-        "etl_orders",
-        "LinearJob",
-        "job",
-        "acme",
-        "team-data",
-        job.runner,
+        job_context.name,
+        "custom_value",
     )
     assert actual == expected
 
 
-def test_from_step_should_create_context_from_step_plugin():
+def test_build_template_vars_should_override_base_with_relative_date(
+    job_context: Context,
+):
     # Arrange
-    step = MagicMock()
-    step.name = "read_orders"
-    step.tiozin_name = "NoOpInput"
-    step.tiozin_kind = "read"
-    step.org = "acme"
-    step.region = "latam"
-    step.domain = "sales"
-    step.layer = "raw"
-    step.product = "orders"
-    step.model = "daily"
-    step.options = {"path": "/data/orders"}
+    base = {
+        "ds": "base_value",
+        "YYYY": "9999",
+    }
 
     # Act
-    context = Context.from_step(step)
+    result = job_context._build_template_vars(base=base)
+
+    # Assert
+    actual = {
+        "ds": result["ds"],
+        "YYYY": result["YYYY"],
+    }
+
+    expected = {
+        "ds": job_context.nominal_time.format("YYYY-MM-DD"),
+        "YYYY": job_context.nominal_time.format("YYYY"),
+    }
+
+    assert actual == expected
+
+
+def test_build_template_vars_should_return_immutable_result(job_context: Context):
+    # Act
+    result = job_context._build_template_vars()
+
+    # Assert
+    with pytest.raises(TypeError):
+        result["new_key"] = "value"
+
+
+# =============================================================================
+# Testing Context._build_template_vars - ENV Namespace
+# =============================================================================
+
+
+def test_build_template_vars_should_include_env_from_os(
+    monkeypatch: pytest.MonkeyPatch,
+    job_context: Context,
+):
+    # Arrange
+    monkeypatch.setenv("TIOZIN_BUILD_TEST", "hello")
+
+    # Act
+    result = job_context._build_template_vars()
+
+    # Assert
+    actual = result["ENV"]["TIOZIN_BUILD_TEST"]
+    expected = "hello"
+    assert actual == expected
+
+
+def test_build_template_vars_should_isolate_env_from_context_fields(
+    monkeypatch: pytest.MonkeyPatch,
+    job_context: Context,
+):
+    # Arrange
+    monkeypatch.setenv("name", "from_os")
+
+    # Act
+    result = job_context._build_template_vars()
 
     # Assert
     actual = (
-        context.name,
-        context.kind,
-        context.tiozin_kind,
-        context.org,
+        result["name"],
+        result["ENV"]["name"],
     )
-    expected = ("read_orders", "NoOpInput", "read", "acme")
+    expected = (
+        job_context.name,
+        "from_os",
+    )
     assert actual == expected
 
 
-def test_from_step_should_link_to_parent_when_provided():
+def test_build_template_vars_should_merge_base_env_with_os_env(
+    monkeypatch: pytest.MonkeyPatch,
+    job_context: Context,
+):
     # Arrange
-    parent = Context(
-        name="parent_job",
-        kind="LinearJob",
-        tiozin_kind="job",
-        org="acme",
-        region="latam",
-        domain="sales",
-        layer="raw",
-        product="orders",
-        model="daily",
-        options={},
-        runner=MagicMock(),
-    )
-    step = MagicMock()
-    step.name = "read_orders"
-    step.tiozin_name = "NoOpInput"
-    step.tiozin_kind = "read"
-    step.org = "acme"
-    step.region = "latam"
-    step.domain = "sales"
-    step.layer = "raw"
-    step.product = "orders"
-    step.model = "daily"
-    step.options = {}
+    monkeypatch.setenv("OS_VAR", "from_os")
+    base = {"ENV": {"USER_VAR": "from_user"}}
 
     # Act
-    context = Context.from_step(step, parent=parent)
+    result = job_context._build_template_vars(base=base)
 
     # Assert
-    actual = context.job
-    expected = parent
-    assert actual is expected
+    actual = result["ENV"]
+    expected = {
+        "OS_VAR": "from_os",
+        "USER_VAR": "from_user",
+    }
+    assert_that(expected).is_subset_of(actual)
 
 
-def test_as_step_context_should_create_child_context(job_context: Context):
+def test_build_template_vars_should_give_precedence_to_os_env_over_base_env(
+    monkeypatch: pytest.MonkeyPatch,
+    job_context: Context,
+):
     # Arrange
-    step = MagicMock()
-    step.name = "write_orders"
-    step.tiozin_name = "NoOpOutput"
-    step.tiozin_kind = "write"
-    step.org = "acme"
-    step.region = "latam"
-    step.domain = "sales"
-    step.layer = "raw"
-    step.product = "orders"
-    step.model = "daily"
-    step.options = {}
+    monkeypatch.setenv("SHARED_KEY", "from_os")
+    base = {"ENV": {"SHARED_KEY": "from_base"}}
 
     # Act
-    context = job_context.as_step_context(step)
+    result = job_context._build_template_vars(base=base)
 
     # Assert
-    actual = (context.name, context.kind, context.job)
-    expected = ("write_orders", "NoOpOutput", job_context)
+    actual = result["ENV"]["SHARED_KEY"]
+    expected = "from_os"
     assert actual == expected
+
+
+def test_build_template_vars_should_raise_if_env_is_not_a_mapping(job_context: Context):
+    # Arrange
+    base = {"ENV": "not-a-mapping"}
+
+    # Act & Assert
+    with pytest.raises(TiozinUnexpectedError, match="ENV must be a mapping"):
+        job_context._build_template_vars(base=base)
