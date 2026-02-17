@@ -297,7 +297,7 @@ def test_safe_load_should_return_typed_plugin(factory: TiozinRegistry):
     # Act
     tiozin = factory.safe_load(
         kind="NoOpInput",
-        tiozin_kind=Input,
+        tiozin_role=Input,
         name="test",
         org="acme",
         region="us",
@@ -319,12 +319,12 @@ def test_safe_load_should_return_typed_plugin(factory: TiozinRegistry):
     assert actual == expected
 
 
-def test_safe_load_should_fail_when_tiozin_kind_does_not_match(factory: TiozinRegistry):
+def test_safe_load_should_fail_when_tiozin_role_does_not_match(factory: TiozinRegistry):
     # Act/Assert
     with pytest.raises(PluginKindError):
         factory.safe_load(
             kind="NoOpInput",
-            tiozin_kind=Runner,
+            tiozin_role=Runner,
             name="test",
             org="acme",
             region="us",
@@ -390,7 +390,7 @@ def test_load_manifest_should_load_plugin_from_manifest(
     assert isinstance(tiozin, plugin_class)
 
 
-def test_load_manifest_should_fail_when_manifest_has_no_tiozin_kind(factory: TiozinRegistry):
+def test_load_manifest_should_fail_when_manifest_has_no_tiozin_role(factory: TiozinRegistry):
     # Arrange
     class UnsupportedManifest(Manifest):
         pass

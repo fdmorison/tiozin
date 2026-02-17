@@ -82,7 +82,7 @@ class TiozinRegistry(Loggable):
 
         self._index[tiozin.tiozin_name].add(tiozin)
         self._index[tiozin.tiozin_uri].add(tiozin)
-        self._index[tiozin.tiozin_tio_path].add(tiozin)
+        self._index[tiozin.tiozin_family_path].add(tiozin)
         self._index[tiozin.tiozin_python_path].add(tiozin)
         self._tiozins.add(tiozin)
 
@@ -116,7 +116,7 @@ class TiozinRegistry(Loggable):
         AmbiguousPluginError.raise_if(
             len(candidates) > 1,
             tiozin_name=kind,
-            candidates=[p.tiozin_tio_path for p in candidates],
+            candidates=[p.tiozin_family_path for p in candidates],
         )
 
         tiozin = next(iter(candidates))
@@ -125,16 +125,16 @@ class TiozinRegistry(Loggable):
         self.info("🧝 Tiozin joined the pipeline", kind=kind, **params)
         return tiozin(**args)
 
-    def safe_load(self, kind: str, tiozin_kind: type[T], **args) -> T:
+    def safe_load(self, kind: str, tiozin_role: type[T], **args) -> T:
         """
         Loads a Tiozin by kind and validates that it matches the expected type.
         """
         tiozin_instance: T = self.load(kind, **args)
 
         PluginKindError.raise_if(
-            not isinstance(tiozin_instance, tiozin_kind),
+            not isinstance(tiozin_instance, tiozin_role),
             tiozin_name=tiozin_instance.tiozin_name,
-            tiozin_kind=tiozin_kind,
+            tiozin_role=tiozin_role,
         )
 
         return tiozin_instance
@@ -153,7 +153,7 @@ class TiozinRegistry(Loggable):
 
         tiozin_instance = self.safe_load(
             kind=manifest.kind,
-            tiozin_kind=manifest.for_kind(),
+            tiozin_role=manifest.for_kind(),
             **manifest.model_dump(exclude="kind"),
         )
 

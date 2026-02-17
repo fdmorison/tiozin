@@ -65,7 +65,7 @@ class StepProxy(wrapt.ObjectProxy):
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
-                step.info(f"▶️  Starting to {context.tiozin_kind} data")
+                step.info(f"▶️  Starting to {context.tiozin_role} data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
                 step.setup(*args, **kwargs)

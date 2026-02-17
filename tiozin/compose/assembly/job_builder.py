@@ -200,7 +200,7 @@ class JobBuilder:
             raise TiozinUnexpectedError("The builder can only be used once")
 
         job = tiozin_registry.safe_load(
-            tiozin_kind=Job,
+            tiozin_role=Job,
             # identity
             kind=self._kind,
             name=self._name,

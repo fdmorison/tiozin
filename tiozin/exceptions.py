@@ -241,15 +241,15 @@ class AmbiguousPluginError(PluginError, ConflictError):
 
 
 class PluginKindError(PluginError, InvalidInputError):
-    message = "Tiozin '{tiozin_name}' cannot be used as '{tiozin_kind}'."
+    message = "Tiozin '{tiozin_name}' cannot be used as '{tiozin_role}'."
 
     def __init__(
-        self, message: str = None, tiozin_name: str = None, tiozin_kind: type = None
+        self, message: str = None, tiozin_name: str = None, tiozin_role: type = None
     ) -> None:
         super().__init__(
             message,
             tiozin_name=tiozin_name,
-            tiozin_kind=tiozin_kind.__name__ if tiozin_kind else None,
+            tiozin_role=tiozin_role.__name__ if tiozin_role else None,
         )
 
 
