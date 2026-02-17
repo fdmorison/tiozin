@@ -1,79 +1,39 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
+from types import MappingProxyType as FrozenMapping
 from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
-from tiozin.compose.templating.context_builder import TemplateContextBuilder
+from tiozin.compose import RelativeDate
+from tiozin.exceptions import TiozinUnexpectedError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class Context:
-    """
-    Runtime execution context used by all execution scopes in Tiozin.
+    # ==================================================
+    # Root reference (controlado nas factories)
+    # ==================================================
+    job: Context = field(init=False, repr=False)
 
-    Context represents the execution environment for both jobs and steps.
-    It provides identity, domain metadata, ownership, runtime state, and
-    timing information required during execution.
-
-    A Context can be either a root context (job-level) or a child context
-    (step-level) linked to a parent. Child contexts inherit runtime attributes
-    from their parent, including runner, session, ownership fields, and
-    nominal time. This allows steps to access job-level information without
-    duplication.
-
-    In simple terms, Context answers:
-    "What is executing, under which identity, and with which runtime state?"
-
-    Context provides:
-    - Execution identity (id, name, kind, tiozin kind)
-    - Domain metadata (org, region, domain, layer, product, model)
-    - Ownership information (maintainer, cost_center, owner, labels)
-    - Tiozin plugin options passed to the executing component
-    - A shared template variable scope used during execution
-    - A shared session dictionary for exchanging state across execution layers
-    - A reference to the Runner executing the job
-    - The nominal time reference for date-based template variables
-    - Runtime timestamps for lifecycle tracking and observability
-    - Helper properties for computing execution durations
-    - A temporary directory path (temp_workdir) for intermediate files
-
-    Hierarchy:
-    - Root context (parent=None): Acts as job context, self.job points to self
-    - Child context (parent=Context): Inherits from parent, self.job points to root
-
-    Context is created and managed by Tiozin's runtime layer. User code should
-    treat it as a read-only view of the execution environment, except for
-    explicitly shared session state.
-    """
-
-    job: Context = None
-    parent: Context = None
-
-    # ------------------
-    # Identity & Fundamentals
-    # ------------------
-    id: str = field(default_factory=generate_id)
+    # ==================================================
+    # Identity
+    # ==================================================
     name: str
     kind: str
     tiozin_kind: str
-    options: Mapping[str, Any]
 
-    maintainer: str = None
-    cost_center: str = None
-    owner: str = None
-    labels: dict[str, str] = field(default_factory=dict)
-
-    # ------------------
-    # Domain Metadata
-    # ------------------
+    # ==================================================
+    # Domain
+    # ==================================================
     org: str
     region: str
     domain: str
@@ -81,119 +41,172 @@ class Context:
     product: str
     model: str
 
-    # ------------------
-    # Templating
-    # ------------------
-    template_vars: Mapping[str, Any] = field(default_factory=dict, metadata={"template": False})
+    # ==================================================
+    # Governance
+    # ==================================================
+    maintainer: str | None = None
+    cost_center: str | None = None
+    owner: str | None = None
+    labels: dict[str, str] = field(default_factory=dict)
 
-    # ------------------
-    # Shared state
-    # ------------------
-    session: Mapping[str, Any] = field(default_factory=dict, metadata={"template": False})
+    # ==================================================
+    # Tiozin arguments
+    # ==================================================
+    options: dict[str, Any]
 
-    # ------------------
-    # Runtime
-    # ------------------
+    # ==================================================
+    # Runtime Identity
+    # ==================================================
+    run_id: str = field(init=False)
+    run_attempt: int = field(default=1)
+    nominal_time: DateTime = field(init=False)
+
+    # ==================================================
+    # Runtime Lifecycle
+    # ==================================================
     runner: Runner = field(default=None, metadata={"template": False})
+    setup_at: DateTime | None = field(default=None, metadata={"template": False})
+    executed_at: DateTime | None = field(default=None, metadata={"template": False})
+    teardown_at: DateTime | None = field(default=None, metadata={"template": False})
+    finished_at: DateTime | None = field(default=None, metadata={"template": False})
 
-    run_id: str = field(default_factory=generate_id)
-    nominal_time: DateTime = field(default_factory=utcnow)
-    setup_at: DateTime = None
-    executed_at: DateTime = None
-    teardown_at: DateTime = None
-    finished_at: DateTime = None
+    # ==================================================
+    # Infra
+    # ==================================================
+    shared: dict[str, Any] = field(default_factory=dict, metadata={"template": False})
+    template_vars: Mapping[str, Any] = field(init=False, metadata={"template": False})
+    temp_workdir: Path = field(init=False)
 
-    # ------------------
-    # Temporary storage
-    # ------------------
-    temp_workdir: Path = field(default=None, metadata={"template": True})
-
-    # ------------------
-    # Initialize from parent
-    # ------------------
-    def __post_init__(self) -> None:
-        parent = self.parent
-        template_vars = TemplateContextBuilder()
-
-        if not parent:
-            self.job = self.job or self
-            self.temp_workdir = create_local_temp_dir(self.name, self.run_id)
-        else:
-            self.job = parent.job
-            self.temp_workdir = create_local_temp_dir(parent.temp_workdir, self.name)
-            self.runner = parent.runner
-            self.session = parent.session
-            self.maintainer = parent.maintainer
-            self.cost_center = parent.cost_center
-            self.owner = parent.owner
-            self.labels = parent.labels
-            self.nominal_time = parent.nominal_time
-            template_vars.with_defaults(parent.template_vars)
-
-        self.template_vars = (
-            template_vars.with_defaults(self.template_vars)
-            .with_relative_date(self.nominal_time)
-            .with_envvars()
-            .with_context(self)
-            .build()
-        )
+    # ==================================================
+    # Factories
+    # ==================================================
 
     @classmethod
-    def from_step(cls, step: EtlStep, parent: Context = None) -> Context:
-        return cls(
-            # Parent
-            parent=parent,
-            # Identity
-            name=step.name,
-            kind=step.tiozin_name,
-            tiozin_kind=step.tiozin_kind,
-            # Domain Metadata
-            org=step.org,
-            region=step.region,
-            domain=step.domain,
-            layer=step.layer,
-            product=step.product,
-            model=step.model,
-            # Extra Tio/Tiozin parameters
-            options=step.options,
-        )
+    def for_job(cls, job: Job) -> Context:
+        job_uuid: str = generate_id()
 
-    @classmethod
-    def from_job(cls, job: Job) -> Context:
-        return cls(
-            # Parent
-            parent=None,
-            # Identity
+        ctx = cls(
             name=job.name,
             kind=job.tiozin_name,
             tiozin_kind=job.tiozin_kind,
-            # Domain Metadata
             org=job.org,
             region=job.region,
             domain=job.domain,
             layer=job.layer,
             product=job.product,
             model=job.model,
-            # Ownership
             maintainer=job.maintainer,
             cost_center=job.cost_center,
             owner=job.owner,
             labels=job.labels,
-            # Runtime
-            runner=job.runner,
-            # Extra Tio/Tiozin parameters
             options=job.options,
         )
+        ctx.job = ctx
+        ctx.runner = job.runner
+        ctx.run_id = f"job_{job_uuid}"
+        ctx.nominal_time = utcnow()
+        ctx.temp_workdir = create_local_temp_dir(ctx.name, ctx.run_id)
+        ctx.template_vars = ctx._build_template_vars()
+        return ctx
 
-    # ------------------
-    # Abstracts
-    # ------------------
-    def as_step_context(self, step: EtlStep) -> Context:
-        return Context.from_step(step, parent=self.job)
+    @classmethod
+    def for_step(cls, step: EtlStep) -> Context:
+        ctx = cls(
+            name=step.name,
+            kind=step.tiozin_name,
+            tiozin_kind=step.tiozin_kind,
+            org=step.org,
+            region=step.region,
+            domain=step.domain,
+            layer=step.layer,
+            product=step.product,
+            model=step.model,
+            maintainer=None,
+            cost_center=None,
+            owner=None,
+            labels={},
+            options=step.options,
+        )
+        ctx.job = None
+        ctx.runner = None
+        ctx.run_id = f"job_{generate_id()}_{step.name}"
+        ctx.nominal_time = utcnow()
+        ctx.temp_workdir = create_local_temp_dir(ctx.name, ctx.run_id)
+        ctx.template_vars = ctx._build_template_vars()
+        return ctx
 
-    # ------------------
-    # Timing helpers
-    # ------------------
+    def for_child_step(self, step: EtlStep) -> Context:
+        ctx = Context(
+            name=step.name,
+            kind=step.tiozin_name,
+            tiozin_kind=step.tiozin_kind,
+            org=step.org or self.org,
+            region=step.region or self.region,
+            domain=step.domain or self.domain,
+            layer=step.layer or self.layer,
+            product=step.product or self.product,
+            model=step.model or self.model,
+            maintainer=self.maintainer,
+            cost_center=self.cost_center,
+            owner=self.owner,
+            labels=self.labels,
+            shared=self.shared,
+            options=step.options,
+        )
+        ctx.job = self.job
+        ctx.runner = self.job.runner
+        ctx.run_id = f"{self.job.run_id}_{step.name}"
+        ctx.nominal_time = self.job.nominal_time
+        ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.name)
+        ctx.template_vars = ctx._build_template_vars(base=self.template_vars)
+        return ctx
+
+    # ==================================================
+    # Template Builder
+    # ==================================================
+
+    def _build_template_vars(
+        self,
+        base: Mapping[str, Any] | None = None,
+    ) -> Mapping[str, Any]:
+        result: dict[str, Any] = {}
+
+        # defaults
+        if base:
+            result |= base
+
+        # context (authoritative)
+        context_data = {
+            field.name: getattr(self, field.name)
+            for field in fields(self)
+            if field.metadata.get("template", True)
+        }
+        result |= context_data
+
+        # ENV namespace
+        base_env = result.get("ENV") or {}
+
+        TiozinUnexpectedError.raise_if(
+            not isinstance(base_env, Mapping),
+            f"ENV must be a mapping, got {base_env!r}",
+        )
+
+        result["ENV"] = {
+            **base_env,
+            **os.environ,
+        }
+
+        # RelativeDate fields
+        relative_date = RelativeDate(self.nominal_time)
+        result |= relative_date.to_dict()
+        result["DAY"] = relative_date
+
+        return FrozenMapping(result)
+
+    # ==================================================
+    # Metrics
+    # ==================================================
+
     @property
     def delay(self) -> float:
         now = utcnow()
