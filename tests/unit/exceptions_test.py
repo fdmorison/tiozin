@@ -294,13 +294,13 @@ def test_ambiguous_plugin_error_should_handle_empty_candidates_list():
     assert actual == expected
 
 
-def test_tiozin_kind_error_should_format_plugin_name_and_kind_in_message():
+def test_tiozin_role_error_should_format_plugin_name_and_kind_in_message():
     # Arrange
     plugin_name = "my_plugin"
-    tiozin_kind = dict
+    tiozin_role = dict
 
     # Act
-    error = PluginKindError(tiozin_name=plugin_name, tiozin_kind=tiozin_kind)
+    error = PluginKindError(tiozin_name=plugin_name, tiozin_role=tiozin_role)
 
     # Assert
     actual = error.message
@@ -475,7 +475,7 @@ def test_raise_if_missing_should_raise_error_when_field_is_not_excluded():
         SchemaNotFoundError(subject="x"),
         PluginError(),
         PluginNotFoundError(tiozin_name="x"),
-        PluginKindError(tiozin_name="x", tiozin_kind=object),
+        PluginKindError(tiozin_name="x", tiozin_role=object),
         AmbiguousPluginError(tiozin_name="x"),
         AlreadyRunningError(),
         AlreadyFinishedError(),
@@ -542,7 +542,7 @@ def test_errors_should_be_catchable_as_conflict(error):
     "error",
     [
         ManifestError(message="x", name="y"),
-        PluginKindError(tiozin_name="x", tiozin_kind=object),
+        PluginKindError(tiozin_name="x", tiozin_role=object),
         SchemaViolationError(),
         PolicyViolationError(policy=object),
     ],
@@ -557,7 +557,7 @@ def test_errors_should_be_catchable_as_invalid_input(error):
     [
         PluginNotFoundError(tiozin_name="x"),
         AmbiguousPluginError(tiozin_name="x"),
-        PluginKindError(tiozin_name="x", tiozin_kind=object),
+        PluginKindError(tiozin_name="x", tiozin_role=object),
         PluginAccessForbiddenError(plugin=object()),
     ],
 )

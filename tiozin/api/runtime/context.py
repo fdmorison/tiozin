@@ -64,7 +64,7 @@ class Context:
     # ==================================================
     name: str
     kind: str
-    tiozin_kind: str
+    tiozin_role: str
 
     # ==================================================
     # Domain
@@ -166,7 +166,7 @@ class Context:
         ctx = cls(
             name=job.name,
             kind=job.tiozin_name,
-            tiozin_kind=job.tiozin_kind,
+            tiozin_role=job.tiozin_role,
             org=job.org,
             region=job.region,
             domain=job.domain,
@@ -192,7 +192,7 @@ class Context:
         ctx = cls(
             name=step.name,
             kind=step.tiozin_name,
-            tiozin_kind=step.tiozin_kind,
+            tiozin_role=step.tiozin_role,
             org=step.org,
             region=step.region,
             domain=step.domain,
@@ -217,7 +217,7 @@ class Context:
         ctx = Context(
             name=step.name,
             kind=step.tiozin_name,
-            tiozin_kind=step.tiozin_kind,
+            tiozin_role=step.tiozin_role,
             org=step.org or self.org,
             region=step.region or self.region,
             domain=step.domain or self.domain,

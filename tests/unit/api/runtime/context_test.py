@@ -42,7 +42,7 @@ def test_for_job_should_create_job_context(
         # Identity
         "name": job.name,
         "kind": job.kind,
-        "tiozin_kind": job.tiozin_kind,
+        "tiozin_role": job.tiozin_role,
         # Domain / Governance
         **fake_domain,
         **fake_governance,
@@ -86,7 +86,7 @@ def test_for_step_should_create_step_context(
         # Identity
         "name": step.name,
         "kind": step.kind,
-        "tiozin_kind": step.tiozin_kind,
+        "tiozin_role": step.tiozin_role,
         # Domain / Governance
         **fake_domain,
         # Governance inheritance
@@ -133,7 +133,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         # Identity
         "name": step.name,
         "kind": step.kind,
-        "tiozin_kind": step.tiozin_kind,
+        "tiozin_role": step.tiozin_role,
         # Domain / Governance
         "org": job_context.org,
         "region": job_context.region,

@@ -39,6 +39,6 @@ log_show_locals = env.TIO_LOG_SHOW_LOCALS
 # ===============================================
 #           Tiozin Plugins
 # ===============================================
-tiozin_provider_group = "tiozin.family"
-tiozin_provider_prefixes = ["tio_", "tia_"]
-tiozin_provider_unknown = "tio_unknown"
+tiozin_family_group = "tiozin.family"
+tiozin_family_prefixes = ["tio_", "tia_"]
+tiozin_family_unknown = "tio_unknown"
