@@ -56,7 +56,7 @@ class StepProxy(wrapt.ObjectProxy):
 
     def _run(self, method_name: str, context: Context, *args, **kwargs) -> Any:
         step: EtlStep = self.__wrapped__
-        context = Context.from_step(step, parent=context)
+        context = context.for_child_step(step) if context else Context.for_step(step)
 
         with TiozinTemplateOverlay(step, context):
             try:
@@ -65,7 +65,8 @@ class StepProxy(wrapt.ObjectProxy):
                 context.setup_at = utcnow()
                 step.setup(context, *args, **kwargs)
                 context.executed_at = utcnow()
-                result = getattr(step, method_name)(context, *args, **kwargs)
+                execute = getattr(step, method_name)
+                result = execute(context, *args, **kwargs)
             except Exception:
                 step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
                 raise
