@@ -7,6 +7,8 @@ from tiozin import config
 from tiozin.api import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
 
+from .processors.context import Context
+
 
 class Tiozin(Loggable, metaclass=TioProxyMeta):
     """
@@ -106,6 +108,16 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         if self.tiozin_uri.endswith(self.name):
             return self.tiozin_uri
         return f"{self.tiozin_uri}/{self.name}"
+
+    @property
+    def context(self) -> Context:
+        """
+        Returns the active execution Context.
+
+        Raises:
+            TiozinUnexpectedError if no execution scope is active.
+        """
+        return Context.current()
 
     def setup(self, *args, **kwargs) -> None:
         """
