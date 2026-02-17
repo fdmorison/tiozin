@@ -60,7 +60,7 @@ class TiozinTemplateOverlay:
             case dict():
                 for field, value in obj.items():
                     self._scan_templates(value, *parents, field)
-            case Tiozin() if isinstance(obj, self._tiozin.tiozin_kind_class):
+            case Tiozin() if isinstance(obj, self._tiozin.tiozin_role_class):
                 for field, value in vars(obj).items():
                     if not field.startswith("_"):
                         self._scan_templates(value, *parents, field)

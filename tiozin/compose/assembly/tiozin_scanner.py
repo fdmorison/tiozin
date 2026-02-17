@@ -26,7 +26,7 @@ class TiozinScanner(Loggable):
     def _scan_tios(self) -> list[tuple[EntryPoint, ModuleType]]:
         tios: list[tuple[EntryPoint, ModuleType]] = []
 
-        for tio in entry_points(group=config.tiozin_provider_group):
+        for tio in entry_points(group=config.tiozin_family_group):
             # Tio name must follow policy
             if not ProviderNamePolicy.eval(tio).ok():
                 continue

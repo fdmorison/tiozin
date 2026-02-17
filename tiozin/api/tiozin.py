@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from tiozin import config
 from tiozin.api import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
+from tiozin.compose.reflection import detect_family, detect_role
 
 from .runtime.context import Context
 
@@ -22,11 +22,11 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
     @dataclass(frozen=True)
     class Metadata:
         name: str
-        kind: str
-        kind_class: type[Tiozin]
-        provider: str
+        role: str
+        role_class: type[Tiozin]
+        family: str
         uri: str
-        tio_path: str
+        family_path: str
         python_path: str
 
     __tiometa__: ClassVar[Metadata]
@@ -45,63 +45,46 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
     def __init_subclass__(tiozin, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
         name = tiozin.__name__
-        kind_class = tiozin._detect_category()
-        kind = kind_class.__name__
-        provider = tiozin._detect_provider()
+        role_class = detect_role(tiozin)
+        role = role_class.__name__
+        family = detect_family(tiozin)
         tiozin.__tiometa__ = Tiozin.Metadata(
             name=name,
-            kind=kind,
-            kind_class=kind_class,
-            provider=provider,
-            uri=f"tiozin://{provider}/{kind.lower()}/{name}",
-            tio_path=f"{provider}:{name}",
+            role=role,
+            role_class=role_class,
+            family=family,
+            uri=f"tiozin://{family}/{role.lower()}/{name}",
+            family_path=f"{family}:{name}",
             python_path=f"{tiozin.__module__}.{tiozin.__qualname__}",
         )
-
-    @classmethod
-    def _detect_category(tiozin) -> type:
-        for clazz in reversed(tiozin.__mro__):
-            if clazz is not Tiozin and issubclass(clazz, Tiozin):
-                return clazz
-
-    @classmethod
-    def _detect_provider(tiozin) -> str:
-        module_path: list[str] = tiozin.__module__.split(".")
-        prefixes = tuple(config.tiozin_provider_prefixes)
-
-        for part in module_path:
-            if part.startswith(prefixes):
-                return part
-
-        return config.tiozin_provider_unknown
 
     @classproperty
     def tiozin_name(cls) -> str:
         return cls.__tiometa__.name
 
     @classproperty
-    def tiozin_kind(cls) -> str:
-        return cls.__tiometa__.kind
+    def tiozin_role(cls) -> str:
+        return cls.__tiometa__.role
 
     @classproperty
-    def tiozin_kind_class(cls) -> type[Tiozin]:
-        return cls.__tiometa__.kind_class
+    def tiozin_role_class(cls) -> type[Tiozin]:
+        return cls.__tiometa__.role_class
 
     @classproperty
-    def tiozin_provider(cls) -> str:
-        return cls.__tiometa__.provider
+    def tiozin_family(cls) -> str:
+        return cls.__tiometa__.family
 
     @classproperty
-    def tiozin_uri(cls) -> str:
-        return cls.__tiometa__.uri
-
-    @classproperty
-    def tiozin_tio_path(cls) -> str:
-        return cls.__tiometa__.tio_path
+    def tiozin_family_path(cls) -> str:
+        return cls.__tiometa__.family_path
 
     @classproperty
     def tiozin_python_path(cls) -> str:
         return cls.__tiometa__.python_path
+
+    @classproperty
+    def tiozin_uri(cls) -> str:
+        return cls.__tiometa__.uri
 
     @property
     def uri(self) -> str:

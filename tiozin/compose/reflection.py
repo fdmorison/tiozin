@@ -2,6 +2,8 @@ import inspect
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, TypeVar
 
+from tiozin import config
+
 T = TypeVar("T")
 
 
@@ -263,3 +265,61 @@ def is_tiozin(clazz: Any) -> bool:
     from tiozin.api import Tiozin
 
     return inspect.isclass(clazz) and issubclass(clazz, Tiozin) and clazz is not Tiozin
+
+
+def detect_role(tiozin: type) -> type:
+    """
+    Detect the role of a Tiozin plugin class.
+
+    The role is the first Tiozin subclass in the MRO that is not the Tiozin
+    base class itself. It identifies what the plugin does in the pipeline:
+    Input, Output, Transform, Runner, Job, or Registry.
+
+    Args:
+        tiozin: The Tiozin plugin class to inspect.
+
+    Returns:
+        The role class (e.g., Input, Output, Transform).
+
+    Examples:
+        >>> from tiozin.api.runtime import Input
+        >>> class MyInput(Input): pass
+        >>> detect_role(MyInput)
+        <class 'tiozin.api.runtime.input.Input'>
+    """
+    from tiozin.api import Tiozin
+
+    if not (inspect.isclass(tiozin) and issubclass(tiozin, Tiozin)):
+        raise TypeError(f"Expected a Tiozin subclass, got {tiozin!r}")
+
+    for clazz in reversed(tiozin.__mro__):
+        if clazz is not Tiozin and issubclass(clazz, Tiozin):
+            return clazz
+
+
+def detect_family(tiozin: type) -> str:
+    """
+    Detect the family (Tio/Tia) of a Tiozin plugin class.
+
+    Inspects the module path to find which provider family the plugin belongs
+    to, based on configured prefixes (e.g., ``tio_``, ``tia_``).
+
+    Args:
+        tiozin: The Tiozin plugin class to inspect.
+
+    Returns:
+        The family name (e.g., ``"tio_spark"``, ``"tio_duckdb"``).
+        Falls back to the configured unknown family name if no match is found.
+
+    Examples:
+        >>> detect_family(SparkFileInput)
+        "tio_spark"
+    """
+    module_path: list[str] = tiozin.__module__.split(".")
+    prefixes = tuple(config.tiozin_family_prefixes)
+
+    for part in module_path:
+        if part.startswith(prefixes):
+            return part
+
+    return config.tiozin_family_unknown
