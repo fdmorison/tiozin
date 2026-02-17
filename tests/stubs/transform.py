@@ -3,7 +3,7 @@ from typing import Any
 from tiozin import Context, Transform
 
 
-class StubTransform(Transform):
+class TransformStub(Transform):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.path = "./data/{{domain}}/{{layer}}"

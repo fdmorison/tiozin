@@ -1,14 +1,11 @@
 import uuid
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 from pyspark.sql import SparkSession
 
-from tiozin import Context
 from tiozin.compose import RunnerProxy
-from tiozin.family.tio_spark import SparkRunner
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -25,58 +22,3 @@ def spark_session(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSe
     yield spark
     RunnerProxy.active_session.reset(token)
     spark.stop()
-
-
-@pytest.fixture
-def runner(spark_session: SparkSession) -> SparkRunner:
-    runner = MagicMock(spec=SparkRunner)
-    runner.streaming = False
-    runner.streaming = False
-    return runner
-
-
-@pytest.fixture
-def job_context(runner: SparkRunner) -> Context:
-    return Context(
-        # Identity
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-        # Ownership
-        maintainer="test",
-        cost_center="test",
-        owner="test",
-        labels="test",
-        # Runtime
-        runner=runner,
-    )
-
-
-@pytest.fixture
-def step_context(job_context: Context) -> Context:
-    return Context(
-        # Job
-        parent=job_context,
-        # Identity
-        name="test",
-        kind="test",
-        tiozin_kind="test",
-        # Domain Metadata
-        org="test",
-        region="test",
-        domain="test",
-        layer="test",
-        product="test",
-        model="test",
-        # Extra provider/plugin parameters
-        options={},
-    )
