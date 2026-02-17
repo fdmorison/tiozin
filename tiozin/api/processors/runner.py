@@ -6,7 +6,6 @@ from typing import Generic, TypeVar
 from tiozin.compose import RunnerProxy, tioproxy
 
 from .. import Tiozin
-from .context import Context
 
 TPlan = TypeVar("TPlan")
 TSession = TypeVar("TSession")
@@ -77,12 +76,12 @@ class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
         """
 
     @abstractmethod
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         """Initialize the runner's resources (sessions, connections, etc.)."""
         pass
 
     @abstractmethod
-    def run(self, context: Context, execution_plan: TPlan, **options) -> TOutput:
+    def run(self, execution_plan: TPlan, **options) -> TOutput:
         """
         Execute the given plan using the caller's context.
 
@@ -92,6 +91,6 @@ class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
         """
 
     @abstractmethod
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         """Release the runner's resources (close sessions, connections, etc.)."""
         pass

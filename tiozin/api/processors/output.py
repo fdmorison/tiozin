@@ -5,7 +5,6 @@ from tiozin.compose import StepProxy, tioproxy
 
 from ...exceptions import RequiredArgumentError
 from .. import Tiozin
-from .context import Context
 
 TData = TypeVar("TData")
 
@@ -58,14 +57,14 @@ class Output(Tiozin, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, context: Context, data: TData) -> None:
+    def setup(self, data: TData) -> None:
         return None
 
     @abstractmethod
-    def write(self, context: Context, data: TData) -> TData:
+    def write(self, data: TData) -> TData:
         """
         Write data to destination. Providers must implement.
         """
 
-    def teardown(self, context: Context, data: TData) -> None:
+    def teardown(self, data: TData) -> None:
         return None

@@ -3,7 +3,6 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark.testing import assertDataFrameEqual
 
-from tiozin import Context
 from tiozin.family.tio_spark.outputs.file_output import SparkFileOutput
 
 BASE_PATH = "./tests/mocks/data"
@@ -14,9 +13,7 @@ BASE_PATH = "./tests/mocks/data"
 # ============================================================================
 
 
-def test_output_should_write_files(
-    spark_session: SparkSession, tmp_path: Path, output_context: Context
-):
+def test_output_should_write_files(spark_session: SparkSession, tmp_path: Path):
     """Writes a DataFrame to disk using Parquet format."""
     # Arrange
     input_data = spark_session.createDataFrame(
@@ -34,7 +31,7 @@ def test_output_should_write_files(
         path=str(output_path),
         format="parquet",
         mode="overwrite",
-    ).write(output_context, input_data).save()
+    ).write(input_data).save()
 
     # Assert
     actual = spark_session.read.parquet(str(output_path))
@@ -48,9 +45,7 @@ def test_output_should_write_files(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
-def test_output_should_write_another_format_of_files(
-    spark_session: SparkSession, tmp_path: Path, output_context: Context
-):
+def test_output_should_write_another_format_of_files(spark_session: SparkSession, tmp_path: Path):
     """Writes a DataFrame to disk using JSON format."""
     # Arrange
     input_data = spark_session.createDataFrame(
@@ -68,7 +63,7 @@ def test_output_should_write_another_format_of_files(
         path=str(output_path),
         format="json",
         mode="overwrite",
-    ).write(output_context, input_data).save()
+    ).write(input_data).save()
 
     # Assert
     actual = spark_session.read.json(str(output_path))
@@ -82,9 +77,7 @@ def test_output_should_write_another_format_of_files(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
-def test_output_should_write_partitioned_data(
-    spark_session: SparkSession, tmp_path: Path, output_context: Context
-):
+def test_output_should_write_partitioned_data(spark_session: SparkSession, tmp_path: Path):
     """Writes partitioned data when partition_by is provided."""
     # Arrange
     input_data = spark_session.createDataFrame(
@@ -103,7 +96,7 @@ def test_output_should_write_partitioned_data(
         format="parquet",
         mode="overwrite",
         partition_by=["date"],
-    ).write(output_context, input_data).save()
+    ).write(input_data).save()
 
     # Assert
     actual = spark_session.read.parquet(str(output_path))
@@ -120,9 +113,7 @@ def test_output_should_write_partitioned_data(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
-def test_output_should_apply_writer_options(
-    spark_session: SparkSession, tmp_path: Path, output_context: Context
-):
+def test_output_should_apply_writer_options(spark_session: SparkSession, tmp_path: Path):
     """Applies Spark writer options when writing files."""
     # Arrange
     input_data = spark_session.createDataFrame(
@@ -141,7 +132,7 @@ def test_output_should_apply_writer_options(
         format="json",
         mode="overwrite",
         compression="gzip",
-    ).write(output_context, input_data).save()
+    ).write(input_data).save()
 
     # Assert
     actual = spark_session.read.json(str(output_path))

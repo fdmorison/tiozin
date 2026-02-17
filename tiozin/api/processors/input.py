@@ -5,7 +5,6 @@ from tiozin.compose import StepProxy, tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
 from .. import Tiozin
-from .context import Context
 
 TData = TypeVar("TData")
 
@@ -68,12 +67,12 @@ class Input(Tiozin, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         return None
 
     @abstractmethod
-    def read(self, context: Context) -> TData:
+    def read(self) -> TData:
         """Read data from source. Providers must implement."""
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         return None

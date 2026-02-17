@@ -2,7 +2,7 @@ from tiozin.exceptions import NotFoundError, RequiredArgumentError
 from tiozin.utils import trim, trim_lower
 
 from ..typehints import SparkIcebergCatalogType, SparkIcebergClass
-from .spark_runner import Context, SparkRunner
+from .spark_runner import SparkRunner
 
 
 class SparkIcebergRunner(SparkRunner):
@@ -96,7 +96,7 @@ class SparkIcebergRunner(SparkRunner):
         self.catalog_uri = trim(catalog_uri)
         self.iceberg_class = trim(iceberg_class or self._DEFAULT_SPARK_ICEBERG_CLASS)
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         if self.session:
             return
 
@@ -121,4 +121,4 @@ class SparkIcebergRunner(SparkRunner):
         if self.catalog_impl:
             self.options[f"{catalog}.catalog-impl"] = self.catalog_impl
 
-        super().setup(context)
+        super().setup()

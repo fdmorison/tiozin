@@ -1,6 +1,6 @@
 from pyspark.sql import DataFrame, SparkSession
 
-from tiozin import CoTransform, Input, Output, Transform, active_session, tioproxy
+from tiozin import CoTransform, Input, Output, Transform, tioproxy
 
 from .compose.proxies.step_proxy import SparkStepProxy
 
@@ -35,7 +35,10 @@ class SparkStepMixin:
         Raises:
             NotInitializedError: If accessed outside of an active runner scope.
         """
-        return active_session()
+        from . import SparkRunner
+
+        runner: SparkRunner = self.context.runner
+        return runner.session
 
 
 @tioproxy(SparkStepProxy)

@@ -63,14 +63,13 @@ def test_input_should_read_files_via_builder():
     """Delegates reading to ReadBuilder and returns a DuckDB relation."""
     # Arrange
     path = f"{BASE_PATH}/csv/sample.csv"
-    context = None
 
     # Act
     relation = DuckdbFileInput(
         name="test",
         path=path,
         format="csv",
-    ).read(context)
+    ).read()
 
     # Assert
     actual = sorted(relation.fetchall())
@@ -82,7 +81,6 @@ def test_input_should_forward_options_to_builder():
     """Custom **options are forwarded to the builder."""
     # Arrange
     path = f"{BASE_PATH}/csv/sample.csv"
-    context = None
 
     # Act
     relation = DuckdbFileInput(
@@ -91,7 +89,7 @@ def test_input_should_forward_options_to_builder():
         format="csv",
         header=True,
         delim=",",
-    ).read(context)
+    ).read()
 
     # Assert
     actual = sorted(relation.fetchall())

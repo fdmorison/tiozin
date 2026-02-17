@@ -9,7 +9,7 @@ from tests.stubs.job import JobStub
 from tests.stubs.output import OutputStub
 from tests.stubs.runner import RunnerStub
 from tests.stubs.transform import TransformStub
-from tiozin import Context
+from tiozin.api.processors.context import Context
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import InvalidInputError
 from tiozin.family.tio_kernel import NoOpInput
@@ -548,8 +548,8 @@ def test_overlay_should_render_runner_templates_across_all_phases(job_context: C
     runner = RunnerStub()
 
     # Act
-    with runner(job_context):
-        runner.run(job_context, execution_plan="SELECT 1")
+    with job_context, runner():
+        runner.run(execution_plan="SELECT 1")
 
     # Assert
     actual = (
@@ -565,14 +565,12 @@ def test_overlay_should_render_runner_templates_across_all_phases(job_context: C
     assert actual == expected
 
 
-def test_overlay_should_render_input_templates_across_all_phases(
-    fake_domain: dict, job_context: Context
-):
+def test_overlay_should_render_input_templates_across_all_phases(fake_domain: dict):
     # Arrange
     step = InputStub(name="test", **fake_domain)
 
     # Act
-    step.read(job_context)
+    step.read()
 
     # Assert
     actual = (
@@ -588,15 +586,13 @@ def test_overlay_should_render_input_templates_across_all_phases(
     assert actual == expected
 
 
-def test_overlay_should_render_transform_templates_across_all_phases(
-    fake_domain: dict, job_context: Context
-):
+def test_overlay_should_render_transform_templates_across_all_phases(fake_domain: dict):
     # Arrange
     step = TransformStub(name="test", **fake_domain)
     data = {}
 
     # Act
-    step.transform(job_context, data)
+    step.transform(data)
 
     # Assert
     actual = (
@@ -612,15 +608,13 @@ def test_overlay_should_render_transform_templates_across_all_phases(
     assert actual == expected
 
 
-def test_overlay_should_render_output_templates_across_all_phases(
-    fake_domain: dict, job_context: Context
-):
+def test_overlay_should_render_output_templates_across_all_phases(fake_domain: dict):
     # Arrange
     step = OutputStub(name="test", **fake_domain)
     data = {}
 
     # Act
-    step.write(job_context, data)
+    step.write(data)
 
     # Assert
     actual = (

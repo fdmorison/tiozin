@@ -2,7 +2,6 @@ from typing import Any
 
 from pyspark.sql import DataFrame
 
-from tiozin import Context
 from tiozin.utils import bind_self_tokens, tio_alias, trim
 
 from .. import SparkCoTransform
@@ -64,7 +63,7 @@ class SparkSqlTransform(SparkCoTransform):
         self.query = trim(query)
         self.args = args
 
-    def transform(self, _: Context, data: DataFrame, *others: DataFrame) -> DataFrame:
+    def transform(self, data: DataFrame, *others: DataFrame) -> DataFrame:
         query = bind_self_tokens(
             self.query,
             [tio_alias(data), *(tio_alias(other) for other in others)],

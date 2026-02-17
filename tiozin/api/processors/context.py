@@ -119,10 +119,10 @@ class Context:
         _current_context.reset(token)
 
     @staticmethod
-    def current() -> Context:
+    def current(required: bool = True) -> Context | None:
         ctx = _current_context.get()
         TiozinUnexpectedError.raise_if(
-            ctx is None,
+            required and ctx is None,
             "Tiozin has no active execution context",
         )
         return ctx

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pyspark.sql import DataFrame, DataFrameWriter
 
-from tiozin.api import Context
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim, trim_lower
 
@@ -79,7 +78,7 @@ class SparkFileOutput(SparkOutput):
         self.mode = trim_lower(mode or "append")
         self.partition_by = as_list(partition_by)
 
-    def write(self, context: Context, data: DataFrame) -> DataFrameWriter:
+    def write(self, data: DataFrame) -> DataFrameWriter:
         self.info(f"Writing {self.format} to {self.path}")
 
         writer = data.write.format(self.format).mode(self.mode)

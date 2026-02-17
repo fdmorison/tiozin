@@ -11,7 +11,7 @@ from tiozin.utils.runtime import tio_alias
 # ============================================================================
 
 
-def test_transform_should_execute_sql_using_existing_view(spark_session: SparkSession):
+def test_transform_should_execute_sql_using_existing_view(spark: SparkSession):
     """
     This test simulates the canonical happy path of SparkSqlTransform inside
     a pipeline, where the SQL query operates on a view previously registered
@@ -21,7 +21,7 @@ def test_transform_should_execute_sql_using_existing_view(spark_session: SparkSe
     catalog views without relying on the @self token.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [
             (1, "Alice"),
             (2, "Bob"),
@@ -34,10 +34,10 @@ def test_transform_should_execute_sql_using_existing_view(spark_session: SparkSe
     actual = SparkSqlTransform(
         name="sql_existing_view",
         query="SELECT * FROM customers",
-    ).transform(None, input)
+    ).transform(input)
 
     # Assert
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (1, "Alice"),
             (2, "Bob"),
@@ -49,7 +49,7 @@ def test_transform_should_execute_sql_using_existing_view(spark_session: SparkSe
 
 
 def test_transform_should_execute_sql_using_multiple_existing_views(
-    spark_session: SparkSession,
+    spark: SparkSession,
 ):
     """
     This test simulates a SQL transformation that operates on multiple
@@ -60,14 +60,14 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
     canonical happy path for SQL-based composition in a pipeline.
     """
     # Arrange
-    customers = spark_session.createDataFrame(
+    customers = spark.createDataFrame(
         [
             (1, "Alice"),
             (2, "Bob"),
         ],
         schema="`id` INT, `name` STRING",
     )
-    orders = spark_session.createDataFrame(
+    orders = spark.createDataFrame(
         [
             (1, 100.0),
             (2, 50.0),
@@ -86,10 +86,10 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
             JOIN orders o
               ON c.id = o.customer_id
         """,
-    ).transform(None, customers)
+    ).transform(customers)
 
     # Assert
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (1, "Alice", 100.0),
             (2, "Bob", 50.0),
@@ -99,7 +99,7 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_transform_should_bind_single_dataframe_as_self(spark_session: SparkSession):
+def test_transform_should_bind_single_dataframe_as_self(spark: SparkSession):
     """
     This test simulates the explicit use of the @self token as an input
     reference in the SQL query.
@@ -108,7 +108,7 @@ def test_transform_should_bind_single_dataframe_as_self(spark_session: SparkSess
     DataFrame as a temporary view and allows it to be queried via @self.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [
             (1, 100.0),
             (2, 50.0),
@@ -122,10 +122,10 @@ def test_transform_should_bind_single_dataframe_as_self(spark_session: SparkSess
     actual = SparkSqlTransform(
         name="sql_self",
         query="SELECT * FROM @self WHERE total > 80",
-    ).transform(None, input)
+    ).transform(input)
 
     # Assert
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (1, 100.0),
         ],
@@ -135,7 +135,7 @@ def test_transform_should_bind_single_dataframe_as_self(spark_session: SparkSess
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_session: SparkSession):
+def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark: SparkSession):
     """
     This test simulates a multi-input SQL transformation where the primary
     input (@self) is joined with a secondary input (@self1).
@@ -144,7 +144,7 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
     to the SQL layer and allows them to be composed in a single query.
     """
     # Arrange
-    customers = spark_session.createDataFrame(
+    customers = spark.createDataFrame(
         [
             (1, "Alice"),
             (2, "Bob"),
@@ -154,7 +154,7 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
     tio_alias(customers, "customers")
     customers.createOrReplaceTempView("customers")
 
-    regions = spark_session.createDataFrame(
+    regions = spark.createDataFrame(
         [
             (1, "EU"),
             (2, "US"),
@@ -172,10 +172,10 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
             FROM @self c
             JOIN @self1 r ON c.id = r.id
         """,
-    ).transform(None, customers, regions)
+    ).transform(customers, regions)
 
     # Assert
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (1, "Alice", "EU"),
             (2, "Bob", "US"),
@@ -185,7 +185,7 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark_sessio
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_transform_should_execute_sql_on_empty_dataframe(spark_session: SparkSession):
+def test_transform_should_execute_sql_on_empty_dataframe(spark: SparkSession):
     """
     This test simulates the execution of a SQL transformation over an empty
     input DataFrame.
@@ -195,7 +195,7 @@ def test_transform_should_execute_sql_on_empty_dataframe(spark_session: SparkSes
     schema.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [],
         schema="`id` INT, `name` STRING",
     )
@@ -206,10 +206,10 @@ def test_transform_should_execute_sql_on_empty_dataframe(spark_session: SparkSes
     actual = SparkSqlTransform(
         name="sql_empty_input",
         query="SELECT * FROM @self",
-    ).transform(None, input)
+    ).transform(input)
 
     # Assert
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [],
         schema="`id` INT, `name` STRING",
     )
@@ -217,7 +217,7 @@ def test_transform_should_execute_sql_on_empty_dataframe(spark_session: SparkSes
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_transform_should_accept_args_parameter(spark_session: SparkSession):
+def test_transform_should_accept_args_parameter(spark: SparkSession):
     """
     This test simulates a parameterized SQL query using named arguments.
 
@@ -225,7 +225,7 @@ def test_transform_should_accept_args_parameter(spark_session: SparkSession):
     to the SQL query and applies row-level filtering based on those values.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [
             (1, "Alice", 100.0),
             (2, "Bob", 50.0),
@@ -240,10 +240,10 @@ def test_transform_should_accept_args_parameter(spark_session: SparkSession):
         name="sql_args",
         query="SELECT * FROM @self WHERE total > :min_total",
         args={"min_total": 80.0},
-    ).transform(None, input)
+    ).transform(input)
 
     # Assert
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (1, "Alice", 100.0),
         ],
@@ -253,7 +253,7 @@ def test_transform_should_accept_args_parameter(spark_session: SparkSession):
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_transform_should_remove_self_views_after_execution(spark_session: SparkSession):
+def test_transform_should_remove_self_views_after_execution(spark: SparkSession):
     """
     This test simulates repeated execution of SparkSqlTransform within the same
     SparkSession.
@@ -262,7 +262,7 @@ def test_transform_should_remove_self_views_after_execution(spark_session: Spark
     cleaned up, preventing catalog pollution and name collisions across steps.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [(1,), (2,)],
         schema="`value` INT",
     )
@@ -273,11 +273,11 @@ def test_transform_should_remove_self_views_after_execution(spark_session: Spark
     SparkSqlTransform(
         name="sql_cleanup",
         query="SELECT * FROM @self",
-    ).transform(None, input)
+    ).transform(input)
 
     # Assert
     with pytest.raises(AnalysisException):
-        spark_session.sql("SELECT * FROM __self__").collect()
+        spark.sql("SELECT * FROM __self__").collect()
 
 
 # ============================================================================
@@ -285,7 +285,7 @@ def test_transform_should_remove_self_views_after_execution(spark_session: Spark
 # ============================================================================
 
 
-def test_transform_should_fail_when_referenced_view_does_not_exist(spark_session: SparkSession):
+def test_transform_should_fail_when_referenced_view_does_not_exist(spark: SparkSession):
     """
     This test simulates a failure scenario where the SQL query references
     a view that does not exist in the Spark catalog.
@@ -294,7 +294,7 @@ def test_transform_should_fail_when_referenced_view_does_not_exist(spark_session
     and propagates the failure to the caller.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [(1,)],
         schema="`value` INT",
     )
@@ -304,10 +304,10 @@ def test_transform_should_fail_when_referenced_view_does_not_exist(spark_session
         SparkSqlTransform(
             name="sql_missing_view",
             query="SELECT * FROM does_not_exist",
-        ).transform(None, input)
+        ).transform(input)
 
 
-def test_transform_should_fail_when_sql_is_invalid(spark_session: SparkSession):
+def test_transform_should_fail_when_sql_is_invalid(spark: SparkSession):
     """
     This test simulates a failure caused by an invalid SQL statement.
 
@@ -315,7 +315,7 @@ def test_transform_should_fail_when_sql_is_invalid(spark_session: SparkSession):
     SQL syntax errors.
     """
     # Arrange
-    input = spark_session.createDataFrame(
+    input = spark.createDataFrame(
         [(1,)],
         schema="`value` INT",
     )
@@ -327,7 +327,7 @@ def test_transform_should_fail_when_sql_is_invalid(spark_session: SparkSession):
         SparkSqlTransform(
             name="sql_invalid",
             query="SELECXXX * FROM @self",
-        ).transform(None, input)
+        ).transform(input)
 
 
 # ============================================================================
@@ -335,7 +335,7 @@ def test_transform_should_fail_when_sql_is_invalid(spark_session: SparkSession):
 # ============================================================================
 
 
-def test_transform_should_shadow_existing_table_with_step_view(spark_session: SparkSession):
+def test_transform_should_shadow_existing_table_with_step_view(spark: SparkSession):
     """
     This test simulates a scenario where a Spark table already exists in the
     catalog with the same name as a view created by an upstream step.
@@ -345,8 +345,8 @@ def test_transform_should_shadow_existing_table_with_step_view(spark_session: Sp
     during SQL execution.
     """
     # Arrange
-    spark_session.sql("DROP TABLE IF EXISTS shadowed")
-    spark_session.sql(
+    spark.sql("DROP TABLE IF EXISTS shadowed")
+    spark.sql(
         """
         CREATE TABLE shadowed (
             id INT,
@@ -355,14 +355,14 @@ def test_transform_should_shadow_existing_table_with_step_view(spark_session: Sp
         USING parquet
         """
     )
-    spark_session.sql(
+    spark.sql(
         """
         INSERT INTO shadowed VALUES
             (1, 'TABLE_ALICE'),
             (2, 'TABLE_BOB')
         """
     )
-    viewdata = spark_session.createDataFrame(
+    viewdata = spark.createDataFrame(
         [
             (1, "VIEW_ALICE"),
             (2, "VIEW_BOB"),
@@ -375,11 +375,11 @@ def test_transform_should_shadow_existing_table_with_step_view(spark_session: Sp
     result = SparkSqlTransform(
         name="sql_shadowing",
         query="SELECT * FROM shadowed",
-    ).transform(None, viewdata)
+    ).transform(viewdata)
 
     # Assert
     actual = result
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (1, "VIEW_ALICE"),
             (2, "VIEW_BOB"),

@@ -31,7 +31,6 @@ from tiozin.api import Runner, Transform, CoTransform, Input, Output, Job, EtlSt
 # Auxiliary
 from tiozin.api import Context
 from tiozin.app import TiozinApp
-from tiozin.utils import active_session
 from tiozin.compose import tioproxy
 
 
@@ -60,6 +59,5 @@ __all__ = [
     "Context",
     "TiozinApp",
     "EtlStep",
-    "active_session",
     "tioproxy",
 ]

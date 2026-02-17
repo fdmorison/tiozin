@@ -17,12 +17,11 @@ def test_transform_should_count_words(duckdb_session: DuckDBPyConnection):
         ) AS t(value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -43,12 +42,11 @@ def test_transform_should_return_empty_when_input_is_empty(duckdb_session: DuckD
         SELECT '' AS value WHERE false
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -71,12 +69,11 @@ def test_transform_should_normalize_words_to_lowercase(duckdb_session: DuckDBPyC
         ) AS t(value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -99,13 +96,12 @@ def test_transform_should_preserve_case_when_lowercase_is_disabled(
         SELECT * FROM (VALUES ('Hello hello HELLO')) AS t(value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
         lowercase=False,
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -132,12 +128,11 @@ def test_transform_should_remove_punctuation(duckdb_session: DuckDBPyConnection)
         ) AS t(value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -161,12 +156,11 @@ def test_transform_should_preserve_apostrophes(duckdb_session: DuckDBPyConnectio
         ) AS t(value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -191,12 +185,11 @@ def test_transform_should_handle_unicode_characters(duckdb_session: DuckDBPyConn
         ) AS t(value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -225,13 +218,12 @@ def test_transform_should_count_words_grouped_by_single_column(
         ) AS t(doc_id, value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
         count_by="doc_id",
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -261,13 +253,12 @@ def test_transform_should_count_words_grouped_by_multiple_columns(
         ) AS t(play, act, value)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
         name="test",
         count_by=["play", "act"],
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()
@@ -295,7 +286,6 @@ def test_transform_should_apply_all_parameters(duckdb_session: DuckDBPyConnectio
         ) AS t(doc_id, text)
     """).set_alias("input")
     duckdb_session.register("input", input_rel)
-    context = None
 
     # Act
     relation = DuckdbWordCountTransform(
@@ -303,7 +293,7 @@ def test_transform_should_apply_all_parameters(duckdb_session: DuckDBPyConnectio
         content_field="text",
         count_by="doc_id",
         lowercase=False,
-    ).transform(context, input_rel)
+    ).transform(input_rel)
 
     # Assert
     actual = relation.fetchall()

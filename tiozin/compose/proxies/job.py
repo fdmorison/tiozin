@@ -38,15 +38,15 @@ class JobProxy(wrapt.ObjectProxy):
     environment for Job Tiozin plugins.
     """
 
-    def setup(self, context: Context) -> None:
+    def setup(self, *args, **kwargs) -> None:
         raise PluginAccessForbiddenError(self)
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self, *args, **kwargs) -> None:
         raise PluginAccessForbiddenError(self)
 
-    def submit(self, context: Context = None) -> Any:
+    def submit(self) -> Any:
         job: Job = self.__wrapped__
-        context = context or Context.for_job(job)
+        context = Context.for_job(job)
 
         with context, TiozinTemplateOverlay(job, context.template_vars):
             try:
@@ -54,10 +54,10 @@ class JobProxy(wrapt.ObjectProxy):
                 job.info(f"🚀 {context.kind} is starting — {human_join(tios)} on duty")
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
-                job.setup(context)
+                job.setup()
                 context.executed_at = utcnow()
-                with job.runner(context):
-                    result = job.submit(context)
+                with job.runner():
+                    result = job.submit()
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
                 raise
@@ -67,7 +67,7 @@ class JobProxy(wrapt.ObjectProxy):
             finally:
                 context.teardown_at = utcnow()
                 try:
-                    job.teardown(context)
+                    job.teardown()
                 except Exception as e:
                     job.error(f"🚨 {context.kind} teardown failed because {e}")
                 context.finished_at = utcnow()

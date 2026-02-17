@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Context, Transform
+from tiozin.api import Transform
 
 
 class NoOpTransform(Transform):
@@ -16,11 +16,11 @@ class NoOpTransform(Transform):
         self.verbose = verbose
         self.force_error = force_error
 
-    def setup(self, context: Context, *data: Any) -> None:
+    def setup(self, *data: Any) -> None:
         if self.verbose:
             self.info("Tiozin is preparing transform")
 
-    def transform(self, context: Context, *data: Any) -> Any:
+    def transform(self, *data: Any) -> Any:
         if self.verbose:
             args = self.to_dict(exclude="name")
             args.update(args.pop("options"))
@@ -31,6 +31,6 @@ class NoOpTransform(Transform):
 
         return None
 
-    def teardown(self, context: Context, *data: Any) -> None:
+    def teardown(self, *data: Any) -> None:
         if self.verbose:
             self.info("Tiozin is finishing transform lifecycle")

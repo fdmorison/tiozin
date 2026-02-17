@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin import Context, Transform
+from tiozin import Transform
 
 
 class TransformStub(Transform):
@@ -11,12 +11,12 @@ class TransformStub(Transform):
         self.captured_transform = None
         self.captured_teardown = None
 
-    def setup(self, context: Context, data: Any) -> None:
+    def setup(self, data: Any) -> None:
         self.captured_setup = self.path
 
-    def transform(self, context: Context, data) -> Any:
+    def transform(self, data) -> Any:
         self.captured_transform = self.path
         return data
 
-    def teardown(self, context: Context, data: Any) -> None:
+    def teardown(self, data: Any) -> None:
         self.captured_teardown = self.path

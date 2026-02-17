@@ -1,6 +1,6 @@
 from typing import Literal
 
-from tiozin import Context, Input
+from tiozin import Input
 
 
 class InputStub(Input):
@@ -11,12 +11,12 @@ class InputStub(Input):
         self.captured_read = None
         self.captured_teardown = None
 
-    def setup(self, context: Context) -> None:
+    def setup(self) -> None:
         self.captured_setup = self.path
 
-    def read(self, context: Context) -> Literal["data"]:
+    def read(self) -> Literal["data"]:
         self.captured_read = self.path
         return "data"
 
-    def teardown(self, context: Context) -> None:
+    def teardown(self) -> None:
         self.captured_teardown = self.path

@@ -33,5 +33,5 @@ def test_runner_should_expose_session_property():
 
     # Assert
     actual = runner.session
-    expected = {}
+    expected = None
     assert actual == expected

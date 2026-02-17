@@ -42,7 +42,7 @@ class TiozinTemplateOverlay:
 
     def __init__(self, tiozin: Tiozin, template_vars: Mapping[str, Any] = None) -> None:
         self._tiozin = tiozin
-        self._context = template_vars or {}
+        self._template_vars = template_vars or {}
         self._templates: list[tuple] = []
         self._scan_templates(self._tiozin)
 
@@ -73,7 +73,7 @@ class TiozinTemplateOverlay:
                 obj = reflection.get(obj, key)
 
             try:
-                rendered = JINJA_ENV.from_string(template).render(self._context)
+                rendered = JINJA_ENV.from_string(template).render(self._template_vars)
                 reflection.set_field(obj, field, rendered)
             except Exception as e:
                 raise InvalidInputError(f"Cannot render template {template} because {e}") from e

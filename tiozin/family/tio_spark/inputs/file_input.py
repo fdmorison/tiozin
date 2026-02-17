@@ -10,7 +10,7 @@ from pyspark.sql.functions import (
     when,
 )
 
-from tiozin.api import Context, conventions
+from tiozin.api import conventions
 from tiozin.exceptions import InvalidInputError, RequiredArgumentError
 from tiozin.utils import as_list, trim_lower
 
@@ -84,12 +84,12 @@ class SparkFileInput(SparkInput):
         self.format = trim_lower(format or "parquet")
         self.explode_filepath = explode_filepath
 
-    def read(self, context: Context) -> DataFrame:
+    def read(self) -> DataFrame:
         self.info(f"Reading {self.format} from {self.path}")
 
         reader = self.spark.read
         paths = self.path
-        is_streaming = context.runner.streaming
+        is_streaming = self.context.runner.streaming
 
         if is_streaming:
             InvalidInputError.raise_if(

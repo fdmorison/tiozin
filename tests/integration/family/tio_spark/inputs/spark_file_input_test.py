@@ -13,7 +13,7 @@ BASE_PATH = "./tests/mocks/data"
 # ============================================================================
 # Testing SparkFileInput - Core Behavior
 # ============================================================================
-def test_input_should_read_text_files(spark_session: SparkSession, input_context: Context):
+def test_input_should_read_text_files(spark_session: SparkSession):
     """Reads plain text files into a DataFrame."""
     # Arrange
     path = f"{BASE_PATH}/text/sample.txt"
@@ -23,7 +23,7 @@ def test_input_should_read_text_files(spark_session: SparkSession, input_context
         name="test",
         path=path,
         format="text",
-    ).read(input_context)
+    ).read()
 
     # Assert
     actual = result
@@ -37,7 +37,7 @@ def test_input_should_read_text_files(spark_session: SparkSession, input_context
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_input_should_read_json_files(spark_session: SparkSession, input_context: Context):
+def test_input_should_read_json_files(spark_session: SparkSession):
     """Reads JSON files into a DataFrame using Spark semantics."""
     # Arrange
     path = f"{BASE_PATH}/json/sample.json"
@@ -47,7 +47,7 @@ def test_input_should_read_json_files(spark_session: SparkSession, input_context
         name="test",
         path=path,
         format="json",
-    ).read(input_context)
+    ).read()
 
     # Assert
     actual = result
@@ -64,7 +64,7 @@ def test_input_should_read_json_files(spark_session: SparkSession, input_context
 # ============================================================================
 # Testing SparkFileInput - Reader Options
 # ============================================================================
-def test_input_should_apply_reader_options(input_context: Context):
+def test_input_should_apply_reader_options():
     """Applies Spark reader options when loading files."""
     # Arrange
     path = f"{BASE_PATH}/json/sample.json"
@@ -75,7 +75,7 @@ def test_input_should_apply_reader_options(input_context: Context):
         path=path,
         format="json",
         inferSchema=True,
-    ).read(input_context)
+    ).read()
 
     # Assert
     # schema inference doesn't change the value, but ensures options are applied
@@ -99,7 +99,6 @@ def test_input_should_explode_filepath(
     filestem: str,
     filetype: str,
     spark_session: SparkSession,
-    input_context: Context,
 ):
     """Expands filepath into semantic columns when enabled."""
     # Arrange
@@ -113,7 +112,7 @@ def test_input_should_explode_filepath(
         path=path,
         format="text",
         explode_filepath=True,
-    ).read(input_context)
+    ).read()
 
     # Assert
     actual = result
@@ -157,18 +156,18 @@ def test_input_should_explode_filepath(
 # ============================================================================
 # Testing SparkFileInput - Streaming Mode
 # ============================================================================
-def test_input_should_use_streaming_reader_when_runner_is_streaming(input_context: Context):
+def test_input_should_use_streaming_reader_when_runner_is_streaming():
     """Uses Spark readStream when the runner is in streaming mode."""
     # Arrange
     path = f"{BASE_PATH}/text/sample.txt"
-    input_context.job.runner.streaming = True
+    Context.current().job.runner.streaming = True
 
     # Act
     df = SparkFileInput(
         name="test",
         path=path,
         format="text",
-    ).read(input_context)
+    ).read()
 
     # Assert
     assert df.isStreaming is True

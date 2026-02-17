@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin import Context, Output
+from tiozin import Output
 
 
 class OutputStub(Output):
@@ -11,12 +11,12 @@ class OutputStub(Output):
         self.captured_write = None
         self.captured_teardown = None
 
-    def setup(self, context: Context, data: Any) -> None:
+    def setup(self, data: Any) -> None:
         self.captured_setup = self.path
 
-    def write(self, context: Context, data: Any) -> None:
+    def write(self, data: Any) -> None:
         self.captured_write = self.path
         return data
 
-    def teardown(self, context: Context, data: Any) -> None:
+    def teardown(self, data: Any) -> None:
         self.captured_teardown = self.path

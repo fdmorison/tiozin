@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyRelation
 
-from tiozin.api import Context
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim_lower
 
@@ -98,7 +97,7 @@ class DuckdbFileInput(DuckdbInput):
         self.union_by_name = union_by_name
         self.explode_filepath = explode_filepath
 
-    def read(self, _: Context) -> DuckDBPyRelation:
+    def read(self) -> DuckDBPyRelation:
         self.info(f"Reading {self.format} from {self.path}")
 
         relation = (
