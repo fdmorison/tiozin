@@ -41,6 +41,7 @@ def test_for_job_should_create_job_context(
         "job": context,
         # Identity
         "name": job.name,
+        "slug": job.slug,
         "kind": job.kind,
         "tiozin_role": job.tiozin_role,
         # Domain / Governance
@@ -59,7 +60,7 @@ def test_for_job_should_create_job_context(
         "teardown_at": None,
         "finished_at": None,
         # Infra
-        "temp_workdir": Path(f"/tmp/tiozin/{job.name}/{context.run_id}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
         "template_vars": ANY,
         "shared": {},
     }
@@ -67,9 +68,7 @@ def test_for_job_should_create_job_context(
 
 
 @freeze_time(FROZEN_TIME)
-def test_for_step_should_create_step_context(
-    input_stub: InputStub, fake_domain: dict, fake_governance: dict
-):
+def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain: dict):
     # Arrange
     step = input_stub
 
@@ -85,6 +84,7 @@ def test_for_step_should_create_step_context(
         "job": None,
         # Identity
         "name": step.name,
+        "slug": step.slug,
         "kind": step.kind,
         "tiozin_role": step.tiozin_role,
         # Domain / Governance
@@ -107,7 +107,7 @@ def test_for_step_should_create_step_context(
         "teardown_at": None,
         "finished_at": None,
         # Infra
-        "temp_workdir": Path(f"/tmp/tiozin/{step.name}/{context.run_id}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
         "template_vars": ANY,
         "shared": {},
     }
@@ -115,7 +115,7 @@ def test_for_step_should_create_step_context(
 
 
 def test_for_child_step_should_create_step_context_with_job_information(
-    job_context: Context, input_stub: InputStub, fake_domain: dict
+    job_context: Context, input_stub: InputStub
 ):
     # Arrange
     step = input_stub
@@ -132,6 +132,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "job": job_context,
         # Identity
         "name": step.name,
+        "slug": step.slug,
         "kind": step.kind,
         "tiozin_role": step.tiozin_role,
         # Domain / Governance
@@ -159,7 +160,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "teardown_at": None,
         "finished_at": None,
         # Infra
-        "temp_workdir": Path(f"/tmp/tiozin/{job_context.name}/{job_context.run_id}/{step.name}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),
         "template_vars": ANY,
         "shared": job_context.shared,
     }

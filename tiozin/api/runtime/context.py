@@ -63,6 +63,7 @@ class Context:
     # Identity
     # ==================================================
     name: str
+    slug: str
     kind: str
     tiozin_role: str
 
@@ -165,6 +166,7 @@ class Context:
 
         ctx = cls(
             name=job.name,
+            slug=job.slug,
             kind=job.tiozin_name,
             tiozin_role=job.tiozin_role,
             org=job.org,
@@ -183,7 +185,7 @@ class Context:
         ctx.runner = job.runner
         ctx.run_id = f"job_{job_uuid}"
         ctx.nominal_time = utcnow()
-        ctx.temp_workdir = create_local_temp_dir(ctx.name, ctx.run_id)
+        ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
         ctx.template_vars = ctx._build_template_vars()
         return ctx
 
@@ -191,6 +193,7 @@ class Context:
     def for_step(cls, step: EtlStep) -> Context:
         ctx = cls(
             name=step.name,
+            slug=step.slug,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
             org=step.org,
@@ -209,13 +212,14 @@ class Context:
         ctx.runner = None
         ctx.run_id = f"job_{generate_id()}_{step.name}"
         ctx.nominal_time = utcnow()
-        ctx.temp_workdir = create_local_temp_dir(ctx.name, ctx.run_id)
+        ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
         ctx.template_vars = ctx._build_template_vars()
         return ctx
 
     def for_child_step(self, step: EtlStep) -> Context:
         ctx = Context(
             name=step.name,
+            slug=step.slug,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
             org=step.org or self.org,
@@ -235,7 +239,7 @@ class Context:
         ctx.runner = self.job.runner
         ctx.run_id = f"{self.job.run_id}_{step.name}"
         ctx.nominal_time = self.job.nominal_time
-        ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.name)
+        ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
         ctx.template_vars = ctx._build_template_vars(base=self.template_vars)
         return ctx
 

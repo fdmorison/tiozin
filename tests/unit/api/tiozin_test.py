@@ -1,5 +1,43 @@
+import pytest
+
 from tiozin.compose import StepProxy
-from tiozin.family.tio_kernel import NoOpInput
+from tiozin.family.tio_kernel import NoOpInput, NoOpRunner
+
+# ============================================================================
+# Testing Tiozin.slug
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "name,expected_slug",
+    [
+        ("my input", "my_input"),
+        ("  my input  ", "my_input"),
+        ("Customer Orders", "customer_orders"),
+        ("orders-2024", "orders_2024"),
+        ("already_valid", "already_valid"),
+    ],
+)
+def test_tiozin_should_have_slug_derived_from_name(name: str, expected_slug: str):
+    # Arrange / Act
+    tiozin = NoOpInput(
+        name=name, org="x", region="x", domain="x", layer="x", product="x", model="x"
+    )
+
+    # Assert
+    actual = tiozin.slug
+    expected = expected_slug
+    assert actual == expected
+
+
+def test_tiozin_should_use_kind_as_slug_when_name_is_not_provided():
+    # Arrange / Act
+    tiozin = NoOpRunner()
+
+    # Assert
+    actual = tiozin.slug
+    expected = "nooprunner"
+    assert actual == expected
 
 
 # ============================================================================
