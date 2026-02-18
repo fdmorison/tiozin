@@ -8,10 +8,14 @@ from pendulum import DateTime
 
 class RelativeDate:
     """
-    Represents a logical date relative to a base reference DateTime.
+    Logical date view for templating.
 
-    All representations are exposed as attributes (properties),
-    making it fully compatible with Jinja templates.
+    Wraps a DateTime and exposes relative navigation and multiple date
+    representations as attributes.
+
+    RelativeDate provides a stable and template-friendly interface for
+    working with logical dates without exposing the underlying datetime
+    implementation directly.
 
     Example usage (Jinja):
         {{ D[-1].iso8601 }}

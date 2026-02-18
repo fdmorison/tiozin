@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from tiozin.api import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
-from tiozin.compose.reflection import detect_family, detect_role
+from tiozin.compose.reflection import detect_family_name, detect_tiozin_role
 from tiozin.utils import slugify
 
 from .runtime.context import Context
@@ -47,9 +47,9 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
     def __init_subclass__(tiozin, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
         name = tiozin.__name__
-        role_class = detect_role(tiozin)
+        role_class = detect_tiozin_role(tiozin)
         role = role_class.__name__
-        family = detect_family(tiozin)
+        family = detect_family_name(tiozin)
         tiozin.__tiometa__ = Tiozin.Metadata(
             name=name,
             role=role,

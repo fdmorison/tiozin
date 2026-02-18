@@ -218,56 +218,25 @@ def try_get_public_setter(obj: Any, method_name: str) -> Callable | None:
 def is_package(obj: Any) -> bool:
     """
     Check if an object is a Python package.
-
-    A package is a module that has a __path__ attribute.
-
-    Args:
-        obj: The object to check.
-
-    Returns:
-        True if the object is a package, False otherwise.
-
-    Examples:
-        >>> import os
-        >>> is_package(os)
-        False
-        >>> import collections
-        >>> is_package(collections)
-        True
     """
     return inspect.ismodule(obj) and hasattr(obj, "__path__")
 
 
 def is_tiozin(clazz: Any) -> bool:
     """
-    Check if an object is a valid Tiozin plugin class.
-
-    A valid Tiozin plugin is a class that:
-    - Inherits from Tiozin
-    - Is not the Tiozin base class itself
-
-    Args:
-        clazz: The object to check.
-
-    Returns:
-        True if the object is a valid Tiozin plugin class, False otherwise.
-
-    Examples:
-        >>> from tiozin.api import Tiozin
-        >>> class MyTiozin(Tiozin): pass
-        >>> is_tiozin(MyTiozin)
-        False  # Direct inheritance not allowed
-        >>> class BaseTiozin(Tiozin): pass
-        >>> class MyActualTiozin(BaseTiozin): pass
-        >>> is_tiozin(MyActualTiozin)
-        True
+    Check if an object is a valid and pluggable Tiozin class.
     """
     from tiozin.api import Tiozin
 
-    return inspect.isclass(clazz) and issubclass(clazz, Tiozin) and clazz is not Tiozin
+    return (
+        inspect.isclass(clazz)
+        and issubclass(clazz, Tiozin)
+        and not inspect.isabstract(clazz)
+        and clazz is not Tiozin
+    )
 
 
-def detect_role(tiozin: type) -> type:
+def detect_tiozin_role(tiozin: type) -> type:
     """
     Detect the role of a Tiozin plugin class.
 
@@ -297,7 +266,7 @@ def detect_role(tiozin: type) -> type:
             return clazz
 
 
-def detect_family(tiozin: type) -> str:
+def detect_family_name(tiozin: type) -> str:
     """
     Detect the family (Tio/Tia) of a Tiozin plugin class.
 
