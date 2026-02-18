@@ -29,7 +29,7 @@ class JobManifest(Manifest):
     cost_center: str | None = Field(None, description=docs.JOB_COST_CENTER)
     labels: dict[str, str] | None = Field(default_factory=dict, description=docs.JOB_LABELS)
 
-    # Business Taxonomy
+    # Domain
     org: str = Field(description=docs.JOB_ORG)
     region: str = Field(description=docs.JOB_REGION)
     domain: str = Field(description=docs.JOB_DOMAIN)
@@ -45,9 +45,3 @@ class JobManifest(Manifest):
         default_factory=list, description=docs.JOB_TRANSFORMS
     )
     outputs: list[OutputManifest] | None = Field(default_factory=list, description=docs.JOB_OUTPUTS)
-
-    @classmethod
-    def for_kind(cls) -> type:
-        from tiozin import Job
-
-        return Job

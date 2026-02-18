@@ -4,7 +4,6 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api import Job
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     JobManifest,
@@ -13,20 +12,6 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.exceptions import ManifestError
-
-# ============================================================================
-# JobManifest.for_kind() tests
-# ============================================================================
-
-
-def test_manifest_for_kind_should_return_job_type():
-    # Act
-    actual = JobManifest.for_kind()
-
-    # Assert
-    expected = Job
-    assert actual == expected
-
 
 # ============================================================================
 # JobManifest.__init__ tests

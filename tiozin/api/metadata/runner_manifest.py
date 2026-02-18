@@ -18,9 +18,3 @@ class RunnerManifest(Manifest):
 
     # Specific
     streaming: bool = Field(False, description=docs.RUNNER_STREAMING)
-
-    @classmethod
-    def for_kind(cls) -> type:
-        from tiozin import Runner
-
-        return Runner

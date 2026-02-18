@@ -26,9 +26,3 @@ class OutputManifest(Manifest):
     layer: str | None = Field(None, description=docs.OUTPUT_LAYER)
     product: str | None = Field(None, description=docs.OUTPUT_PRODUCT)
     model: str | None = Field(None, description=docs.OUTPUT_MODEL)
-
-    @classmethod
-    def for_kind(cls) -> type:
-        from tiozin import Output
-
-        return Output

@@ -31,9 +31,3 @@ class InputManifest(Manifest):
     schema: str | None = Field(None, description=docs.INPUT_SCHEMA)
     schema_subject: str | None = Field(None, description=docs.INPUT_SCHEMA_SUBJECT)
     schema_version: str | None = Field(None, description=docs.INPUT_SCHEMA_VERSION)
-
-    @classmethod
-    def for_kind(cls) -> type:
-        from tiozin import Input
-
-        return Input
