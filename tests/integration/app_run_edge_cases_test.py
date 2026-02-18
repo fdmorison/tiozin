@@ -47,6 +47,7 @@ def test_app_should_run_job_with_input_only(_atexit, _signal, app: TiozinApp):
         org: tiozin
         region: latam
         domain: platform
+        subdomain: infrastructure
         product: validation
         model: source_check
         layer: raw
@@ -83,6 +84,7 @@ def test_app_should_run_job_without_transforms(_atexit, _signal, app: TiozinApp)
         org: tiozin
         region: latam
         domain: ingestion
+        subdomain: pipeline
         product: raw_data
         model: copy
         layer: raw
@@ -122,6 +124,7 @@ def test_app_should_run_job_without_outputs(_atexit, _signal, app: TiozinApp):
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: events
         model: process
         layer: raw
@@ -161,6 +164,7 @@ def test_app_should_run_job_with_multiple_inputs(_atexit, _signal, app: TiozinAp
         org: tiozin
         region: latam
         domain: sales
+        subdomain: retail
         product: orders
         model: enriched
         layer: refined
@@ -207,6 +211,7 @@ def test_app_should_run_job_with_multiple_transforms(_atexit, _signal, app: Tioz
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: orders
         model: aggregated
         layer: refined
@@ -253,6 +258,7 @@ def test_app_should_run_job_with_multiple_outputs(_atexit, _signal, app: TiozinA
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: orders
         model: distributed
         layer: refined
@@ -302,6 +308,7 @@ def test_app_should_run_job_with_multiple_inputs_transforms_and_outputs(
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: orders
         model: enriched_aggregated
         layer: refined

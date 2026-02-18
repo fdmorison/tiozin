@@ -4,9 +4,10 @@
   "org": "tiozin",
   "region": "latam",
   "domain": "quality",
+  "subdomain": "pipeline",
+  "layer": "test",
   "product": "test_cases",
   "model": "some_case",
-  "layer": "test",
   "runner": {
     "kind": "TestRunner"
   },

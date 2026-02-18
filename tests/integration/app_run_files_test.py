@@ -54,6 +54,7 @@ def test_app_should_run_job_from_yaml_file(_atexit, _signal, app: TiozinApp, tmp
         org: tiozin
         region: latam
         domain: sales
+        subdomain: retail
         product: orders
         model: daily_summary
         layer: refined
@@ -100,6 +101,7 @@ def test_app_should_run_job_from_json_file(_atexit, _signal, app: TiozinApp, tmp
             "org": "tiozin",
             "region": "latam",
             "domain": "sales",
+            "subdomain": "retail",
             "product": "orders",
             "model": "daily_summary",
             "layer": "refined",
@@ -167,6 +169,7 @@ def test_app_should_run_job_from_full_yaml_file(_atexit, _signal, app: TiozinApp
         org: tiozin
         region: latam
         domain: platform
+        subdomain: infrastructure
         product: data-platform
         model: maintenance
         layer: raw
@@ -243,6 +246,7 @@ def test_app_should_render_temp_workdir_in_yaml_file_templates(
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: reports
         model: daily
         layer: refined
