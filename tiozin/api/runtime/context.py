@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Mapping
 from contextvars import ContextVar, Token
 from dataclasses import dataclass, field, fields
@@ -10,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
-from tiozin.compose import RelativeDate
+from tiozin.compose import RelativeDate, SafeEnv
 from tiozin.exceptions import TiozinUnexpectedError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
@@ -110,9 +109,20 @@ class Context:
     # ==================================================
     # Infra
     # ==================================================
-    shared: dict[str, Any] = field(default_factory=dict, metadata={"template": False})
-    template_vars: Mapping[str, Any] = field(init=False, metadata={"template": False})
     temp_workdir: Path = field(init=False)
+
+    shared: dict[str, Any] = field(
+        repr=False,
+        default_factory=dict,
+        metadata={"template": False},
+    )
+
+    template_vars: Mapping[str, Any] = field(
+        init=False,
+        repr=False,
+        default_factory=dict,
+        metadata={"template": False},
+    )
 
     _tokens: list[Token] = field(
         init=False,
@@ -163,8 +173,6 @@ class Context:
 
     @classmethod
     def for_job(cls, job: Job) -> Context:
-        job_uuid: str = generate_id()
-
         ctx = cls(
             name=job.name,
             slug=job.slug,
@@ -185,7 +193,7 @@ class Context:
         )
         ctx.job = ctx
         ctx.runner = job.runner
-        ctx.run_id = f"job_{job_uuid}"
+        ctx.run_id = generate_id(prefix="job")
         ctx.nominal_time = utcnow()
         ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
         ctx.template_vars = ctx._build_template_vars()
@@ -213,7 +221,7 @@ class Context:
         )
         ctx.job = None
         ctx.runner = None
-        ctx.run_id = f"job_{generate_id()}_{step.name}"
+        ctx.run_id = cls._generate_step_run_id(step.slug)
         ctx.nominal_time = utcnow()
         ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
         ctx.template_vars = ctx._build_template_vars()
@@ -241,15 +249,21 @@ class Context:
         )
         ctx.job = self.job
         ctx.runner = self.job.runner
-        ctx.run_id = f"{self.job.run_id}_{step.name}"
+        ctx.run_id = self._generate_step_run_id(step.slug, self.job)
         ctx.nominal_time = self.job.nominal_time
         ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
         ctx.template_vars = ctx._build_template_vars(base=self.template_vars)
         return ctx
 
     # ==================================================
-    # Template Builder
+    # Private Utilities
     # ==================================================
+    @staticmethod
+    def _generate_step_run_id(slug: str, job: Context | None = None) -> str:
+        if job:
+            job_run_id = job.run_id.removeprefix("job_")
+            return f"step_{job_run_id}_{slug}"
+        return generate_id(prefix="step", suffix=slug)
 
     def _build_template_vars(
         self,
@@ -270,17 +284,7 @@ class Context:
         result |= context_data
 
         # ENV namespace
-        base_env = result.get("ENV") or {}
-
-        TiozinUnexpectedError.raise_if(
-            not isinstance(base_env, Mapping),
-            f"ENV must be a mapping, got {base_env!r}",
-        )
-
-        result["ENV"] = {
-            **base_env,
-            **os.environ,
-        }
+        result["ENV"] = SafeEnv()
 
         # RelativeDate fields
         relative_date = RelativeDate(self.nominal_time)

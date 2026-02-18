@@ -4,13 +4,11 @@ from unittest.mock import ANY
 
 import pendulum
 import pytest
-from assertpy import assert_that
 from freezegun import freeze_time
 
 from tests.stubs import InputStub, JobStub
 from tiozin import Context
 from tiozin.compose import RelativeDate
-from tiozin.exceptions import TiozinUnexpectedError
 
 FAKE_UUID = "01968e6a-0000-7000-8000-000000000001"
 FROZEN_TIME = "2026-06-15T12:00:00+00:00"
@@ -151,7 +149,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         # Tiozin arguments
         "options": step.options,
         # Runtime Identity
-        "run_id": f"{job_context.run_id}_{step.name}",
+        "run_id": f"step_{job_context.run_id.removeprefix('job_')}_{step.slug}",
         "run_attempt": 1,
         "nominal_time": job_context.nominal_time,
         # Runtime Lifecycle
@@ -357,49 +355,3 @@ def test_build_template_vars_should_isolate_env_from_context_fields(
         "from_os",
     )
     assert actual == expected
-
-
-def test_build_template_vars_should_merge_base_env_with_os_env(
-    monkeypatch: pytest.MonkeyPatch,
-    job_context: Context,
-):
-    # Arrange
-    monkeypatch.setenv("OS_VAR", "from_os")
-    base = {"ENV": {"USER_VAR": "from_user"}}
-
-    # Act
-    result = job_context._build_template_vars(base=base)
-
-    # Assert
-    actual = result["ENV"]
-    expected = {
-        "OS_VAR": "from_os",
-        "USER_VAR": "from_user",
-    }
-    assert_that(expected).is_subset_of(actual)
-
-
-def test_build_template_vars_should_give_precedence_to_os_env_over_base_env(
-    monkeypatch: pytest.MonkeyPatch,
-    job_context: Context,
-):
-    # Arrange
-    monkeypatch.setenv("SHARED_KEY", "from_os")
-    base = {"ENV": {"SHARED_KEY": "from_base"}}
-
-    # Act
-    result = job_context._build_template_vars(base=base)
-
-    # Assert
-    actual = result["ENV"]["SHARED_KEY"]
-    expected = "from_os"
-    assert actual == expected
-
-
-def test_build_template_vars_should_raise_if_env_is_not_a_mapping(job_context: Context):
-    # Arrange
-    base = {"ENV": "not-a-mapping"}
-
-    # Act & Assert
-    with pytest.raises(TiozinUnexpectedError, match="ENV must be a mapping"):
-        job_context._build_template_vars(base=base)

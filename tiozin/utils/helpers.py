@@ -54,17 +54,23 @@ def trim_lower(value: str | None) -> str | None:
     return value.strip().lower()
 
 
-def generate_id() -> str:
+def generate_id(prefix: str = None, suffix: str = None) -> str:
     """
     Generate a unique identifier.
 
-    Creates a time-ordered UUID v7 that uniquely identifies a resource or resource run and can be
-    sorted chronologically.
-
-    Returns:
-        A UUIDv7 string (time-ordered, globally unique).
+    Produces a chronologically sortable identifier suitable for naming
+    resources or executions. When provided, ``prefix`` is prepended and
+    ``suffix`` is appended using the format "<prefix>_<id>_<suffix>".
     """
-    return str(uuid7())
+    identifier = str(uuid7())
+
+    if prefix:
+        identifier = f"{prefix}_{identifier}"
+
+    if suffix:
+        identifier = f"{identifier}_{suffix}"
+
+    return identifier
 
 
 def default(value: T, default_: T) -> T:
