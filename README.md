@@ -3,7 +3,7 @@
 <p align="center">
   <img
     src="https://raw.githubusercontent.com/fdmorison/tiozin/main/docs/img/tiozin.png"
-    lt="Tiozin - Your friendly ETL framework"
+    alt="Tiozin - Your friendly ETL framework"
   />
 </p>
 
@@ -15,7 +15,19 @@ Tiozin brings it back to basics: **Transform. Input. Output.** Nothing more, not
 
 A lightweight Python framework that makes data jobs declarative, testable, and actually enjoyable to write.
 
-## Quick Start
+## Philosophy
+
+Your uncle's advice: keep it simple, readable, and testable.
+
+Tiozin is built around a small set of principles that are not features but constraints that shape the design.
+
+- **Declarative** — Define what, not how
+- **Pluggable** — Swap runners, registries, and plugins when needed
+- **Metadata-native** — Execution and metadata walk together
+- **Observable** — Logs that actually help
+- **Testable** — Mock anything, validate everything
+
+## One-Minute Example
 
 ```bash
 pip install tiozin
@@ -33,13 +45,13 @@ cost_center: tio_scrooge
 org: tiozin
 region: latam
 domain: marketing
+subdomain: campaigns
 layer: refined
 product: users
 model: customers
 
 runner:
   kind: NoOpRunner
-  streaming: false
   log_level: "{{ ENV.LOG_LEVEL }}"
 
 inputs:
@@ -75,18 +87,6 @@ app.run("examples/jobs/dummy.yaml")
 ```
 Done. No ceremony, no boilerplate.
 
-## Philosophy
-
-Your uncle's advice: Keep it simple, readable, and testable.
-
-- **Declarative** – Define what, not how
-- **Pluggable** – Swap runners, registries, plugins as needed
-- **Metadata** – Built-in metadata integration
-- **Observable** – Logs that help
-- **Testable** – Mock anything, validate everything
-
-No magic. No surprises. Just clean data pipelines.
-
 ## Who is Tiozin for?
 Tiozin is human-readable and machine-generatable:
 
@@ -98,17 +98,29 @@ Tiozin is human-readable and machine-generatable:
 
 ## Documentation
 
-- [Tiozin Family: Understanding Tios and Tiozins](docs/family.md)
-- [Working with Jobs](docs/jobs.md)
-- [Inputs, Transforms & Outputs](docs/transforms.md)
-- [Runners](docs/runners.md)
-- [Registries](docs/registries.md)
-- [Examples](docs/examples.md)
-- [API Reference](docs/api.md)
+### Getting Started
+- [Your First Job](https://github.com/fdmorison/tiozin/blob/main/docs/quickstart.md)
+
+### Concepts
+- [Family Model: Tios and Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/family.md)
+- [Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/jobs.md)
+- [Runners](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/runners.md)
+- [Inputs, Transforms & Outputs](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/steps.md)
+- [Registries](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/registries.md)
+- [Tio Proxy](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/proxies.md)
+
+### Extending Tiozin
+- [Creating a Provider Family](https://github.com/fdmorison/tiozin/blob/main/docs/extending/families.md)
+- [Creating Pluggable Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/tiozins.md)
+
+### Reference
+- [Examples](https://github.com/fdmorison/tiozin/blob/main/docs/examples.md)
+- [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
+- [Settings](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](docs/contributing.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/fdmorison/tiozin/blob/main/docs/CONTRIBUTING.md) for guidelines.
 
 ## License
 
