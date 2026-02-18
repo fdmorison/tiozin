@@ -28,9 +28,10 @@ class Input(Tiozin, Generic[TData]):
         description: Short description of the data source.
         org: Organization owning the source data.
         domain: Domain team owning the source data.
+        subdomain: Subdomain within the domain team owning the source data.
+        layer: Data layer of the source (e.g., raw, trusted, refined).
         product: Data product being consumed.
         model: Data model being read (e.g., table, topic, collection).
-        layer: Data layer of the source (e.g., raw, trusted, refined).
         schema: The schema definition of input data.
         schema_subject: Schema registry subject name.
         schema_version: Specific schema version.
@@ -46,6 +47,7 @@ class Input(Tiozin, Generic[TData]):
         org: str = None,
         region: str = None,
         domain: str = None,
+        subdomain: str = None,
         layer: str = None,
         product: str = None,
         model: str = None,
@@ -63,6 +65,7 @@ class Input(Tiozin, Generic[TData]):
         self.org = org
         self.region = region
         self.domain = domain
+        self.subdomain = subdomain
         self.layer = layer
         self.product = product
         self.model = model

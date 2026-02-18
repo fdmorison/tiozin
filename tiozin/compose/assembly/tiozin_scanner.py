@@ -35,15 +35,17 @@ class TiozinScanner(Loggable):
             try:
                 package = tio.load()
             except Exception as e:
-                self.exception(f"💥 Tio `{tio.name}` failed to load: {e}", exc_info=True)
+                self.exception(f"💥 Family `{tio.name}` failed to load: {e}", exc_info=True)
                 continue
 
             # Tio must be a package
             if not reflection.is_package(package):
-                self.warning(f"🧓 Skipping Tio `{tio.name}` because it is not a package: {package}")
+                self.warning(
+                    f"🧓 Skipping family `{tio.name}` because it is not a package: {package}"
+                )
                 continue
 
-            self.info(f"🧓 Tio `{tio.name}` discovered")
+            self.info(f"🧓 Family `{tio.name}` discovered")
             tios.append((tio, package))
 
         return tios

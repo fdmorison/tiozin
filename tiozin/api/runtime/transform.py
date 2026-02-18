@@ -27,9 +27,10 @@ class Transform(Tiozin, Generic[TData]):
         description: Short description of the transformation logic.
         org: Organization owning the transformation logic.
         domain: Domain team owning the transformation.
+        subdomain: Subdomain within the domain team owning the transformation.
+        layer: Data layer of the transformation output.
         product: Data product being transformed.
         model: Data model being transformed.
-        layer: Data layer of the transformation output.
     """
 
     def __init__(
@@ -39,6 +40,7 @@ class Transform(Tiozin, Generic[TData]):
         org: str = None,
         region: str = None,
         domain: str = None,
+        subdomain: str = None,
         layer: str = None,
         product: str = None,
         model: str = None,
@@ -52,6 +54,7 @@ class Transform(Tiozin, Generic[TData]):
         self.org = org
         self.region = region
         self.domain = domain
+        self.subdomain = subdomain
         self.layer = layer
         self.product = product
         self.model = model

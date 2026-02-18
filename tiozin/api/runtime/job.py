@@ -50,9 +50,10 @@ class Job(Tiozin, Generic[TData]):
         org: Organization producing the data product.
         region: Business region of the domain team.
         domain: Domain team following the Data Mesh concept.
+        subdomain: Subdomain within the domain team producing the data product.
+        layer: Data layer this job represents (e.g., raw, trusted, refined).
         product: Data product being produced.
         model: Data model being produced (e.g., table, topic, collection).
-        layer: Data layer this job represents (e.g., raw, trusted, refined).
         runner: Runtime environment where the job runs.
         inputs: Sources that provide data to the job.
         transforms: Steps that modify the data.
@@ -70,6 +71,7 @@ class Job(Tiozin, Generic[TData]):
         org: str = None,
         region: str = None,
         domain: str = None,
+        subdomain: str = None,
         layer: str = None,
         product: str = None,
         model: str = None,
@@ -88,6 +90,7 @@ class Job(Tiozin, Generic[TData]):
             org=org,
             region=region,
             domain=domain,
+            subdomain=subdomain,
             layer=layer,
             product=product,
             model=model,
@@ -101,6 +104,7 @@ class Job(Tiozin, Generic[TData]):
         self.org = org
         self.region = region
         self.domain = domain
+        self.subdomain = subdomain
         self.layer = layer
         self.product = product
         self.model = model
