@@ -4,11 +4,11 @@ from unittest.mock import Mock
 import pytest
 
 from tiozin.compose.policies import (
+    FamilyNamePolicy,
     InputNamingPolicy,
     OutputNamingPolicy,
     PolicyDecision,
     PolicyResult,
-    ProviderNamePolicy,
     RegistryNamingPolicy,
     RunnerNamingPolicy,
     TransformNamingPolicy,
@@ -177,7 +177,7 @@ def test_provider_name_policy_should_allow_name_with_valid_prefix(provider_name:
     provider.value = f"test.{provider_name}"
 
     # Act
-    result = ProviderNamePolicy.eval(provider)
+    result = FamilyNamePolicy.eval(provider)
 
     # Assert
     actual = result.decision
@@ -201,7 +201,7 @@ def test_provider_name_policy_should_skip_package_with_valid_but_swapped_prefix(
     provider.value = provider_value
 
     # Act
-    result = ProviderNamePolicy.eval(provider)
+    result = FamilyNamePolicy.eval(provider)
 
     # Assert
     actual = result.decision
@@ -216,7 +216,7 @@ def test_provider_name_policy_should_skip_name_without_valid_prefix():
     provider.value = "some.package.my_provider"
 
     # Act
-    result = ProviderNamePolicy.eval(provider)
+    result = FamilyNamePolicy.eval(provider)
 
     # Assert
     actual = result.decision
@@ -237,26 +237,12 @@ def test_provider_name_policy_should_skip_package_without_provider_name_suffix(
     provider.value = "some.package.wrong_name"
 
     # Act
-    result = ProviderNamePolicy.eval(provider)
+    result = FamilyNamePolicy.eval(provider)
 
     # Assert
     actual = result.decision
     expected = PolicyDecision.SKIP
     assert actual == expected
-
-
-def test_provider_name_policy_should_include_expected_names_in_skip_message():
-    # Arrange
-    provider = Mock(spec=EntryPoint)
-    provider.name = "my_provider"
-    provider.value = "some.package.my_provider"
-
-    # Act
-    result = ProviderNamePolicy.eval(provider)
-
-    # Assert
-    assert "tio_my_provider" in result.message
-    assert "tia_my_provider" in result.message
 
 
 # ============================================================================

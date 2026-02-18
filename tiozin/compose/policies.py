@@ -3,8 +3,10 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from importlib.metadata import EntryPoint
 
+import tiozin.family.tio_kernel as tio_kernel
 from tiozin import config
 from tiozin.exceptions import PolicyViolationError
+from tiozin.utils import human_join
 
 logger = logging.getLogger(__name__)
 
@@ -41,29 +43,39 @@ class PolicyResult:
         return True
 
 
-class ProviderNamePolicy:
+class FamilyNamePolicy:
     prefixes = tuple(config.tiozin_family_prefixes)
 
+    core_names = {
+        tio_kernel.__name__.split(".")[-1],
+        config.tiozin_family_unknown,
+    }
+
+    core_packages = {
+        tio_kernel.__name__,
+    }
+
     @classmethod
-    def eval(cls, provider: EntryPoint) -> PolicyResult:
-        name_ok = provider.name.startswith(cls.prefixes)
-        package_ok = provider.value.endswith(f".{provider.name}")
+    def eval(cls, family: EntryPoint) -> PolicyResult:
+        name_ok = family.name.startswith(cls.prefixes)
+        package_ok = family.value.endswith(f".{family.name}")
+        reserved_ok = any(
+            [
+                family.name not in cls.core_names,
+                family.name in cls.core_names and family.value in cls.core_packages,
+            ]
+        )
 
-        if name_ok and package_ok:
+        if name_ok and package_ok and reserved_ok:
             return PolicyResult(cls, PolicyDecision.ALLOW)
-
-        current_prefix = next((p for p in cls.prefixes if provider.name.startswith(p)), "")
-        base_name = provider.name.removeprefix(current_prefix)
-        expected_names = [f"{p}{base_name}" for p in cls.prefixes]
 
         return PolicyResult(
             policy=cls,
             decision=PolicyDecision.SKIP,
             message=(
-                "Skipping provider that does not match Tiozin's naming convention. "
-                f"The provider '{provider.name}' should be prefixed with one of "
-                f"{cls.prefixes} and the package '{provider.value}' should end with "
-                f"one of {expected_names}."
+                f"Skipping invalid family '{family.name}'. "
+                f"Family names must be prefixed with one of {cls.prefixes} "
+                f"and must not use reserved names: {human_join(cls.core_names)}."
             ),
         )
 

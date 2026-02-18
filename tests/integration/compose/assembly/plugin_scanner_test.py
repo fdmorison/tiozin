@@ -30,7 +30,7 @@ def test_scan_providers_should_find_providers(scanner: TiozinScanner):
     )
 
     # Act
-    providers = scanner._scan_tios()
+    providers = scanner._scan_families()
 
     # Assert
     actual = providers
