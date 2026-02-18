@@ -6,6 +6,7 @@ from typing import Any, ClassVar
 from tiozin.api import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
 from tiozin.compose.reflection import detect_family, detect_role
+from tiozin.utils import slugify
 
 from .runtime.context import Context
 
@@ -39,6 +40,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
     ) -> None:
         self.kind = self.tiozin_name
         self.name = name or self.kind
+        self.slug = slugify(self.name)
         self.description = description
         self.options = options
 

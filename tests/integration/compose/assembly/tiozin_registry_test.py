@@ -111,6 +111,7 @@ def test_load_should_load_input_plugin(factory: TiozinRegistry, kind: str):
     expected = dict(
         kind="NoOpInput",
         name="test_input",
+        slug="test_input",
         description="test",
         org="acme",
         region="us",
@@ -156,6 +157,7 @@ def test_load_should_load_output_plugin(factory: TiozinRegistry, kind: str):
     expected = dict(
         kind="NoOpOutput",
         name="test_output",
+        slug="test_output",
         description="test",
         org="acme",
         region="us",
@@ -198,6 +200,7 @@ def test_load_should_load_transform_plugin(factory: TiozinRegistry, kind: str):
     expected = dict(
         kind="NoOpTransform",
         name="test_transform",
+        slug="test_transform",
         description="test",
         org="acme",
         region="us",
@@ -234,6 +237,7 @@ def test_load_should_load_runner_plugin(factory: TiozinRegistry, kind: str):
     expected = dict(
         kind="NoOpRunner",
         name="test_runner",
+        slug="test_runner",
         description="test",
         streaming=False,
         verbose=True,
@@ -260,6 +264,7 @@ def test_load_should_load_registry_plugin(factory: TiozinRegistry, kind: str):
     expected = dict(
         kind="FileJobRegistry",
         name="FileJobRegistry",
+        slug="filejobregistry",
         description=None,
         options=ANY,
         ready=False,

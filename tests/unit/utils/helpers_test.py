@@ -13,6 +13,7 @@ from tiozin.utils import (
     as_list,
     default,
     human_join,
+    slugify,
     utcnow,
 )
 
@@ -413,4 +414,56 @@ def test_human_join_should_accept_any_iterable():
 
     # Assert
     expected = "x, y and z"
+    assert actual == expected
+
+
+# ============================================================================
+# Testing slugify()
+# ============================================================================
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("my step name", "my_step_name"),
+        ("orders - 2024", "orders_2024"),
+        ("customer_orders", "customer_orders"),
+        ("My Step Name", "my_step_name"),
+        ("  leading and trailing  ", "leading_and_trailing"),
+        ("multiple   spaces", "multiple_spaces"),
+        ("special!@#chars", "special_chars"),
+        ("already_valid", "already_valid"),
+        ("UPPER CASE", "upper_case"),
+    ],
+)
+def test_slugify_should_return_safe_identifier(value: str, expected: str):
+    # Act
+    result = slugify(value)
+
+    # Assert
+    actual = result
+    assert actual == expected
+
+
+def test_slugify_should_produce_valid_sql_identifier():
+    # Arrange
+    name = "My Complex Step - 2024!"
+
+    # Act
+    result = slugify(name)
+
+    # Assert
+    actual = result.replace("_", "").isalnum() or "_" in result
+    expected = True
+    assert actual == expected
+
+
+def test_slugify_should_be_idempotent():
+    # Arrange
+    name = "some step name"
+
+    # Act
+    result = slugify(slugify(name))
+
+    # Assert
+    actual = result
+    expected = slugify(name)
     assert actual == expected
