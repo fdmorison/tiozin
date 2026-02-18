@@ -41,9 +41,10 @@ class JobBuilder:
         self._org: str | None = None
         self._region: str | None = None
         self._domain: str | None = None
+        self._subdomain: str | None = None
+        self._layer: str | None = None
         self._product: str | None = None
         self._model: str | None = None
-        self._layer: str | None = None
 
         # Governance
         self._owner: str | None = None
@@ -104,16 +105,20 @@ class JobBuilder:
         self._domain = trim(domain)
         return self
 
+    def with_subdomain(self, subdomain: str) -> Self:
+        self._subdomain = trim(subdomain)
+        return self
+
+    def with_layer(self, layer: str) -> Self:
+        self._layer = trim(layer)
+        return self
+
     def with_product(self, product: str) -> Self:
         self._product = trim(product)
         return self
 
     def with_model(self, model: str) -> Self:
         self._model = trim(model)
-        return self
-
-    def with_layer(self, layer: str) -> Self:
-        self._layer = trim(layer)
         return self
 
     def with_runner(self, runner: RunnerDefinition) -> Self:
@@ -190,9 +195,10 @@ class JobBuilder:
         manifest.org = manifest.org or self._org
         manifest.region = manifest.region or self._region
         manifest.domain = manifest.domain or self._domain
+        manifest.subdomain = manifest.subdomain or self._subdomain
+        manifest.layer = manifest.layer or self._layer
         manifest.product = manifest.product or self._product
         manifest.model = manifest.model or self._model
-        manifest.layer = manifest.layer or self._layer
         return tiozin_registry.load_manifest(manifest)
 
     def build(self) -> Job:
@@ -214,9 +220,10 @@ class JobBuilder:
             org=self._org,
             region=self._region,
             domain=self._domain,
+            subdomain=self._subdomain,
+            layer=self._layer,
             product=self._product,
             model=self._model,
-            layer=self._layer,
             # Pipeline
             runner=tiozin_registry.load_manifest(self._runner),
             inputs=[self._build_step(m) for m in self._inputs],

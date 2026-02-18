@@ -46,6 +46,7 @@ def test_app_should_run_job_with_custom_runner_parameters(_atexit, _signal, app:
         org: tiozin
         region: latam
         domain: platform
+        subdomain: infrastructure
         product: execution
         model: maintenance
         layer: raw
@@ -86,6 +87,7 @@ def test_app_should_run_job_with_custom_input_parameters(_atexit, _signal, app: 
         org: tiozin
         region: latam
         domain: ingestion
+        subdomain: pipeline
         product: documents
         model: scan
         layer: raw
@@ -126,6 +128,7 @@ def test_app_should_run_job_with_custom_transform_parameters(_atexit, _signal, a
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: text
         model: normalize
         layer: refined
@@ -172,6 +175,7 @@ def test_app_should_run_job_with_custom_output_parameters(_atexit, _signal, app:
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: metrics
         model: export
         layer: refined
@@ -217,6 +221,7 @@ def test_app_should_run_job_with_custom_parameters_across_all_plugins(
         org: tiozin
         region: latam
         domain: analytics
+        subdomain: reporting
         product: text
         model: wordcount
         layer: refined

@@ -73,6 +73,7 @@ class Context:
     org: str
     region: str
     domain: str
+    subdomain: str
     layer: str
     product: str
     model: str
@@ -172,6 +173,7 @@ class Context:
             org=job.org,
             region=job.region,
             domain=job.domain,
+            subdomain=job.subdomain,
             layer=job.layer,
             product=job.product,
             model=job.model,
@@ -199,6 +201,7 @@ class Context:
             org=step.org,
             region=step.region,
             domain=step.domain,
+            subdomain=step.subdomain,
             layer=step.layer,
             product=step.product,
             model=step.model,
@@ -225,6 +228,7 @@ class Context:
             org=step.org or self.org,
             region=step.region or self.region,
             domain=step.domain or self.domain,
+            subdomain=step.subdomain or self.subdomain,
             layer=step.layer or self.layer,
             product=step.product or self.product,
             model=step.model or self.model,

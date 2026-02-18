@@ -22,9 +22,10 @@ class InputManifest(Manifest):
     org: str | None = Field(None, description=docs.INPUT_ORG)
     region: str | None = Field(None, description=docs.INPUT_REGION)
     domain: str | None = Field(None, description=docs.INPUT_DOMAIN)
+    subdomain: str | None = Field(None, description=docs.INPUT_SUBDOMAIN)
+    layer: str | None = Field(None, description=docs.INPUT_LAYER)
     product: str | None = Field(None, description=docs.INPUT_PRODUCT)
     model: str | None = Field(None, description=docs.INPUT_MODEL)
-    layer: str | None = Field(None, description=docs.INPUT_LAYER)
 
     # Specific
     schema: str | None = Field(None, description=docs.INPUT_SCHEMA)

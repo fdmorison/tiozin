@@ -15,9 +15,10 @@ TEST_TAXONOMY = {
     "org": "tiozin",
     "region": "latam",
     "domain": "quality",
+    "subdomain": "pipeline",
+    "layer": "test",
     "product": "test_cases",
     "model": "some_case",
-    "layer": "test",
     "description": "test",
 }
 
@@ -30,9 +31,10 @@ def test_builder_should_accept_job_manifest():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="NoOpRunner"),
         inputs=[
             InputManifest(kind="NoOpInput", name="read_something"),
@@ -64,9 +66,10 @@ def test_builder_should_accept_plugin_dicts():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner(
             {
                 "kind": "NoOpRunner",
@@ -108,9 +111,10 @@ def test_builder_should_accept_plugin_manifests():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner(
             RunnerManifest(kind="NoOpRunner"),
         )
@@ -141,9 +145,10 @@ def test_builder_should_accept_plugin_objects():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner(
             NoOpRunner(),
         )
@@ -174,9 +179,10 @@ def test_builder_should_accept_multiple_inputs():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs(
             {"kind": "NoOpInput", "name": "input1"},
@@ -201,9 +207,10 @@ def test_builder_should_accept_multiple_transforms():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_transforms(
@@ -229,9 +236,10 @@ def test_builder_should_accept_multiple_outputs():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs(
@@ -256,9 +264,10 @@ def test_builder_should_set_labels():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_label("env", "dev")
         .with_label("team", "data")
         .with_runner({"kind": "NoOpRunner"})
@@ -282,9 +291,10 @@ def test_builder_should_set_labels_dict():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_labels({"env": "dev", "team": "data"})
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
@@ -311,9 +321,10 @@ def test_builder_should_set_optional_fields():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
@@ -337,9 +348,10 @@ def test_builder_should_handle_unplanned_fields():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
@@ -398,9 +410,10 @@ def test_builder_should_propagate_taxonomy_to_inputs():
         .with_org("tiozin")
         .with_region("europe")
         .with_domain("marketing")
+        .with_subdomain("analytics")
+        .with_layer("refined")
         .with_product("user_events")
         .with_model("order_completed")
-        .with_layer("refined")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
@@ -413,17 +426,19 @@ def test_builder_should_propagate_taxonomy_to_inputs():
         "org": input_operator.org,
         "region": input_operator.region,
         "domain": input_operator.domain,
+        "subdomain": input_operator.subdomain,
+        "layer": input_operator.layer,
         "product": input_operator.product,
         "model": input_operator.model,
-        "layer": input_operator.layer,
     }
     expected = {
         "org": "tiozin",
         "region": "europe",
         "domain": "marketing",
+        "subdomain": "analytics",
+        "layer": "refined",
         "product": "user_events",
         "model": "order_completed",
-        "layer": "refined",
     }
     assert actual == expected
 
@@ -439,9 +454,10 @@ def test_builder_should_propagate_taxonomy_to_outputs():
         .with_org("tiozin")
         .with_region("europe")
         .with_domain("marketing")
+        .with_subdomain("analytics")
+        .with_layer("refined")
         .with_product("user_events")
         .with_model("order_completed")
-        .with_layer("refined")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
@@ -454,17 +470,19 @@ def test_builder_should_propagate_taxonomy_to_outputs():
         "org": output_operator.org,
         "region": output_operator.region,
         "domain": output_operator.domain,
+        "subdomain": output_operator.subdomain,
+        "layer": output_operator.layer,
         "product": output_operator.product,
         "model": output_operator.model,
-        "layer": output_operator.layer,
     }
     expected = {
         "org": "tiozin",
         "region": "europe",
         "domain": "marketing",
+        "subdomain": "analytics",
+        "layer": "refined",
         "product": "user_events",
         "model": "order_completed",
-        "layer": "refined",
     }
     assert actual == expected
 
@@ -480,9 +498,10 @@ def test_builder_should_propagate_taxonomy_to_transforms():
         .with_org("tiozin")
         .with_region("europe")
         .with_domain("marketing")
+        .with_subdomain("analytics")
+        .with_layer("refined")
         .with_product("user_events")
         .with_model("order_completed")
-        .with_layer("refined")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_transforms({"kind": "NoOpTransform", "name": "transform_something"})
@@ -496,17 +515,19 @@ def test_builder_should_propagate_taxonomy_to_transforms():
         "org": transform_operator.org,
         "region": transform_operator.region,
         "domain": transform_operator.domain,
+        "subdomain": transform_operator.subdomain,
+        "layer": transform_operator.layer,
         "product": transform_operator.product,
         "model": transform_operator.model,
-        "layer": transform_operator.layer,
     }
     expected = {
         "org": "tiozin",
         "region": "europe",
         "domain": "marketing",
+        "subdomain": "analytics",
+        "layer": "refined",
         "product": "user_events",
         "model": "order_completed",
-        "layer": "refined",
     }
     assert actual == expected
 
@@ -522,9 +543,10 @@ def test_builder_should_not_overwrite_input_taxonomy_when_already_set():
         .with_org("tiozin")
         .with_region("europe")
         .with_domain("marketing")
+        .with_subdomain("analytics")
+        .with_layer("refined")
         .with_product("user_events")
         .with_model("order_completed")
-        .with_layer("refined")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs(
             {
@@ -548,17 +570,19 @@ def test_builder_should_not_overwrite_input_taxonomy_when_already_set():
         "org": input_operator.org,
         "region": input_operator.region,
         "domain": input_operator.domain,
+        "subdomain": input_operator.subdomain,
+        "layer": input_operator.layer,
         "product": input_operator.product,
         "model": input_operator.model,
-        "layer": input_operator.layer,
     }
     expected = {
         "org": "custom_org",
         "region": "custom_region",
         "domain": "custom_domain",
+        "subdomain": "analytics",
+        "layer": "custom_layer",
         "product": "custom_product",
         "model": "custom_model",
-        "layer": "custom_layer",
     }
     assert actual == expected
 
@@ -574,9 +598,10 @@ def test_builder_should_not_overwrite_output_taxonomy_when_already_set():
         .with_org("tiozin")
         .with_region("europe")
         .with_domain("marketing")
+        .with_subdomain("analytics")
+        .with_layer("refined")
         .with_product("user_events")
         .with_model("order_completed")
-        .with_layer("refined")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs(
@@ -600,17 +625,19 @@ def test_builder_should_not_overwrite_output_taxonomy_when_already_set():
         "org": output_operator.org,
         "region": output_operator.region,
         "domain": output_operator.domain,
+        "subdomain": output_operator.subdomain,
+        "layer": output_operator.layer,
         "product": output_operator.product,
         "model": output_operator.model,
-        "layer": output_operator.layer,
     }
     expected = {
         "org": "custom_org",
         "region": "custom_region",
         "domain": "custom_domain",
+        "subdomain": "analytics",
+        "layer": "custom_layer",
         "product": "custom_product",
         "model": "custom_model",
-        "layer": "custom_layer",
     }
     assert actual == expected
 
@@ -626,9 +653,10 @@ def test_builder_should_not_overwrite_transform_taxonomy_when_already_set():
         .with_org("tiozin")
         .with_region("europe")
         .with_domain("marketing")
+        .with_subdomain("analytics")
+        .with_layer("refined")
         .with_product("user_events")
         .with_model("order_completed")
-        .with_layer("refined")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_transforms(
@@ -653,17 +681,19 @@ def test_builder_should_not_overwrite_transform_taxonomy_when_already_set():
         "org": transform_operator.org,
         "region": transform_operator.region,
         "domain": transform_operator.domain,
+        "subdomain": transform_operator.subdomain,
+        "layer": transform_operator.layer,
         "product": transform_operator.product,
         "model": transform_operator.model,
-        "layer": transform_operator.layer,
     }
     expected = {
         "org": "custom_org",
         "region": "custom_region",
         "domain": "custom_domain",
+        "subdomain": "analytics",
+        "layer": "custom_layer",
         "product": "custom_product",
         "model": "custom_model",
-        "layer": "custom_layer",
     }
     assert actual == expected
 
@@ -677,9 +707,10 @@ def test_builder_should_fail_when_used_twice():
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_layer("test")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})

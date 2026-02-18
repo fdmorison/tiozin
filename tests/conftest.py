@@ -14,6 +14,7 @@ def fake_domain() -> dict:
         org="acme",
         region="latam",
         domain="ecommerce",
+        subdomain="checkout",
         layer="raw",
         product="sales",
         model="orders",

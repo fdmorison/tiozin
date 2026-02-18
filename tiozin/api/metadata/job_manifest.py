@@ -33,9 +33,10 @@ class JobManifest(Manifest):
     org: str = Field(description=docs.JOB_ORG)
     region: str = Field(description=docs.JOB_REGION)
     domain: str = Field(description=docs.JOB_DOMAIN)
+    subdomain: str = Field(description=docs.JOB_SUBDOMAIN)
+    layer: str = Field(description=docs.JOB_LAYER)
     product: str = Field(description=docs.JOB_PRODUCT)
     model: str = Field(description=docs.JOB_MODEL)
-    layer: str = Field(description=docs.JOB_LAYER)
 
     # Pipeline Components
     runner: RunnerManifest = Field(description=docs.JOB_RUNNER)

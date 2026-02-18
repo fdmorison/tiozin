@@ -9,6 +9,7 @@ cost_center: tio_scrooge
 org: tiozin
 region: europe
 domain: ecommerce
+subdomain: retail
 layer: raw
 product: customers
 model: customers

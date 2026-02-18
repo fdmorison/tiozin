@@ -28,9 +28,10 @@ class Output(Tiozin, Generic[TData]):
         description: Short description of the data destination.
         org: Organization owning the destination data.
         domain: Domain team owning the destination.
+        subdomain: Subdomain within the domain team owning the destination.
+        layer: Data layer of the destination (e.g., raw, trusted, refined).
         product: Data product being produced.
         model: Data model being written (e.g., table, topic, collection).
-        layer: Data layer of the destination (e.g., raw, trusted, refined).
     """
 
     def __init__(
@@ -40,6 +41,7 @@ class Output(Tiozin, Generic[TData]):
         org: str = None,
         region: str = None,
         domain: str = None,
+        subdomain: str = None,
         layer: str = None,
         product: str = None,
         model: str = None,
@@ -53,6 +55,7 @@ class Output(Tiozin, Generic[TData]):
         self.org = org
         self.region = region
         self.domain = domain
+        self.subdomain = subdomain
         self.layer = layer
         self.product = product
         self.model = model

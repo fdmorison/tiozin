@@ -41,9 +41,10 @@ def test_manifest_should_accept_job():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "reader"}],
         transforms=[{"kind": "TestTransform", "name": "transformer"}],
@@ -65,9 +66,10 @@ def test_manifest_should_accept_job_with_multiple_inputs_transforms_and_outputs(
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[
             {"kind": "TestInput", "name": "input_1"},
@@ -95,9 +97,10 @@ def test_manifest_should_accept_job_with_multiple_inputs_transforms_and_outputs(
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[
             InputManifest(kind="TestInput", name="input_1"),
@@ -124,9 +127,10 @@ def test_manifest_should_accept_job_without_transforms_and_outputs():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "input_1"}],
     )
@@ -142,9 +146,10 @@ def test_manifest_should_accept_job_without_transforms_and_outputs():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="input_1")],
         transforms=[],
@@ -173,9 +178,10 @@ def test_manifest_should_accept_job_with_optional_fields(optional_field: str, op
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "read_something"}],
     )
@@ -198,9 +204,10 @@ def test_manifest_should_apply_defaults():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "read_something"}],
     )
@@ -221,9 +228,10 @@ def test_manifest_should_apply_defaults():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="read_something")],
         transforms=[],
@@ -234,7 +242,19 @@ def test_manifest_should_apply_defaults():
 
 @pytest.mark.parametrize(
     "field_to_remove",
-    ["kind", "name", "org", "region", "domain", "product", "model", "layer", "runner", "inputs"],
+    [
+        "kind",
+        "name",
+        "org",
+        "region",
+        "domain",
+        "subdomain",
+        "layer",
+        "product",
+        "model",
+        "runner",
+        "inputs",
+    ],
 )
 def test_manifest_should_reject_job_without_required_field(field_to_remove):
     # Arrange
@@ -244,9 +264,10 @@ def test_manifest_should_reject_job_without_required_field(field_to_remove):
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "reader"}],
         transforms=[{"kind": "TestTransform", "name": "transformer"}],
@@ -267,9 +288,10 @@ def test_manifest_should_reject_job_with_empty_inputs():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[],
         transforms=[{"kind": "TestTransform", "name": "transform_something"}],
@@ -299,9 +321,10 @@ def test_manifest_should_reject_job_with_invalid_field_types(field_name, invalid
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "reader"}],
         transforms=[{"kind": "TestTransform", "name": "transformer"}],
@@ -327,9 +350,10 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
         transforms=[TransformManifest(kind="TestTransform", name="transformer")],
@@ -347,9 +371,10 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
         org: tiozin
         region: latam
         domain: quality
+        subdomain: pipeline
+        layer: test
         product: test_cases
         model: some_case
-        layer: test
         runner:
           kind: TestRunner
         inputs:
@@ -373,9 +398,10 @@ def test_to_yaml_should_not_render_unset_values():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
     )
@@ -408,9 +434,10 @@ def test_to_json_should_serialize_manifest_to_json_string():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
         transforms=[TransformManifest(kind="TestTransform", name="transformer")],
@@ -429,9 +456,10 @@ def test_to_json_should_serialize_manifest_to_json_string():
       "org": "tiozin",
       "region": "latam",
       "domain": "quality",
+      "subdomain": "pipeline",
+      "layer": "test",
       "product": "test_cases",
       "model": "some_case",
-      "layer": "test",
       "runner": {
         "kind": "TestRunner"
       },
@@ -466,9 +494,10 @@ def test_to_json_should_not_render_unset_fields():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
     )
@@ -502,9 +531,10 @@ def test_from_yaml_or_json_should_deserialize_yaml():
         org: tiozin
         region: latam
         domain: quality
+        subdomain: pipeline
+        layer: test
         product: test_cases
         model: some_case
-        layer: test
         runner:
           kind: TestRunner
           streaming: false
@@ -530,9 +560,10 @@ def test_from_yaml_or_json_should_deserialize_yaml():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
         transforms=[TransformManifest(kind="TestTransform", name="transformer")],
@@ -551,9 +582,10 @@ def test_from_yaml_or_json_should_deserialize_json():
       "org": "tiozin",
       "region": "latam",
       "domain": "quality",
+      "subdomain": "pipeline",
+      "layer": "test",
       "product": "test_cases",
       "model": "some_case",
-      "layer": "test",
       "runner": {
         "kind": "TestRunner",
         "streaming": false
@@ -590,9 +622,10 @@ def test_from_yaml_or_json_should_deserialize_json():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
         transforms=[TransformManifest(kind="TestTransform", name="transformer")],
@@ -610,10 +643,11 @@ def test_from_yaml_or_json_should_fail_when_manifest_has_duplicated_keys():
         org: tiozin
         region: latam
         domain: quality
+        subdomain: pipeline
+        layer: test
         product: test_cases_1
         product: test_cases_2
         model: some_case
-        layer: test
         runner:
           kind: TestRunner
           streaming: false
@@ -647,9 +681,10 @@ def test_try_from_yaml_or_json_should_return_manifest_when_valid_yaml():
         org: tiozin
         region: latam
         domain: quality
+        subdomain: pipeline
+        layer: test
         product: test_cases
         model: some_case
-        layer: test
         runner:
           kind: TestRunner
           streaming: false
@@ -717,9 +752,10 @@ def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
     )
@@ -746,9 +782,10 @@ def test_yaml_roundtrip_should_preserve_data():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
         transforms=[TransformManifest(kind="TestTransform", name="transformer")],
@@ -773,9 +810,10 @@ def test_json_roundtrip_should_preserve_data():
         org="tiozin",
         region="latam",
         domain="quality",
+        subdomain="pipeline",
+        layer="test",
         product="test_cases",
         model="some_case",
-        layer="test",
         runner=RunnerManifest(kind="TestRunner"),
         inputs=[InputManifest(kind="TestInput", name="reader")],
         transforms=[TransformManifest(kind="TestTransform", name="transformer")],

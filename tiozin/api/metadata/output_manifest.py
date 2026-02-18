@@ -22,9 +22,10 @@ class OutputManifest(Manifest):
     org: str | None = Field(None, description=docs.OUTPUT_ORG)
     region: str | None = Field(None, description=docs.OUTPUT_REGION)
     domain: str | None = Field(None, description=docs.OUTPUT_DOMAIN)
+    subdomain: str | None = Field(None, description=docs.OUTPUT_SUBDOMAIN)
+    layer: str | None = Field(None, description=docs.OUTPUT_LAYER)
     product: str | None = Field(None, description=docs.OUTPUT_PRODUCT)
     model: str | None = Field(None, description=docs.OUTPUT_MODEL)
-    layer: str | None = Field(None, description=docs.OUTPUT_LAYER)
 
     @classmethod
     def for_kind(cls) -> type:

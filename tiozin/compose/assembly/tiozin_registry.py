@@ -60,7 +60,7 @@ class TiozinRegistry(Loggable):
         self._index: dict[str, set[type[Tiozin]]] = defaultdict(set)
         self._tiozins: set[type[Tiozin]] = set()
 
-        self.info("Waking up the Tios and Tias...")
+        self.info("Discovering Families...")
         tios = TiozinScanner().scan()
 
         self.info("Summoning Tiozins to work...")
@@ -122,7 +122,7 @@ class TiozinRegistry(Loggable):
         tiozin = next(iter(candidates))
         params = args.copy()
         params.pop("description", None)
-        self.info("🧝 Tiozin joined the pipeline", kind=kind, **params)
+        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined with", **params)
         return tiozin(**args)
 
     def safe_load(self, kind: str, tiozin_role: type[T], **args) -> T:

@@ -21,7 +21,7 @@ from tiozin.family.tio_kernel import NoOpInput, NoOpRunner
 def test_tiozin_should_have_slug_derived_from_name(name: str, expected_slug: str):
     # Arrange / Act
     tiozin = NoOpInput(
-        name=name, org="x", region="x", domain="x", layer="x", product="x", model="x"
+        name=name, org="x", region="x", domain="x", subdomain="x", layer="x", product="x", model="x"
     )
 
     # Assert
@@ -65,6 +65,7 @@ def test_to_dict_should_return_all_attributes():
         org="acme",
         region="latam",
         domain="sales",
+        subdomain="checkout",
         layer="raw",
         product="orders",
         model="transactions",
@@ -86,6 +87,7 @@ def test_to_dict_should_exclude_fields_when_requested():
         org="acme",
         region="latam",
         domain="sales",
+        subdomain="checkout",
         layer="raw",
         product="orders",
         model="transactions",
@@ -108,6 +110,7 @@ def test_to_dict_should_include_none_by_default():
         org="acme",
         region="latam",
         domain="sales",
+        subdomain="checkout",
         layer="raw",
         product="orders",
         model="transactions",
@@ -128,6 +131,7 @@ def test_to_dict_should_exclude_none_when_requested():
         org="acme",
         region="latam",
         domain="sales",
+        subdomain="checkout",
         layer="raw",
         product="orders",
         model="transactions",
@@ -148,6 +152,7 @@ def test_to_dict_should_apply_both_filters_when_requested():
         org="acme",
         region="latam",
         domain="sales",
+        subdomain="checkout",
         layer="raw",
         product="orders",
         model="transactions",
@@ -172,6 +177,7 @@ def test_to_dict_should_return_new_dict_each_call():
         org="acme",
         region="latam",
         domain="sales",
+        subdomain="checkout",
         layer="raw",
         product="orders",
         model="transactions",

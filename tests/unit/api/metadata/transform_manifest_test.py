@@ -52,9 +52,10 @@ def test_manifest_should_reject_transform_without_required_field(field_to_remove
         ("org", "test_org"),
         ("region", "test_region"),
         ("domain", "test_domain"),
+        ("subdomain", "test_subdomain"),
+        ("layer", "test_layer"),
         ("product", "test_product"),
         ("model", "test_model"),
-        ("layer", "test_layer"),
     ],
 )
 def test_manifest_should_accept_transform_with_optional_fields(field_name, field_value):
@@ -114,8 +115,9 @@ def test_manifest_should_have_correct_defaults():
         org=None,
         region=None,
         domain=None,
+        subdomain=None,
+        layer=None,
         product=None,
         model=None,
-        layer=None,
     )
     assert actual == expected

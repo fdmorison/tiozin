@@ -7,6 +7,7 @@ description: |
 org: tiozin
 region: latam
 domain: marketing
+subdomain: campaigns
 layer: refined
 product: users
 model: customers

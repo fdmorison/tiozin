@@ -67,6 +67,7 @@ def test_app_should_run_programmatic_job_with_dicts(_atexit, _signal, app: Tiozi
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("sales")
+        .with_subdomain("retail")
         .with_product("orders")
         .with_model("daily_summary")
         .with_layer("refined")
@@ -119,6 +120,7 @@ def test_app_should_run_programmatic_job_with_manifests(_atexit, _signal, app: T
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("sales")
+        .with_subdomain("retail")
         .with_product("orders")
         .with_model("daily_summary")
         .with_layer("refined")
@@ -193,6 +195,7 @@ def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal,
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("platform")
+        .with_subdomain("infrastructure")
         .with_product("data-platform")
         .with_model("maintenance")
         .with_layer("raw")
@@ -275,6 +278,7 @@ def test_app_should_run_job_from_direct_instantiation(_atexit, _signal, app: Tio
         org="tiozin",
         region="latam",
         domain="platform",
+        subdomain="infrastructure",
         product="data-platform",
         model="maintenance",
         layer="raw",
@@ -349,6 +353,7 @@ def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _sign
         .with_org("tiozin")
         .with_region("latam")
         .with_domain("analytics")
+        .with_subdomain("reporting")
         .with_product("reports")
         .with_model("daily")
         .with_layer("refined")
@@ -416,6 +421,7 @@ def test_app_should_render_temp_workdir_in_concrete_objects(_atexit, _signal, ap
         org="tiozin",
         region="latam",
         domain="analytics",
+        subdomain="reporting",
         product="reports",
         model="daily",
         layer="refined",

@@ -139,6 +139,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "org": job_context.org,
         "region": job_context.region,
         "domain": job_context.domain,
+        "subdomain": job_context.subdomain,
         "layer": job_context.layer,
         "product": job_context.product,
         "model": job_context.model,

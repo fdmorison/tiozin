@@ -20,9 +20,10 @@ class TransformManifest(Manifest):
     org: str | None = Field(None, description=docs.TRANSFORM_ORG)
     region: str | None = Field(None, description=docs.TRANSFORM_REGION)
     domain: str | None = Field(None, description=docs.TRANSFORM_DOMAIN)
+    subdomain: str | None = Field(None, description=docs.TRANSFORM_SUBDOMAIN)
+    layer: str | None = Field(None, description=docs.TRANSFORM_LAYER)
     product: str | None = Field(None, description=docs.TRANSFORM_PRODUCT)
     model: str | None = Field(None, description=docs.TRANSFORM_MODEL)
-    layer: str | None = Field(None, description=docs.TRANSFORM_LAYER)
 
     @classmethod
     def for_kind(cls) -> type:
