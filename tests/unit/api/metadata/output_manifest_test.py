@@ -1,17 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api import Output
 from tiozin.api.metadata.output_manifest import OutputManifest
-
-
-def test_manifest_for_kind_should_return_output_type():
-    # Act
-    actual = OutputManifest.for_kind()
-
-    # Assert
-    expected = Output
-    assert actual == expected
 
 
 def test_manifest_should_accept_minimum_output():

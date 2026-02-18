@@ -3,8 +3,15 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TypeVar
 
-from tiozin.api import Loggable, Tiozin
-from tiozin.api.metadata.job_manifest import Manifest
+from tiozin.api import Input, Job, Loggable, Output, Runner, Tiozin, Transform
+from tiozin.api.metadata.job_manifest import (
+    InputManifest,
+    JobManifest,
+    Manifest,
+    OutputManifest,
+    RunnerManifest,
+    TransformManifest,
+)
 from tiozin.exceptions import (
     AmbiguousPluginError,
     InvalidInputError,
@@ -16,6 +23,14 @@ from .. import reflection
 from .tiozin_scanner import TiozinScanner
 
 T = TypeVar("T", bound=Tiozin)
+
+_MANIFEST_ROLE_MAP = {
+    JobManifest: Job,
+    RunnerManifest: Runner,
+    InputManifest: Input,
+    OutputManifest: Output,
+    TransformManifest: Transform,
+}
 
 
 class TiozinRegistry(Loggable):
@@ -50,7 +65,7 @@ class TiozinRegistry(Loggable):
     must start with the ``tio_`` prefix. The ``tio_kernel`` provider is Tiozin's built-in provider
     and serves as both a baseline implementation and a reference for custom providers.
 
-    When Tiozin plugins are registered, their names are qualified with the Tio name, producing
+    When Tiozin plugins are registered, their names are qualified with the Family name, producing
     identifiers like ``tio_spark:SparkFileInput``. This qualification allows the registry to
     disambiguate when multiple providers expose Tiozin plugins with the same class name.
     """
@@ -70,7 +85,7 @@ class TiozinRegistry(Loggable):
 
     def register(self, tiozin: type[Tiozin]) -> None:
         """
-        Registers a Tiozin class from a given provider (e.g. ``tio_pandas``, ``tio_spark``).
+        Registers a Tiozin class from a given Family (e.g. ``tio_pandas``, ``tio_spark``).
         """
         InvalidInputError.raise_if(
             not reflection.is_tiozin(tiozin),
@@ -146,14 +161,16 @@ class TiozinRegistry(Loggable):
         if isinstance(manifest, Tiozin):
             return manifest
 
+        role = _MANIFEST_ROLE_MAP.get(type(manifest))
+
         PluginKindError.raise_if(
-            not manifest.for_kind(),
-            f"Unsupported manifest {type(manifest).__name__} does not specify a Tiozin Kind",
+            not role,
+            f"Unsupported manifest {type(manifest).__name__}",
         )
 
         tiozin_instance = self.safe_load(
             kind=manifest.kind,
-            tiozin_role=manifest.for_kind(),
+            tiozin_role=role,
             **manifest.model_dump(exclude="kind"),
         )
 

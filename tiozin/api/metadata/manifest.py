@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from io import StringIO
 from typing import Any, Self
 
@@ -20,19 +19,13 @@ _yaml.default_flow_style = False
 
 class Manifest(BaseModel):
     """
-    Base manifest for pipeline resources.
+    Base class for serializable Tiozin manifests.
 
-    Provides identity and business context for runners, inputs, transforms, and outputs.
+    Provides common validation, parsing, and serialization utilities for manifest definitions
+    loaded from YAML or JSON.
     """
 
     model_config = ConfigDict(extra="allow")
-
-    @classmethod
-    def for_kind(cls) -> type:
-        """
-        Returns the resource type expected to be built from this manifest.
-        """
-        return None
 
     @classmethod
     def model_validate(cls, obj, **kwargs) -> None:
@@ -45,18 +38,11 @@ class Manifest(BaseModel):
     @classmethod
     def from_yaml_or_json(cls, data: str) -> Self:
         """
-        Load manifest from YAML or JSON string.
+        Load a manifest instance from a YAML or JSON string.
         JSON is parsed as YAML since JSON is a valid YAML subset.
 
-        Args:
-            data: YAML or JSON formatted string to parse.
-            failfast: returns None instead of raising an exception.
-
-        Returns:
-            Validated manifest instance.
-
         Raises:
-            ManifestError: If the data contains duplicate keys or validation fails.
+            ManifestError: If parsing or validation fails.
         """
         try:
             manifest = _yaml.load(data)
@@ -67,15 +53,8 @@ class Manifest(BaseModel):
     @classmethod
     def try_from_yaml_or_json(cls, data: str | Manifest | Any) -> Self | None:
         """
-        Alias of from_yaml_or_json() that suppresses all exceptions.
-        Try to load manifest from YAML or JSON string, returning None on failure.
-
-        Args:
-            data: YAML/JSON string, manifest instance, or any other object type.
-
-        Returns:
-            Manifest instance if data is already a manifest or valid YAML/JSON string.
-            Returns None if parsing/validation fails or data is an unsupported type.
+        Attempt to load a manifest from YAML or JSON.
+        Returns None if parsing or validation fails.
         """
         if isinstance(data, cls):
             return data
@@ -90,10 +69,8 @@ class Manifest(BaseModel):
 
     def to_yaml(self) -> str:
         """
-        Serialize manifest to YAML string.
-
-        Returns:
-            YAML formatted string with None values excluded.
+        Serialize the manifest to a YAML string.
+        Fields not explicitly set are excluded.
         """
         manifest = self.model_dump(mode="json", exclude_unset=True)
         data = StringIO()
@@ -102,10 +79,8 @@ class Manifest(BaseModel):
 
     def to_json(self) -> str:
         """
-        Serialize manifest to JSON string.
+        Serialize the manifest to a pretty-printed JSON string.
 
-        Returns:
-            Pretty-printed JSON string with 2-space indentation and None values excluded.
+        Fields not explicitly set are excluded.
         """
-        manifest = self.model_dump(mode="json", exclude_unset=True)
-        return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+        return self.model_dump_json(indent=2, exclude_unset=True, ensure_ascii=False) + "\n"
