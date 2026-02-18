@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .proxies.tioproxy import tioproxy, TioProxyMeta
+from .templating.safe_env import SafeEnv
 
 from .classproperty import classproperty
 
@@ -55,6 +56,7 @@ __all__ = [
     # Templating
     "TiozinTemplateOverlay",
     "RelativeDate",
+    "SafeEnv",
     # Other
     "classproperty",
 ]
