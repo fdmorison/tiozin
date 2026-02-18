@@ -11,6 +11,7 @@ cost_center: tio_scrooge
 org: tiozin
 region: latam
 domain: literature
+subdomain: classics
 product: shakespeare
 model: loverscomplaint
 layer: refined
