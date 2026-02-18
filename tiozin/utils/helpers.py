@@ -6,6 +6,7 @@ from fractions import Fraction
 from typing import TypeVar
 
 import pendulum
+from slugify import slugify as _slugify
 from uuid_utils import uuid7
 
 T = TypeVar("T")
@@ -214,3 +215,31 @@ def human_join(items: list[str]) -> str:
         if len(items) == 2
         else f"{', '.join(items[:-1])} and {items[-1]}"
     )
+
+
+def slugify(value: str) -> str:
+    """
+    Convert a string into a safe SQL/filesystem identifier.
+
+    Lowercases the value, replaces spaces and special characters with
+    underscores, and collapses consecutive separators. The result is
+    safe for use as SQL view names, table names, database identifiers,
+    and filesystem path segments.
+
+    Uses ``python-slugify`` under the hood with underscore as separator.
+
+    Args:
+        value: The string to slugify.
+
+    Returns:
+        A lowercase, underscore-separated identifier string.
+
+    Examples:
+        >>> slugify("My Step Name")
+        "my_step_name"
+        >>> slugify("orders - 2024")
+        "orders_2024"
+        >>> slugify("customer_orders")
+        "customer_orders"
+    """
+    return _slugify(value, separator="_")

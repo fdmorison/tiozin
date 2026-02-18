@@ -60,13 +60,13 @@ class SparkStepProxy(wrapt.ObjectProxy):
 
     def _register_view(self, df: DataFrame) -> DataFrame:
         """
-        Registers a DataFrame as a Spark temporary view using the step name.
+        Registers a DataFrame as a Spark temporary view using the step slug.
         """
         if not isinstance(df, DataFrame):
             return df
 
         step: SparkEtlStep = self.__wrapped__
-        view_name = step.name
+        view_name = step.slug
 
         df.createOrReplaceTempView(view_name)
         df = df.alias(view_name)
