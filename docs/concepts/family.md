@@ -42,7 +42,7 @@ replaceability, and testability without introducing a monolithic
 abstraction layer.
 
 Multiple Families together form the ecosystem, which expands as new ones
-are introduced. You are free to define your own — public or private —
+are introduced. You are free to define your own, public or private,
 with whatever name you choose.
 
 Contributions to the core are welcome where appropriate, and new provider
@@ -74,11 +74,11 @@ Tiozin standardizes the declarative structure of data applications but
 intentionally does not define a unified execution API across runtimes.
 This is by design.
 
-Much like modern web development — where frameworks such as Spring MVC,
-FastAPI, Flask, or Express provide strong application structure while
-still leveraging each platform’s native capabilities — Tiozin focuses on
-developer productivity and architectural clarity rather than cross-runtime
-portability.
+Much like modern web development, where frameworks provide strong application
+structure while still leveraging each platform’s native capabilities, Tiozin focuses on
+developer productivity and architectural clarity rather than cross-runtime portability,
+aiming to bring to data engineering the same level of structure, composability, and
+developer experience that application frameworks established in web development.
 
 By embracing the native APIs of each Family, Tiozin enables teams to build
 well-structured, testable, and composable data applications without
@@ -87,7 +87,6 @@ sacrificing the power of the underlying runtime.
 ## The Tiozin's Pluggable Object Model
 
 Like any well-organized family, each member has a clear responsibility.
-
 A Tiozin Family is structured around a pluggable Object Model that defines
 the core abstractions of execution. The diagram below presents the six
 fundamental Tiozin roles that compose this model.
@@ -100,10 +99,8 @@ fundamental Tiozin roles that compose this model.
 
 Each Tiozin role represents a single, well-defined responsibility within
 the execution pipeline. Tiozins are designed to be small, specialized,
-composable, and testable.
-
-Complex data processes are constructed by composing these focused
-units into declarative Jobs.
+composable, and testable. Complex data processes are constructed by
+composing these focused units into declarative Jobs.
 
 This Object Model establishes the structural foundation that makes
 Tiozin declarative, pluggable, metadata-native, observable, and testable.
