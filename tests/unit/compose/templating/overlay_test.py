@@ -7,7 +7,7 @@ import pytest
 from tests.stubs import InputStub, JobStub, OutputStub, RunnerStub, TransformStub
 from tiozin import Context
 from tiozin.compose import TiozinTemplateOverlay
-from tiozin.exceptions import InvalidInputError
+from tiozin.exceptions import TiozinInputError
 from tiozin.family.tio_kernel import NoOpInput
 
 
@@ -230,7 +230,7 @@ def test_overlay_should_raise_error_on_missing_variable(fake_domain: dict):
     tiozin.path = "./data/{{missing}}"
 
     # Act & Assert
-    with pytest.raises(InvalidInputError):
+    with pytest.raises(TiozinInputError):
         with TiozinTemplateOverlay(tiozin, fake_domain):
             pass
 

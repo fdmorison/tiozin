@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
-from tiozin.compose.reflection import try_get
 from tiozin.exceptions import ManifestError
 
 _yaml = YAML(typ="safe")
@@ -32,8 +31,7 @@ class Manifest(BaseModel):
         try:
             return super().model_validate(obj, **kwargs)
         except ValidationError as e:
-            name = try_get(obj, "name", cls.__name__)
-            raise ManifestError.from_pydantic(e, name=name) from e
+            raise ManifestError.from_pydantic(cls.__name__, e) from e
 
     @classmethod
     def from_yaml_or_json(cls, data: str) -> Self:
@@ -48,7 +46,7 @@ class Manifest(BaseModel):
             manifest = _yaml.load(data)
             return cls.model_validate(manifest)
         except DuplicateKeyError as e:
-            raise ManifestError.from_ruamel(e, cls.__name__) from e
+            raise ManifestError.from_ruamel(cls.__name__, e) from e
 
     @classmethod
     def try_from_yaml_or_json(cls, data: str | Manifest | Any) -> Self | None:

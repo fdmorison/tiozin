@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import Context
-from tiozin.exceptions import PluginAccessForbiddenError
+from tiozin.exceptions import AccessViolationError
 from tiozin.utils import human_join, utcnow
 
 from .. import TiozinTemplateOverlay
@@ -39,10 +39,10 @@ class JobProxy(wrapt.ObjectProxy):
     """
 
     def setup(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
+        raise AccessViolationError(self)
 
     def teardown(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
+        raise AccessViolationError(self)
 
     def submit(self) -> Any:
         job: Job = self.__wrapped__

@@ -14,10 +14,9 @@ from tiozin.api.metadata.job_manifest import (
 from tiozin.api.metadata.manifest import Manifest
 from tiozin.compose import TiozinRegistry
 from tiozin.exceptions import (
-    AmbiguousPluginError,
-    InvalidInputError,
-    PluginKindError,
+    PluginConflictError,
     PluginNotFoundError,
+    TiozinInputError,
 )
 from tiozin.family.tio_kernel import (
     NoOpInput,
@@ -37,7 +36,7 @@ def factory() -> TiozinRegistry:
 
 def test_register_should_fail_when_registering_non_plugin(factory: TiozinRegistry):
     # Act/Assert
-    with pytest.raises(InvalidInputError, match="is not a Tiozin"):
+    with pytest.raises(TiozinInputError, match="is not a Tiozin"):
         factory.register(tiozin=12345)
 
 
@@ -294,7 +293,7 @@ def test_load_should_fail_when_multiple_plugins_with_same_name(factory: TiozinRe
     factory.register(AmbiguousInput)
 
     # Act/Assert
-    with pytest.raises(AmbiguousPluginError):
+    with pytest.raises(PluginConflictError):
         factory.load("AmbiguousInput")
 
 
@@ -329,7 +328,7 @@ def test_safe_load_should_return_typed_plugin(factory: TiozinRegistry):
 
 def test_safe_load_should_fail_when_tiozin_role_does_not_match(factory: TiozinRegistry):
     # Act/Assert
-    with pytest.raises(PluginKindError):
+    with pytest.raises(TiozinInputError):
         factory.safe_load(
             kind="NoOpInput",
             tiozin_role=Runner,
@@ -406,5 +405,5 @@ def test_load_manifest_should_fail_when_manifest_has_no_tiozin_role(factory: Tio
     manifest = UnsupportedManifest(kind="NoOpInput", name="test")
 
     # Act/Assert
-    with pytest.raises(PluginKindError):
+    with pytest.raises(TiozinInputError):
         factory.load_manifest(manifest)

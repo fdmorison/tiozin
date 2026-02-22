@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import Generic, TypeVar
 
 from tiozin.api import Tiozin
-from tiozin.exceptions import NotFoundError
+from tiozin.exceptions import TiozinNotFoundError
 
 TMetadata = TypeVar("TMetadata")
 
@@ -36,5 +36,5 @@ class Registry(Tiozin, Generic[TMetadata]):
         """Retrieve metadata or return None if not found."""
         try:
             return self.get(identifier, version)
-        except NotFoundError:
+        except TiozinNotFoundError:
             return None

@@ -8,7 +8,7 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.compose import JobBuilder
-from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
+from tiozin.exceptions import TiozinInputError, TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
 
 TEST_TAXONOMY = {
@@ -368,7 +368,7 @@ def test_builder_should_reject_invalid_runner_type():
     builder = JobBuilder()
 
     # Act & Assert
-    with pytest.raises(InvalidInputError, match="Invalid runner definition"):
+    with pytest.raises(TiozinInputError, match="Invalid runner definition"):
         builder.with_runner(12345)
 
 
@@ -377,7 +377,7 @@ def test_builder_should_reject_invalid_input_type():
     builder = JobBuilder()
 
     # Act & Assert
-    with pytest.raises(InvalidInputError, match="Invalid input definition"):
+    with pytest.raises(TiozinInputError, match="Invalid input definition"):
         builder.with_inputs("invalid")
 
 
@@ -386,7 +386,7 @@ def test_builder_should_reject_invalid_transform_type():
     builder = JobBuilder()
 
     # Act & Assert
-    with pytest.raises(InvalidInputError, match="Invalid transform definition"):
+    with pytest.raises(TiozinInputError, match="Invalid transform definition"):
         builder.with_transforms(12345)
 
 
@@ -395,7 +395,7 @@ def test_builder_should_reject_invalid_output_type():
     builder = JobBuilder()
 
     # Act & Assert
-    with pytest.raises(InvalidInputError, match="Invalid output definition"):
+    with pytest.raises(TiozinInputError, match="Invalid output definition"):
         builder.with_outputs(None)
 
 
@@ -717,6 +717,6 @@ def test_builder_should_fail_when_used_twice():
     )
 
     # Act/Assert
-    with pytest.raises(TiozinUnexpectedError, match="can only be used once"):
+    with pytest.raises(TiozinInternalError, match="can only be used once"):
         builder.build()
         builder.build()

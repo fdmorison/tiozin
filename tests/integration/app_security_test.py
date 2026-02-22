@@ -18,7 +18,7 @@ from unittest.mock import patch
 import pytest
 
 from tiozin import TiozinApp
-from tiozin.exceptions import TiozinUnexpectedError
+from tiozin.exceptions import TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpRunner, NoOpTransform
 
 
@@ -66,7 +66,7 @@ def test_exception_traceback_should_not_expose_local_variables(
     )
 
     # Act
-    with pytest.raises(TiozinUnexpectedError):
+    with pytest.raises(TiozinInternalError):
         app_secure.run(job)
 
     # Assert
@@ -102,7 +102,7 @@ def test_exception_traceback_should_expose_local_variables(
     )
 
     # Act
-    with pytest.raises(TiozinUnexpectedError):
+    with pytest.raises(TiozinInternalError):
         app_insecure.run(job)
 
     # Assert

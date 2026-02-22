@@ -3,7 +3,7 @@ from rich.console import Console
 
 from . import config
 from .app import TiozinApp
-from .exceptions import TiozinError, TiozinUnexpectedError
+from .exceptions import TiozinInternalError, TiozinUsageError
 
 REQUIRED = ...
 OPTIONAL = None
@@ -45,9 +45,9 @@ def run(
     console.print(f"[green]▶ Starting job:[/green] [bold cyan]{name}[/bold cyan]\n")
     try:
         app.run(name)
-    except TiozinError:
+    except TiozinUsageError:
         raise typer.Exit(code=2) from None
-    except TiozinUnexpectedError:
+    except TiozinInternalError:
         raise typer.Exit(code=1) from None
     except Exception:
         raise typer.Exit(code=1) from None

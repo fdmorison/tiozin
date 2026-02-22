@@ -69,9 +69,9 @@ def bind_self_tokens(sql: str, inputs: Sequence[str | None]) -> str:
             If no inputs are provided, if a referenced ``@selfN`` index is
             out of range, or if a referenced input is ``None``.
     """
-    from tiozin.exceptions import InvalidInputError
+    from tiozin.exceptions import TiozinInputError
 
-    InvalidInputError.raise_if(
+    TiozinInputError.raise_if(
         not inputs,
         "@self tokens require at least one input",
     )
@@ -83,9 +83,9 @@ def bind_self_tokens(sql: str, inputs: Sequence[str | None]) -> str:
         try:
             value = inputs[index]
         except IndexError:
-            raise InvalidInputError(f"@self{index} refers to a missing input") from None
+            raise TiozinInputError(f"@self{index} refers to a missing input") from None
 
-        InvalidInputError.raise_if(
+        TiozinInputError.raise_if(
             value is None,
             f"@self{index} refers to a null input",
         )

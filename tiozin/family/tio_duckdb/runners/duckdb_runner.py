@@ -7,7 +7,7 @@ import duckdb
 from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
 from tiozin import Runner
-from tiozin.exceptions import NotInitializedError, TiozinUnexpectedError
+from tiozin.exceptions import NotInitializedError, TiozinInternalError
 from tiozin.utils import as_list, trim
 
 from ..compose.utils import fetchall_as_pydict
@@ -92,8 +92,7 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
         """Active DuckDB connection. Raises ``NotInitializedError`` if called before ``setup``."""
         NotInitializedError.raise_if(
             self._conn is None,
-            message="DuckDB connection not initialized for {tiozin}",
-            tiozin=self,
+            f"DuckDB connection not initialized for {self.tiozin_name}",
         )
         return self._conn
 
@@ -166,7 +165,7 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
                         results[relation.alias] = fetchall_as_pydict(relation)
 
                 case _:
-                    raise TiozinUnexpectedError(f"Unsupported DuckDB plan: {type(plan)}")
+                    raise TiozinInternalError(f"Unsupported DuckDB plan: {type(plan)}")
 
         return results
 

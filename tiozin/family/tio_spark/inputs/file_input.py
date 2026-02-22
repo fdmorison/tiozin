@@ -11,7 +11,7 @@ from pyspark.sql.functions import (
 )
 
 from tiozin.api import conventions
-from tiozin.exceptions import InvalidInputError, RequiredArgumentError
+from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, trim_lower
 
 from .. import SparkInput
@@ -92,7 +92,7 @@ class SparkFileInput(SparkInput):
         is_streaming = self.context.runner.streaming
 
         if is_streaming:
-            InvalidInputError.raise_if(
+            TiozinInputError.raise_if(
                 len(self.path) != 1,
                 "Spark streaming file sources require exactly one directory path "
                 f"when streaming is enabled. Received: {self.path}",

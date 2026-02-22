@@ -2,7 +2,7 @@ import duckdb
 import pytest
 from duckdb import CatalogException, DuckDBPyConnection, DuckDBPyRelation
 
-from tiozin.exceptions import InvalidInputError, RequiredArgumentError
+from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.family.tio_duckdb.compose.assembly.read_builder import ReadBuilder
 
 BASE_PATH = "./tests/mocks/data"
@@ -509,7 +509,7 @@ def test_builder_should_raise_error_when_mode_is_invalid(conn):
     builder = ReadBuilder(conn)
 
     # Act / Assert
-    with pytest.raises(InvalidInputError):
+    with pytest.raises(TiozinInputError):
         builder.format("csv").path(f"{BASE_PATH}/csv/sample.csv").mode("invalid_mode", "x").load()
 
 

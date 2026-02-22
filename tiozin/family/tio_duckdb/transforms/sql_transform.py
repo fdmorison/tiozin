@@ -2,7 +2,7 @@ from typing import Any
 
 from duckdb import DuckDBPyRelation
 
-from tiozin.exceptions import InvalidInputError
+from tiozin.exceptions import TiozinInputError
 from tiozin.utils import bind_self_tokens, trim
 
 from .. import DuckdbCoTransform
@@ -96,7 +96,7 @@ class DuckdbSqlTransform(DuckdbCoTransform):
             params=self.args,
         )
 
-        InvalidInputError.raise_if(
+        TiozinInputError.raise_if(
             relation is None,
             "Only DQL statements can be handled by DuckdbSqlTransform. "
             "The provided SQL did not produce a relation.",

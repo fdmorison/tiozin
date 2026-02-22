@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import Context
-from tiozin.exceptions import PluginAccessForbiddenError
+from tiozin.exceptions import AccessViolationError
 from tiozin.utils import utcnow
 
 from .. import TiozinTemplateOverlay
@@ -40,10 +40,10 @@ class StepProxy(wrapt.ObjectProxy):
     """
 
     def setup(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
+        raise AccessViolationError(self)
 
     def teardown(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
+        raise AccessViolationError(self)
 
     def read(self) -> None:
         return self._run("read")

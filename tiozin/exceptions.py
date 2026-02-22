@@ -1,92 +1,98 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Self
+from typing import Any, Self
 
 from pydantic import ValidationError
 from ruamel.yaml.error import MarkedYAMLError
-from wrapt import ObjectProxy
 
-if TYPE_CHECKING:
-    from tiozin import Tiozin
-
-
-RESOURCE = "resource"
+from tiozin.utils import human_join
 
 
 # ============================================================================
 # Layer 1: Base Exceptions
 # ============================================================================
-class TiozinErrorMixin:
+class TiozinError(Exception):
     """
-    Shared logic for Tiozin exceptions.
+    Base exception for all Tiozin framework errors.
 
-    Provides standardized error code handling, message resolution,
-    string representation, and dictionary serialization.
+    Defines error code handling, message interpolation, string representation,
+    and dictionary serialization.
+
+    Errors follow HTTP status semantics and are divided into two categories:
+
+    - Usage errors (4xx): caused by invalid input, configuration issues,
+      missing resources, or public API contract violations. These are
+      caller-correctable and safe to expose.
+    - Internal errors (5xx): caused by bugs, invariant violations, or
+      unexpected framework state.
+
+    Exceptions are also organized by domain, allowing them to be caught
+    either by category (e.g. TiozinNotFoundError) or by domain
+    (e.g. JobNotFoundError).
+
+    The `retryable` class attribute indicates whether the operation may
+    succeed if retried without changes. Defaults to False and should be
+    True only for transient failures such as timeouts or temporarily
+    unavailable resources.
     """
 
-    message: str = None
-    http_status: int = None
+    message: str = "An error occurred while executing Tiozin."
+    http_status: int = 500
+    retryable: bool = False
 
-    def __init__(self, message: str | None = None, *, code: str | None = None, **options) -> None:
+    def __init__(self, message: str = None, *, code: str = None, **options) -> None:
         self.code = code or type(self).__name__
-        self.message = (message or self.message).format(code=code, **options)
+        template = message or self.message or ""
+
+        try:
+            self.message = template.format(code=self.code, **options)
+        except Exception:
+            self.message = template
+
         super().__init__(self.message)
 
     @classmethod
-    def raise_if(
-        cls,
-        condition: bool,
-        message: str | None = None,
-        **options,
-    ) -> Self:
+    def raise_if(cls, condition: bool, *args, **kwargs) -> Self:
         """
-        Guard method that raises this exception type if condition is True.
-
-        Example:
-            TiozinUnexpectedError.raise_if(
-                value is None,
-                "Expected value to be defined",
-            )
+        Guard-style helper that raises this exception if the condition is True.
         """
         if bool(condition):
-            args = {}
-            if message:
-                args["message"] = message
-            raise cls(**args, **options)
+            raise cls(*args, **kwargs)
         return cls
 
     def to_dict(self) -> dict[str, Any]:
-        result = {
+        return {
             "code": self.code,
             "message": self.message,
+            "retryable": self.retryable,
         }
-        if self.http_status:
-            result["http_status"] = self.http_status
-        return result
 
     def __str__(self) -> str:
         return f"{self.code}: {self.message}"
 
 
-class TiozinError(TiozinErrorMixin, Exception):
+class TiozinUsageError(TiozinError):
     """
-    Base exception for all expected Tiozin errors.
+    Base class for errors caused by incorrect use of the framework.
 
-    Raised for handleable errors caused by invalid input, configuration issues,
-    missing resources, or contract violations that users can fix.
+    Raised when execution fails due to invalid input, configuration,
+    missing resources, or contract violations in the public API.
+
+    Covers all callers: job YAML authors, Python API consumers, and
+    plugin developers. These errors are correctable by the caller
+    and safe to surface.
     """
 
     http_status = 400
-    message = "Tiozin couldn't proceed due to an issue."
+    message = "Invalid input or configuration. Please review and try again."
 
 
-class TiozinUnexpectedError(TiozinErrorMixin, RuntimeError):
+class TiozinInternalError(TiozinError):
     """
-    Base exception for unexpected/internal errors that should not be handled.
+    Base class for unexpected internal framework failures.
 
-    Use this for bugs, assertion failures, third-party library errors, runtime failures
-    that indicate system/code issues, and truly unexpected conditions that should
-    propagate and crash.
+    Indicates bugs, invariant violations, or invalid internal state
+    that the caller cannot correct. Should fail fast.
     """
 
     http_status = 500
@@ -96,7 +102,7 @@ class TiozinUnexpectedError(TiozinErrorMixin, RuntimeError):
 # ============================================================================
 # Layer 2: Categorical exceptions
 # ============================================================================
-class NotFoundError(TiozinError):
+class TiozinNotFoundError(TiozinUsageError):
     """
     Raised when a requested resource cannot be found.
     """
@@ -105,7 +111,7 @@ class NotFoundError(TiozinError):
     message = "The requested resource could not be found."
 
 
-class ConflictError(TiozinError):
+class TiozinConflictError(TiozinUsageError):
     """
     Raised when an operation conflicts with the current state of a resource.
     """
@@ -114,25 +120,17 @@ class ConflictError(TiozinError):
     message = "The operation conflicts with the current state of the resource."
 
 
-class InvalidInputError(TiozinError):
-    """
-    Raised when resource fails validation rules.
-    """
-
-    http_status = 422
-    message = "The input failed validation. Please review and correct the errors."
-
-
-class OperationTimeoutError(TiozinError):
+class TiozinTimeoutError(TiozinUsageError):
     """
     Raised when an operation exceeds its time limit.
     """
 
     http_status = 408
+    retryable = True
     message = "The operation exceeded the time limit and timed out."
 
 
-class ForbiddenError(TiozinError):
+class TiozinForbiddenError(TiozinUsageError):
     """
     Raised when access to a resource or operation is forbidden.
     """
@@ -141,154 +139,279 @@ class ForbiddenError(TiozinError):
     message = "You are not allowed to perform this operation."
 
 
+class TiozinInputError(TiozinUsageError):
+    """
+    Raised when input fails validation rules.
+    """
+
+    http_status = 422
+    message = "The input failed validation. Please review and correct the errors."
+
+
+class TiozinPreconditionError(TiozinUsageError):
+    """
+    Raised when a required precondition for the operation is not satisfied.
+
+    The request is valid and the input is correct, but the system is not
+    in the right state to proceed. Common in ETL pipelines where operations
+    depend on upstream jobs, registered schemas, or prepared environments.
+
+    Distinct from ``TiozinConflictError``, which signals a conflict with
+    the state of the target resource itself.
+    """
+
+    http_status = 412
+    message = "A required precondition for this operation was not met."
+
+
+class TiozinUnavailableError(TiozinUsageError):
+    """
+    Raised when an external dependency is temporarily unavailable.
+
+    Indicates that a required service, registry, or data source cannot be
+    reached at this time. Common in ETL pipelines that depend on external
+    systems such as databases, storage backends, or remote APIs.
+
+    This error is transient and the operation may succeed on retry.
+    """
+
+    http_status = 503
+    retryable = True
+    message = "A required service or resource is temporarily unavailable."
+
+
+class TiozinNotImplementedError(TiozinUsageError):
+    """
+    Raised when a requested capability is not implemented by the plugin.
+
+    Indicates that the Tiozin does not support the invoked operation for
+    its current configuration or role. Distinct from Python's built-in
+    ``NotImplementedError``, this integrates with the Tiozin error hierarchy
+    and can be caught alongside other usage errors.
+    """
+
+    http_status = 501
+    message = "This operation is not implemented by the current plugin."
+
+
 # ============================================================================
-# Layer 3: Domain Exceptions - Job
+# Layer 3: Domain Exceptions - Manifest
 # ============================================================================
-class JobError(TiozinError):
-    """Base exception for unexpected job-related errors."""
+class ManifestError(TiozinInputError):
+    """
+    Raised when a declarative manifest fails parsing or validation.
 
-    message = "An unexpected error occurred while processing the job."
+    Applies to any resource defined via YAML or Pydantic models, not
+    exclusively to jobs. Factory methods are provided for the most
+    common error sources.
+    """
 
+    message = "Invalid manifest `{manifest}`: {msg}"
 
-class JobNotFoundError(JobError, NotFoundError):
-    """Raised when a job cannot be found."""
-
-    message = "Job `{job_name}` not found."
-
-    def __init__(self, job_name: str) -> None:
-        super().__init__(job_name=job_name)
-
-
-class JobAlreadyExistsError(JobError, ConflictError):
-    message = "The job `{job_name}` already exists."
-
-    def __init__(self, job_name: str, reason: str = None) -> None:
-        super().__init__(
-            f"{self.message} {reason}." if reason else None,
-            job_name=job_name,
-        )
-
-
-class ManifestError(JobError, InvalidInputError):
-    message = "Invalid manifest for `{name}`: {detail}"
-
-    def __init__(self, message: str, name: str) -> None:
-        super().__init__(name=name, detail=message)
+    def __init__(self, manifest: str, message: str) -> None:
+        super().__init__(manifest=manifest, msg=message)
 
     @classmethod
-    def from_pydantic(cls, error: ValidationError, name: str = None) -> Self:
+    def from_pydantic(cls, manifest: str, error: ValidationError) -> Self:
         from .utils.messages import MessageTemplates
 
         messages = MessageTemplates.format_friendly_message(error)
-        messages = ". ".join(messages)
-        return cls(message=messages, name=name or "manifest")
+        message = human_join(messages)
+        return cls(manifest, message)
 
     @classmethod
-    def from_ruamel(cls, error: MarkedYAMLError, name: str = None) -> Self:
+    def from_ruamel(cls, manifest: str, error: MarkedYAMLError) -> Self:
         info = str(error.problem).capitalize()
         line = str(error.problem_mark).strip()
         message = f"{info} {line}"
-        return cls(message=message, name=name)
+        return cls(manifest, message)
+
+
+# ============================================================================
+# Layer 3: Domain Exceptions - Job
+# ============================================================================
+class JobError(TiozinUsageError):
+    """
+    Base exception for job-related errors.
+    """
+
+    message = "An error occurred while processing the job."
+
+
+class JobNotFoundError(JobError, TiozinNotFoundError):
+    """
+    Raised when a job cannot be found.
+    """
+
+    message = "Job `{name}` not found."
+
+    def __init__(self, message: str = None, *, name: str = None) -> None:
+        super().__init__(message, name=name)
+
+    @classmethod
+    def raise_if(cls, condition: bool, message: str = None, *, name: str = None) -> type[Self]:
+        if condition:
+            raise cls(message, name=name)
+        return cls
+
+
+class JobAlreadyExistsError(JobError, TiozinConflictError):
+    """
+    Raised when a job with the same name already exists.
+    """
+
+    message = "The job `{name}` already exists."
+
+    def __init__(self, message: str = None, *, name: str) -> None:
+        super().__init__(
+            message,
+            name=name,
+        )
+
+    @classmethod
+    def raise_if(cls, condition: bool, message: str = None, *, name: str) -> type[Self]:
+        if condition:
+            raise cls(message, name=name)
+        return cls
 
 
 # ============================================================================
 # Layer 3: Domain Exceptions - Schema
 # ============================================================================
-class SchemaError(InvalidInputError):
+class SchemaError(TiozinUsageError):
+    """
+    Base exception for schema registry errors.
+    """
+
     message = "The schema validation failed."
 
 
-class SchemaViolationError(SchemaError, InvalidInputError):
+class SchemaViolationError(SchemaError, TiozinInputError):
+    """
+    Raised when an input violates one or more schema constraints.
+    """
+
     message = "The input violates one or more schema constraints."
 
 
-class SchemaNotFoundError(SchemaError, NotFoundError):
+class SchemaNotFoundError(SchemaError, TiozinNotFoundError):
+    """
+    Raised when a schema subject cannot be found in the registry.
+    """
+
     message = "Schema `{subject}` not found in the registry."
 
     def __init__(self, subject: str) -> None:
         super().__init__(subject=subject)
 
+    @classmethod
+    def raise_if(cls, condition: bool, subject: str) -> type[Self]:
+        if condition:
+            raise cls(subject)
+        return cls
+
 
 # ============================================================================
-# Layer 3: Domain Exceptions - Tiozin Plugin
+# Layer 3: Domain Exceptions - Plugin
 # ============================================================================
-class PluginError(TiozinError):
+class PluginError(TiozinUsageError):
+    """
+    Base exception for plugin discovery, resolution, and loading errors.
+    """
+
     message = "The Tiozin plugin discovery, resolution or load failed."
 
 
-class PluginNotFoundError(PluginError, NotFoundError):
-    message = "Tiozin `{tiozin_name}` not found."
-    detail = "Ensure its provider is installed and loads correctly via entry points"
+class PluginNotFoundError(PluginError, TiozinNotFoundError):
+    """
+    Raised when a Tiozin plugin cannot be found for the given name.
+    """
 
-    def __init__(self, tiozin_name: str, detail: str = None) -> None:
-        detail = detail or self.detail
-        super().__init__(f"{self.message} {detail}.", tiozin_name=tiozin_name)
+    message = "Tiozin `{name}` not found. Ensure its family is installed."
+
+    def __init__(self, *, name: str = None) -> None:
+        super().__init__(name=name)
+
+    @classmethod
+    def raise_if(cls, condition: bool, *, name: str = None) -> type[Self]:
+        if condition:
+            raise cls(name=name)
+        return cls
 
 
-class AmbiguousPluginError(PluginError, ConflictError):
+class PluginConflictError(PluginError, TiozinConflictError):
+    """
+    Raised when a Tiozin name matches multiple registered plugins.
+    """
+
     message = (
-        "The Tiozin name '{tiozin_name}' matches multiple registered Tiozin plugins. "
+        "The Tiozin name '{name}' matches multiple registered Tiozin plugins. "
         "Available provider-qualified options are: {candidates}. "
         "You can disambiguate by specifying the provider-qualified name "
         "or the fully qualified Python class path."
     )
 
-    def __init__(self, tiozin_name: str, candidates: list[str] = None) -> None:
+    def __init__(self, *, name: str = None, candidates: list[str] = None) -> None:
         super().__init__(
-            tiozin_name=tiozin_name,
-            candidates=", ".join(candidates or []),
+            name=name,
+            candidates=human_join(candidates or []),
         )
 
-
-class PluginKindError(PluginError, InvalidInputError):
-    message = "Tiozin '{tiozin_name}' cannot be used as '{tiozin_role}'."
-
-    def __init__(
-        self, message: str = None, tiozin_name: str = None, tiozin_role: type = None
-    ) -> None:
-        super().__init__(
-            message,
-            tiozin_name=tiozin_name,
-            tiozin_role=tiozin_role.__name__ if tiozin_role else None,
-        )
-
-
-class PluginAccessForbiddenError(PluginError, ForbiddenError):
-    """
-    Raised when access to a Tiozin plugin's lifecycle methods is attempted outside of
-    Tiozin's runtime control.
-
-    This error indicates an attempt to directly invoke setup or teardown on a
-    Tiozin plugin, which are exclusively managed by the Tiozin runtime.
-    """
-
-    message = (
-        "Access to {plugin} lifecycle methods is forbidden. "
-        "Setup and teardown are managed by the Tiozin runtime."
-    )
-
-    def __init__(self, plugin: Any) -> None:
-        super().__init__(plugin=plugin)
+    @classmethod
+    def raise_if(
+        cls,
+        condition: bool,
+        *,
+        name: str = None,
+        candidates: list[str] = None,
+    ) -> type[Self]:
+        if condition:
+            raise cls(name=name, candidates=candidates)
+        return cls
 
 
 # ============================================================================
-# Layer 4: Domain Exceptions - Misc
+# Layer 4: Runtime State Errors
 # ============================================================================
-class AlreadyRunningError(ConflictError):
-    message = "The `{name}` is already running."
+class AlreadyRunningError(TiozinConflictError):
+    """
+    Raised when an operation is attempted on a resource that is already running.
+    """
 
-    def __init__(self, name: str = RESOURCE) -> None:
-        super().__init__(self.message.format(name=name))
+    retryable = True
+    message = "The {name} is already running."
+
+    def __init__(self, name: str = None) -> None:
+        super().__init__(name=name or "resource")
+
+    @classmethod
+    def raise_if(cls, condition: bool, name: str = None) -> type[Self]:
+        if condition:
+            raise cls(name)
+        return cls
 
 
-class AlreadyFinishedError(ConflictError):
-    message = "The `{name}` has already finished."
+class AlreadyFinishedError(TiozinConflictError):
+    """
+    Raised when an operation is attempted on a resource that has already finished.
+    """
 
-    def __init__(self, name: str = RESOURCE) -> None:
-        super().__init__(name=name)
+    message = "The {name} has already finished."
+
+    def __init__(self, name: str = None) -> None:
+        super().__init__(name=name or "resource")
+
+    @classmethod
+    def raise_if(cls, condition: bool, name: str = None) -> type[Self]:
+        if condition:
+            raise cls(name)
+        return cls
 
 
-class PolicyViolationError(InvalidInputError):
+# ============================================================================
+# Layer 4: Policy and Validation Errors
+# ============================================================================
+class PolicyViolationError(TiozinInputError):
     """
     Raised when execution is denied due to a policy violation.
     """
@@ -298,8 +421,18 @@ class PolicyViolationError(InvalidInputError):
     def __init__(self, policy: type, message: str = None) -> None:
         super().__init__(policy=policy.__name__, detail=message or "Execution was denied")
 
+    @classmethod
+    def raise_if(cls, condition: bool, policy: type, message: str = None) -> type[Self]:
+        if condition:
+            raise cls(policy, message)
+        return cls
 
-class RequiredArgumentError(InvalidInputError):
+
+class RequiredArgumentError(TiozinInputError):
+    """
+    Raised when a required argument is null, empty, or absent.
+    """
+
     NULL_OR_EMPTY = [None, "", [], {}, tuple(), set()]
 
     def __init__(self, message: str, **options) -> None:
@@ -338,62 +471,58 @@ class RequiredArgumentError(InvalidInputError):
         return cls
 
 
-class ProxyContractViolationError(TiozinUnexpectedError):
+# ============================================================================
+# Layer 4: Internal Errors
+# ============================================================================
+class ProxyError(TiozinInternalError):
     """
-    Raised when a class registered as a proxy violates the required inheritance contract.
+    Raised when the @tioproxy decorator is misused.
 
-    This is a service-level error indicating a bug or invalid internal state
-    in the Tiozin core.
-    """
-
-    message = (
-        "Class `{proxy}` was registered as a proxy but does not inherit from "
-        "`{base}`, and therefore cannot be applied to `{wrapped}`."
-    )
-
-    def __init__(self, proxy: type, wrapped: type, base: type = ObjectProxy) -> None:
-        super().__init__(
-            proxy=proxy.__name__,
-            wrapped=wrapped.__name__,
-            base=base.__name__,
-        )
-
-
-class DuplicateProxyDecoratorError(TiozinUnexpectedError):
-    """
-    Raised when @tioproxy is applied more than once to the same class.
-
-    Use @tioproxy(ProxyA, ProxyB) to register multiple proxies in a single call.
+    Indicates a provider implementation bug, such as applying the decorator
+    more than once or registering a class that does not inherit from
+    ``wrapt.ObjectProxy``.
     """
 
-    message = (
-        "Class `{cls}` already has @tioproxy applied. "
-        "Use @tioproxy(ProxyA, ProxyB) to register multiple proxies."
-    )
-
-    def __init__(self, cls: type) -> None:
-        super().__init__(cls=cls.__name__)
+    message = "The @tioproxy decorator was used incorrectly."
 
 
-class NotInitializedError(TiozinUnexpectedError):
+class NotInitializedError(TiozinInternalError):
     """
-    Raised when a Tiozin plugin is accessed before its lifecycle has been properly initialized.
+    Raised when a resource is accessed before its initialization is complete.
 
-    This error indicates a violation of the Tiozin runtime lifecycle contract, where a Tiozin plugin
-    method or property is used before the corresponding `setup` phase has completed.
-
-    This is an internal service-level error that signals a bug in the framework or an invalid
-    execution order, not a user configuration issue
+    Indicates an invalid execution order or lifecycle contract violation.
+    Not a user configuration issue — callers should provide a descriptive
+    message identifying which resource was accessed prematurely.
     """
 
-    message = "{tiozin} was accessed before being initialized."
+    message = "Resource was accessed before being initialized."
 
-    def __init__(
-        self, message: str = None, *, tiozin: Tiozin = None, code: str = None, **options
-    ) -> None:
-        super().__init__(
-            message=message,
-            code=code,
-            tiozin=tiozin.name if tiozin else "Tiozin",
-            **options,
-        )
+    def __init__(self, message: str = None) -> None:
+        super().__init__(message)
+
+    @classmethod
+    def raise_if(cls, condition: bool, message: str = None) -> type[Self]:
+        if condition:
+            raise cls(message)
+        return cls
+
+
+class AccessViolationError(TiozinInternalError):
+    """
+    Raised when runtime-reserved methods are invoked directly by plugin code.
+
+    Setup and teardown are owned exclusively by the Tiozin runtime. Calling
+    them directly from within a plugin or proxy is a provider implementation
+    bug — equivalent to accessing a private method in a managed framework.
+    """
+
+    message = "{name} invoked a method reserved for the Tiozin runtime."
+
+    def __init__(self, name: str) -> None:
+        super().__init__(name=name)
+
+    @classmethod
+    def raise_if(cls, condition: bool, name: str) -> type[Self]:
+        if condition:
+            raise cls(name)
+        return cls

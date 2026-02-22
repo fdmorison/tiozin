@@ -6,7 +6,7 @@ import tiozin.app
 from tests.mocks.fake_registry_factory import MockedRegistryFactory
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.app import AppStatus, TiozinApp
-from tiozin.exceptions import TiozinUnexpectedError
+from tiozin.exceptions import TiozinInternalError
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -166,7 +166,7 @@ def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_a
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act - TiozinApp wraps unexpected exceptions in TiozinUnexpectedError
-    with pytest.raises(TiozinUnexpectedError):
+    with pytest.raises(TiozinInternalError):
         ready_app.run("job://fail")
 
     # Assert

@@ -122,8 +122,7 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
         """
         NotInitializedError.raise_if(
             self._spark is None,
-            message="Spark session not initialized for {tiozin}",
-            tiozin=self,
+            f"Spark session not initialized for {self.tiozin_name}",
         )
         return self._spark
 
