@@ -116,7 +116,8 @@ Tiozin is human-readable and machine-generatable:
 ### Reference
 - [Examples](https://github.com/fdmorison/tiozin/blob/main/docs/examples.md)
 - [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
-- [Settings](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
+- [Settings Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
+- [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)
 
 ## Contributing
 
