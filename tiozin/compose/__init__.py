@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from .proxies.runner import RunnerProxy as RunnerProxy
     from .proxies.step import StepProxy as StepProxy
     from .templating.overlay import TiozinTemplateOverlay as TiozinTemplateOverlay
-    from .templating.relative_date import RelativeDate as RelativeDate
+    from .templating.date import TemplateDate as TemplateDate
 
 _DEFERRED = {
     "JobBuilder": ".assembly.job_builder",
@@ -27,7 +27,7 @@ _DEFERRED = {
     "RunnerProxy": ".proxies.runner",
     "StepProxy": ".proxies.step",
     "TiozinTemplateOverlay": ".templating.overlay",
-    "RelativeDate": ".templating.relative_date",
+    "TemplateDate": ".templating.date",
 }
 
 
@@ -55,7 +55,7 @@ __all__ = [
     "StepProxy",
     # Templating
     "TiozinTemplateOverlay",
-    "RelativeDate",
+    "TemplateDate",
     "SafeEnv",
     # Other
     "classproperty",

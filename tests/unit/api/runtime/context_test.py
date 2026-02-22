@@ -8,7 +8,7 @@ from freezegun import freeze_time
 
 from tests.stubs import InputStub, JobStub
 from tiozin import Context
-from tiozin.compose import RelativeDate
+from tiozin.compose import TemplateDate
 
 FAKE_UUID = "01968e6a-0000-7000-8000-000000000001"
 FROZEN_TIME = "2026-06-15T12:00:00+00:00"
@@ -228,7 +228,7 @@ def test_build_template_vars_should_include_relative_date(
     result = job_context._build_template_vars()
 
     # Assert
-    actual = isinstance(result["DAY"], RelativeDate)
+    actual = isinstance(result["DAY"], TemplateDate)
     expected = True
     assert actual == expected
 
@@ -241,15 +241,15 @@ def test_build_template_vars_should_expose_correct_relative_date_values(
 
     # Assert
     actual = {
-        "ds": result["ds"],
-        "iso": result["iso"],
-        "YYYY": result["YYYY"],
-        "MM": result["MM"],
-        "DD": result["DD"],
+        "ds": str(result["ds"]),
+        "iso": str(result["iso"]),
+        "YYYY": str(result["YYYY"]),
+        "MM": str(result["MM"]),
+        "DD": str(result["DD"]),
     }
     expected = {
         "ds": job_context.nominal_time.format("YYYY-MM-DD"),
-        "iso": job_context.nominal_time.to_iso8601_string(),
+        "iso": job_context.nominal_time.format("YYYY-MM-DD[T]HH:mm:ssZ"),
         "YYYY": job_context.nominal_time.format("YYYY"),
         "MM": job_context.nominal_time.format("MM"),
         "DD": job_context.nominal_time.format("DD"),
@@ -293,8 +293,8 @@ def test_build_template_vars_should_override_base_with_relative_date(
 
     # Assert
     actual = {
-        "ds": result["ds"],
-        "YYYY": result["YYYY"],
+        "ds": str(result["ds"]),
+        "YYYY": str(result["YYYY"]),
     }
 
     expected = {
