@@ -8,7 +8,7 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.exceptions import InvalidInputError, TiozinUnexpectedError
+from tiozin.exceptions import TiozinInputError, TiozinInternalError
 from tiozin.utils.helpers import trim
 
 from ..reflection import try_get_public_setter
@@ -128,7 +128,7 @@ class JobBuilder:
             case Runner() | RunnerManifest():
                 self._runner = runner
             case _:
-                raise InvalidInputError(f"Invalid runner definition: {type(runner)}")
+                raise TiozinInputError(f"Invalid runner definition: {type(runner)}")
 
         return self
 
@@ -140,7 +140,7 @@ class JobBuilder:
                 case Input() | InputManifest():
                     definition = value
                 case _:
-                    raise InvalidInputError(f"Invalid input definition: {type(value)}")
+                    raise TiozinInputError(f"Invalid input definition: {type(value)}")
             self._inputs.append(definition)
 
         return self
@@ -153,7 +153,7 @@ class JobBuilder:
                 case Transform() | TransformManifest():
                     definition = value
                 case _:
-                    raise InvalidInputError(f"Invalid transform definition: {type(value)}")
+                    raise TiozinInputError(f"Invalid transform definition: {type(value)}")
             self._transforms.append(definition)
 
         return self
@@ -166,7 +166,7 @@ class JobBuilder:
                 case Output() | OutputManifest():
                     definition = value
                 case _:
-                    raise InvalidInputError(f"Invalid output definition: {type(value)}")
+                    raise TiozinInputError(f"Invalid output definition: {type(value)}")
             self._outputs.append(definition)
 
         return self
@@ -203,7 +203,7 @@ class JobBuilder:
 
     def build(self) -> Job:
         if self._built:
-            raise TiozinUnexpectedError("The builder can only be used once")
+            raise TiozinInternalError("The builder can only be used once")
 
         job = tiozin_registry.safe_load(
             tiozin_role=Job,

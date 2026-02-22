@@ -13,10 +13,9 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.exceptions import (
-    AmbiguousPluginError,
-    InvalidInputError,
-    PluginKindError,
+    PluginConflictError,
     PluginNotFoundError,
+    TiozinInputError,
 )
 
 from .. import reflection
@@ -87,7 +86,7 @@ class TiozinRegistry(Loggable):
         """
         Registers a Tiozin class from a given Family (e.g. ``tio_pandas``, ``tio_spark``).
         """
-        InvalidInputError.raise_if(
+        TiozinInputError.raise_if(
             not reflection.is_tiozin(tiozin),
             f"{tiozin} is not a Tiozin.",
         )
@@ -125,12 +124,12 @@ class TiozinRegistry(Loggable):
 
         PluginNotFoundError.raise_if(
             not candidates,
-            tiozin_name=kind,
+            name=kind,
         )
 
-        AmbiguousPluginError.raise_if(
+        PluginConflictError.raise_if(
             len(candidates) > 1,
-            tiozin_name=kind,
+            name=kind,
             candidates=[p.tiozin_family_path for p in candidates],
         )
 
@@ -146,10 +145,11 @@ class TiozinRegistry(Loggable):
         """
         tiozin_instance: T = self.load(kind, **args)
 
-        PluginKindError.raise_if(
+        TiozinInputError.raise_if(
             not isinstance(tiozin_instance, tiozin_role),
-            tiozin_name=tiozin_instance.tiozin_name,
-            tiozin_role=tiozin_role,
+            "Tiozin '{name}' is not a '{role}'",
+            name=tiozin_instance.tiozin_name,
+            role=tiozin_role,
         )
 
         return tiozin_instance
@@ -163,9 +163,9 @@ class TiozinRegistry(Loggable):
 
         role = _MANIFEST_ROLE_MAP.get(type(manifest))
 
-        PluginKindError.raise_if(
+        TiozinInputError.raise_if(
             not role,
-            f"Unsupported manifest {type(manifest).__name__}",
+            f"No Tiozin can be load from manifest {type(manifest).__name__}",
         )
 
         tiozin_instance = self.safe_load(

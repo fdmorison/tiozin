@@ -4,7 +4,7 @@ from typing import Any, TypeVar
 
 import wrapt
 
-from tiozin.exceptions import DuplicateProxyDecoratorError, ProxyContractViolationError
+from tiozin.exceptions import ProxyError
 
 TIO_PROXY = "__tioproxy__"
 
@@ -53,10 +53,9 @@ def tioproxy(*proxy_classes: type[wrapt.ObjectProxy]) -> Callable[[TClass], TCla
             Proxy classes that must inherit from ``wrapt.ObjectProxy``.
 
     Raises:
-        DuplicateProxyDecoratorError:
-            If @tioproxy is declared more than once on the same class.
-        ProxyContractViolationError:
-            If a provided proxy does not inherit from ``wrapt.ObjectProxy``.
+        ProxyError:
+            If @tioproxy is declared more than once on the same class, or if
+            a provided proxy does not inherit from ``wrapt.ObjectProxy``.
 
     Example::
 
@@ -74,11 +73,18 @@ def tioproxy(*proxy_classes: type[wrapt.ObjectProxy]) -> Callable[[TClass], TCla
 
     def decorator(wrapped_class: TClass) -> TClass:
         if TIO_PROXY in wrapped_class.__dict__:
-            raise DuplicateProxyDecoratorError(wrapped_class)
+            raise ProxyError(
+                f"Class `{wrapped_class.__name__}` already has @tioproxy applied. "
+                "Use @tioproxy(ProxyA, ProxyB) to register multiple proxies."
+            )
 
         for proxy_class in proxy_classes:
             if not issubclass(proxy_class, wrapt.ObjectProxy):
-                raise ProxyContractViolationError(proxy_class, wrapped_class)
+                raise ProxyError(
+                    f"Class `{proxy_class.__name__}` does not inherit from "
+                    f"`{wrapt.ObjectProxy.__name__}` and cannot be used as a proxy "
+                    f"for `{wrapped_class.__name__}`."
+                )
 
         proxies = list(getattr(wrapped_class, TIO_PROXY, []))
         proxies.extend(proxy_classes)

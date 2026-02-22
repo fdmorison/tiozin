@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from tiozin.api import Tiozin
-from tiozin.exceptions import InvalidInputError
+from tiozin.exceptions import TiozinInputError
 
 from .. import reflection
 from . import filters
@@ -76,7 +76,7 @@ class TiozinTemplateOverlay:
                 rendered = JINJA_ENV.from_string(template).render(self._template_vars)
                 reflection.set_field(obj, field, rendered)
             except Exception as e:
-                raise InvalidInputError(f"Cannot render template {template} because {e}") from e
+                raise TiozinInputError(f"Cannot render template {template} because {e}") from e
 
     def _restore_templates(self) -> None:
         """Restore each rendered field back to its original template string."""

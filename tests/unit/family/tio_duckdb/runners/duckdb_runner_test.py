@@ -3,7 +3,7 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from tiozin.exceptions import NotInitializedError, TiozinUnexpectedError
+from tiozin.exceptions import NotInitializedError, TiozinInternalError
 from tiozin.family.tio_duckdb.runners.duckdb_runner import DuckdbRunner
 
 
@@ -230,7 +230,7 @@ def test_run_should_raise_error_for_unsupported_plan_type(
     duckdb_runner: DuckdbRunner,
 ):
     # Act / Assert
-    with pytest.raises(TiozinUnexpectedError, match="Unsupported DuckDB plan"):
+    with pytest.raises(TiozinInternalError, match="Unsupported DuckDB plan"):
         duckdb_runner.run(12345)
 
 

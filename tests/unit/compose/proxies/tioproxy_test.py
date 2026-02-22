@@ -2,7 +2,7 @@ import pytest
 import wrapt
 
 from tiozin.compose import TioProxyMeta, tioproxy
-from tiozin.exceptions import DuplicateProxyDecoratorError, ProxyContractViolationError
+from tiozin.exceptions import ProxyError
 
 
 class AlphaProxy(wrapt.ObjectProxy):
@@ -52,7 +52,7 @@ def test_tioproxy_should_reject_invalid_class():
         pass
 
     # Act & Assert
-    with pytest.raises(ProxyContractViolationError):
+    with pytest.raises(ProxyError):
 
         @tioproxy(NotAProxy)
         class Subject(metaclass=TioProxyMeta):
@@ -63,7 +63,7 @@ def test_tioproxy_should_reject_duplicate_decorator():
     """@tioproxy raises if applied more than once to the same class."""
 
     # Act & Assert
-    with pytest.raises(DuplicateProxyDecoratorError):
+    with pytest.raises(ProxyError):
 
         @tioproxy(BetaProxy)
         @tioproxy(AlphaProxy)

@@ -1,4 +1,4 @@
-from tiozin.exceptions import NotFoundError, RequiredArgumentError
+from tiozin.exceptions import RequiredArgumentError, TiozinNotFoundError
 from tiozin.utils import trim, trim_lower
 
 from ..typehints import SparkIcebergCatalogType, SparkIcebergClass
@@ -83,7 +83,7 @@ class SparkIcebergRunner(SparkRunner):
             "One of `catalog_type` or `catalog_impl` must be provided",
         )
 
-        NotFoundError.raise_if(
+        TiozinNotFoundError.raise_if(
             catalog_type and catalog_type not in self._CATALOG_TYPES,
             f"Unsupported Iceberg catalog type: '{catalog_type}'. "
             f"Supported: {', '.join(self._CATALOG_TYPES)}",

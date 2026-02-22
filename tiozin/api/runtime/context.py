@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from pendulum import DateTime
 
 from tiozin.compose import RelativeDate, SafeEnv
-from tiozin.exceptions import TiozinUnexpectedError
+from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 if TYPE_CHECKING:
@@ -161,7 +161,7 @@ class Context:
     @staticmethod
     def current(required: bool = True) -> Context | None:
         ctx = _current_context.get()
-        TiozinUnexpectedError.raise_if(
+        TiozinInternalError.raise_if(
             required and ctx is None,
             "Tiozin has no active execution context",
         )

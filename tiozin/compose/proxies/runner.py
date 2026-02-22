@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.exceptions import PluginAccessForbiddenError
+from tiozin.exceptions import AccessViolationError
 
 from .. import TiozinTemplateOverlay
 
@@ -31,10 +31,10 @@ class RunnerProxy(wrapt.ObjectProxy):
     """
 
     def setup(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
+        raise AccessViolationError(self)
 
     def teardown(self, *args, **kwargs) -> None:
-        raise PluginAccessForbiddenError(self)
+        raise AccessViolationError(self)
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)

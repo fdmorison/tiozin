@@ -213,6 +213,9 @@ def human_join(items: list[str]) -> str:
         >>> human_join(["Alice", "Bob", "Charlie"])
         "Alice, Bob and Charlie"
     """
+    if not items:
+        return ""
+
     items = list(items)
     return (
         items[0]
