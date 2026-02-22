@@ -1,5 +1,47 @@
 # Changelog
 
+## [3.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v2.0.0...tiozin-v3.0.0) (2026-02-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** Review exception model and introduce retryable support ([#135](https://github.com/fdmorison/tiozin/issues/135))
+* **core:** Introduce subdomain field ([#129](https://github.com/fdmorison/tiozin/issues/129))
+* **core:** Redesign Context execution model to align with Python context management ([#126](https://github.com/fdmorison/tiozin/issues/126))
+* **core:** Adopt Tiozin and Tio naming across the codebase ([#125](https://github.com/fdmorison/tiozin/issues/125))
+
+### Features
+
+* **core:** Add classproperty decorator and refine tioproxy internals ([#124](https://github.com/fdmorison/tiozin/issues/124)) ([c17f779](https://github.com/fdmorison/tiozin/commit/c17f779c3f7fd079344df889817fdac225994522))
+* **core:** Add deterministic .env resolution order ([#110](https://github.com/fdmorison/tiozin/issues/110)) ([3827a79](https://github.com/fdmorison/tiozin/commit/3827a79e3f4b4902e78581fe83676391be1b8197))
+* **core:** Add slug to Tiozin and Context for safe SQL/filesystem identifier ([#128](https://github.com/fdmorison/tiozin/issues/128)) ([80173e1](https://github.com/fdmorison/tiozin/commit/80173e17d826994c72d61615c46133b81547b541))
+* **core:** Introduce subdomain field ([#129](https://github.com/fdmorison/tiozin/issues/129)) ([ec2e9b6](https://github.com/fdmorison/tiozin/commit/ec2e9b69ff047ffb487876e942a2bc7f22921a42))
+* **tio_duckdb:** Expand DuckdbFileInput to support advanced read scenarios ([#114](https://github.com/fdmorison/tiozin/issues/114)) ([ede001f](https://github.com/fdmorison/tiozin/commit/ede001fb80e2222b866dd3d3449e33fdad0f5a24))
+* **tio_duckdb:** Tio DuckDB provider with Runner, Inputs, Outputs, SQL Transforms, and declarative job examples ([#113](https://github.com/fdmorison/tiozin/issues/113)) ([7902b31](https://github.com/fdmorison/tiozin/commit/7902b31f32e99672fe4f9e69e09ad82ef8e017ae))
+* **tio_spark:** Introduce provider-level proxies and SQL-first Spark pipelines ([#108](https://github.com/fdmorison/tiozin/issues/108)) ([9a33fe9](https://github.com/fdmorison/tiozin/commit/9a33fe924af5a754b110511e148ea69b71220dfa))
+
+
+### Bug Fixes
+
+* **core:** Allow [@tioproxy](https://github.com/tioproxy) to accept multiple proxies and reject stacking ([#123](https://github.com/fdmorison/tiozin/issues/123)) ([8939b7b](https://github.com/fdmorison/tiozin/commit/8939b7bf0712e3de4218fd6d0440248805a9e593))
+* **core:** Template rendering in plugin setup and teardown ([#115](https://github.com/fdmorison/tiozin/issues/115)) ([6aa4d80](https://github.com/fdmorison/tiozin/commit/6aa4d802fcfc058258d1749177d2a381d3b3cf97))
+* **security:** Secret leakage and run_id format ([#132](https://github.com/fdmorison/tiozin/issues/132)) ([f54fe65](https://github.com/fdmorison/tiozin/commit/f54fe65490fc498efbf25db4161b893bef27f6ce))
+
+
+### Documentation
+
+* Improve README and write about Tiozin Family model ([#118](https://github.com/fdmorison/tiozin/issues/118)) ([5903943](https://github.com/fdmorison/tiozin/commit/59039438dfaaab58dd336f2ae0ecf5bddc7c7926))
+* Improves README and documentation index ([#133](https://github.com/fdmorison/tiozin/issues/133)) ([7b70fa3](https://github.com/fdmorison/tiozin/commit/7b70fa3ae56c3dccad974ae135ae05580e7bd862))
+* Introduce Object Model and refine Family Model docs ([#134](https://github.com/fdmorison/tiozin/issues/134)) ([d89f94b](https://github.com/fdmorison/tiozin/commit/d89f94b7e74e45742e5c8df08823bd0d98d474ec))
+* Review and improve Tiozin Family documentation ([#120](https://github.com/fdmorison/tiozin/issues/120)) ([7553634](https://github.com/fdmorison/tiozin/commit/7553634b550193774cbb5608dfad026b8060a236))
+
+
+### Code Refactoring
+
+* **core:** Adopt Tiozin and Tio naming across the codebase ([#125](https://github.com/fdmorison/tiozin/issues/125)) ([ecbee0d](https://github.com/fdmorison/tiozin/commit/ecbee0d3f0b35ce89e683731e8e99024e72fc5a7))
+* **core:** Redesign Context execution model to align with Python context management ([#126](https://github.com/fdmorison/tiozin/issues/126)) ([81f79c1](https://github.com/fdmorison/tiozin/commit/81f79c1744d89bb0eb4b5418d7d6cd8987ecfb87))
+* **core:** Review exception model and introduce retryable support ([#135](https://github.com/fdmorison/tiozin/issues/135)) ([b627b75](https://github.com/fdmorison/tiozin/commit/b627b754537edc4a9ec7936dcd2f0d1ea1d523b7))
+
 ## [2.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.5.0...tiozin-v2.0.0) (2026-01-26)
 
 
