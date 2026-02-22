@@ -1,14 +1,47 @@
 ## 📌 Description
-<!-- Concise explanation of why this PR is necessary. -->
+<!--
+Must open with one line stating the PR goal.
+A follow-up paragraph of up to three lines may expand on the description.
+
+Do NOT:
+- Justify the change
+- Criticize previous code
+- Use bullet points
+- Add implementation details
+- Repeat content from "What"
+
+Keep it concise and high-level.
+-->
 
 ## 📌 What
-<!-- Human-friendly explanation of what was done in this PR. -->
+<!--
+List logical changes only.
+Summarize the logic, not the diff.
+
+Each bullet must:
+- Represent one meaningful structural or behavioral change
+- Use direct verbs (Added, Removed, Renamed, Extracted, Refactored, Introduced, Replaced)
+
+Do NOT:
+- List line-level edits
+- Describe minor internal adjustments
+- Explain how the code works
+-->
 
 ## 📎 Notes
-<!-- Any important context, rollout instructions, risks, or follow-ups reviewers should be aware of. -->
+<!--
+State explicitly:
+- Runtime behavior change: Yes or No
+- Breaking change: Yes or No
+
+Be factual. No commentary.
+-->
 
 ## 🔗 References
-<!-- Links to related tickets, RFCs, Slack threads, documentation, or other PRs. -->
+<!--
+Include only real references.
+If none exist, write: None.
+-->
 
 ## ✅ Checklist
 - [ ] Code follows project standards
