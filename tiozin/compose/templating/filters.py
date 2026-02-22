@@ -3,218 +3,96 @@ Jinja2 environment and custom filters for template rendering.
 """
 
 import re
+from typing import Any
 
 from jinja2 import Environment, StrictUndefined
 
-from ..templating.relative_date import (
-    FilesystemDeepView,
-    FilesystemFlatView,
-    RelativeDate,
-)
 
-TRUNC_SUPPORTED_UNITS = {"minute", "hour", "day", "month", "year"}
-
-
-# =============================================================================
-# String filters
-# =============================================================================
 def nodash(value: str) -> str:
     """
-    Remove dashes.
-    Eg: {{ "2026-01-14" | nodash }} -> "20260114"
+    Return the input string with all dash characters removed.
+
+    Useful for compact date representations and identifier normalization.
+
+    Example:
+        {{ "2026-01-14" | nodash }} -> "20260114"
     """
     if value is None:
         return value
     return str(value).replace("-", "")
 
 
+def notz(value: str) -> str:
+    """
+    Return the input string without a trailing timezone designator.
+
+    Removes common ISO 8601 timezone suffixes such as ``Z``,
+    ``+HH:MM`` and ``+HHMM`` when present at the end of the string.
+
+    Example:
+        {{ "2026-01-14T01:59:57+00:00" | notz }} -> "2026-01-14T01:59:57"
+        {{ "2026-01-14T01:59:57Z" | notz }} -> "2026-01-14T01:59:57"
+    """
+    if value is None:
+        return value
+    return re.sub(r"([+-]\d{2}:?\d{2}|Z)$", "", str(value))
+
+
 def compact(value: str) -> str:
     """
-    Remove all non-alphanumeric.
-    Eg: {{ "2026-01-14T01:59" | compact }} -> "20260114T0159"
+    Return the input string with all non-alphanumeric characters removed.
+
+    Useful for generating compact identifiers or normalized keys.
+
+    Example:
+        {{ "2026-01-14T01:59" | compact }} -> "20260114T0159"
     """
     if value is None:
         return value
     return re.sub(r"[^A-Za-z0-9]", "", str(value))
 
 
-def sanitize_date(value: str) -> str:
+def fs_safe(value: Any) -> str:
     """
-    Make datetime filesystem-safe.
-    Eg: {{ "2026-01-14 01:59" | sanitize_date }} -> "2026-01-14_01-59"
+    Return a filesystem-safe representation of the input string.
+
+    Normalizes common datetime separators to make the value suitable
+    for filenames and paths by:
+
+    - replacing ':' with '-'
+    - replacing whitespace with '_'
+    - removing the colon in timezone offsets (e.g. ``+00:00`` → ``+0000``)
+
+    Example:
+        {{ "2026-01-14 01:59" | fs_safe }} -> "2026-01-14_01-59"
     """
     if value is None:
         return value
     value = str(value)
+    value = re.sub(r"([+-]\d{2}):(\d{2})$", r"\1\2", value)
     value = value.replace(":", "-")
     value = re.sub(r"\s+", "_", value)
     return value
 
 
 # =============================================================================
-# Truncation filters
-# =============================================================================
-def trunc_date(dt, unit: str) -> str:
-    """Truncate datetime to start of unit (minute, hour, day, month, year)."""
-    if dt is None:
-        return dt
-
-    if unit not in TRUNC_SUPPORTED_UNITS:
-        raise ValueError(f"Invalid unit '{unit}'. Supported: {', '.join(TRUNC_SUPPORTED_UNITS)}")
-
-    return RelativeDate.coerce(dt).start_of(unit).to_iso8601_string()
-
-
-def trunc_min(dt) -> str:
-    """Truncate to start of minute."""
-    return trunc_date(dt, "minute")
-
-
-def trunc_hour(dt) -> str:
-    """Truncate to start of hour."""
-    return trunc_date(dt, "hour")
-
-
-def trunc_day(dt) -> str:
-    """Truncate to start of day."""
-    return trunc_date(dt, "day")
-
-
-def trunc_month(dt) -> str:
-    """Truncate to start of month."""
-    return trunc_date(dt, "month")
-
-
-def trunc_year(dt) -> str:
-    """Truncate to start of year."""
-    return trunc_date(dt, "year")
-
-
-# =============================================================================
-# Format filters
-# =============================================================================
-def iso(value) -> str:
-    """Convert to ISO-8601 string."""
-    return RelativeDate.coerce(value).to_iso8601_string()
-
-
-def iso8601(value) -> str:
-    """Convert to ISO-8601 string (alias for iso)."""
-    return RelativeDate.coerce(value).to_iso8601_string()
-
-
-def rfc3339(value) -> str:
-    """Convert to RFC-3339 string."""
-    return RelativeDate.coerce(value).to_rfc3339_string()
-
-
-def w3c(value) -> str:
-    """Convert to W3C datetime string."""
-    return RelativeDate.coerce(value).to_w3c_string()
-
-
-def sql_datetime(value) -> str:
-    """Convert to SQL datetime string (YYYY-MM-DD HH:MM:SS)."""
-    return RelativeDate.coerce(value).to_datetime_string()
-
-
-# =============================================================================
-# Unix timestamp filters
-# =============================================================================
-def unix(value) -> int:
-    """Convert to Unix timestamp (int seconds)."""
-    return RelativeDate.coerce(value).int_timestamp
-
-
-def unix_float(value) -> float:
-    """Convert to Unix timestamp (float seconds)."""
-    return RelativeDate.coerce(value).float_timestamp
-
-
-# =============================================================================
-# Datetime part filters
-# =============================================================================
-def year(value) -> str:
-    """Extract year as YYYY."""
-    return RelativeDate.coerce(value).format("YYYY")
-
-
-def month(value) -> str:
-    """Extract month as MM."""
-    return RelativeDate.coerce(value).format("MM")
-
-
-def day(value) -> str:
-    """Extract day as DD."""
-    return RelativeDate.coerce(value).format("DD")
-
-
-def hour(value) -> str:
-    """Extract hour as HH."""
-    return RelativeDate.coerce(value).format("HH")
-
-
-def minute(value) -> str:
-    """Extract minute as mm."""
-    return RelativeDate.coerce(value).format("mm")
-
-
-def second(value) -> str:
-    """Extract second as ss."""
-    return RelativeDate.coerce(value).format("ss")
-
-
-# =============================================================================
-# Filesystem path filters
-# =============================================================================
-def fs(value) -> FilesystemFlatView:
-    """Convert to FilesystemFlatView for flat path formats."""
-    return FilesystemFlatView(RelativeDate.coerce(value))
-
-
-def fsdeep(value) -> FilesystemDeepView:
-    """Convert to FilesystemDeepView for Hive-style partitioned paths."""
-    return FilesystemDeepView(RelativeDate.coerce(value))
-
-
-# =============================================================================
 # Environment factory
 # =============================================================================
 def create_jinja_environment() -> Environment:
-    """Create a pre-configured Jinja2 environment with custom filters."""
+    """
+    Create and return a preconfigured Jinja2 environment.
+
+    The environment uses ``StrictUndefined`` and registers the custom
+    string normalization filters provided by this module.
+    """
     env = Environment(
         undefined=StrictUndefined,
         autoescape=False,
         trim_blocks=True,
         lstrip_blocks=True,
     )
-    # String filters
     env.filters["nodash"] = nodash
+    env.filters["notz"] = notz
     env.filters["compact"] = compact
-    env.filters["sanitize_date"] = sanitize_date
-    # Truncation filters
-    env.filters["trunc_min"] = trunc_min
-    env.filters["trunc_hour"] = trunc_hour
-    env.filters["trunc_day"] = trunc_day
-    env.filters["trunc_month"] = trunc_month
-    env.filters["trunc_year"] = trunc_year
-    # Format filters
-    env.filters["iso"] = iso
-    env.filters["iso8601"] = iso8601
-    env.filters["rfc3339"] = rfc3339
-    env.filters["w3c"] = w3c
-    env.filters["sql_datetime"] = sql_datetime
-    # Unix timestamp filters
-    env.filters["unix"] = unix
-    env.filters["unix_float"] = unix_float
-    # Datetime part filters
-    env.filters["year"] = year
-    env.filters["month"] = month
-    env.filters["day"] = day
-    env.filters["hour"] = hour
-    env.filters["minute"] = minute
-    env.filters["second"] = second
-    # Filesystem path filters
-    env.filters["fs"] = fs
-    env.filters["fsdeep"] = fsdeep
+    env.filters["fs_safe"] = fs_safe
     return env
