@@ -2,28 +2,17 @@
 
 Every component you write for Tiozin is a Tiozin: an Input that reads from your database, a Transform that applies your business logic, an Output that writes to your system, a Runner that manages your execution engine. This guide shows how to build each one, using a MongoDB family as the running example. Data flows through the pipeline as `pandas.DataFrame`.
 
----
-
 ## How Tiozin finds your plugins
 
-Tiozin discovers plugins through Python's standard `entry_points` mechanism. You declare your package once in `pyproject.toml`, and from that point forward Tiozin loads your plugins automatically at startup. No registration calls, no decorators, no configuration files.
+Plugin discovery uses Python's `entry_points` mechanism. See [Creating a Provider Family](families.md) for the full registration walkthrough.
 
-```toml
-[project.entry-points."tiozin.family"]
-tio_sqlite = "tio_sqlite"
-```
-
-The key is your package name. The value is the Python import path to your package. When Tiozin starts, it scans all installed packages registered under `tiozin.family`, imports each one, and makes their Tiozins available by class name.
-
-That is the entire discovery contract. Once your package is installed, users reference your Tiozins by class name using the `kind` field in any job YAML.
-
----
+Once your package is installed, Tiozin makes your Tiozins available by class name. Users reference them using the `kind` field in any job YAML or Python definition. The framework resolves the class at runtime without any manual wiring.
 
 ## Eager and lazy execution
 
 Before implementing Output and Runner, you need to understand how execution flows.
 
-When a job runs, Tiozin calls each step in sequence: inputs read, transforms modify, outputs write. But "write" does not always mean "execute immediately."
+When a job runs, inputs read, transforms modify, outputs write. The order depends on the job implementation. `LinearJob` runs steps in a fixed sequential order, but a custom `Job` may coordinate steps differently. "Write" does not always mean "execute immediately."
 
 An eager output writes immediately inside `write()` and returns `None`. The runner receives nothing and skips it.
 
@@ -32,8 +21,6 @@ A lazy output returns a typed plan object describing what to write. The runner c
 Lazy execution is what makes the runner genuinely useful. Spark returns `DataFrameWriter` objects. DuckDB returns SQL strings. The runner executes each one in the right way. You can do the same in your own family.
 
 You choose the pattern by what your `write()` returns and what your `run()` knows how to handle.
-
----
 
 ## Implementing a Runner
 
@@ -96,8 +83,6 @@ runner:
   path: example.db
 ```
 
----
-
 ## Implementing an Input
 
 An Input reads data from a source and passes it to the next step. Extend `Input` and implement `read()`.
@@ -135,8 +120,6 @@ inputs:
 
 The `kind` is your class name exactly. The `name` is a required unique identifier within the job. The `description` is optional but useful for anyone reading the YAML later. Any parameter you define in `__init__`, like `query`, becomes a YAML field automatically.
 
----
-
 ## Implementing a Transform
 
 A Transform receives input from the previous step, applies business logic, and returns the result. Extend `Transform` and implement `transform()`.
@@ -160,8 +143,6 @@ class TaxTransform(Transform[str]):
 
 This is where your business logic lives. Call external APIs, apply ML models, run SQL, compute aggregations. As long as you accept what the previous step returned and return something the next step can use, the framework does not care what happens in between. That is the point: Tiozin handles the structure, you handle the logic.
 
-Notice `self.context.nominal_time`. The execution context is always available and gives you the reference time, the run ID, Data Mesh fields, and more.
-
 In YAML:
 
 ```yaml
@@ -173,8 +154,6 @@ transforms:
 ```
 
 For operations that need to combine multiple inputs, extend `CoTransform` instead.
-
----
 
 ## Implementing an Output
 
@@ -241,8 +220,6 @@ outputs:
     table: daily_summaries
 ```
 
----
-
 ## Implementing a Registry
 
 Extend the appropriate registry class and implement `get()` and `register()`.
@@ -272,15 +249,11 @@ class SQLiteSecretRegistry(SecretRegistry):
 
 The `try_get()` method is provided by the base class. It catches `TiozinNotFoundError` and returns `None`.
 
----
-
 ## Using @tioproxy
 
 Proxies let you add shared methods to every step in your family without repeating code in each class.
 
 See [Tio Proxy](../concepts/proxies.md) for how the proxy chain is built across the class hierarchy.
-
----
 
 ## Stateless steps, stateful runner
 

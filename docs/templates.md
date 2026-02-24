@@ -3,8 +3,6 @@
 Tiozin uses [Jinja2](https://jinja.palletsprojects.com/) to render dynamic values in your job YAML files.
 Any string value in a job definition can contain template expressions using `{{ }}` syntax.
 
----
-
 ## The basics
 
 Use `{{ }}` to insert a value:
@@ -20,8 +18,6 @@ Use filters with `|` to transform a value:
 ```yaml
 path: .output/ids/{{run_id | nodash}}
 ```
-
----
 
 ## Job metadata variables
 
@@ -50,8 +46,6 @@ Use them freely:
 path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
 ```
 
----
-
 ## Environment variables
 
 Use `ENV.<VAR_NAME>` to read environment variables at runtime:
@@ -68,12 +62,10 @@ If the variable is not set, Tiozin raises an error at render time. Use `| defaul
 log_level: "{{ ENV.LOG_LEVEL | default('INFO') }}"
 ```
 
----
-
 ## Date variables
 
 Tiozin injects a **`TemplateDate`** object based on the job's `nominal_time`.
-You can use it directly as `D` (or `DAY`, `day`, `d` — all aliases):
+You can use it directly as `D` (or `DAY`, `day`, `d`, all aliases):
 
 ```yaml
 # Just prints the date: 2026-01-17
@@ -107,7 +99,7 @@ Use a format property to control the output:
 {{ D[-1].deep_date }}    → year=2026/month=01/day=16
 ```
 
-Chaining is order-independent — format and navigation can come in any order:
+Chaining is order-independent: format and navigation can come in any order:
 
 ```yaml
 {{ D[-1].flat_hour }}   ==   {{ D.flat_hour.yesterday }}
@@ -115,7 +107,7 @@ Chaining is order-independent — format and navigation can come in any order:
 
 ### Convenience shortcuts
 
-These are also available directly (without `D`) — they're shortcuts for `D[0].<property>`:
+These are also available directly (without `D`), as shortcuts for `D[0].<property>`:
 
 ```yaml
 {{ today }}       → 2026-01-17
@@ -125,8 +117,6 @@ These are also available directly (without `D`) — they're shortcuts for `D[0].
 {{ flat_date }}   → 2026-01-17
 {{ deep_date }}   → year=2026/month=01/day=17
 ```
-
----
 
 ## Pinning to a specific hour
 
@@ -138,8 +128,6 @@ Use `.at<HH>` to jump to a specific hour of the day:
 {{ D[0].midnight }}        → 2026-01-17T00:00:00+00:00
 {{ D[0].noon }}            → 2026-01-17T12:00:00+00:00
 ```
-
----
 
 ## Common patterns
 
@@ -177,8 +165,6 @@ path: .output/{{domain}}/{{run_id | nodash}}
 # → .output/ecommerce/a1b2c3d4
 ```
 
----
-
 ## String filters
 
 Filters transform string values. Apply with `|`:
@@ -197,8 +183,6 @@ path: ./data/{{ domain | upper }}         → ./data/ECOMMERCE
 name: {{ product | replace("_", "-") }}   → orders-v2
 ```
 
----
-
 ## Full date property reference
 
 All properties are chainable. When used as standalone variables, they resolve for `D[0]` (today's nominal time).
@@ -207,19 +191,19 @@ All properties are chainable. When used as standalone variables, they resolve fo
 
 | Property / Syntax | Description | Example output |
 |---|---|---|
-| `D[n]` | Navigate `n` days (negative = past) | `D[-1]` → yesterday |
-| `.today` | Same day (no-op) | — |
-| `.yesterday` | Previous day | — |
-| `.tomorrow` | Next day | — |
+| `D[n]` | Navigate `n` days (negative = past) | `D[-1]` → `2026-01-16` |
+| `.today` | Same day (no-op) | `2026-01-17` |
+| `.yesterday` | Previous day | `2026-01-16` |
+| `.tomorrow` | Next day | `2026-01-18` |
 | `.start_of_year` | Jan 1st of current year | `2026-01-01` |
 | `.start_of_month` | 1st of current month | `2026-01-01` |
 | `.start_of_day` | Midnight of current day | `2026-01-17` |
 | `.start_of_week` | Monday of current week | `2026-01-12` |
-| `.start_of_hour` | Start of current hour | — |
-| `.start_of_minute` | Start of current minute | — |
+| `.start_of_hour` | Start of current hour (chain with format) | `D[0].start_of_hour.flat_hour` → `2026-01-17T10` |
+| `.start_of_minute` | Start of current minute (chain with format) | `D[0].start_of_minute.flat_minute` → `2026-01-17T10-30` |
 | `.midnight` | This day at 00:00:00 | `2026-01-17T00:00:00+00:00` |
 | `.noon` | This day at 12:00:00 | `2026-01-17T12:00:00+00:00` |
-| `.at00` … `.at23` | This day at HH:00:00 | `D[0].at09` → `2026-01-17T09:00:00+00:00` |
+| `.at00` to `.at23` | This day at HH:00:00 | `D[0].at09` → `2026-01-17T09:00:00+00:00` |
 
 ### ISO / datetime formats
 
@@ -248,27 +232,27 @@ All properties are chainable. When used as standalone variables, they resolve fo
 
 ### Flat filesystem paths
 
-Safe for filenames — dashes instead of colons, no spaces.
+Safe for filenames: dashes instead of colons, no spaces.
 
-| Property | Example output |
-|---|---|
-| `.flat_year` | `2026` |
-| `.flat_month` | `2026-01` |
-| `.flat_date` / `.flat_day` | `2026-01-17` |
-| `.flat_hour` | `2026-01-17T10` |
-| `.flat_minute` | `2026-01-17T10-30` |
-| `.flat_second` / `.flat_ts` | `2026-01-17T10-30-45` |
+| Property | Description | Example output |
+|---|---|---|
+| `.flat_year` | Year | `2026` |
+| `.flat_month` | Year and month | `2026-01` |
+| `.flat_date` / `.flat_day` | Full date | `2026-01-17` |
+| `.flat_hour` | Date and hour | `2026-01-17T10` |
+| `.flat_minute` | Date, hour, and minute | `2026-01-17T10-30` |
+| `.flat_second` / `.flat_ts` | Date and full time | `2026-01-17T10-30-45` |
 
 ### Deep (Hive-style) partitioned paths
 
-| Property | Example output |
-|---|---|
-| `.deep_year` | `year=2026` |
-| `.deep_month` | `year=2026/month=01` |
-| `.deep_date` / `.deep_day` | `year=2026/month=01/day=17` |
-| `.deep_hour` | `year=2026/month=01/day=17/hour=10` |
-| `.deep_minute` | `year=2026/month=01/day=17/hour=10/min=30` |
-| `.deep_second` / `.deep_ts` | `year=2026/month=01/day=17/hour=10/min=30/sec=45` |
+| Property | Description | Example output |
+|---|---|---|
+| `.deep_year` | Year partition | `year=2026` |
+| `.deep_month` | Year and month partitions | `year=2026/month=01` |
+| `.deep_date` / `.deep_day` | Year, month, and day partitions | `year=2026/month=01/day=17` |
+| `.deep_hour` | Year through hour partitions | `year=2026/month=01/day=17/hour=10` |
+| `.deep_minute` | Year through minute partitions | `year=2026/month=01/day=17/hour=10/min=30` |
+| `.deep_second` / `.deep_ts` | Year through second partitions | `year=2026/month=01/day=17/hour=10/min=30/sec=45` |
 
 ### Individual date/time parts
 

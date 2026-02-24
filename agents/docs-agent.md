@@ -84,7 +84,7 @@ Friendly, direct, and grounded — like advice from someone who has done it befo
 - No filler phrases ("It is worth noting that...", "In order to...", "In this section, we will...")
 - No marketing language ("powerful", "seamless", "robust", "intuitive")
 - No academic framing ("This document describes...", "The following section covers...")
-- No em-dashes (—) or en-dashes (–) in prose text. Rewrite the sentence instead
+- No em-dashes (—) or en-dashes (–) anywhere: prose, headings, or table cells. Rewrite the sentence instead. Use a period, a colon, or parentheses
 
 If something is simple, say it simply:
 
@@ -112,6 +112,10 @@ Every guide must follow this progression:
 4. Reference table at the end (when applicable)
 
 Never open with theory. Always open with an example the reader can copy and run.
+
+In guides with progressive examples, each section builds on the previous. Do not redefine code that was already shown in an earlier section. Reference it by name instead.
+
+When a framework-provided attribute appears for the first time (`self.options`, `self.context`, `self.name`, etc.), explain where it comes from before using it. Do not assume the reader knows the source.
 
 ---
 
@@ -160,8 +164,9 @@ Rules:
 - Filename: lowercase, hyphen-separated (`templates.md`, `quick-start.md`)
 - First heading: `# Title Case`
 - Section headings: `## Title Case`
-- Use `---` as horizontal rule between major sections
+- Do not use `---` as a horizontal rule between sections. Section headings provide their own visual separation.
 - Code blocks must declare a language (`yaml`, `python`, `bash`)
+- All Python method signatures in code examples must include type hints on parameters and return types. Use concrete types where the context makes them clear (`str`, `DataFrame`, etc.). For genuinely generic examples, use `Any` from `typing`.
 
 ---
 

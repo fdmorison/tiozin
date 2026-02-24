@@ -1,8 +1,6 @@
 # API Reference
 
-The public Python API — the stable surface for building Tiozin pipelines and provider families.
-
----
+The public Python API. The stable surface for building Tiozin pipelines and provider families.
 
 ## Import
 
@@ -37,8 +35,6 @@ from tiozin import (
 )
 ```
 
----
-
 ## TiozinApp
 
 Main entrypoint. Manages the application lifecycle and runs jobs.
@@ -58,8 +54,6 @@ app.run("path/to/job.yaml")
 
 Returns the job execution result (provider-specific).
 
----
-
 ## Tiozin (base)
 
 All executable components extend `Tiozin`. It provides:
@@ -72,130 +66,49 @@ All executable components extend `Tiozin`. It provides:
 | `tiozin_uri` | Fully qualified identifier: `<family>/<role>/<name>` |
 | `context` | Active execution `Context` (raises if no active context) |
 
----
-
 ## Job
 
-Defines a complete pipeline. Extend and implement `submit()`.
+Defines a complete pipeline. Extend and implement `submit()`. See [Jobs](concepts/jobs.md) for the full contract, properties, and invariants.
 
 ```python
+from typing import Any
 from tiozin import Job
 
-class LinearJob(Job):
-    def submit(self):
-        datasets = [i.read() for i in self.inputs]
-        for t in self.transforms:
-            datasets = [t.transform(d) for d in datasets]
-        results = [o.write(d) for o in self.outputs for d in datasets]
-        return self.runner.run(results)
+
+class MyJob(Job[Any]):
+    def submit(self) -> Any:
+        # implement your execution model here
+        ...
 ```
-
-Key attributes populated from the YAML manifest:
-
-| Attribute | Type | Description |
-|---|---|---|
-| `name` | `str` | Job identifier |
-| `runner` | `Runner` | Execution backend |
-| `inputs` | `list[Input]` | Data sources |
-| `transforms` | `list[Transform]` | Data transformations |
-| `outputs` | `list[Output]` | Data destinations |
-| `org`, `domain`, `layer`, ... | `str` | Data Mesh fields |
-
----
 
 ## Runner
 
-Abstract base for execution engines. Extend and implement `session`, `setup()`, `run()`, `teardown()`.
-
-```python
-from tiozin import Runner
-
-class MyRunner(Runner):
-    @property
-    def session(self):
-        return self._session
-
-    def setup(self):
-        self._session = create_session()
-
-    def run(self, plan):
-        return execute(plan, self._session)
-
-    def teardown(self):
-        self._session.close()
-```
+Abstract base for execution engines. Extend and implement `session`, `setup()`, `run()`, and `teardown()`. See [Runners](concepts/runners.md) for the full contract and properties.
 
 | Attribute | Description |
 |---|---|
-| `streaming` | `bool` — whether this runner executes streaming workloads |
-| `session` | Abstract property — the active engine session |
-
----
+| `streaming` | `bool`. Whether this runner executes streaming workloads |
+| `session` | Abstract property. Returns the active engine session |
 
 ## Input
 
-Abstract base for data sources. Extend and implement `read()`.
-
-```python
-from tiozin import Input
-
-class MyInput(Input):
-    def read(self):
-        return load_data(self.path)
-```
+Abstract base for data sources. Extend and implement `read()`. See [Steps](concepts/steps.md#input) for the full contract and properties.
 
 Lifecycle: `setup()` → `read()` → `teardown()`
 
-`setup()` and `teardown()` are no-ops by default. Override them if needed.
-
----
-
 ## Transform and CoTransform
 
-Abstract bases for data transformations.
+Abstract bases for data transformations. Extend and implement `transform()`. See [Steps](concepts/steps.md#transform) for the full contract and properties.
 
-`Transform.transform(data)` — single dataset:
-
-```python
-from tiozin import Transform
-
-class MyTransform(Transform):
-    def transform(self, data):
-        return filter_data(data)
-```
-
-`CoTransform.transform(data, *others)` — multiple datasets:
-
-```python
-from tiozin import CoTransform
-
-class JoinTransform(CoTransform):
-    def transform(self, left, right):
-        return join(left, right)
-```
-
-Lifecycle: `setup(data)` → `transform(data)` → `teardown(data)`
-
----
+`Transform.transform(data)` for a single dataset. `CoTransform.transform(data, *others)` for multiple datasets.
 
 ## Output
 
-Abstract base for data destinations. Extend and implement `write()`.
-
-```python
-from tiozin import Output
-
-class MyOutput(Output):
-    def write(self, data):
-        save_data(data, self.path)
-        return data
-```
+Abstract base for data destinations. Extend and implement `write()`. See [Steps](concepts/steps.md#output) for the full contract and properties.
 
 `write()` can return the data, a writer object, or `None`. The return value becomes part of the execution plan passed to the runner's `run()` method.
 
 Lifecycle: `setup(data)` → `write(data)` → `teardown(data)`
-
----
 
 ## Registry
 
@@ -205,10 +118,10 @@ Abstract base for metadata services. Extend and implement `get()` and `register(
 from tiozin import Registry
 
 class MyRegistry(Registry):
-    def get(self, identifier, version=None):
+    def get(self, identifier: str, version: str | None = None) -> Any:
         return fetch(identifier)
 
-    def register(self, identifier, value):
+    def register(self, identifier: str, value: Any) -> None:
         store(identifier, value)
 ```
 
@@ -218,13 +131,23 @@ class MyRegistry(Registry):
 | `register(identifier, value)` | Store metadata |
 | `try_get(identifier, version=None)` | Retrieve metadata or return `None` |
 
----
-
 ## Context
 
-Holds the execution scope for the current job or step. Populated automatically by the framework.
+Holds the execution scope for the current job or step. Populated automatically by the framework. Every step and runner that runs inside a job has access to the same context for that execution.
 
-Access the active context from any Tiozin:
+### Safety guarantees
+
+`Context` is implemented with Python's `contextvars.ContextVar`. This means:
+
+- **Thread-safe**: each thread gets its own isolated copy of the active context. Parallel threads running different jobs never see each other's context.
+- **Async-safe**: each `asyncio` Task gets its own copy. Concurrent coroutines do not share context state even when running in the same event loop.
+- **Nested execution-safe**: activating a context is reentrant. Each `with context:` call pushes a restoration token onto an internal stack; exiting restores the previous scope. A child step context can be safely activated inside a parent job context without corrupting the parent.
+
+These guarantees are provided by the Python runtime and do not require any application-level locking.
+
+### Accessing the active context
+
+From inside any Tiozin plugin:
 
 ```python
 ctx = self.context                     # raises if no active context
@@ -232,19 +155,42 @@ ctx = Context.current()                # same
 ctx = Context.current(required=False)  # returns None if not active
 ```
 
-Key fields:
+Context is activated automatically by the framework before calling your `setup()`, `read()`, `transform()`, `write()`, or `teardown()` methods. You do not need to activate it manually.
+
+### Key fields
 
 | Field | Type | Description |
 |---|---|---|
 | `name` | `str` | Job or step name |
 | `run_id` | `str` | Unique execution ID for this run |
 | `nominal_time` | `DateTime` | Reference time for this execution (UTC) |
-| `org`, `domain`, `layer`, ... | `str` | Data Mesh fields |
+| `org`, `domain`, `layer`, ... | `str` | Governance fields. See [Jobs](concepts/jobs.md#governance) |
 | `runner` | `Runner` | Active runner |
-| `shared` | `dict` | Shared state for passing data between steps |
-| `temp_workdir` | `Path` | Temporary working directory for this execution |
+| `job` | `Context` | The parent job context (same as `self` when accessed from a job) |
+| `shared` | `dict` | Shared mutable state for passing data between steps within the same execution |
+| `temp_workdir` | `Path` | Temporary working directory for this component's execution |
 
----
+### Passing data between steps
+
+`shared` is a plain `dict` scoped to the current job execution. Values written by one step are readable by any step that runs after it:
+
+```python
+from typing import Any
+from tiozin import Transform, Output
+
+
+class RecordCountTransform(Transform):
+    def transform(self, data: Any) -> Any:
+        self.context.shared["record_count"] = len(data)
+        return data
+
+
+class AuditOutput(Output):
+    def write(self, data: Any) -> Any:
+        count = self.context.shared.get("record_count")
+        self.info(f"{self.context.name}: writing {count} records")
+        return data
+```
 
 ## JobManifest
 
@@ -257,9 +203,7 @@ from tiozin import JobManifest
 manifest = JobManifest.try_from_yaml_or_json("path/to/job.yaml")
 ```
 
----
-
-## tioproxy
+## @tioproxy
 
 Registers proxy classes on a Tiozin class. Used when building provider families.
 

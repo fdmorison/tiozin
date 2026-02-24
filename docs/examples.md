@@ -2,11 +2,9 @@
 
 Ready-to-run examples organized by provider. Full examples live in the `examples/jobs/` directory of the repository.
 
----
-
 ## Minimal (NoOp)
 
-The simplest possible job. Runs without any additional dependencies. Good for understanding the structure.
+The starting point. No additional packages needed, no execution engine to configure. Use this to understand the full YAML layout: job metadata, governance fields, runner, inputs, transforms, and outputs. It also shows Jinja templates in path fields.
 
 ```yaml
 kind: LinearJob
@@ -50,11 +48,9 @@ Run it:
 tiozin run examples/jobs/dummy.yaml
 ```
 
----
+## Spark: CSV to Parquet ingestion
 
-## Spark — CSV to Parquet ingestion
-
-Reads a CSV file and writes it as Parquet to the raw layer, adding ingestion metadata.
+The standard raw ingestion pattern on Spark. A single input reads a CSV, a transform injects traceability metadata (`run_id`, `nominal_time`, `created_at`), and an output writes Parquet to the raw layer. Shows `SparkRunner`, `SparkFileInput`, `SparkSqlTransform`, and `SparkFileOutput` working together for the first time.
 
 ```yaml
 kind: LinearJob
@@ -104,11 +100,9 @@ outputs:
     format: parquet
 ```
 
----
+## Spark: Multi-input join with parameterized filter
 
-## Spark — Multi-input join with parameterized filter
-
-Joins two inputs, filters the result, and writes partitioned Parquet output.
+Shows four patterns not in the previous example: multiple inputs joined by name in SQL, chained transforms where each `@self` refers to the previous output, a parameterized query with `args:` to keep literals out of SQL, and output partitioned by column. Each pattern is independent. You can use any combination of them.
 
 ```yaml
 kind: LinearJob
@@ -167,11 +161,9 @@ outputs:
       - country
 ```
 
----
+## DuckDB: CSV to Parquet ingestion
 
-## DuckDB — CSV to Parquet ingestion
-
-Same ingestion pattern, local DuckDB execution.
+The same ingestion pattern as the Spark example above, but running on DuckDB locally. Compare the two side by side: only the `kind` fields change. The job structure, YAML layout, and intent are identical. This is the portability guarantee Tiozin provides across execution engines.
 
 ```yaml
 kind: LinearJob
@@ -217,11 +209,9 @@ outputs:
     mode: overwrite
 ```
 
----
+## DuckDB: Extensions and attached databases
 
-## DuckDB — Extensions and attached databases
-
-Uses DuckDB extensions and reads from an attached external database.
+Shows runner-level configuration: `extensions` loads `httpfs` and `spatial` so DuckDB can read from S3 and run geospatial queries; `attach` mounts an external DuckDB file under an alias. The input reads from an S3 path with a date template. The transform joins across databases using the `staging.table` syntax that the attach alias provides.
 
 ```yaml
 kind: LinearJob

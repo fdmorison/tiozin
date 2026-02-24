@@ -1,175 +1,75 @@
-# Runners
+# Runner
 
-A Runner is the execution engine of your pipeline. It creates the runtime session, receives the execution plan after steps run, and releases resources when the job finishes.
+A Runner is Tiozin's execution engine. It creates the runtime session, receives the execution plan produced by the pipeline steps, and releases resources when the job finishes.
 
----
+## The contract
 
-## How runners work
+`Runner` is an abstract base class. Any class that extends it and registers as a Tiozin plugin becomes a valid runner type.
 
-Every job has exactly one runner. The runner:
+Four lifecycle methods define the contract:
 
-1. Creates its session (a `SparkSession`, DuckDB connection, etc.) during `setup`
-2. Receives the execution plan produced by the job after all steps complete
-3. Executes the plan in `run`
-4. Releases resources in `teardown`
-
-You never call these methods yourself — the framework calls them automatically when you run a job.
-
----
-
-## NoOpRunner
-
-The default runner for testing and local development. Accepts any plan and returns `None` without executing anything.
-
-```yaml
-runner:
-  kind: NoOpRunner
-```
-
-| Property | Default | Description |
+| Method | Required | Description |
 |---|---|---|
-| `streaming` | `false` | Simulate streaming mode |
+| `setup()` | yes | Called before execution. Create sessions, connections, or shared resources here |
+| `run(plan)` | yes | Execute the plan. Receives the list of values returned by all outputs |
+| `teardown()` | no | Called after execution. Release sessions, connections, and resources here |
+| `session` | yes | Abstract property. Returns the active engine session |
 
----
+The session is the live connection to the underlying engine, such as a `SparkSession` or a `DuckDBPyConnection`. It is created during `setup()` and made available to all steps via `self.context.runner.session`.
 
-## SparkRunner
+## Custom implementations
 
-Runs pipelines on Apache Spark. Requires `pip install tiozin[tio_spark]`.
+Any class that extends `Runner` and implements `session`, `setup()`, and `run()` becomes a valid runner type:
 
-```yaml
-runner:
-  kind: SparkRunner
-  master: local[*]
-  log_level: WARN
+```python
+from typing import Any
+from tiozin import Runner
+
+
+class MyRunner(Runner[list, Any, None]):
+    @property
+    def session(self) -> Any:
+        return self._session
+
+    def setup(self) -> None:
+        self._session = create_session()
+
+    def run(self, plan: list) -> None:
+        for item in plan:
+            if item is not None:
+                execute(item, self._session)
+
+    def teardown(self) -> None:
+        self._session.close()
 ```
 
-The runner creates a `SparkSession` during setup and stops it during teardown. The app name is set to the job slug automatically.
+Register it as a `tiozin.family` entry point and use `kind: MyRunner` in YAML. See [Creating Provider Families](../extending/families.md) for registration details.
 
-### Spark Connect
+## Properties
 
-To connect to a remote Spark Connect server (Spark 3.4+):
+### Identity
 
-```yaml
-runner:
-  kind: SparkRunner
-  endpoint: sc://localhost:15002
-```
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `kind` | yes | `str` | | Runner type, used to resolve the plugin |
+| `name` | no | `str` | `None` | Optional identifier |
+| `description` | no | `str` | `None` | Short description |
 
-`master` and `endpoint` are mutually exclusive.
+### Execution
 
-### Hive support
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `streaming` | no | `bool` | `false` | Whether this runner executes streaming workloads |
+| `**options` | no | | | Provider-specific configuration parameters |
 
-```yaml
-runner:
-  kind: SparkRunner
-  enable_hive_support: true
-```
+`streaming` is part of the base `Runner` contract, not provider-specific. Provider implementations may inspect it to switch between batch and streaming modes.
 
-### Adding JAR packages
+## Invariants
 
-```yaml
-runner:
-  kind: SparkRunner
-  jars_packages:
-    - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0
-```
-
-### Arbitrary Spark config
-
-Any unrecognized property is passed directly to `SparkSession.builder.config()`:
-
-```yaml
-runner:
-  kind: SparkRunner
-  spark.executor.memory: 4g
-  spark.sql.shuffle.partitions: 200
-```
-
-### All SparkRunner properties
-
-| Property | Default | Description |
-|---|---|---|
-| `master` | — | Spark master URL (e.g. `local[*]`, `yarn`, `spark://host:7077`) |
-| `endpoint` | — | Spark Connect endpoint (e.g. `sc://localhost:15002`) |
-| `enable_hive_support` | `false` | Enable Hive metastore integration |
-| `log_level` | `WARN` | Spark context log level |
-| `jars_packages` | `[]` | Maven coordinates to add to the classpath |
-| `streaming` | `false` | Enable streaming execution mode |
-| `**options` | — | Additional Spark config passed to `SparkSession.builder` |
-
-### SparkIcebergRunner
-
-A convenience variant that pre-loads the Iceberg runtime JAR and Spark catalog extensions. Drop-in replacement for `SparkRunner` when working with Iceberg tables.
-
-```yaml
-runner:
-  kind: SparkIcebergRunner
-  master: local[*]
-```
-
----
-
-## DuckdbRunner
-
-Runs pipelines on DuckDB. Requires `pip install tiozin[tio_duckdb]`.
-
-```yaml
-runner:
-  kind: DuckdbRunner
-```
-
-By default, uses an in-memory database named after the job slug.
-
-### Persistent database
-
-```yaml
-runner:
-  kind: DuckdbRunner
-  database: path/to/main.duckdb
-```
-
-### Extensions
-
-```yaml
-runner:
-  kind: DuckdbRunner
-  extensions:
-    - httpfs
-    - spatial
-```
-
-Extensions are installed and loaded during setup.
-
-### Attaching external databases
-
-```yaml
-runner:
-  kind: DuckdbRunner
-  attach:
-    staging: /data/staging.duckdb
-    analytics: /data/analytics.duckdb
-```
-
-Attached databases are available by alias in SQL transforms:
-
-```yaml
-transforms:
-  - kind: DuckdbSqlTransform
-    name: from_staging
-    query: SELECT * FROM staging.my_table
-```
-
-### All DuckdbRunner properties
-
-| Property | Default | Description |
-|---|---|---|
-| `database` | `:memory:<job_name>` | DuckDB database path, `:memory:`, or `:default:` |
-| `read_only` | `false` | Open all databases in read-only mode |
-| `attach` | `{}` | Map of alias → path for external databases |
-| `extensions` | `[]` | DuckDB extensions to install and load |
-| `**options` | — | DuckDB config options passed to `duckdb.connect(config=...)` |
-
----
+- `session`, `setup()`, and `run()` are required. A runner that does not implement them raises at construction time.
+- `teardown()` is optional. The default implementation is a no-op.
+- Accessing `session` before `setup()` raises `NotInitializedError`.
+- The Runner is the only component that may hold stateful connections. Inputs, Transforms, and Outputs must access the session through `self.context.runner.session`.
 
 ## Accessing the session
 
@@ -179,4 +79,20 @@ Inside any step, access the runner's session via the context:
 session = self.context.runner.session
 ```
 
-For Spark steps, this returns the `SparkSession`. For DuckDB steps, the `DuckDBPyConnection`. Accessing the session before `setup` raises `NotInitializedError`.
+## Eager and lazy execution
+
+A runner's `run()` method receives a list containing the return value of every output's `write()` method.
+
+An **eager output** writes immediately inside `write()` and returns `None`. The runner receives `None` for that position and skips it.
+
+A **lazy output** returns a typed plan object: a writer, a SQL string, or any value the runner knows how to process. The runner collects all plans and decides how to execute them: sequentially, in parallel, as a batch, or any other strategy appropriate for the underlying engine.
+
+The choice is determined by what `write()` returns and what `run()` knows how to handle. Lazy execution is what makes runners genuinely useful for engines like Spark or DuckDB, where execution is most efficient when the engine controls scheduling.
+
+## Available runners
+
+Runners are provided by provider families:
+
+- **`NoOpRunner`** from `tio_kernel`: accepts any plan and returns `None` without executing anything. Use for testing, dry-runs, and local development.
+- **`SparkRunner`** and **`SparkIcebergRunner`** from `tio_spark`. See [tio_spark](../tio_spark.md).
+- **`DuckdbRunner`** from `tio_duckdb`. See [tio_duckdb](../tio_duckdb.md).

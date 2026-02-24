@@ -1,168 +1,192 @@
-# Working with Jobs
+# Job
 
-A Job describes a complete data pipeline: where data comes from, how it's transformed, and where it goes.
+A Job is Tiozin's top-level unit. It groups an execution engine, data sources, transformations, and destinations into a single declarative description of a pipeline.
 
----
+## The contract
 
-## The simplest job
+`Job` is an abstract base class. Any class that extends it and registers as a Tiozin plugin becomes a valid job type.
+
+Three lifecycle methods define the contract:
+
+| Method | Required | Description |
+|---|---|---|
+| `setup()` | no | Called before `submit()`. Override to run pre-execution initialization |
+| `submit()` | yes | Implements the execution model. Must be overridden |
+| `teardown()` | no | Called after `submit()`, even on failure. Override to run cleanup |
+
+The framework wraps every job in a `JobProxy` before execution. The proxy handles context creation, template rendering, logging, and lifecycle sequencing. Your job implementation focuses only on coordinating its steps.
+
+## LinearJob
+
+`LinearJob` is the built-in implementation, provided by the `tio_kernel` family. It runs steps in a fixed, sequential order:
+
+1. All inputs run, in declaration order.
+2. Transforms run in sequence. Each transform receives the output of the previous step. A `CoTransform` receives all current datasets at once (for joins, unions, or any multi-dataset operation).
+3. All outputs write the same final dataset, independently.
+4. The runner executes the resulting plan.
+
+```text
+┌───────────┐    ┌─────────────┐    ┌─────────────┐    ┌──────────┐
+│  Input 1  │───►│             │    │             │    │ Output 1 │
+├───────────┤    │ Transform 1 │───►│ Transform 2 │───►├──────────┤
+│  Input N  │───►│             │    │             │    │ Output N │
+└───────────┘    └─────────────┘    └─────────────┘    └──────────┘
+```
+
+`LinearJob` has no branches, no conditions, no retry logic, and no dependency rules between steps. Use it when data flows forward in one direction.
+
+If your pipeline needs conditional execution, parallel steps, or DAG-style dependency control, extend `Job` directly and implement `submit()`. The framework keeps `Job` pluggable for exactly this reason.
+
+## Custom implementations
+
+Any class that extends `Job` and implements `submit()` becomes a valid job type:
+
+```python
+from typing import Any
+from tiozin import Job
+
+
+class MyJob(Job[Any]):
+    def submit(self) -> Any:
+        # implement your execution model here
+        ...
+```
+
+Register it as a `tiozin.family` entry point and use `kind: MyJob` in YAML. See [Creating Pluggable Tiozins](../extending/tiozins.md) for registration details.
+
+## Properties
+
+### Identity
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `kind` | yes | `str` | | Job type, used to resolve the plugin |
+| `name` | yes | `str` | | Unique job identifier. Not the execution ID |
+| `description` | no | `str` | `None` | Short description of the pipeline |
+
+### Ownership
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `owner` | no | `str` | `None` | Team that requested this job |
+| `maintainer` | no | `str` | `None` | Team that maintains this job |
+| `cost_center` | no | `str` | `None` | Team that pays for this job |
+| `labels` | no | `dict[str, str]` | `{}` | Free-form key-value metadata |
+
+### Governance
+
+These fields declare the organizational context and lineage of the data this job produces. All seven are required. They are also available as template variables in any YAML string property.
+
+| Property | Required | Type | Description |
+|---|---|---|---|
+| `org` | yes | `str` | Organization that owns and produces this data |
+| `region` | yes | `str` | Business region of the domain team. This is a business territory (`us-east`, `latam`, `emea`), not a cloud infrastructure region like an AWS availability zone or GCP region |
+| `domain` | yes | `str` | Business domain that owns this pipeline (e.g. `ecommerce`, `marketing`) |
+| `subdomain` | yes | `str` | More specific area within the domain (e.g. `retail`, `campaigns`) |
+| `layer` | yes | `str` | Data layer: `raw`, `trusted`, `refined`, or any custom label |
+| `product` | yes | `str` | Data product being produced. A product groups one or more related models |
+| `model` | yes | `str` | Specific data representation within the product: a table, topic, file, collection, or any other structure. A product can expose one or more models |
+
+### Pipeline components
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `runner` | yes | `Runner` | | Execution engine for this pipeline |
+| `inputs` | yes | `list[Input]` | min 1 | Sources that provide data |
+| `transforms` | no | `list[Transform]` | `[]` | Steps that modify the data |
+| `outputs` | no | `list[Output]` | `[]` | Destinations where data is written |
+
+## Invariants
+
+These constraints apply to all job types, including `LinearJob`:
+
+- `name`, `runner`, `org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model` are required. Missing any one raises an error at construction time.
+- `inputs` must contain at least one element.
+- `transforms` and `outputs` are optional. A job with no outputs is valid: the runner receives an empty plan.
+- Unknown fields in YAML are silently ignored. You can annotate job definitions with custom fields without breaking execution.
+
+## A complete job
 
 ```yaml
 kind: LinearJob
-name: my_job
+name: orders_daily_summary
+description: Aggregates daily order totals by region.
+owner: data-platform
+maintainer: analytics-team
+cost_center: tio_scrooge
+labels:
+  criticality: high
 
 org: acme
 region: us-east
-domain: marketing
-subdomain: campaigns
+domain: ecommerce
+subdomain: retail
 layer: refined
-product: users
-model: customers
+product: orders
+model: daily_summary
 
 runner:
   kind: NoOpRunner
 
 inputs:
   - kind: NoOpInput
-    name: load
-    path: data/input
-```
-
-`name`, `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`, `runner`, and at least one input are all required.
-
----
-
-## LinearJob — how data flows
-
-`LinearJob` is the standard job type. Data flows forward in a straight line:
-
-```
-Inputs → Transforms → Outputs
-```
-
-1. All inputs are read and produce datasets
-2. Transforms are applied one by one in order, each receiving the result of the previous step
-3. Outputs each receive the final transformed dataset
-
-### Multiple inputs
-
-When you declare multiple inputs, the first transform must handle all datasets at once — typically a join, union, or merge. `SparkSqlTransform` and `DuckdbSqlTransform` both support this by referencing each input by its `name`.
-
-```yaml
-inputs:
-  - kind: SparkFileInput
-    name: customers
-    path: data/customers
-
-  - kind: SparkFileInput
-    name: orders
-    path: data/orders
+    name: read_raw_orders
+    path: "data/{{ layer }}/{{ product }}/date={{ D[-1] }}"
 
 transforms:
-  - kind: SparkSqlTransform
-    name: joined
-    query: |-
-      SELECT c.name, o.total
-      FROM customers c
-      JOIN orders o ON c.id = o.customer_id
-```
+  - kind: NoOpTransform
+    name: aggregate
 
-### Multiple outputs
-
-When you declare multiple outputs, all of them write the same final dataset independently.
-
-```yaml
 outputs:
-  - kind: SparkFileOutput
-    name: parquet_sink
-    path: .output/lake/customers
-    format: parquet
-
-  - kind: SparkFileOutput
-    name: csv_export
-    path: .output/exports/customers
-    format: csv
+  - kind: NoOpOutput
+    name: write_summary
+    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}"
 ```
 
----
-
-## Job metadata
-
-Every job has two groups of metadata: governance and Data Mesh.
-
-### Governance
-
-| Field | Required | Description |
-|---|---|---|
-| `name` | yes | Unique job identifier |
-| `description` | no | Short description of the pipeline |
-| `owner` | no | Team that required this job |
-| `maintainer` | no | Team that maintains this job |
-| `cost_center` | no | Team that pays for this job |
-| `labels` | no | Key-value pairs for additional metadata |
-
-### Data Mesh
-
-| Field | Required | Description |
-|---|---|---|
-| `org` | yes | Organization producing the data product |
-| `region` | yes | Business region (e.g. `europe`, `us-east`) |
-| `domain` | yes | Domain team (e.g. `ecommerce`, `marketing`) |
-| `subdomain` | yes | Subdomain within the domain (e.g. `retail`, `campaigns`) |
-| `layer` | yes | Data layer: `raw`, `trusted`, `refined`, or custom |
-| `product` | yes | Data product being produced (e.g. `customers`) |
-| `model` | yes | Data model within the product (e.g. `customers_v2`) |
-
-All Data Mesh fields are available as template variables inside YAML string values. See [Templates](../templates.md).
-
----
-
-## Running a job
-
-From the command line:
-
-```bash
-tiozin run path/to/job.yaml
-```
-
-From Python:
+The same job programmatically:
 
 ```python
 from tiozin import TiozinApp
+from tiozin.family.tio_kernel import (
+    LinearJob,
+    NoOpInput,
+    NoOpOutput,
+    NoOpRunner,
+    NoOpTransform,
+)
+
+job = LinearJob(
+    name="orders_daily_summary",
+    description="Aggregates daily order totals by region.",
+    owner="data-platform",
+    maintainer="analytics-team",
+    cost_center="tio_scrooge",
+    labels={"criticality": "high"},
+    org="acme",
+    region="us-east",
+    domain="ecommerce",
+    subdomain="retail",
+    layer="refined",
+    product="orders",
+    model="daily_summary",
+    runner=NoOpRunner(),
+    inputs=[
+        NoOpInput(
+            name="read_raw_orders",
+            path="data/{{ layer }}/{{ product }}/date={{ D[-1] }}",
+        )
+    ],
+    transforms=[
+        NoOpTransform(name="aggregate"),
+    ],
+    outputs=[
+        NoOpOutput(
+            name="write_summary",
+            path="data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}",
+        )
+    ],
+)
 
 app = TiozinApp()
-app.run("path/to/job.yaml")
-```
-
-`TiozinApp.run()` accepts:
-- A path to a YAML or JSON file
-- A raw YAML or JSON string
-- A `JobManifest` object
-- A `Job` instance
-
----
-
-## Labels
-
-Use `labels` to attach free-form key-value metadata to a job:
-
-```yaml
-labels:
-  team: data-platform
-  env: production
-  pipeline: nightly
-```
-
-Labels are stored in the execution context but not used by the framework for execution logic.
-
----
-
-## Unknown fields
-
-Fields not recognized by the framework are silently ignored. You can add custom annotations to job YAML without breaking anything:
-
-```yaml
-kind: LinearJob
-name: my_job
-my_custom_annotation: some_value   # ignored by Tiozin
-...
+app.run(job)
 ```

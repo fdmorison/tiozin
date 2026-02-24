@@ -21,11 +21,11 @@ Your uncle's advice: keep it simple, readable, and testable.
 
 Tiozin is built around a small set of principles that are not features but constraints that shape the design.
 
-- **Declarative** — Define what, not how
-- **Pluggable** — Swap runners, registries, and plugins when needed
-- **Metadata-native** — Execution and metadata walk together
-- **Observable** — Logs that actually help
-- **Testable** — Mock anything, validate everything
+- **Declarative**: Define what, not how
+- **Pluggable**: Swap runners, registries, and plugins when needed
+- **Metadata-native**: Execution and metadata walk together
+- **Observable**: Logs that actually help
+- **Testable**: Mock anything, validate everything
 
 ## One-Minute Example
 
@@ -99,7 +99,7 @@ Tiozin is human-readable and machine-generatable:
 ## Documentation
 
 ### Getting Started
-- [Your First Job](https://github.com/fdmorison/tiozin/blob/main/docs/quickstart.md)
+- [Working with Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/working-with-jobs.md)
 
 ### Concepts
 - [Family Model: Tios and Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/family.md)
@@ -118,6 +118,8 @@ Tiozin is human-readable and machine-generatable:
 - [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
 - [Settings Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
 - [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)
+- [tio_spark](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark.md)
+- [tio_duckdb](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb.md)
 
 ## Contributing
 
