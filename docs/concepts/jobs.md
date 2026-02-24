@@ -73,7 +73,7 @@ Register it as a `tiozin.family` entry point and use `kind: MyJob` in YAML. See 
 | `cost_center` | no | `str` | `None` | Team that pays for this job |
 | `labels` | no | `dict[str, str]` | `{}` | Free-form key-value metadata |
 
-### Governance
+### Domain
 
 These fields declare the organizational context and lineage of the data this job produces. All seven are required. They are also available as template variables in any YAML string property.
 
@@ -111,6 +111,7 @@ These constraints apply to all job types, including `LinearJob`:
 kind: LinearJob
 name: orders_daily_summary
 description: Aggregates daily order totals by region.
+
 owner: data-platform
 maintainer: analytics-team
 cost_center: tio_scrooge
@@ -132,6 +133,7 @@ inputs:
   - kind: NoOpInput
     name: read_raw_orders
     path: "data/{{ layer }}/{{ product }}/date={{ D[-1] }}"
+    # → data/refined/orders/date=2026-02-23
 
 transforms:
   - kind: NoOpTransform
@@ -141,6 +143,7 @@ outputs:
   - kind: NoOpOutput
     name: write_summary
     path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}"
+    # → data/ecommerce-refined/orders/daily_summary/date=2026-02-24
 ```
 
 The same job programmatically:

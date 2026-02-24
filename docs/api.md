@@ -164,7 +164,7 @@ Context is activated automatically by the framework before calling your `setup()
 | `name` | `str` | Job or step name |
 | `run_id` | `str` | Unique execution ID for this run |
 | `nominal_time` | `DateTime` | Reference time for this execution (UTC) |
-| `org`, `domain`, `layer`, ... | `str` | Governance fields. See [Jobs](concepts/jobs.md#governance) |
+| `org`, `domain`, `layer`, ... | `str` | Domain fields. See [Jobs](concepts/jobs.md#domain) |
 | `runner` | `Runner` | Active runner |
 | `job` | `Context` | The parent job context (same as `self` when accessed from a job) |
 | `shared` | `dict` | Shared mutable state for passing data between steps within the same execution |

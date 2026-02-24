@@ -70,19 +70,9 @@ The illustration above makes this constraint explicit:
 - The DuckDB Tiozin holds a duck → it is built on DuckDB’s APIs
 - The Bean Tiozin carries coffee beans → it is built on Apache Beam’s APIs
 
-Tiozin standardizes the declarative structure of data applications but
-intentionally does not define a unified execution API across runtimes.
-This is by design.
+Tiozin standardizes the declarative structure of data applications but does not define a unified execution API across runtimes. This is intentional.
 
-Much like modern web development, where frameworks provide strong application
-structure while still leveraging each platform’s native capabilities, Tiozin focuses on
-developer productivity and architectural clarity rather than cross-runtime portability,
-aiming to bring to data engineering the same level of structure, composability, and
-developer experience that application frameworks established in web development.
-
-By embracing the native APIs of each Family, Tiozin enables teams to build
-well-structured, testable, and composable data applications without
-sacrificing the power of the underlying runtime.
+Each Family uses its runtime's native APIs directly. The framework handles structure. Each runtime handles execution.
 
 ## The Tiozin's Pluggable Object Model
 
@@ -105,7 +95,7 @@ composing these focused units into declarative Jobs.
 This Object Model establishes the structural foundation that makes
 Tiozin declarative, pluggable, metadata-native, observable, and testable.
 
-## Summary
+## Roles at a glance
 
 - **Family** is a plugin provider
 - **Tio** is a provider package
