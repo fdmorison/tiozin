@@ -4,7 +4,7 @@ Ready-to-run examples organized by provider. Full examples live in the `examples
 
 ## Minimal (NoOp)
 
-The starting point. No additional packages needed, no execution engine to configure. Use this to understand the full YAML layout: job metadata, governance fields, runner, inputs, transforms, and outputs. It also shows Jinja templates in path fields.
+The starting point. No additional packages needed, no execution engine to configure. Use this to understand the full YAML layout: job metadata, domain fields, runner, inputs, transforms, and outputs. It also shows Jinja templates in path fields.
 
 ```yaml
 kind: LinearJob

@@ -99,6 +99,7 @@ Tiozin is human-readable and machine-generatable:
 ## Documentation
 
 ### Getting Started
+- [Quick Start](https://github.com/fdmorison/tiozin/blob/main/docs/quick-start.md)
 - [Working with Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/working-with-jobs.md)
 
 ### Concepts

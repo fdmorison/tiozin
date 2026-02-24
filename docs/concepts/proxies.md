@@ -205,7 +205,7 @@ outputs:
 
 `SparkOrdersInput` extends `SparkInput` and `SparkFilterTransform` extends `SparkTransform`. Both get logging and `show` without any extra code because it is a family-level feature.
 
-## Summary
+## Quick reference
 
 Here is what the proxy gives you as a family developer:
 

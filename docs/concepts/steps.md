@@ -40,9 +40,9 @@ Three lifecycle methods define the contract:
 | `schema_subject` | no | `str` | `None` | Schema registry subject name |
 | `schema_version` | no | `str` | `None` | Specific schema version to enforce |
 
-### Governance overrides
+### Domain overrides
 
-Every input optionally accepts the same governance fields declared at the job level. When set, they override the job-level values for template rendering within that step. This is useful when an input reads from a different layer or domain than the job's output:
+Every input optionally accepts the same domain fields declared at the job level. When set, they override the job-level values for template rendering within that step. This is useful when an input reads from a different layer or domain than the job's output:
 
 | Field | Description |
 |---|---|
@@ -110,7 +110,7 @@ class MyCoTransform(CoTransform[Any]):
 | `name` | yes | `str` | | Unique identifier within the job |
 | `description` | no | `str` | `None` | Short description of the transformation |
 
-Transforms accept the same governance override fields as inputs.
+Transforms accept the same domain override fields as inputs.
 
 ## Output
 
@@ -147,7 +147,7 @@ Three lifecycle methods define the contract:
 | `name` | yes | `str` | | Unique identifier within the job |
 | `description` | no | `str` | `None` | Short description of the destination |
 
-Outputs accept the same governance override fields as inputs.
+Outputs accept the same domain override fields as inputs.
 
 ## Invariants
 

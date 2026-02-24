@@ -169,7 +169,7 @@ path: .output/{{domain}}/{{run_id | nodash}}
 
 Filters transform string values. Apply with `|`:
 
-| Filter | What it does | Example |
+| Filter | Description | Example output |
 |---|---|---|
 | `nodash` | Remove all dashes | `"2026-01-14"` → `"20260114"` |
 | `notz` | Remove timezone suffix | `"2026-01-14T10:00:00+00:00"` → `"2026-01-14T10:00:00"` |
