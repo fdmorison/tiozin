@@ -254,6 +254,20 @@ The test agent is responsible for:
 
 ------------------------------------------------------------------------
 
+## Docs Agent
+
+All documentation generation must follow:
+
+    agents/docs-agent.md
+
+The docs agent is responsible for:
+
+- Writing user guides and reference pages under `docs/`
+- Verifying behavior against source code before documenting it
+- Keeping the README index up to date
+
+------------------------------------------------------------------------
+
 ## 11. Package Structure
 
 ### `tiozin/api`
