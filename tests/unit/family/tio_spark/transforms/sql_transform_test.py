@@ -18,7 +18,7 @@ def test_transform_should_execute_sql_using_existing_view(spark: SparkSession):
     by an upstream step.
 
     It validates that SparkSqlTransform can execute SQL against existing
-    catalog views without relying on the @self token.
+    catalog views without relying on the @data token.
     """
     # Arrange
     input = spark.createDataFrame(
@@ -56,7 +56,7 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
     pre-existing views registered in the Spark catalog by upstream steps.
 
     It validates that SparkSqlTransform can execute a SQL query that joins
-    multiple existing views without relying on @self, which represents the
+    multiple existing views without relying on @data, which represents the
     canonical happy path for SQL-based composition in a pipeline.
     """
     # Arrange
@@ -101,11 +101,11 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
 
 def test_transform_should_bind_single_dataframe_as_self(spark: SparkSession):
     """
-    This test simulates the explicit use of the @self token as an input
+    This test simulates the explicit use of the @data token as an input
     reference in the SQL query.
 
     It validates that SparkSqlTransform correctly exposes the current input
-    DataFrame as a temporary view and allows it to be queried via @self.
+    DataFrame as a temporary view and allows it to be queried via @data.
     """
     # Arrange
     input = spark.createDataFrame(
@@ -121,7 +121,7 @@ def test_transform_should_bind_single_dataframe_as_self(spark: SparkSession):
     # Act
     actual = SparkSqlTransform(
         name="sql_self",
-        query="SELECT * FROM @self WHERE total > 80",
+        query="SELECT * FROM @data WHERE total > 80",
     ).transform(input)
 
     # Assert
@@ -138,7 +138,7 @@ def test_transform_should_bind_single_dataframe_as_self(spark: SparkSession):
 def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark: SparkSession):
     """
     This test simulates a multi-input SQL transformation where the primary
-    input (@self) is joined with a secondary input (@self1).
+    input (@data) is joined with a secondary input (@data1).
 
     It validates that SparkSqlTransform correctly exposes multiple inputs
     to the SQL layer and allows them to be composed in a single query.
@@ -169,8 +169,8 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(spark: Spark
         name="sql_multi_input",
         query="""
             SELECT c.id, c.name, r.region
-            FROM @self c
-            JOIN @self1 r ON c.id = r.id
+            FROM @data c
+            JOIN @data1 r ON c.id = r.id
         """,
     ).transform(customers, regions)
 
@@ -205,7 +205,7 @@ def test_transform_should_execute_sql_on_empty_dataframe(spark: SparkSession):
     # Act
     actual = SparkSqlTransform(
         name="sql_empty_input",
-        query="SELECT * FROM @self",
+        query="SELECT * FROM @data",
     ).transform(input)
 
     # Assert
@@ -238,7 +238,7 @@ def test_transform_should_accept_args_parameter(spark: SparkSession):
     # Act
     actual = SparkSqlTransform(
         name="sql_args",
-        query="SELECT * FROM @self WHERE total > :min_total",
+        query="SELECT * FROM @data WHERE total > :min_total",
         args={"min_total": 80.0},
     ).transform(input)
 
@@ -272,7 +272,7 @@ def test_transform_should_remove_self_views_after_execution(spark: SparkSession)
     # Act
     SparkSqlTransform(
         name="sql_cleanup",
-        query="SELECT * FROM @self",
+        query="SELECT * FROM @data",
     ).transform(input)
 
     # Assert
@@ -326,7 +326,7 @@ def test_transform_should_fail_when_sql_is_invalid(spark: SparkSession):
     with pytest.raises(AnalysisException):
         SparkSqlTransform(
             name="sql_invalid",
-            query="SELECXXX * FROM @self",
+            query="SELECXXX * FROM @data",
         ).transform(input)
 
 

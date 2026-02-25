@@ -34,7 +34,7 @@ from tiozin.utils.io import (
 
 # Runtime
 from tiozin.utils.runtime import (
-    bind_self_tokens,
+    bind_data_tokens,
     tio_alias,
 )
 
@@ -61,6 +61,6 @@ __all__ = [
     "write_text",
     "create_local_temp_dir",
     # Runtime
-    "bind_self_tokens",
+    "bind_data_tokens",
     "tio_alias",
 ]

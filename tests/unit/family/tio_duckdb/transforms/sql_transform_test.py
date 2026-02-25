@@ -13,7 +13,7 @@ from tiozin.family.tio_duckdb import DuckdbSqlTransform
 
 
 def test_transform_should_execute_sql_using_existing_view(duckdb_session: DuckDBPyConnection):
-    """Executes SQL against existing views without relying on the @self token."""
+    """Executes SQL against existing views without relying on the @data token."""
     # Arrange
     duckdb_session.sql("""
         CREATE OR REPLACE VIEW customers AS
@@ -65,7 +65,7 @@ def test_transform_should_execute_sql_using_multiple_existing_views(
 
 
 def test_transform_should_bind_single_dataframe_as_self(duckdb_session: DuckDBPyConnection):
-    """Resolves the @self token to the input relation's alias."""
+    """Resolves the @data token to the input relation's alias."""
     # Arrange
     input_rel = duckdb_session.sql(
         "SELECT * FROM (VALUES (1, 100.0), (2, 50.0)) AS t(id, total)"
@@ -75,7 +75,7 @@ def test_transform_should_bind_single_dataframe_as_self(duckdb_session: DuckDBPy
     # Act
     relation = DuckdbSqlTransform(
         name="sql_self",
-        query="SELECT * FROM @self WHERE total > 80",
+        query="SELECT * FROM @data WHERE total > 80",
     ).transform(input_rel)
 
     # Assert
@@ -87,7 +87,7 @@ def test_transform_should_bind_single_dataframe_as_self(duckdb_session: DuckDBPy
 def test_transform_should_bind_multiple_dataframes_as_self_sequence(
     duckdb_session: DuckDBPyConnection,
 ):
-    """Resolves @self and @self1 to their respective input aliases."""
+    """Resolves @data and @data1 to their respective input aliases."""
     # Arrange
     customers = duckdb_session.sql(
         "SELECT * FROM (VALUES (1, 'Alice'), (2, 'Bob')) AS t(id, name)"
@@ -104,8 +104,8 @@ def test_transform_should_bind_multiple_dataframes_as_self_sequence(
         name="sql_multi_input",
         query="""
             SELECT c.id, c.name, r.region
-            FROM @self0 c
-            JOIN @self1 r ON c.id = r.id
+            FROM @data0 c
+            JOIN @data1 r ON c.id = r.id
         """,
     ).transform(customers, regions)
 
@@ -126,7 +126,7 @@ def test_transform_should_execute_sql_on_empty_relation(duckdb_session: DuckDBPy
     # Act
     relation = DuckdbSqlTransform(
         name="sql_empty",
-        query="SELECT * FROM @self",
+        query="SELECT * FROM @data",
     ).transform(input_rel)
 
     # Assert
@@ -146,7 +146,7 @@ def test_transform_should_accept_args_parameter(duckdb_session: DuckDBPyConnecti
     # Act
     relation = DuckdbSqlTransform(
         name="sql_args",
-        query="SELECT * FROM @self WHERE total > $min_total",
+        query="SELECT * FROM @data WHERE total > $min_total",
         args={"min_total": 80.0},
     ).transform(input_rel)
 
@@ -185,5 +185,5 @@ def test_transform_should_fail_when_sql_is_invalid(duckdb_session: DuckDBPyConne
     with pytest.raises((ParserException, CatalogException)):
         DuckdbSqlTransform(
             name="sql_invalid",
-            query="SELECXXX * FROM @self",
+            query="SELECXXX * FROM @data",
         ).transform(input_rel)

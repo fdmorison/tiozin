@@ -2,7 +2,7 @@ kind: LinearJob
 name: high_value_orders_job
 description: |
   Joins customers with orders and filters high-value completed orders.
-  Demonstrates DuckdbSqlTransform with @self token and parameterized queries.
+  Demonstrates DuckdbSqlTransform with @data token and parameterized queries.
 
 owner: data@tiozin.com
 maintainer: tiozin
@@ -51,12 +51,12 @@ transforms:
   - kind: DuckdbSqlTransform
     name: completed_orders
     description: Keeps only successfully completed orders.
-    query: SELECT * FROM @self WHERE status = 'completed'
+    query: SELECT * FROM @data WHERE status = 'completed'
 
   - kind: DuckdbSqlTransform
     name: high_value_orders
     description: Filters orders above the high-value threshold.
-    query: SELECT * FROM @self WHERE total > $min_total
+    query: SELECT * FROM @data WHERE total > $min_total
     args:
       min_total: 500
 
@@ -71,7 +71,7 @@ transforms:
           '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
           current_timestamp      AS _{{layer}}_created_at,
           created_at             AS _source_created_at
-      FROM @self
+      FROM @data
 
 outputs:
   - kind: DuckdbFileOutput

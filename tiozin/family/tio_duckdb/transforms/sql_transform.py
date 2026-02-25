@@ -3,7 +3,7 @@ from typing import Any
 from duckdb import DuckDBPyRelation
 
 from tiozin.exceptions import TiozinInputError
-from tiozin.utils import bind_self_tokens, trim
+from tiozin.utils import bind_data_tokens, trim
 
 from .. import DuckdbCoTransform
 
@@ -20,14 +20,14 @@ class DuckdbSqlTransform(DuckdbCoTransform):
     by upstream inputs or transforms, using the step name as the table
     identifier.
 
-    Additionally, the ``@self`` token can be used to reference the current
+    Additionally, the ``@data`` token can be used to reference the current
     input data without knowing the upstream step name:
 
-        - ``@self`` or ``@self0``: Primary input
-        - ``@self1``, ``@self2``, ...: Additional inputs (for multi-input transforms)
+        - ``@data`` or ``@data0``: Primary input
+        - ``@data1``, ``@data2``, ...: Additional inputs (for multi-input transforms)
 
     Since the DuckDB proxy already registers each step result as a named view,
-    ``@self`` is resolved by replacing the token with the input relation's alias
+    ``@data`` is resolved by replacing the token with the input relation's alias
     at query time — no temporary views are created or destroyed.
 
     ── Note on DDL and DML ──
@@ -48,7 +48,7 @@ class DuckdbSqlTransform(DuckdbCoTransform):
 
     Attributes:
         query:
-            SQL query to execute. Supports ``@self`` references and
+            SQL query to execute. Supports ``@data`` references and
             ``$param`` named parameters.
 
         args:
@@ -61,7 +61,7 @@ class DuckdbSqlTransform(DuckdbCoTransform):
 
         ```python
         DuckdbSqlTransform(
-            query="SELECT *, amount * 1.1 AS taxed FROM @self WHERE status = $status",
+            query="SELECT *, amount * 1.1 AS taxed FROM @data WHERE status = $status",
             args={"status": "active"},
         )
         ```
@@ -69,7 +69,7 @@ class DuckdbSqlTransform(DuckdbCoTransform):
         ```yaml
         transforms:
           - kind: DuckdbSqlTransform
-            query: "SELECT *, amount * 1.1 AS taxed FROM @self WHERE status = $status"
+            query: "SELECT *, amount * 1.1 AS taxed FROM @data WHERE status = $status"
             args:
               status: active
         ```
@@ -86,7 +86,7 @@ class DuckdbSqlTransform(DuckdbCoTransform):
         self.args = args or {}
 
     def transform(self, data: DuckDBPyRelation, *others: DuckDBPyRelation) -> DuckDBPyRelation:
-        query = bind_self_tokens(
+        query = bind_data_tokens(
             self.query,
             [data.alias, *(other.alias for other in others)],
         )

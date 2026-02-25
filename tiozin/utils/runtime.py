@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from typing import Any
 
 _TIO_ALIAS = "_tio_alias"
-_SELF_TOKEN_PATTERN = re.compile(r"@self(\d*)")
+_DATA_TOKEN_PATTERN = re.compile(r"@data(\d*)(?!\w)")
 
 
 def tio_alias(obj: Any, value: str | None = None) -> str:
@@ -34,21 +34,21 @@ def tio_alias(obj: Any, value: str | None = None) -> str:
     return getattr(obj, _TIO_ALIAS, None)
 
 
-def bind_self_tokens(sql: str, inputs: Sequence[str | None]) -> str:
+def bind_data_tokens(sql: str, inputs: Sequence[str | None]) -> str:
     """
-    Resolve ``@self`` tokens in a SQL query to concrete input identifiers.
+    Resolve ``@data`` tokens in a SQL query to concrete input identifiers.
 
-    This function replaces ``@self`` and ``@selfN`` tokens with the corresponding
+    This function replaces ``@data`` and ``@dataN`` tokens with the corresponding
     SQL identifiers provided by the runtime, enabling SQL steps to reference
     their input relations without hard-coding upstream step names.
 
     Resolution rules:
-        - ``@self``  or ``@self0`` → first input
-        - ``@selfN``               → N-th input (0-based)
+        - ``@data``  or ``@data0`` → first input
+        - ``@dataN``               → N-th input (0-based)
 
     The function enforces a strict runtime contract:
         - At least one input must be provided
-        - Every referenced ``@selfN`` must exist
+        - Every referenced ``@dataN`` must exist
         - Referenced inputs must not be ``None``
 
     Any violation of this contract results in an immediate error, preventing
@@ -56,24 +56,24 @@ def bind_self_tokens(sql: str, inputs: Sequence[str | None]) -> str:
 
     Args:
         sql:
-            SQL query that may contain ``@self`` tokens.
+            SQL query that may contain ``@data`` tokens.
         inputs:
             Ordered sequence of SQL identifiers representing the runtime
             inputs. Identifiers are typically table or view names.
 
     Returns:
-        The SQL query with all ``@self`` tokens resolved to concrete identifiers.
+        The SQL query with all ``@data`` tokens resolved to concrete identifiers.
 
     Raises:
         InvalidInputError:
-            If no inputs are provided, if a referenced ``@selfN`` index is
+            If no inputs are provided, if a referenced ``@dataN`` index is
             out of range, or if a referenced input is ``None``.
     """
     from tiozin.exceptions import TiozinInputError
 
     TiozinInputError.raise_if(
         not inputs,
-        "@self tokens require at least one input",
+        "@data tokens require at least one input",
     )
 
     def replace(match: re.Match) -> str:
@@ -83,13 +83,13 @@ def bind_self_tokens(sql: str, inputs: Sequence[str | None]) -> str:
         try:
             value = inputs[index]
         except IndexError:
-            raise TiozinInputError(f"@self{index} refers to a missing input") from None
+            raise TiozinInputError(f"@data{index} refers to a missing input") from None
 
         TiozinInputError.raise_if(
             value is None,
-            f"@self{index} refers to a null input",
+            f"@data{index} refers to a null input",
         )
 
         return value
 
-    return _SELF_TOKEN_PATTERN.sub(replace, sql)
+    return _DATA_TOKEN_PATTERN.sub(replace, sql)
