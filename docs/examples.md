@@ -90,7 +90,7 @@ transforms:
           '{{job.run_id}}'       AS _raw_run_id,
           '{{job.nominal_time}}' AS _raw_nominal_date,
           current_timestamp()    AS _raw_created_at
-      FROM @self
+      FROM @data
 
 outputs:
   - kind: SparkFileOutput
@@ -102,7 +102,7 @@ outputs:
 
 ## Spark: Multi-input join with parameterized filter
 
-Shows four patterns not in the previous example: multiple inputs joined by name in SQL, chained transforms where each `@self` refers to the previous output, a parameterized query with `args:` to keep literals out of SQL, and output partitioned by column. Each pattern is independent. You can use any combination of them.
+Shows four patterns not in the previous example: multiple inputs joined by name in SQL, chained transforms where each `@data` refers to the previous output, a parameterized query with `args:` to keep literals out of SQL, and output partitioned by column. Each pattern is independent. You can use any combination of them.
 
 ```yaml
 kind: LinearJob
@@ -144,11 +144,11 @@ transforms:
 
   - kind: SparkSqlTransform
     name: completed_orders
-    query: SELECT * FROM @self WHERE status = 'completed'
+    query: SELECT * FROM @data WHERE status = 'completed'
 
   - kind: SparkSqlTransform
     name: high_value
-    query: SELECT * FROM @self WHERE total > :min_total
+    query: SELECT * FROM @data WHERE total > :min_total
     args:
       min_total: 500
 
@@ -199,7 +199,7 @@ transforms:
           *,
           '{{job.run_id}}'       AS _raw_run_id,
           current_timestamp      AS _raw_created_at
-      FROM @self
+      FROM @data
 
 outputs:
   - kind: DuckdbFileOutput

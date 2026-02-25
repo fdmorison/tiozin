@@ -37,7 +37,7 @@ transforms:
           '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
           current_timestamp()    AS _{{layer}}_created_at,
           created_at             AS _source_created_at
-      FROM @self
+      FROM @data
 
 outputs:
   - kind: SparkFileOutput

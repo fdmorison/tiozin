@@ -116,12 +116,12 @@ Runs a DQL SQL query using DuckDB. Each input or prior transform result is autom
 transforms:
   - kind: DuckdbSqlTransform
     name: filtered
-    query: SELECT * FROM @self WHERE status = $status
+    query: SELECT * FROM @data WHERE status = $status
     args:
       status: active
 ```
 
-Use `@self` to reference the current input without knowing its name:
+Use `@data` to reference the current input without knowing its name:
 
 ```yaml
 transforms:
@@ -134,13 +134,13 @@ transforms:
 
   - kind: DuckdbSqlTransform
     name: high_value
-    query: SELECT * FROM @self WHERE total > 100
+    query: SELECT * FROM @data WHERE total > 100
 ```
 
 With multiple inputs:
 
-- `@self` or `@self0`: first dataset
-- `@self1`, `@self2`, ...: additional datasets
+- `@data` or `@data0`: first dataset
+- `@data1`, `@data2`, ...: additional datasets
 
 Named parameters use `$param_name` syntax:
 
@@ -148,7 +148,7 @@ Named parameters use `$param_name` syntax:
 transforms:
   - kind: DuckdbSqlTransform
     name: filtered
-    query: SELECT * FROM @self WHERE total > $min_total
+    query: SELECT * FROM @data WHERE total > $min_total
     args:
       min_total: 500
 ```
@@ -159,7 +159,7 @@ Only `SELECT`-like queries are supported. DDL and DML (`CREATE`, `INSERT`, `UPDA
 
 | Property | Required | Description |
 |---|---|---|
-| `query` | yes | DQL SQL query. Supports `@self` references and `$param` named parameters |
+| `query` | yes | DQL SQL query. Supports `@data` references and `$param` named parameters |
 | `args` | no | Named parameter values for the query |
 
 ## DuckdbFileOutput

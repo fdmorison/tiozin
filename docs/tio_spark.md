@@ -144,10 +144,10 @@ transforms:
     name: add_metadata
     query: |-
       SELECT *, current_timestamp() AS _created_at
-      FROM @self
+      FROM @data
 ```
 
-Use `@self` to reference the current input without knowing its name:
+Use `@data` to reference the current input without knowing its name:
 
 ```yaml
 transforms:
@@ -160,13 +160,13 @@ transforms:
 
   - kind: SparkSqlTransform
     name: filtered
-    query: SELECT * FROM @self WHERE total > 100
+    query: SELECT * FROM @data WHERE total > 100
 ```
 
 With multiple inputs:
 
-- `@self` or `@self0`: first dataset
-- `@self1`, `@self2`, ...: additional datasets
+- `@data` or `@data0`: first dataset
+- `@data1`, `@data2`, ...: additional datasets
 
 Named parameters via `args` (`:param_name` syntax):
 
@@ -174,7 +174,7 @@ Named parameters via `args` (`:param_name` syntax):
 transforms:
   - kind: SparkSqlTransform
     name: filtered
-    query: SELECT * FROM @self WHERE total > :min_total
+    query: SELECT * FROM @data WHERE total > :min_total
     args:
       min_total: 500
 ```
@@ -183,7 +183,7 @@ transforms:
 
 | Property | Required | Description |
 |---|---|---|
-| `query` | yes | SQL query. Supports `@self` references and `:param` named parameters |
+| `query` | yes | SQL query. Supports `@data` references and `:param` named parameters |
 | `args` | no | Named parameter values for the query |
 
 ## SparkFileOutput

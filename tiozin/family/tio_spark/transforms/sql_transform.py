@@ -2,7 +2,7 @@ from typing import Any
 
 from pyspark.sql import DataFrame
 
-from tiozin.utils import bind_self_tokens, tio_alias, trim
+from tiozin.utils import bind_data_tokens, tio_alias, trim
 
 from .. import SparkCoTransform
 
@@ -14,11 +14,11 @@ class SparkSqlTransform(SparkCoTransform):
     Executes a Spark SQL query against temporary views.
 
     Queries can reference views created by previous steps (by step name) or use
-    the `@self` token to reference the current dataframe inputs.
+    the `@data` token to reference the current dataframe inputs.
 
     Input references:
-        - `@self` or `@self0`: First input (the step's primary input)
-        - `@self1`, `@self2`, ...: Additional inputs (for multi-input transforms)
+        - `@data` or `@data0`: First input (the step's primary input)
+        - `@data1`, `@data2`, ...: Additional inputs (for multi-input transforms)
         - `<step_name>`: Any view registered by a previous step
 
     Parameterized queries:
@@ -44,17 +44,17 @@ class SparkSqlTransform(SparkCoTransform):
                 FROM customers c
                 JOIN orders o ON c.id = o.customer_id
 
-            # Use @self to reference current input dataframe
+            # Use @data to reference current input dataframe
             - kind: SparkSqlTransform
               name: high_value_orders
-              query: SELECT * FROM @self WHERE total > :min_total
+              query: SELECT * FROM @data WHERE total > :min_total
               args:
                 min_total: 100
 
-            # Chain transforms using @self
+            # Chain transforms using @data
             - kind: SparkSqlTransform
               name: with_timestamp
-              query: SELECT *, current_timestamp() AS created_at FROM @self
+              query: SELECT *, current_timestamp() AS created_at FROM @data
         ```
     """
 
@@ -64,7 +64,7 @@ class SparkSqlTransform(SparkCoTransform):
         self.args = args
 
     def transform(self, data: DataFrame, *others: DataFrame) -> DataFrame:
-        query = bind_self_tokens(
+        query = bind_data_tokens(
             self.query,
             [tio_alias(data), *(tio_alias(other) for other in others)],
         )
