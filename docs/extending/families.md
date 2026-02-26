@@ -2,7 +2,7 @@
 
 A provider family is an independent Python package that adds new execution backends to Tiozin. Families are discovered automatically via Python `entry_points`.
 
-**A family is a package, not a plugin.** One entry_point registration makes the entire package available. Every class exported from `__init__.py` becomes a Tiozin. This is different from frameworks like Airflow, where each plugin class is registered individually. In Tiozin, you register once and expose as many Tiozins as you need from a single package.
+**A family is a package, not a plugin.** One entry_point registration makes the entire package available, and every class you choose to expose becomes a Tiozin. This is different from frameworks like Airflow, where each plugin class is registered individually. Register the family once and expose as many Tiozins as you need from a single package.
 
 ## Package naming
 
@@ -40,13 +40,13 @@ In `pyproject.toml`, declare your family under the `tiozin.family` group:
 tio_dilbert = "tio_dilbert"
 ```
 
-The key is the family name (your package name). The value is the Python import path of your package's `__init__.py`.
+The key is the family name (your package name). The value is the Python import path of your package's `__init__.py`, which defines the family's public API.
 
 This single declaration is the entire registration contract. Tiozin discovers all installed families at startup by scanning packages registered under `tiozin.family`, imports each one, and makes all their exported Tiozins available by class name. No additional registration calls, decorators, or configuration files are needed.
 
 ## Public API
 
-Export all public Tiozins from your package's `__init__.py`:
+The family's public API is defined by its `__init__.py`. Export every Tiozin you want users to access:
 
 ```python
 # tio_dilbert/__init__.py
@@ -55,13 +55,13 @@ from .inputs.dilbert_input import MongoInput as MongoInput
 from .outputs.dilbert_output import MongoOutput as MongoOutput
 ```
 
-Only symbols exported from `__init__.py` are part of your public API. Internal modules may change without notice.
+Only symbols exported from `__init__.py` are part of the family's public API. Internal modules may change without notice.
 
 ## What to include
 
 A family typically provides:
 
-- One or more **Runners** (required, defines the execution engine)
+- One or more **Runners** (defines the execution engine)
 - One or more **Inputs** (reads from the technology)
 - One or more **Outputs** (writes to the technology)
 - Optionally **Transforms** (technology-specific transformations)
@@ -69,15 +69,52 @@ A family typically provides:
 
 You do not need to implement all roles. Provide only what makes sense for your technology.
 
-## Installing a family
+## Installing and using a family
 
-Because families are independent packages, users install them separately:
+Families are independent packages. Users install Tiozin and any families they need together:
 
 ```bash
-pip install tio_dilbert
+pip install tiozin tio_dilbert
 ```
 
-Once installed, all Tiozins from your family are immediately available in job YAML files using their class name as the `kind`.
+The first-party families `tio_spark` and `tio_duckdb` can also be installed as extras, which is a convenience alias for the same packages:
+
+```bash
+pip install tiozin[tio_spark]
+pip install tiozin[tio_duckdb]
+```
+
+`tio_kernel` is the exception: it ships with Tiozin and requires no separate installation. The next section explains what it provides.
+
+Once installed, all Tiozins from your family are immediately available in job YAML files using their class name as the `kind`:
+
+```yaml
+runner:
+  kind: DilbertRunner
+
+inputs:
+  - kind: DilbertInput
+
+outputs:
+  - kind: DilbertOutput
+```
+
+### Declaring a Tiozin by class name
+
+The short class name works as long as it is unique across all installed families. If two families export a class with the same name, qualify it with the family name:
+
+```yaml
+# Short name: works when unique across installed families
+kind: DilbertInput
+
+# Family-qualified: always unambiguous
+kind: tio_dilbert:DilbertInput
+
+# Full Python path: the last resort
+kind: tio_dilbert.inputs.dilbert_input.DilbertInput
+```
+
+Use the short name by default. Switch to the family-qualified form if you get a `PluginConflictError` at startup.
 
 ## tio_kernel: the built-in family
 
@@ -112,9 +149,11 @@ Its purpose is to guarantee that the system is always complete and executable, e
 
 These no-ops allow Tiozin to boot, validate configurations, and run dry-runs without any real execution backend.
 
-### Not for production execution
+### No-ops are not for production execution
 
-No-op execution plugins are not intended for production workloads. For real execution, install a provider family such as `tio_spark` or `tio_duckdb`.
+The no-op execution plugins listed above are not intended for production workloads. For real execution, install a provider family such as `tio_spark` or `tio_duckdb`.
+
+Other `tio_kernel` plugins are production-ready. `FileJobRegistry`, for example, reads job manifests from local paths or any object storage bucket on AWS, GCP, or Azure.
 
 ### Architectural boundary
 
