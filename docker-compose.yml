@@ -1,0 +1,26 @@
+volumes:
+  postgres_data:
+
+networks:
+  tiozin-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: tiozin-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tiozin-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tiozin -d tiozin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

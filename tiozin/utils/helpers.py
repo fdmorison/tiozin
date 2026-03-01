@@ -4,6 +4,7 @@ from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
 from typing import TypeVar
+from uuid import uuid4
 
 import pendulum
 from slugify import slugify as _slugify
@@ -224,6 +225,28 @@ def human_join(items: list[str]) -> str:
         if len(items) == 2
         else f"{', '.join(items[:-1])} and {items[-1]}"
     )
+
+
+def randstr(n: int = 6) -> str:
+    """
+    Generate a short random hex string.
+
+    Useful for creating unique temporary names for tables, files,
+    or other resources that must not collide within a run.
+
+    Args:
+        n: Number of hex characters to return. Defaults to 6.
+
+    Returns:
+        A lowercase hex string of length ``n``.
+
+    Examples:
+        >>> hex_token()
+        "a3f9c1"
+        >>> hex_token(8)
+        "a3f9c1b2"
+    """
+    return uuid4().hex[:n]
 
 
 def slugify(value: str) -> str:

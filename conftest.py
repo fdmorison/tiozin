@@ -4,10 +4,14 @@ import sys
 import pytest
 
 from tests import config
+from tests.integration.family.tio_duckdb import env
 
-# Mock Tiozin Config
+# Mock Settings
 # Importing config.py will actually immport tests/config.py
 sys.modules[f"{config.artifact_name}.config"] = config
+
+# Importing tio_duckdb/env.py will actually get tests/integration/family/tio_duckdb/env.py
+sys.modules[f"{config.artifact_name}.family.tio_duckdb.env"] = env
 
 
 # Lint Tiozin Tests

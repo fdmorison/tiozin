@@ -22,6 +22,7 @@ from .inputs.file_input import DuckdbFileInput
 
 # Outputs
 from .outputs.file_output import DuckdbFileOutput
+from .outputs.postgres_output import DuckdbPostgresOutput
 
 # Runners
 from .runners.duckdb_runner import DuckdbRunner
@@ -40,6 +41,7 @@ __all__ = [
     "DuckdbRunner",
     "DuckdbFileInput",
     "DuckdbFileOutput",
+    "DuckdbPostgresOutput",
     "DuckdbSqlTransform",
     "DuckdbWordCountTransform",
 ]

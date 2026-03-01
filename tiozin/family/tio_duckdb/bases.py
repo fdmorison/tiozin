@@ -1,8 +1,12 @@
-from duckdb import DuckDBPyConnection, DuckDBPyRelation
+from typing import Any
+
+from duckdb import DuckDBPyConnection, DuckDBPyRelation, Statement
 
 from tiozin import CoTransform, Input, Output, Transform, tioproxy
+from tiozin.utils import as_flat_list
 
 from .compose.proxies.step_proxy import DuckdbStepProxy
+from .compose.utils import fetchall_as_pydict
 
 
 class DuckdbStepMixin:
@@ -40,6 +44,29 @@ class DuckdbStepMixin:
 
         runner: DuckdbRunner = self.context.runner
         return runner.session
+
+    def scriptfy(self, *statements: str) -> str:
+        parts = [
+            sql.strip().rstrip(";") for sql in as_flat_list(statements) if sql and str(sql).strip()
+        ]
+        return ";\n".join(parts) + (";" if parts else "")
+
+    def fetch(self, query: Statement | str, parameters: object = None) -> list[dict[str, Any]]:
+        result = self.duckdb.execute(query, parameters)
+        return fetchall_as_pydict(result) if result else result
+
+    def create_table_as_select(
+        self, table: str, source: DuckDBPyRelation, with_data: bool = False
+    ) -> str:
+        limit = "" if with_data else " LIMIT 0"
+        return f"CREATE TABLE IF NOT EXISTS {table} AS SELECT * FROM {source.alias}{limit}"
+
+    def insert_into(self, table: str, source: DuckDBPyRelation) -> str:
+        cols = ", ".join(source.columns)
+        return f"INSERT INTO {table} ({cols}) SELECT * FROM {source.alias}"
+
+    def truncate(self, table: str) -> str:
+        return f"TRUNCATE TABLE {table}"
 
 
 @tioproxy(DuckdbStepProxy)

@@ -171,7 +171,7 @@ def test_job_not_found_error_should_format_job_name_in_message():
 
     # Assert
     actual = error.message
-    expected = "Job `my_job` not found."
+    expected = "Could not find a job matching `my_job`."
     assert actual == expected
 
 
