@@ -1,13 +1,11 @@
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 
 import duckdb
 import pytest
 from duckdb import DuckDBPyConnection
-from testcontainers.core.network import DockerClient, Network
-from testcontainers.core.wait_strategies import LogMessageWaitStrategy
-from testcontainers.core.waiting_utils import wait_for_logs
-from testcontainers.postgres import PostgresContainer
+from testcontainers.compose import DockerCompose
 
 from tests.integration.family.tio_duckdb import env
 from tests.stubs import JobStub, RunnerStub
@@ -15,6 +13,7 @@ from tiozin import Context
 from tiozin.utils import randstr
 
 TEST_ID = f"tiozin-test-{randstr()}"
+COMPOSE_DIR = Path(__file__).parent
 
 
 # Mock Tiozins
@@ -76,32 +75,9 @@ def customers_updated(duckdb_session: DuckDBPyConnection):
 
 # Mock External Systems
 @pytest.fixture(scope="session", autouse=True)
-def tiozinnet():
-    client = DockerClient()
-    network = client.client_networks_create(
-        f"{TEST_ID}-net",
-        {"driver": "bridge"},
-    )
-    return network
-
-
-# Postgres
-@pytest.fixture(scope="session", autouse=True)
-def postgres15(request: pytest.FixtureRequest, tiozinnet: Network) -> None:
-    postgres = PostgresContainer(
-        dbname=env.PGDATABASE,
-        username=env.PGUSER,
-        password=env.PGPASSWORD,
-        image="postgres:15-alpine",
-    )
-    postgres.with_name(f"{TEST_ID}-postgres")
-    postgres.with_bind_ports(5432, env.PGPORT)
-    postgres.with_network(tiozinnet)
-    postgres.with_network_aliases(postgres._name)
-
-    postgres.start()
-    wait_for_logs(postgres, LogMessageWaitStrategy("server started"))
-    request.addfinalizer(lambda: postgres.stop())
+def compose() -> Generator[DockerCompose, Any, None]:
+    with DockerCompose(COMPOSE_DIR) as c:
+        yield c
 
 
 @pytest.fixture(autouse=True)

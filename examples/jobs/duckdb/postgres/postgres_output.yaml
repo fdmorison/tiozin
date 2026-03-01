@@ -36,16 +36,16 @@ outputs:
     primary_key: id
     # Table
     schema: public
-    database: tiozin
+    database: postgres
     table: customers
     # Connection
     host: localhost
     port: 5432
-    user: "{{ ENV.PGUSER | default('tiozin') }}"
-    password: "{{ ENV.PGPASSWORD | default('tiozin') }}"
+    user: postgres
+    password: "{{ ENV.PGPASSWORD | default('postgres') }}"
     # Utilities
     pre_pgsql:
     post_pgsql:
-      - GRANT ALL ON public.customers TO tiozin
+      - GRANT ALL ON public.customers TO postgres
       - CREATE INDEX IF NOT EXISTS idx_customers_email   ON public.customers(email)
       - CREATE INDEX IF NOT EXISTS idx_customers_country ON public.customers(country)
