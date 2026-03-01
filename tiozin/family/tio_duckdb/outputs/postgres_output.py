@@ -1,209 +1,353 @@
 from __future__ import annotations
 
+from typing import get_args
+
 from duckdb import DuckDBPyRelation
 
-from tiozin.api import Context
-from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils import as_list, bind_self_tokens, trim, trim_upper
+from tiozin.exceptions import RequiredArgumentError, TiozinInputError
+from tiozin.utils import as_list, randstr, trim_lower, trim_upper
 
-from .. import DuckdbOutput
+from .. import DuckdbOutput, env
 from ..typehints import DuckdbPlan, DuckdbPostgresWriteMode
 
-EXTENTION = "postgres"
+EXTENSION = "postgres"
+DEFAULT_MODE = "APPEND"
 
 
 class DuckdbPostgresOutput(DuckdbOutput):
     """
-    Writes a DuckDB relation to a PostgreSQL table using DuckDB's postgres extension.
+    Materializes a DuckDB relation into a PostgreSQL table.
 
-    This output writes DuckDBPyRelation data to a PostgreSQL database using
-    DuckDB's native postgres extension, which provides high-performance data
-    transfer between DuckDB and PostgreSQL.
+    Supports append, truncate, overwrite, and merge write modes, automatic schema evolution, and
+    optional pre/post SQL execution. Intended for pipelines that require controlled writes into
+    PostgreSQL tables.
 
-    For advanced options, refer to DuckDB documentation at:
-
+    For extension-specific behavior and limitations, see:
     https://duckdb.org/docs/extensions/postgres
 
-    Attributes:
+    Args:
         host:
-            PostgreSQL server hostname or IP address.
-
+            PostgreSQL server hostname or IP address. Defaults to "localhost".
         port:
             PostgreSQL server port. Defaults to 5432.
-
         database:
-            Name of the PostgreSQL database.
-
+            Target PostgreSQL database name. Defaults to "postgres".
         user:
-            PostgreSQL username for authentication.
-
+            Username used for authentication. Defaults to "postgres".
         password:
-            PostgreSQL password for authentication.
-
+            Password used for authentication. Defaults to "".
         schema:
-            Target schema in PostgreSQL. Defaults to ``"public"``.
-
+            Target schema in PostgreSQL. Defaults to "public".
         table:
             Target table name in PostgreSQL.
 
         mode:
-            Write mode: ``"append"`` or ``"overwrite"``.
+            Write strategy applied to the target table. Supported values are "append", "truncate",
+            "overwrite", and "merge". Defaults to "append".
+
+            - append: Ensures the table exists and inserts incoming rows.
+            - truncate: Ensures the table exists, clears existing data, then inserts incoming rows.
+            - overwrite: Recreates the table structure on each run and loads the new dataset.
+            - merge: Performs an upsert using a staging table and a PostgreSQL MERGE statement.
+              Requires `primary_key`.
+
+        primary_key:
+            Column or columns used as the primary key when the table is created.
+            Required when `mode="merge"`.
+
+        merge_key:
+            Conflict key used during `merge` operations. When not provided, `primary_key` is used.
 
         pre_pgsql:
-            SQL statement or list of statements to execute before writing.
-            Supports ``@self`` token to reference the target table.
+            SQL statement(s) executed on PostgreSQL before the write strategy
+            runs. Use this to prepare dependencies that could block the write
+            (for example, dropping views or disabling triggers).
 
         post_pgsql:
-            SQL statement or list of statements to execute after writing.
-            Useful for GRANTs, index creation, or other post-write operations.
-            Supports ``@self`` token to reference the target table.
+            SQL statement(s) executed on PostgreSQL after the write completes.
+            Common uses include creating indexes, granting permissions,
+            or recreating views.
 
         **options:
-            Additional options passed to the postgres extension.
+            Additional keyword arguments forwarded to the DuckDB Postgres extension.
 
     Examples:
+        Basic append:
 
-        ```python
-        DuckdbPostgresOutput(
-            host="localhost",
-            port=5432,
-            database="analytics",
-            user="etl_user",
-            password="secret",
-            schema="public",
-            table="events",
-            mode="append",
-        )
-        ```
+            >>> DuckdbPostgresOutput(
+            ...     mode="append",
+            ...     table="events",
+            ... )
+
+        Merge using a business key:
+
+            >>> DuckdbPostgresOutput(
+            ...     mode="merge",
+            ...     table="events",
+            ...     merge_key=["external_id"],
+            ... )
+
+        Overwrite with primary key definition:
+
+            >>> DuckdbPostgresOutput(
+            ...     mode="overwrite",
+            ...     table="events",
+            ...     primary_key="id",
+            ... )
+
+        Complete YAML configuration:
 
         ```yaml
         outputs:
-          - type: DuckdbPostgresOutput
+          - kind: DuckdbPostgresOutput
+            name: write_to_postgres
+            description: Loads the customer dataset into the PostgreSQL table public.customers.
+            # Write strategy
+            mode: merge
+            primary_key: id
+            # Target table
+            schema: public
+            database: tiozin
+            table: customers
+            # Connection
             host: localhost
             port: 5432
-            database: analytics
-            user: etl_user
-            password: ${POSTGRES_PASSWORD}
-            schema: public
-            table: events
-            mode: append
+            user: tiozin
+            password: "{{ ENV.PGPASSWORD | default('tiozin') }}"
+            # Pre-write SQL (runs before the write strategy)
+            pre_pgsql:
+              - DROP VIEW IF EXISTS public.vw_customers_summary
+            # Post-write SQL (runs after the write strategy)
+            post_pgsql:
+              - GRANT ALL ON public.customers TO tiozin
+              - CREATE INDEX IF NOT EXISTS idx_customers_email ON public.customers(email)
         ```
     """
 
     def __init__(
         self,
+        table: str = None,
         host: str = None,
-        port: int = None,
         database: str = None,
         user: str = None,
         password: str = None,
+        port: int = None,
         schema: str = None,
-        table: str = None,
         mode: DuckdbPostgresWriteMode = None,
+        primary_key: str | list[str] = None,
+        merge_key: str | list[str] = None,
         pre_pgsql: str | list[str] = None,
         post_pgsql: str | list[str] = None,
         **options,
     ) -> None:
         super().__init__(**options)
         RequiredArgumentError.raise_if_missing(
-            host=host,
-            database=database,
-            user=user,
-            password=password,
             table=table,
         )
-        self.host = trim(host) or "localhost"
-        self.port = port or 5432
-        self.user = trim(user)
-        self.password = trim(password)
-        self.database = trim(database)
-        self.schema = trim(schema) or "public"
-        self.table = trim(table)
-        self.mode = trim_upper(mode) or "APPEND"
+        TiozinInputError.raise_if_not_in(
+            trim_lower(mode),
+            get_args(DuckdbPostgresWriteMode),
+            allow_none=True,
+        )
+        self.table = table
+        self.host = host or env.PGHOST
+        self.database = database or env.PGDATABASE
+        self.user = user or env.PGUSER
+        self.password = password or env.PGPASSWORD
+        self.port = port or env.PGPORT
+        self.schema = schema or env.PGSCHEMA
+        self.mode = trim_upper(mode) or DEFAULT_MODE
+        self.primary_key = as_list(primary_key, [])
+        self.merge_key = as_list(merge_key, self.primary_key)
         self.pre_pgsql = as_list(pre_pgsql, [])
         self.post_pgsql = as_list(post_pgsql, [])
+        self._token = randstr()
 
     @property
-    def _pg_db(self) -> str:
-        return f"_pg_{self.name}"
+    def _database(self) -> str:
+        return f"_pg_{self.slug}"
 
     @property
-    def _pg_secret(self) -> str:
-        return f"{self._pg_db}_secret"
+    def _secret(self) -> str:
+        return f"{self._database}_secret"
 
     @property
     def _pg_table(self) -> str:
-        return f"{self._pg_db}.{self.schema}.{self.table}"
+        return f"{self.schema}.{self.table}"
 
-    def _when(self, cond: bool, *sql: str) -> str:
-        return ";\n".join(sql) if cond else ""
+    @property
+    def _pg_staging(self) -> str:
+        return f"{self.schema}._{self.table}_temp_{self._token}"
 
-    def _pg_format(self, statements: list[str], alias: str) -> list[str]:
-        return [
-            f"FROM postgres_execute('{self._pg_db}',$${bind_self_tokens(sql, [alias])}$$);"
-            for sql in statements
-        ]
+    @property
+    def _pg_probe(self) -> str:
+        return f"{self.schema}._{self.table}_probe_{self._token}"
 
-    def setup(self, _: Context, data: DuckDBPyRelation) -> None:
-        self.duckdb.install_extension(EXTENTION)
-        self.duckdb.load_extension(EXTENTION)
+    @property
+    def _table(self) -> str:
+        return f"{self._database}.{self._pg_table}"
+
+    @property
+    def _staging(self) -> str:
+        return f"{self._database}.{self._pg_staging}"
+
+    @property
+    def _probe(self) -> str:
+        return f"{self._database}.{self._pg_probe}"
+
+    def setup(self, data: DuckDBPyRelation) -> None:
         self.duckdb.execute(
             f"""
-            CREATE SECRET IF NOT EXISTS {self._pg_secret} (
+            INSTALL {EXTENSION};LOAD {EXTENSION};
+            CREATE SECRET IF NOT EXISTS {self._secret} (
                 TYPE POSTGRES,
                 HOST '{self.host}',
                 PORT {self.port},
                 DATABASE '{self.database}',
                 USER '{self.user}',
                 PASSWORD '{self.password}'
-            )
+            );
+            ATTACH '' AS {self._database}
+            (TYPE POSTGRES, SECRET {self._secret}, SCHEMA '{self.schema}')
             """
         )
-        self.duckdb.execute(
-            f"ATTACH '' AS {self._pg_db} "
-            f"(TYPE POSTGRES, SECRET {self._pg_secret}, SCHEMA '{self.schema}')"
-        )
 
-    def write(self, _: Context, data: DuckDBPyRelation) -> DuckdbPlan:
-        """
-        Writes the relation to PostgreSQL using DuckDB's postgres extension.
-
-        Installs and loads the postgres extension, attaches to the PostgreSQL
-        database, and inserts the data into the target table.
-
-        When ``mode`` is ``overwrite``, the target table is truncated before
-        inserting new data. When ``mode`` is ``"append"``, data is inserted
-        without modifying existing rows.
-
-        If the target table does not exist, it is created automatically.
-
-        Returns a SQL string to be executed lazily by the runner.
-        """
+    def write(self, data: DuckDBPyRelation) -> DuckdbPlan:
         self.info(f"Writing to Postgres table `{self.schema}.{self.table}`")
-
-        pre_pgsql = self._pg_format(self.pre_pgsql, data.alias)
-        post_pgsql = self._pg_format(self.post_pgsql, data.alias)
-
-        drop_table_when_overwrite = self._when(
-            self.mode == "OVERWRITE",
-            f"DROP TABLE IF EXISTS {self._pg_table}",
+        strategy = {
+            "APPEND": self._write_append,
+            "TRUNCATE": self._write_truncate,
+            "OVERWRITE": self._write_overwrite,
+            "MERGE": self._write_merge,
+        }
+        return self.scriptfy(
+            self.create_table_as_select(self._table, data),
+            self._create_primary_key(),
+            self._evolve_schema(data),
+            self._postgres_execute(self.pre_pgsql),
+            strategy[self.mode](data),
+            self._postgres_execute(self.post_pgsql),
         )
 
-        clear_table_when_truncate = self._when(
-            self.mode == "TRUNCATE",
-            f"TRUNCATE TABLE {self._pg_table}",
-        )
-
-        execution_plan = [
-            # Built-in preparation phase
-            drop_table_when_overwrite,
-            f"CREATE TABLE IF NOT EXISTS {self._pg_table} AS SELECT * FROM {data.alias} LIMIT 0",
-            clear_table_when_truncate,
-            # User pre-write hooks for Postgres
-            *pre_pgsql,
-            # Actual Output phase
-            f"INSERT INTO {self._pg_table} SELECT * FROM {data.alias}",
-            # User post-write hooks for Postgres
-            *post_pgsql,
+    def _write_append(self, source: DuckDBPyRelation) -> list[str]:
+        return [
+            self.insert_into(self._table, source),
         ]
-        return ";\n".join(sql for sql in execution_plan if sql)
+
+    def _write_truncate(self, source: DuckDBPyRelation) -> list[str]:
+        return [
+            self.truncate(self._table),
+            self.insert_into(self._table, source),
+        ]
+
+    def _write_overwrite(self, source: DuckDBPyRelation) -> list[str]:
+        return [
+            self._postgres_execute(f"""
+                CREATE TABLE {self._pg_staging} (LIKE {self._pg_table}
+                INCLUDING ALL EXCLUDING INDEXES);
+                DROP TABLE {self._pg_table};
+                ALTER TABLE {self._pg_staging} RENAME TO {self.table};
+            """),
+            self._create_primary_key(),
+            self.insert_into(self._table, source),
+        ]
+
+    def _write_merge(self, source: DuckDBPyRelation) -> list[str]:
+        RequiredArgumentError.raise_if_missing(
+            merge_key=self.merge_key,
+        )
+
+        schema = list(source.columns)
+        fields = [c for c in schema if c not in self.merge_key]
+
+        on_clause = " AND ".join(f"target.{k}=source.{k}" for k in self.merge_key)
+        update_set = ", ".join(f"{c}=COALESCE(source.{c},target.{c})" for c in fields)
+        insert_cols = ", ".join(schema)
+        insert_vals = ", ".join(f"source.{c}" for c in schema)
+
+        return [
+            self.create_table_as_select(self._table, source),
+            self._create_primary_key(),
+            self.create_table_as_select(self._staging, source, with_data=True),
+            f"""
+                MERGE INTO {self._table} AS target
+                USING {self._staging} AS source
+                ON {on_clause}
+                WHEN MATCHED THEN
+                    UPDATE SET {update_set}
+                WHEN NOT MATCHED THEN
+                    INSERT ({insert_cols})
+                    VALUES ({insert_vals})
+            """,
+            f"DROP TABLE {self._staging}",
+        ]
+
+    def _postgres_execute(self, *statements: str) -> str:
+        return f"""
+        CALL postgres_execute('{self._database}',$$
+            DO $do$
+            BEGIN
+                {self.scriptfy(statements)}
+                DROP TABLE IF EXISTS {self._pg_staging};
+                DROP TABLE IF EXISTS {self._pg_probe};
+            EXCEPTION WHEN OTHERS THEN
+                DROP TABLE IF EXISTS {self._pg_staging};
+                DROP TABLE IF EXISTS {self._pg_probe};
+                RAISE;
+            END
+            $do$;
+        $$)
+        """
+
+    def _create_primary_key(self) -> list[str]:
+        if not self.primary_key:
+            return ""
+
+        pk = ",".join(f'"{c}"' for c in self.primary_key)
+        return self._postgres_execute(
+            f"""
+            IF NOT EXISTS (
+                SELECT 1
+                    FROM information_schema.table_constraints
+                WHERE table_schema    = '{self.schema}'
+                    AND table_name      = '{self.table}'
+                    AND constraint_type = 'PRIMARY KEY'
+            ) THEN
+                ALTER TABLE {self._pg_table} ADD PRIMARY KEY ({pk});
+            END IF;
+            """
+        )
+
+    def _evolve_schema(self, source: DuckDBPyRelation) -> list[str]:
+        probe_name = self._pg_probe.split(".")[-1]
+        return [
+            self.create_table_as_select(self._probe, source),
+            self._postgres_execute(f"""
+                DECLARE field RECORD;
+                BEGIN
+                    FOR field IN
+                        SELECT
+                            a.attname                                       AS name
+                          , pg_catalog.format_type(a.atttypid, a.atttypmod) AS type
+                         FROM pg_attribute a
+                         JOIN pg_class     c ON c.oid = a.attrelid
+                         JOIN pg_namespace n ON n.oid = c.relnamespace
+                        WHERE n.nspname = '{self.schema}'
+                          AND c.relname = '{probe_name}'
+                          AND a.attnum > 0
+                          AND NOT a.attisdropped
+                    LOOP
+                        EXECUTE FORMAT(
+                            'ALTER TABLE {self._pg_table} ADD COLUMN IF NOT EXISTS %I %s',
+                            field.name,
+                            field.type
+                        );
+                    END LOOP;
+                    DROP TABLE IF EXISTS {self._pg_probe};
+                EXCEPTION WHEN OTHERS THEN
+                    DROP TABLE IF EXISTS {self._pg_probe};
+                    RAISE;
+                END
+            """),
+            "CALL pg_clear_cache()",
+        ]

@@ -46,6 +46,7 @@ DuckdbPostgresWriteMode = Literal[
     "append",
     "overwrite",
     "truncate",
+    "merge",
 ]
 
 DuckdbCompression = Literal[

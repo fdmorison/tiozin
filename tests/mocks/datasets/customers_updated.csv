@@ -1,0 +1,5 @@
+id,name,email,country,created_at,updated_at
+1,Albert Einstein,albert@physics.com,Germany,2024-01-10T09:00:00,2024-01-12T08:30:00
+2,Max Planck,max@quantum.de,Germany,2024-01-10T09:05:00,2024-01-10T09:05:00
+3,Werner Heisenberg,werner@uncertainty.de,France,2024-01-10T09:10:00,2024-01-11T14:00:00
+4,Hannah Arendt,hannah@philosophy.de,Germany,2024-01-10T09:15:00,2024-01-15T10:45:00

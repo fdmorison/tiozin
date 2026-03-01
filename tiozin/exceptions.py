@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import Any, Self
 
 from pydantic import ValidationError
@@ -147,6 +148,27 @@ class TiozinInputError(TiozinUsageError):
     http_status = 422
     message = "The input failed validation. Please review and correct the errors."
 
+    @classmethod
+    def raise_if_not_in(
+        cls,
+        value: Any,
+        options: Collection,
+        message: str = None,
+        allow_none: bool = False,
+    ) -> type[Self]:
+        """
+        Guard-style helper that raises this exception if ``value`` is not in ``options``.
+
+        When ``allow_none`` is ``True``, a ``None`` value is always accepted regardless
+        of whether ``None`` appears in ``options``.
+        """
+        if allow_none and value is None:
+            return cls
+        if value not in options:
+            opts = ", ".join(str(o) for o in sorted(options))
+            raise cls(message or f"Invalid value '{value}'. Must be one of: {opts}")
+        return cls
+
 
 class TiozinPreconditionError(TiozinUsageError):
     """
@@ -243,7 +265,7 @@ class JobNotFoundError(JobError, TiozinNotFoundError):
     Raised when a job cannot be found.
     """
 
-    message = "Job `{name}` not found."
+    message = "Could not find a job matching `{name}`."
 
     def __init__(self, message: str = None, *, name: str = None) -> None:
         super().__init__(message, name=name)

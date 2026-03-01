@@ -12,6 +12,7 @@ cost_center: tio_scrooge
 org: tiozin
 region: europe
 domain: ecommerce
+subdomain: ecommerce
 layer: raw
 product: customers
 model: customers
@@ -31,22 +32,20 @@ outputs:
   - kind: DuckdbPostgresOutput
     name: write_to_postgres
     description: Loads the customer dataset into the PostgreSQL table public.customers.
-    mode: overwrite
+    mode: merge
+    primary_key: id
+    # Table
     schema: public
     database: tiozin
     table: customers
+    # Connection
     host: localhost
     port: 5432
     user: "{{ ENV.PGUSER | default('tiozin') }}"
     password: "{{ ENV.PGPASSWORD | default('tiozin') }}"
+    # Utilities
     pre_pgsql:
+    post_pgsql:
+      - GRANT ALL ON public.customers TO tiozin
       - CREATE INDEX IF NOT EXISTS idx_customers_email   ON public.customers(email)
       - CREATE INDEX IF NOT EXISTS idx_customers_country ON public.customers(country)
-    post_pgsql:
-      - GRANT ALL ON public.customers TO postgres
-
-  - kind: DuckdbFileOutput
-    name: write_to_parquet
-    description: Writes the same dataset to Parquet for local lake storage.
-    mode: overwrite
-    path: .output/lake-{{domain}}-{{layer}}/postgres/{{model}}/{{fs.hour}}
