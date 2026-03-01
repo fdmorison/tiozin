@@ -1,6 +1,6 @@
 from abc import ABCMeta
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import TypeVar
 
 import wrapt
 
@@ -9,7 +9,7 @@ from tiozin.exceptions import ProxyError
 TIO_PROXY = "__tioproxy__"
 
 
-TClass = TypeVar("TClass", bound=type)
+TClass = TypeVar("TClass")
 
 
 class TioProxyMeta(ABCMeta):
@@ -24,8 +24,8 @@ class TioProxyMeta(ABCMeta):
     def tioproxy(cls) -> list[type[wrapt.ObjectProxy]]:
         return list(getattr(cls, TIO_PROXY, []))
 
-    def __call__(cls, *args, **kwargs) -> Any | wrapt.ObjectProxy:
-        wrapped = super().__call__(*args, **kwargs)
+    def __call__(cls: type[TClass], *args, **kwargs) -> TClass:
+        wrapped: TClass = super().__call__(*args, **kwargs)
 
         for proxy_class in reversed(cls.tioproxy):
             wrapped = proxy_class(wrapped)
