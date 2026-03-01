@@ -37,7 +37,7 @@ class FileJobRegistry(JobRegistry):
             content = read_text(identifier, **self.options)
             return JobManifest.from_yaml_or_json(content)
         except FileNotFoundError as e:
-            raise JobNotFoundError(identifier) from e
+            raise JobNotFoundError("No job found at path `{name}`", name=identifier) from e
 
     def register(self, identifier: str, value: JobManifest) -> None:
         """

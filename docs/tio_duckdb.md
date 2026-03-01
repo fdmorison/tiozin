@@ -202,6 +202,135 @@ Files are named `part-{i}-{uuid}.snappy` by default.
 | `compression` | no | `snappy` | Compression codec |
 | `**options` | no | `-` | Additional DuckDB writer options |
 
+## DuckdbPostgresOutput
+
+Writes data from a DuckDB pipeline into a PostgreSQL table. Supports four write modes, automatic schema evolution, and SQL hooks that run before and after each write.
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    name: save_customers
+    table: customers
+```
+
+To connect to a specific Postgres instance, set the connection properties directly in the job:
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    name: save_customers
+    table: customers
+    host: my-postgres-host
+    port: 5432
+    database: analytics
+    user: etl_user
+    password: "{{ ENV.PGPASSWORD }}"
+```
+
+You can also configure the connection via environment variables (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSCHEMA`). Properties set in the job always take priority.
+
+### Write modes
+
+The `mode` property controls how data is written to the target table on each run. All modes create the table automatically if it does not exist yet.
+
+**append** (default): Inserts incoming rows into the table. Does not deduplicate: running twice on the same data produces twice as many rows.
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    table: events
+    mode: append
+```
+
+**truncate**: Clears the table before each write, then inserts incoming rows. Every run replaces the table content with the current batch. The table structure is preserved between runs.
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    table: events
+    mode: truncate
+```
+
+**overwrite**: Recreates the table on every run. Each run produces a table whose structure matches the current batch exactly. Check constraints, column defaults, and outbound foreign keys are preserved. The primary key is re-added automatically if `primary_key` is set. Other indexes are not: recreate them via `post_pgsql`.
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    table: events
+    mode: overwrite
+    primary_key: id
+    post_pgsql:
+      - CREATE INDEX IF NOT EXISTS idx_events_date ON public.events(date)
+```
+
+**merge**: Upserts rows by primary key. Rows that already exist are updated; rows that do not exist are inserted. Incoming `NULL` values do not overwrite existing values. Requires `primary_key`.
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    table: customers
+    mode: merge
+    primary_key: id
+```
+
+Use `merge_key` when the conflict key is different from the primary key:
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    table: customers
+    mode: merge
+    primary_key: id
+    merge_key: external_id
+```
+
+### Schema evolution
+
+All modes detect new columns automatically. When the incoming batch has a column the target table does not, that column is added to the table before the write runs. Existing rows get `NULL` for the new column.
+
+### Hooks
+
+`pre_pgsql` runs SQL on PostgreSQL before the write strategy executes, but after schema evolution has already run. `post_pgsql` runs after the write completes. Both accept a single statement or a list. Common uses: dropping dependent views before an overwrite, granting permissions and recreating views after a write.
+
+```yaml
+outputs:
+  - kind: DuckdbPostgresOutput
+    table: events
+    mode: overwrite
+    primary_key: id
+    pre_pgsql:
+      - DROP VIEW IF EXISTS public.vw_events_summary
+    post_pgsql:
+      - CREATE INDEX IF NOT EXISTS idx_events_date ON public.events(date)
+      - GRANT SELECT ON public.events TO reporter
+      - CREATE VIEW public.vw_events_summary AS SELECT date, count(*) FROM public.events GROUP BY date
+```
+
+### Properties
+
+#### Connection
+
+| Property | Required | Default | Description |
+|---|---|---|---|
+| `host` | no | `$PGHOST` (`localhost`) | PostgreSQL server hostname |
+| `port` | no | `$PGPORT` (`5432`) | PostgreSQL server port |
+| `database` | no | `$PGDATABASE` (`postgres`) | PostgreSQL database name |
+| `user` | no | `$PGUSER` (`postgres`) | PostgreSQL username |
+| `password` | no | `$PGPASSWORD` (`postgres`) | PostgreSQL password |
+| `schema` | no | `$PGSCHEMA` (`public`) | Target schema |
+
+#### Write behavior
+
+| Property | Required | Default | Description |
+|---|---|---|---|
+| `table` | yes | | Target table name in PostgreSQL |
+| `mode` | no | `append` | Write mode: `append`, `truncate`, `overwrite`, or `merge` |
+| `primary_key` | no | | Column name or list for the primary key. Required for `merge` mode |
+| `merge_key` | no | | Column name or list used as the conflict key for `merge`. Defaults to `primary_key` when omitted |
+| `pre_pgsql` | no | | SQL statement or list to run on PostgreSQL before the write |
+| `post_pgsql` | no | | SQL statement or list to run on PostgreSQL after the write |
+| `**options` | no | | Additional keyword arguments passed to the postgres extension |
+
 ## Accessing the session
 
 All `tio_duckdb` steps inherit from `DuckdbStepMixin`, which provides a `self.duckdb` shortcut to the active `DuckDBPyConnection`:
