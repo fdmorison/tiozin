@@ -143,7 +143,14 @@ Opening with context before examples is expected here.
 
 ### Reference pages
 
-Structure is determined by the property set being documented. Group properties by category with a heading above each table. Follow the Reference Tables format.
+When documenting a plugin (Input, Transform, Output, Runner), use this fixed structure for each plugin section:
+
+1. One-line description
+2. Minimal YAML example
+3. A single unified properties table covering all parameters (never split by category)
+4. One dedicated section per parameter or behavior that needs explanation. Each section must open with the motivation: why the parameter exists and when you would use it. Do not introduce a parameter without that context.
+
+For all other reference content, structure is determined by the property set being documented. Follow the Reference Tables format.
 
 ### FAQ
 
@@ -203,6 +210,8 @@ Table columns must follow this order:
 - Example output: literal rendered value, not a format string
 - Group rows by category with a heading above each table
 - Aliases must be listed together, not separately
+
+When a property accepts a fixed set of values (enum-like), list every accepted value in the dedicated section for that property. A link to external documentation does not replace this listing: the values accepted by the Tiozin API may differ from those in the upstream library, and the reader must not have to cross-reference external docs to use the parameter.
 
 ---
 
