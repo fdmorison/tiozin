@@ -70,7 +70,6 @@ class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
     @abstractmethod
     def setup(self) -> None:
         """Initialize the runner's resources (sessions, connections, etc.)."""
-        pass
 
     @abstractmethod
     def run(self, execution_plan: TPlan, **options) -> TOutput:
@@ -86,4 +85,3 @@ class Runner(Tiozin, Generic[TPlan, TSession, TOutput]):
     @abstractmethod
     def teardown(self) -> None:
         """Release the runner's resources (close sessions, connections, etc.)."""
-        pass

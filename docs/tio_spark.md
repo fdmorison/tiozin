@@ -1,6 +1,6 @@
 # tio_spark
 
-`tio_spark` is the Tiozin provider family for Apache Spark. It runs pipelines on a managed `SparkSession` and provides four plugins: a file reader, a SQL transform, a file writer, and an Iceberg-ready runner. Every step result is automatically available as a named temporary view for downstream SQL queries. The family supports both batch and streaming execution.
+`tio_spark` is the Tiozin provider family for Apache Spark. It runs pipelines on a managed `SparkSession`. Every step result is automatically available as a named temporary view for downstream SQL queries. The family supports both batch and streaming execution.
 
 > **Note:** `tio_spark` currently lives inside the `tiozin` core repository. In a future major version it will be extracted into its own independent package. Creating new provider families inside the core repository is not allowed.
 
@@ -485,8 +485,7 @@ When writing a custom step in `tio_spark`, use `self.spark` to access the active
 
 ```python
     def transform(self, data: DataFrame) -> DataFrame:
-        sql = f"SELECT * FROM {data.alias} WHERE amount > 100"
-        return self.spark.sql(sql)
+        return data.withColumn("tax", data["amount"] * 0.1)
 ```
 
 This session is the one created and managed by the runner. It is shared across all steps in the pipeline, so every step reads from and writes to the same Spark session. Do not create a new session with `SparkSession.builder.getOrCreate()` inside a step: that would interfere with the runner-managed session and bypass the temporary views registered by other steps.

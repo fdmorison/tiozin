@@ -1,6 +1,6 @@
 # tio_duckdb
 
-`tio_duckdb` is the Tiozin provider family for DuckDB. It runs pipelines on a local DuckDB connection and provides four plugins: a file reader, a SQL transform, a file writer, and a PostgreSQL writer. Every step result is automatically available as a named relation for downstream SQL queries. The family is designed for single-node, in-memory or file-based workloads.
+`tio_duckdb` is the Tiozin provider family for DuckDB. It runs pipelines on a local DuckDB connection. Every step result is automatically available as a named relation for downstream SQL queries. The family is designed for single-node, in-memory or file-based workloads.
 
 > **Note:** `tio_duckdb` currently lives inside the `tiozin` core repository. In a future major version it will be extracted into its own independent package. Creating new provider families inside the core repository is not allowed.
 

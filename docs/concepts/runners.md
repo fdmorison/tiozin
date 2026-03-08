@@ -12,14 +12,14 @@ Four lifecycle methods define the contract:
 |---|---|---|
 | `setup()` | yes | Called before execution. Create sessions, connections, or shared resources here |
 | `run(plan)` | yes | Execute the plan. Receives the list of values returned by all outputs |
-| `teardown()` | no | Called after execution. Release sessions, connections, and resources here |
+| `teardown()` | yes | Called after execution, even on failure. Release sessions, connections, and resources here |
 | `session` | yes | Abstract property. Returns the active engine session |
 
 The session is the live connection to the underlying engine, such as a `SparkSession` or a `DuckDBPyConnection`. It is created during `setup()` and made available to all steps via `self.context.runner.session`.
 
 ## Custom implementations
 
-Any class that extends `Runner` and implements `session`, `setup()`, and `run()` becomes a valid runner type:
+Any class that extends `Runner` and implements `session`, `setup()`, `run()`, and `teardown()` becomes a valid runner type:
 
 ```python
 from typing import Any
@@ -66,8 +66,7 @@ Register it as a `tiozin.family` entry point and use `kind: MyRunner` in YAML. S
 
 ## Invariants
 
-- `session`, `setup()`, and `run()` are required. A runner that does not implement them raises at construction time.
-- `teardown()` is optional. The default implementation is a no-op.
+- `session`, `setup()`, `run()`, and `teardown()` are required. A runner that does not implement them raises at construction time.
 - Accessing `session` before `setup()` raises `NotInitializedError`.
 - The Runner is the only component that may hold stateful connections. Inputs, Transforms, and Outputs must access the session through `self.context.runner.session`.
 

@@ -20,9 +20,9 @@ The framework defines seven registry contracts:
 
 ## Built-in registries
 
-The `tio_kernel` family ships NoOp implementations for all seven registries. They return `None` or empty values. They're the default and work fine for local development and testing.
+The `tio_kernel` family ships NoOp implementations for optional registries: `SettingRegistry`, `SecretRegistry`, `SchemaRegistry`, `LineageRegistry`, `MetricRegistry`, and `TransactionRegistry`. They return `None` or discard events. They work fine for local development and testing.
 
-`FileJobRegistry` is also included. It loads job definitions from YAML or JSON files on disk and is the registry used when you run `tiozin run path/to/job.yaml`.
+`JobRegistry` is covered by `FileJobRegistry`, a production-ready implementation that loads job definitions from YAML or JSON files on disk. It is the registry used when you run `tiozin run path/to/job.yaml`.
 
 ## Registry API
 

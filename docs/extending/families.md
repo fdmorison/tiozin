@@ -50,9 +50,9 @@ The family's public API is defined by its `__init__.py`. Export every Tiozin you
 
 ```python
 # tio_dilbert/__init__.py
-from .runners.dilbert_runner import MongoRunner as MongoRunner
-from .inputs.dilbert_input import MongoInput as MongoInput
-from .outputs.dilbert_output import MongoOutput as MongoOutput
+from .runners.dilbert_runner import DilbertRunner as DilbertRunner
+from .inputs.dilbert_input import DilbertInput as DilbertInput
+from .outputs.dilbert_output import DilbertOutput as DilbertOutput
 ```
 
 Only symbols exported from `__init__.py` are part of the family's public API. Internal modules may change without notice.

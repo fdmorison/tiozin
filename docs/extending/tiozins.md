@@ -1,6 +1,6 @@
 # Creating Pluggable Tiozins
 
-Every component you write for Tiozin is a Tiozin: an Input that reads from your database, a Transform that applies your business logic, an Output that writes to your system, a Runner that manages your execution engine. This guide shows how to build each one, using a MongoDB family as the running example. Data flows through the pipeline as `pandas.DataFrame`.
+Every component you write for Tiozin is a Tiozin: an Input that reads from your database, a Transform that applies your business logic, an Output that writes to your system, a Runner that manages your execution engine. This guide shows how to build each one, using a SQLite family as the running example. Data flows through the pipeline as SQL strings.
 
 ## How Tiozin finds your plugins
 

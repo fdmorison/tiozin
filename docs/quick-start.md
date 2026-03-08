@@ -36,7 +36,7 @@ tiozin run my_first_job.yaml
 
 `kind` selects the job implementation. `LinearJob` runs steps in fixed sequential order and is the standard choice.
 
-`name` is the unique identifier for this job in your system. It is not the execution ID — a new execution ID is generated every time the job runs.
+`name` is the unique identifier for this job in your system. It is not the execution ID. A new execution ID is generated every time the job runs.
 
 `description` is optional. Write it for whoever will be debugging this job at 3am.
 
@@ -65,7 +65,7 @@ labels:
 
 ## Declare domain
 
-These seven fields define where this job lives in your data organization. They are all required. They also become available as template variables anywhere in the job — in paths, connection strings, table names, and so on.
+These seven fields define where this job lives in your data organization. They are all required. They also become available as template variables anywhere in the job: in paths, connection strings, table names, and so on.
 
 ```yaml
 org: acme
@@ -195,7 +195,7 @@ tiozin run jobs/orders_daily_summary.yaml
 
 ## Next steps
 
-Replace the `NoOp*` kinds with real provider implementations from a [Tiozin Family](concepts/family.md) — Spark, DuckDB, or any other installed family.
+Replace the `NoOp*` kinds with real provider implementations from a [Tiozin Family](concepts/family.md): Spark, DuckDB, or any other installed family.
 
 - [Working with Jobs](working-with-jobs.md): all ways to define a job, pipeline shapes, and templating
 - [Jobs](concepts/jobs.md): full field reference and execution model
