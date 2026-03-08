@@ -268,6 +268,61 @@ class SQLiteSecretRegistry(SecretRegistry):
 
 The `try_get()` method is provided by the base class. It catches `TiozinNotFoundError` and returns `None`.
 
+## Putting it all together
+
+Here is the complete job YAML for the SQLite ETL built throughout this guide. It wires the runner, input, transform, and output into a single `LinearJob`:
+
+```yaml
+kind: LinearJob
+name: sqlite_orders_etl
+description: |
+  Reads high-value open orders, applies tax, and writes the result to SQLite.
+
+runner:
+  kind: SQLiteRunner
+  path: example.db
+
+inputs:
+  - kind: SQLiteInput
+    name: orders_source
+    description: High-value open orders created since the start of the month.
+    query: |
+      WITH orders(id, status, total) AS (
+          VALUES (1, 'open', 200), (2, 'open', 50), (3, 'closed', 300)
+      )
+      SELECT *
+      FROM orders
+      WHERE status = 'open'
+        AND total > 100
+
+transforms:
+  - kind: TaxTransform
+    name: apply_tax
+    description: Applies tax rate to total column.
+    tax_rate: 0.15
+
+outputs:
+  - kind: SQLiteOutput
+    name: orders_sink
+    description: Writes enriched orders to SQLite.
+    table: processed_orders
+```
+
+Save it as `sqlite_orders_etl.yaml` and run it:
+
+```bash
+tiozin run sqlite_orders_etl.yaml
+```
+
+For `tiozin run` to resolve `SQLiteRunner`, `SQLiteInput`, `TaxTransform`, and `SQLiteOutput` by name, your package must declare a `tiozin.family` entry point. If you packaged your SQLite components as `tio_sqlite`, add this to your `pyproject.toml`:
+
+```toml
+[project.entry-points."tiozin.family"]
+tio_sqlite = "tio_sqlite"
+```
+
+Install your package (e.g. `uv sync`, `poetry install`) and the classes become available to the framework. See [Creating a Provider Family](families.md) for the full walkthrough, including how to structure the package and what the family module must export.
+
 ## Using @tioproxy
 
 Proxies let you add shared methods to every step in your family without repeating code in each class.
@@ -285,6 +340,28 @@ Inputs, Transforms, and Outputs must be stateless. They receive all runtime depe
 The reason is practical. The framework may instantiate steps multiple times, reuse them across executions, or run them in parallel. A step that holds a connection will fail unpredictably under these conditions. A step that gets its connection from the context will always work, regardless of how the framework chooses to run it.
 
 Configuration parameters set in `__init__` are fine. Storing `self.table = table` is not state, it is configuration. What you must not store is anything that is alive: connections, file handles, sessions, loggers created at runtime.
+
+```python
+# Fine: table name is configuration, not state
+class SQLiteOutput(Output[str]):
+    def __init__(self, table: str, **options) -> None:
+        super().__init__(**options)
+        self.table = table  # ok
+
+    def write(self, data: str) -> SQLiteWriteSpec:
+        conn = self.context.runner.session  # correct: get the connection from context
+        ...
+
+
+# Wrong: connection opened and held in __init__
+class SQLiteOutput(Output[str]):
+    def __init__(self, table: str, path: str, **options) -> None:
+        super().__init__(**options)
+        self.table = table
+        self._conn = sqlite3.connect(path)  # wrong: the runner has not started yet, and
+                                            # live objects like connections cannot be
+                                            # serialized by engines such as Spark
+```
 
 | Role | Can hold state | Where the session comes from |
 |---|---|---|
