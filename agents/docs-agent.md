@@ -251,6 +251,12 @@ Do not add links that point to files that do not yet exist.
 
 ---
 
+## Self-Review
+
+After the first draft, re-read and check for: internal contradictions, prose that does not match the code, code that would not run as written, enumerations that will go stale, and style violations. Fix before marking done.
+
+---
+
 ## Verification Checklist
 
 Before completing any documentation task:
@@ -259,3 +265,4 @@ Before completing any documentation task:
 - [ ] Every example was manually traced to confirm the output
 - [ ] No assumed defaults or inferred behavior was included
 - [ ] README index updated if a new file was created
+- [ ] Self-review completed: no internal contradictions, no stale enumerations, no broken code
