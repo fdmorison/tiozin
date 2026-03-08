@@ -10,15 +10,29 @@ Once your package is installed, Tiozin makes your Tiozins available by class nam
 
 ## Eager and lazy execution
 
-Before implementing Output and Runner, you need to understand how execution flows.
+Any step can do its work immediately or defer it to the runner.
 
-When a job runs, inputs read, transforms modify, outputs write. The order depends on the job implementation. `LinearJob` runs steps in a fixed sequential order, but a custom `Job` may coordinate steps differently. "Write" does not always mean "execute immediately."
+An **eager** step executes inside its own method and returns the result directly. An input that reads a file, a transform that calls an external API, an output that writes to a database inline: all are eager. The step does its work, returns its value (or `None`), and the pipeline moves on.
 
-An eager output writes immediately inside `write()` and returns `None`. The runner receives nothing and skips it.
+A **lazy** step returns a plan object instead. The runner collects all plan objects at the end of the job and decides how to execute them: sequentially, in parallel, as a batch, or whatever the engine handles best.
 
-A lazy output returns a typed plan object describing what to write. The runner collects all plans from all outputs and decides how to execute them: sequentially, in parallel, as a batch, or any other strategy that makes sense for the underlying engine.
+The Output and Runner pair is where this distinction matters most. `write()` can return `None` (eager) or a typed plan object (lazy). The runner's `run()` receives the list of plan objects and executes them.
 
-Lazy execution is what makes the runner genuinely useful. Spark returns `DataFrameWriter` objects. DuckDB returns SQL strings. The runner executes each one in the right way. You can do the same in your own family.
+Here is an example of eager execution. The step may write directly inside `write()` using the active connection and return `None`. The runner has nothing to do for that output:
+
+```python
+class MyDuckdbOutput(Output[DuckDBPyRelation]):
+    def write(self, data: DuckDBPyRelation) -> None:
+        self.duckdb.execute(f"COPY ({data.query}) TO '{self.path}' (FORMAT PARQUET)")
+```
+
+A Spark output is a good example of lazy execution. `write()` builds a `DataFrameWriter` and returns it without calling `.save()`. The runner collects all writers and triggers them, which is when Spark actually executes the job:
+
+```python
+class MySparkOutput(Output[DataFrame]):
+    def write(self, data: DataFrame) -> DataFrameWriter:
+        return data.write.format("parquet").mode("overwrite").option("path", self.path)
+```
 
 You choose the pattern by what your `write()` returns and what your `run()` knows how to handle.
 
@@ -51,7 +65,7 @@ class SQLiteRunner(Runner[list[SQLiteWriteSpec], sqlite3.Connection, None]):
         return self._conn
 
     def setup(self) -> None:
-        self._conn = sqlite3.connect(self.path)
+        self._conn = sqlite3.connect(self.path, isolation_level=None)
         self.info(f"Connected to SQLite at {self.path}")
 
     def run(self, plan: list[SQLiteWriteSpec | None]) -> None:
@@ -88,8 +102,6 @@ runner:
 An Input reads data from a source and passes it to the next step. Extend `Input` and implement `read()`.
 
 ```python
-import sqlite3
-
 from tiozin import Input
 
 
@@ -112,6 +124,9 @@ inputs:
     name: orders_source
     description: High-value open orders created since the start of the month.
     query: |
+      WITH orders(id, status, total) AS (
+          VALUES (1, 'open', 200), (2, 'open', 50), (3, 'closed', 300)
+      )
       SELECT *
       FROM orders
       WHERE status = 'open'
@@ -173,8 +188,8 @@ class SQLiteOutput(Output[str]):
         self.table = table
 
     def write(self, data: str) -> None:
-        cursor = self.context.runner.session.cursor()
-        cursor.execute(f"CREATE TABLE IF NOT EXISTS {self.table} AS {data}")
+        conn = self.context.runner.session
+        conn.execute(f"CREATE TABLE IF NOT EXISTS {self.table} AS {data}")
 ```
 
 In YAML:
@@ -235,16 +250,20 @@ class SQLiteSecretRegistry(SecretRegistry):
         self.table = table
 
     def get(self, identifier: str, version: str | None = None) -> str:
-        cursor = self.context.runner.session.cursor()
-        cursor.execute(f"SELECT value FROM {self.table} WHERE key = ?", (identifier,))
-        row = cursor.fetchone()
+        conn = self.context.runner.session
+        row = conn.execute(
+            f"SELECT value FROM {self.table} WHERE key = ?", (identifier,)
+        ).fetchone()
         if not row:
             raise TiozinNotFoundError(identifier)
         return row[0]
 
     def register(self, identifier: str, value: str) -> None:
-        cursor = self.context.runner.session.cursor()
-        cursor.execute(f"INSERT OR REPLACE INTO {self.table} (key, value) VALUES (?, ?)", (identifier, value))
+        conn = self.context.runner.session
+        conn.execute(
+            f"INSERT OR REPLACE INTO {self.table} (key, value) VALUES (?, ?)",
+            (identifier, value),
+        )
 ```
 
 The `try_get()` method is provided by the base class. It catches `TiozinNotFoundError` and returns `None`.
