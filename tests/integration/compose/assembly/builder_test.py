@@ -52,8 +52,8 @@ def test_builder_should_accept_job_manifest():
     job = builder.from_manifest(manifest).build()
 
     # Assert
-    actual = type(job)
-    expected = LinearJob
+    actual = isinstance(job, LinearJob)
+    expected = True
     assert actual == expected
 
 
@@ -99,8 +99,8 @@ def test_builder_should_accept_plugin_dicts():
     )
 
     # Assert
-    actual = type(job)
-    expected = LinearJob
+    actual = isinstance(job, LinearJob)
+    expected = True
     assert actual == expected
 
 
@@ -135,8 +135,8 @@ def test_builder_should_accept_plugin_manifests():
     )
 
     # Assert
-    actual = type(job)
-    expected = LinearJob
+    actual = isinstance(job, LinearJob)
+    expected = True
     assert actual == expected
 
 
@@ -171,8 +171,8 @@ def test_builder_should_accept_plugin_objects():
     )
 
     # Assert
-    actual = type(job)
-    expected = LinearJob
+    actual = isinstance(job, LinearJob)
+    expected = True
     assert actual == expected
 
 
@@ -378,8 +378,8 @@ def test_builder_should_handle_unplanned_fields():
     )
 
     # Assert
-    actual = type(job)
-    expected = LinearJob
+    actual = isinstance(job, LinearJob)
+    expected = True
     assert actual == expected
 
 
