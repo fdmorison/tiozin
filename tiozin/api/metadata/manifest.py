@@ -68,6 +68,10 @@ class Manifest(BaseModel):
             return cls.model_validate(manifest)
         except DuplicateKeyError as e:
             raise ManifestError.from_ruamel(cls.__name__, e) from e
+        except ManifestError:
+            raise
+        except Exception as e:
+            raise ManifestError(manifest=cls.__name__, message=str(e)) from e
 
     @classmethod
     def try_from_yaml_or_json(cls, data: str | Manifest | Any) -> Self | None:
@@ -83,7 +87,7 @@ class Manifest(BaseModel):
 
         try:
             return cls.from_yaml_or_json(data)
-        except ManifestError:
+        except Exception:
             return None
 
     def to_yaml(self) -> str:
