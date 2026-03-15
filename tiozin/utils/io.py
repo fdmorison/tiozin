@@ -17,33 +17,35 @@ import fsspec
 
 from tiozin import config
 
+StrOrPath = str | Path
 
-def _fs(path: str) -> tuple[Any, str]:
-    fs, _, paths = fsspec.get_fs_token_paths(path)
+
+def _fs(path: StrOrPath) -> tuple[Any, str]:
+    fs, _, paths = fsspec.get_fs_token_paths(str(path))
     return fs, paths[0]
 
 
-def read_text(path: str, **options) -> str:
+def read_text(path: StrOrPath, **options) -> str:
     """
     Read and return the full contents of a text file.
 
     Supports local filesystems and object storage via fsspec.
     """
-    with fsspec.open(path, mode="r", **options) as f:
+    with fsspec.open(str(path), mode="r", **options) as f:
         return f.read()
 
 
-def write_text(path: str, data: str, **options) -> None:
+def write_text(path: StrOrPath, data: str, **options) -> None:
     """
     Write text data to a file.
 
     Supports local filesystems and object storage via fsspec.
     """
-    with fsspec.open(path, mode="w", **options) as f:
+    with fsspec.open(str(path), mode="w", **options) as f:
         f.write(data)
 
 
-def ensure_dir(path: str) -> None:
+def ensure_dir(path: StrOrPath) -> None:
     """
     Ensure that a directory exists.
 
@@ -58,7 +60,7 @@ def ensure_dir(path: str) -> None:
     fs.mkdirs(p, exist_ok=True)
 
 
-def remove_dir(path: str, recursive: bool = True) -> None:
+def remove_dir(path: StrOrPath, recursive: bool = True) -> None:
     """
     Remove a directory.
 
@@ -73,7 +75,7 @@ def remove_dir(path: str, recursive: bool = True) -> None:
     fs.rm(p, recursive=recursive)
 
 
-def clear_dir(path: str) -> None:
+def clear_dir(path: StrOrPath) -> None:
     """
     Remove all contents of a directory, preserving the directory itself.
     """
@@ -90,7 +92,7 @@ def clear_dir(path: str) -> None:
             fs.rm(name)
 
 
-def exists(path: str) -> bool:
+def exists(path: StrOrPath) -> bool:
     """
     Return True if the path exists.
     """
@@ -98,7 +100,7 @@ def exists(path: str) -> bool:
     return fs.exists(p)
 
 
-def create_local_temp_dir(*entries: str) -> Path:
+def create_local_temp_dir(*entries: StrOrPath) -> Path:
     """
     Create a temporary working directory under the application temp root.
 

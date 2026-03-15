@@ -44,7 +44,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         self.description = description
         self.options = options
 
-    def __init_subclass__(tiozin, **kwargs) -> None:
+    def __init_subclass__(tiozin: type[Tiozin], **kwargs) -> None:
         super().__init_subclass__(**kwargs)
         name = tiozin.__name__
         role_class = detect_tiozin_role(tiozin)

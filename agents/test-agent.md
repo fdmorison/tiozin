@@ -77,47 +77,6 @@ Deviation is not allowed.
 
 ---
 
-## Behavioral Standards
-
-Tests must be:
-
-- Deterministic
-- Isolated
-- Behavior-focused
-- Readable
-- Minimal but complete
-
-Avoid:
-
-- Testing implementation details
-- Asserting private state
-- Testing multiple contracts in one test
-- Over-mocking
-
----
-
-## Consolidation Rules
-
-After generating tests:
-
-- Remove duplicates
-- Use `@pytest.mark.parametrize` when variation is input-only
-- Ensure no redundant behavioral coverage
-
----
-
-## Output Expectations
-
-Your output must:
-
-- Follow project naming conventions
-- Respect AAA strictly
-- Avoid re-executing the SUT in Assert
-- Use tuple grouping for composite observable contracts
-- Use `match=` when asserting exception messages
-
----
-
 ## Failure Policy
 
 If tests fail:

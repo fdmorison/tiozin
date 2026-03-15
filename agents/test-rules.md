@@ -119,6 +119,26 @@ Avoid:
 ❌ Incorrect:
     assert result == 5
 
+Exception — boolean existence checks:
+
+When the assertion is a boolean predicate whose name already makes
+the intent unambiguous (e.g. path.exists(), target.is_dir()), the
+short form is preferred. Wrapping it in actual/expected = True adds
+verbosity without clarity.
+
+✔ Preferred:
+    assert target.exists()
+    assert target.is_dir()
+
+❌ Avoid (overly verbose):
+    actual = target.exists()
+    expected = True
+    assert actual == expected
+
+Apply this exception only when the predicate name is self-explanatory.
+For any result that carries a non-trivial value, the full pattern is
+still required.
+
 
 6. ASSERT COUNT
 ---------------
@@ -178,6 +198,8 @@ Each test validates one behavioral contract only.
 
 Exception tests MAY omit actual/expected pattern.
 
+Always use `match=` when the exception message is part of the contract.
+
 ✔ Correct:
     with pytest.raises(ValueError, match="Division by zero"):
         divide(10, 0)
@@ -199,7 +221,23 @@ After generating tests, the agent MUST:
 - Prefer behavior over implementation detail
 
 
-11. QUALITY REQUIREMENTS
+11. TEST FILE ORDERING
+----------------------
+
+Within a test file, tests must follow this reading order:
+
+1. Happy path — construct the SUT with minimum required input and
+   assert all observable defaults. Establishes the baseline contract.
+2. Success variations — parametrized tests covering optional inputs,
+   accepted values, or alternate valid states.
+3. Error cases — rejection tests (invalid types, missing required
+   fields, constraint violations).
+
+This order allows a reader to understand what the SUT does before
+understanding what it rejects.
+
+
+12. QUALITY REQUIREMENTS
 ------------------------
 
 Tests must be:
@@ -207,3 +245,10 @@ Tests must be:
 - Isolated
 - Behavior-focused
 - Readable
+- Minimal but complete
+
+Avoid:
+- Testing implementation details
+- Asserting private state
+- Testing multiple contracts in one test
+- Over-mocking

@@ -1,10 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.transform_manifest import TransformManifest
+from tiozin.api.metadata.job_manifest import TransformManifest
 
 
-def test_manifest_should_accept_minimum_transform():
+def test_manifest_should_have_correct_defaults():
     # Arrange
     data = {
         "kind": "TestTransform",
@@ -12,27 +12,23 @@ def test_manifest_should_accept_minimum_transform():
     }
 
     # Act
-    TransformManifest(**data)
+    manifest = TransformManifest(**data)
 
     # Assert
-    assert True
-
-
-@pytest.mark.parametrize(
-    "field_to_remove",
-    ["kind", "name"],
-)
-def test_manifest_should_reject_transform_without_required_field(field_to_remove):
-    # Arrange
-    data = {
-        "kind": "TestTransform",
-        "name": "test_transform",
-    }
-    del data[field_to_remove]
-
-    # Act
-    with pytest.raises(ValidationError):
-        TransformManifest(**data)
+    actual = manifest
+    expected = TransformManifest(
+        kind="TestTransform",
+        name="test_transform",
+        description=None,
+        org=None,
+        region=None,
+        domain=None,
+        subdomain=None,
+        layer=None,
+        product=None,
+        model=None,
+    )
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -86,28 +82,18 @@ def test_manifest_should_reject_transform_with_invalid_field_types(field_name, i
         TransformManifest(**data)
 
 
-def test_manifest_should_have_correct_defaults():
+@pytest.mark.parametrize(
+    "field_to_remove",
+    ["kind", "name"],
+)
+def test_manifest_should_reject_transform_without_required_field(field_to_remove):
     # Arrange
     data = {
         "kind": "TestTransform",
         "name": "test_transform",
     }
+    del data[field_to_remove]
 
     # Act
-    manifest = TransformManifest(**data)
-
-    # Assert
-    actual = manifest
-    expected = TransformManifest(
-        kind="TestTransform",
-        name="test_transform",
-        description=None,
-        org=None,
-        region=None,
-        domain=None,
-        subdomain=None,
-        layer=None,
-        product=None,
-        model=None,
-    )
-    assert actual == expected
+    with pytest.raises(ValidationError):
+        TransformManifest(**data)

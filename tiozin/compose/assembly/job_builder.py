@@ -8,7 +8,7 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.exceptions import TiozinInputError, TiozinInternalError
+from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
 from tiozin.utils.helpers import trim
 
 from ..reflection import try_get_public_setter
@@ -183,6 +183,10 @@ class JobBuilder:
         return self
 
     def from_manifest(self, manifest: JobManifest) -> Self:
+        RequiredArgumentError.raise_if_missing(
+            manifest=manifest,
+        )
+
         for field in JobManifest.model_fields:
             self.with_field(field, getattr(manifest, field))
 
