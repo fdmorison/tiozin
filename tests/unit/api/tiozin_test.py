@@ -120,7 +120,9 @@ def test_to_dict_should_include_none_by_default():
     result = tiozin.to_dict()
 
     # Assert
-    assert "description" in result
+    actual = "description" in result
+    expected = True
+    assert actual == expected
 
 
 def test_to_dict_should_exclude_none_when_requested():
@@ -141,7 +143,9 @@ def test_to_dict_should_exclude_none_when_requested():
     result = tiozin.to_dict(exclude_none=True)
 
     # Assert
-    assert None not in result.values()
+    actual = None in result.values()
+    expected = False
+    assert actual == expected
 
 
 def test_to_dict_should_apply_both_filters_when_requested():
