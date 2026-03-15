@@ -18,6 +18,8 @@ from tiozin.exceptions import (
     SchemaError,
     SchemaNotFoundError,
     SchemaViolationError,
+    SettingsError,
+    SettingsNotFoundError,
     TiozinConflictError,
     TiozinForbiddenError,
     TiozinInputError,
@@ -198,7 +200,7 @@ def test_job_manifest_error_should_format_job_name_when_provided():
 
     # Assert
     actual = error.message
-    expected = "Invalid manifest `my_job`: something is wrong"
+    expected = "Invalid `my_job`: something is wrong"
     assert actual == expected
 
 
@@ -217,7 +219,7 @@ def test_job_manifest_error_from_pydantic_should_format_validation_errors():
 
     # Assert
     assert isinstance(error, ManifestError)
-    assert error.message.startswith("Invalid manifest `test_job`:")
+    assert error.message.startswith("Invalid `test_job`:")
 
 
 def test_job_manifest_error_from_ruamel_should_format_yaml_errors():
@@ -239,7 +241,7 @@ def test_job_manifest_error_from_ruamel_should_format_yaml_errors():
 
     # Assert
     assert isinstance(error, ManifestError)
-    assert error.message.startswith("Invalid manifest `test_job`:")
+    assert error.message.startswith("Invalid `test_job`:")
 
 
 # ============================================================================
@@ -269,6 +271,27 @@ def test_schema_not_found_error_should_format_subject_in_message():
 
 
 # ============================================================================
+# Testing SettingsError
+# ============================================================================
+def test_settings_not_found_error_should_show_location():
+    # Arrange
+    location = "/etc/tiozin/settings.yaml"
+
+    # Act
+    error = SettingsNotFoundError(location=location)
+
+    # Assert
+    actual = error.message
+    expected = f"Settings not found: '{location}'."
+    assert actual == expected
+
+
+def test_settings_not_found_error_raise_if_should_raise_when_condition_is_true():
+    with pytest.raises(SettingsNotFoundError, match="/missing/settings.yaml"):
+        SettingsNotFoundError.raise_if(True, "/missing/settings.yaml")
+
+
+# ============================================================================
 # Testing PluginError
 # ============================================================================
 def test_plugin_not_found_error_should_format_plugin_name_in_message():
@@ -276,7 +299,7 @@ def test_plugin_not_found_error_should_format_plugin_name_in_message():
     error = PluginNotFoundError(name="my_plugin")
 
     # Assert
-    assert error.message == "Tiozin `my_plugin` not found. Ensure its family is installed."
+    assert error.message == "Tiozin `my_plugin` not found."
 
 
 def test_ambiguous_plugin_error_should_format_plugin_name_and_candidates_in_message():
@@ -477,6 +500,8 @@ def test_raise_if_missing_should_raise_error_when_field_is_not_excluded():
         SchemaError(),
         SchemaViolationError(),
         SchemaNotFoundError(subject="x"),
+        SettingsError(),
+        SettingsNotFoundError(location="x"),
         PluginError(),
         PluginNotFoundError(name="x"),
         PluginConflictError(name="x"),
@@ -517,8 +542,20 @@ def test_schema_errors_should_be_catchable_as_schema_error(error):
 @pytest.mark.parametrize(
     "error",
     [
+        SettingsNotFoundError(location="x"),
+    ],
+)
+def test_settings_errors_should_be_catchable_as_settings_error(error):
+    with pytest.raises(SettingsError):
+        raise error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
         JobNotFoundError(name="test"),
         PluginNotFoundError(name="test"),
+        SettingsNotFoundError(location="test"),
     ],
 )
 def test_errors_should_be_catchable_as_not_found(error):

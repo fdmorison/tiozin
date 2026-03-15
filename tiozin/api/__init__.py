@@ -7,6 +7,7 @@ from .tiozin import Tiozin as Tiozin
 from .registry import Registry as Registry
 
 from .metadata.job_manifest import JobManifest as JobManifest
+from .metadata.settings_manifest import SettingsManifest as SettingsManifest
 
 from .registries.job_registry import JobRegistry as JobRegistry
 from .registries.lineage_registry import LineageRegistry as LineageRegistry

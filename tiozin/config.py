@@ -42,3 +42,21 @@ log_show_locals = env.TIO_LOG_SHOW_LOCALS
 tiozin_family_group = "tiozin.family"
 tiozin_family_prefixes = ["tio_", "tia_"]
 tiozin_family_unknown = "tio_unknown"
+
+# ===============================================
+#           Tiozin Configs
+# ===============================================
+tiozin_settings_file = "tiozin.yaml"
+tiozin_settings_path = env.TIO_SETTINGS_PATH
+tiozin_settings_search_paths = (
+    # Project-level
+    tiozin_settings_file,
+    # User-level
+    Path.home() / tiozin_settings_file,
+    Path.home() / ".config/tiozin" / tiozin_settings_file,
+    # Container-level
+    Path("/etc/tiozin") / tiozin_settings_file,
+    Path("/tiozin") / tiozin_settings_file,
+    Path("/config") / tiozin_settings_file,
+    Path("/") / tiozin_settings_file,
+)

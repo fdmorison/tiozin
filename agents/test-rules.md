@@ -252,3 +252,15 @@ Avoid:
 - Asserting private state
 - Testing multiple contracts in one test
 - Over-mocking
+- Asserting object identity (`result is sut`) when observable state is available
+
+Object identity is an implementation detail. Prefer asserting `.kind`, `.path`,
+`.value`, or other observable attributes that define the behavioral contract.
+
+✔ Correct:
+    actual = (result.path, result.kind)
+    expected = (None, "FileSettingRegistry")
+    assert actual == expected
+
+❌ Incorrect:
+    assert result is registry  # ❌ asserts identity, not behavior

@@ -1,0 +1,24 @@
+registries:
+
+  job:
+    kind: FileJobRegistry
+
+  schema:
+    kind: NoOpSchemaRegistry
+    verbose: true
+
+  secret:
+    kind: NoOpSecretRegistry
+    verbose: true
+
+  transaction:
+    kind: NoOpTransactionRegistry
+    verbose: true
+
+  lineage:
+    kind: NoOpLineageRegistry
+    verbose: true
+
+  metric:
+    kind: NoOpMetricRegistry
+    verbose: true

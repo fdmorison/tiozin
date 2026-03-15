@@ -31,7 +31,9 @@ OBJ_2025_01_02T12_00_00Z = datetime.fromisoformat(ISO_2025_01_02T12_00_00Z)
 
 @pytest.fixture
 def factory() -> TiozinRegistry:
-    return TiozinRegistry()
+    registry = TiozinRegistry()
+    registry.setup()
+    return registry
 
 
 def test_register_should_fail_when_registering_non_plugin(factory: TiozinRegistry):

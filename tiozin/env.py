@@ -45,3 +45,23 @@ TIO_LOG_JSON_ENSURE_ASCII = _env.bool("TIO_LOG_JSON_ENSURE_ASCII", False)
 
 # TIO_LOG_SHOW_LOCALS - Show local variables in exception tracebacks.
 TIO_LOG_SHOW_LOCALS = _env.bool("TIO_LOG_SHOW_LOCALS", False)
+
+# ===============================================
+#           Settings
+# ===============================================
+# Path to the settings file, which serves as the framework configuration entrypoint.
+# If not provided, Tiozin searches for `tiozin.yaml` in standard filesystem locations;
+# if not found, configuration falls back to the environment variables below.
+TIO_SETTINGS_PATH = _env.str("TIO_SETTINGS_PATH", None)
+
+# Registry bindings used when no settings file is available.
+# These variables allow selecting which registry implementations TiozinApp should use.
+TIO_SETTINGS_REGISTRY_KIND = _env.str("TIO_SETTINGS_KIND", "tio_kernel:FileSettingRegistry")
+TIO_JOB_REGISTRY_KIND = _env.str("TIO_JOB_REGISTRY_KIND", "tio_kernel:FileJobRegistry")
+TIO_SCHEMA_REGISTRY_KIND = _env.str("TIO_SCHEMA_REGISTRY_KIND", "tio_kernel:NoOpSchemaRegistry")
+TIO_SECRET_REGISTRY_KIND = _env.str("TIO_SECRET_REGISTRY_KIND", "tio_kernel:NoOpSecretRegistry")
+TIO_LINEAGE_REGISTRY_KIND = _env.str("TIO_LINEAGE_REGISTRY_KIND", "tio_kernel:NoOpLineageRegistry")
+TIO_METRIC_REGISTRY_KIND = _env.str("TIO_METRIC_REGISTRY_KIND", "tio_kernel:NoOpMetricRegistry")
+TIO_TRANSACTION_REGISTRY_KIND = _env.str(
+    "TIO_TRANSACTION_REGISTRY_KIND", "tio_kernel:NoOpTransactionRegistry"
+)

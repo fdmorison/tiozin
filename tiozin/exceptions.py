@@ -228,7 +228,7 @@ class ManifestError(TiozinInputError):
     common error sources.
     """
 
-    message = "Invalid manifest `{manifest}`: {msg}"
+    message = "Invalid `{manifest}`: {msg}"
 
     def __init__(self, manifest: str, message: str) -> None:
         super().__init__(manifest=manifest, msg=message)
@@ -334,6 +334,34 @@ class SchemaNotFoundError(SchemaError, TiozinNotFoundError):
 
 
 # ============================================================================
+# Layer 3: Domain Exceptions - Settings
+# ============================================================================
+class SettingsError(TiozinUsageError):
+    """
+    Base exception for settings registry errors.
+    """
+
+    message = "An error occurred while loading settings."
+
+
+class SettingsNotFoundError(SettingsError, TiozinNotFoundError):
+    """
+    Raised when settings cannot be found at the specified path.
+    """
+
+    message = "Settings not found: '{location}'."
+
+    def __init__(self, location: str) -> None:
+        super().__init__(location=location)
+
+    @classmethod
+    def raise_if(cls, condition: bool, location: str) -> type[Self]:
+        if condition:
+            raise cls(location)
+        return cls
+
+
+# ============================================================================
 # Layer 3: Domain Exceptions - Plugin
 # ============================================================================
 class PluginError(TiozinUsageError):
@@ -349,7 +377,7 @@ class PluginNotFoundError(PluginError, TiozinNotFoundError):
     Raised when a Tiozin plugin cannot be found for the given name.
     """
 
-    message = "Tiozin `{name}` not found. Ensure its family is installed."
+    message = "Tiozin `{name}` not found."
 
     def __init__(self, *, name: str = None) -> None:
         super().__init__(name=name)
