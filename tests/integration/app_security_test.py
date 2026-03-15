@@ -17,7 +17,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tiozin import TiozinApp
+from tiozin import TiozinApp, logs
 from tiozin.exceptions import TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpRunner, NoOpTransform
 
@@ -25,6 +25,7 @@ from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpRunner, NoOpTrans
 @pytest.fixture
 def app_secure():
     with patch("tiozin.config.log_show_locals", False):
+        logs.setup()
         app = TiozinApp()
         yield app
         app.teardown()
@@ -33,6 +34,7 @@ def app_secure():
 @pytest.fixture
 def app_insecure():
     with patch("tiozin.config.log_show_locals", True):
+        logs.setup()
         app = TiozinApp()
         yield app
         app.teardown()

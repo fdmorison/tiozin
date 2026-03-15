@@ -5,7 +5,6 @@ from threading import RLock
 from tiozin import Job, logs
 from tiozin.api import Loggable
 from tiozin.api.metadata.job_manifest import JobManifest
-from tiozin.compose.registry_factory import RegistryFactory
 from tiozin.exceptions import TiozinInternalError, TiozinUsageError
 from tiozin.lifecycle import Lifecycle
 from tiozin.utils.app_status import AppStatus
@@ -23,15 +22,12 @@ class TiozinApp(Loggable):
     and executed under a controlled runtime environment.
     """
 
-    def __init__(self, registries: RegistryFactory = None) -> None:
+    def __init__(self, settings_file: str = None) -> None:
         super().__init__()
         self.status = AppStatus.CREATED
         self.current_job = None
         self.lock = RLock()
-        self.registries = registries or RegistryFactory()
-        self.job_registry = self.registries.job_registry
-        self.lifecycle = Lifecycle(*self.registries.all_registries())
-        logs.setup()
+        self.lifecycle = Lifecycle(settings_file)
 
     def setup(self) -> None:
         with self.lock:
@@ -103,17 +99,17 @@ class TiozinApp(Loggable):
             JobNotFoundError: If the job identifier cannot be resolved.
             ManifestError: If the manifest string is invalid.
         """
-        self.setup()
 
         with self.lock:
             try:
+                self.setup()
                 self.current_job = None
                 self.status = self.status.set_running()
 
                 if isinstance(job, (str, JobManifest)):
                     manifest = JobManifest.try_from_yaml_or_json(job)
                     if manifest is None:
-                        manifest = self.job_registry.get(identifier=job)
+                        manifest = self.lifecycle.job_registry.get(identifier=job)
                     job = Job.builder().from_manifest(manifest).build()
 
                 self.current_job = job
@@ -121,16 +117,19 @@ class TiozinApp(Loggable):
                 self.status = self.status.set_success()
                 return result
             except TiozinUsageError as e:
-                self.status = self.status.set_failure()
                 self.error(e.message)
+                self.status = self.status.set_failure()
                 raise
             except TiozinInternalError as e:
-                self.status = self.status.set_failure()
                 self.exception(e.message)
+                self.status = self.status.set_failure()
                 raise
             except Exception as e:
-                self.status = self.status.set_failure()
                 self.exception("Unexpected error while executing job.")
+                self.status = self.status.set_failure()
                 raise TiozinInternalError() from e
             finally:
                 self.current_job = None
+
+
+logs.setup()
