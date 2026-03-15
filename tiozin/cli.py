@@ -14,7 +14,6 @@ cli = typer.Typer(
     no_args_is_help=True,
     pretty_exceptions_show_locals=config.log_show_locals,
 )
-app = TiozinApp()
 console = Console()
 
 ASCII_TIO = rf"""
@@ -30,7 +29,8 @@ ASCII_TIO = rf"""
 
 @cli.command()
 def run(
-    name: str = typer.Argument(REQUIRED, help="Name of the job to create."),
+    job: str = typer.Argument(REQUIRED, help="Identifier of the job to be run."),
+    settings_file: str = typer.Option(None, "--settings-file", help="Path to the settings file."),
 ) -> None:
     """
     Submit and run a job.
@@ -42,9 +42,10 @@ def run(
     - Exit code 1: TiozinUnexpectedError or Exception (bugs, provider errors, etc)
     """
     console.print(ASCII_TIO)
-    console.print(f"[green]▶ Starting job:[/green] [bold cyan]{name}[/bold cyan]\n")
+    console.print(f"[green]▶ Starting job:[/green] [bold cyan]{job}[/bold cyan]\n")
     try:
-        app.run(name)
+        app = TiozinApp(settings_file)
+        app.run(job)
     except TiozinUsageError:
         raise typer.Exit(code=2) from None
     except TiozinInternalError:

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import tiozin.app
-from tests.mocks.fake_registry_factory import MockedRegistryFactory
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.app import AppStatus, TiozinApp
 from tiozin.exceptions import TiozinInternalError
@@ -17,9 +16,8 @@ def mock_signals():
 
 @pytest.fixture(scope="function")
 def created_app() -> TiozinApp:
-    app = TiozinApp(registries=MockedRegistryFactory())
+    app = TiozinApp()
     app.lifecycle = MagicMock()
-    app.job_registry = MagicMock()
     return app
 
 
@@ -288,7 +286,7 @@ def test_run_should_accept_identifier_string_from_registry(
     job_builder: MagicMock, ready_app: TiozinApp
 ):
     # Arrange
-    ready_app.job_registry.get.return_value = JobManifest(
+    ready_app.lifecycle.job_registry.get.return_value = JobManifest(
         kind="Job",
         name="test_job",
         org="tiozin",
