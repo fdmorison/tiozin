@@ -8,6 +8,16 @@ from tiozin.app import AppStatus, TiozinApp
 from tiozin.exceptions import TiozinInternalError
 
 
+def test_app_should_forward_settings_file_to_lifecycle():
+    # Arrange / Act
+    app = TiozinApp(settings_file="custom/tiozin.yaml")
+
+    # Assert
+    actual = app.lifecycle.settings_file
+    expected = "custom/tiozin.yaml"
+    assert actual == expected
+
+
 @pytest.fixture(scope="function", autouse=True)
 def mock_signals():
     with patch("tiozin.app.signal") as mock_signal, patch("tiozin.app.atexit") as mock_atexit:

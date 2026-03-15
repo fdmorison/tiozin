@@ -47,21 +47,48 @@ TIO_LOG_JSON_ENSURE_ASCII = _env.bool("TIO_LOG_JSON_ENSURE_ASCII", False)
 TIO_LOG_SHOW_LOCALS = _env.bool("TIO_LOG_SHOW_LOCALS", False)
 
 # ===============================================
-#           Settings
+#           Registry configurations (all attribute defaults are null)
 # ===============================================
-# Path to the settings file, which serves as the framework configuration entrypoint.
-# If not provided, Tiozin searches for `tiozin.yaml` in standard filesystem locations;
-# if not found, configuration falls back to the environment variables below.
-TIO_SETTINGS_PATH = _env.str("TIO_SETTINGS_PATH", None)
+TIO_SETTING_REGISTRY_KIND = _env.str("TIO_SETTING_REGISTRY_KIND", "tio_kernel:FileSettingRegistry")
+TIO_SETTING_REGISTRY_LOCATION = _env.str("TIO_SETTING_REGISTRY_LOCATION", None)
+TIO_SETTING_REGISTRY_TIMEOUT = _env.int("TIO_SETTING_REGISTRY_TIMEOUT", None)
+TIO_SETTING_REGISTRY_READONLY = _env.bool("TIO_SETTING_REGISTRY_READONLY", None)
+TIO_SETTING_REGISTRY_CACHE = _env.bool("TIO_SETTING_REGISTRY_CACHE", None)
 
-# Registry bindings used when no settings file is available.
-# These variables allow selecting which registry implementations TiozinApp should use.
-TIO_SETTINGS_REGISTRY_KIND = _env.str("TIO_SETTINGS_KIND", "tio_kernel:FileSettingRegistry")
 TIO_JOB_REGISTRY_KIND = _env.str("TIO_JOB_REGISTRY_KIND", "tio_kernel:FileJobRegistry")
+TIO_JOB_REGISTRY_LOCATION = _env.str("TIO_JOB_REGISTRY_LOCATION", None)
+TIO_JOB_REGISTRY_TIMEOUT = _env.int("TIO_JOB_REGISTRY_TIMEOUT", None)
+TIO_JOB_REGISTRY_READONLY = _env.bool("TIO_JOB_REGISTRY_READONLY", None)
+TIO_JOB_REGISTRY_CACHE = _env.bool("TIO_JOB_REGISTRY_CACHE", None)
+
 TIO_SCHEMA_REGISTRY_KIND = _env.str("TIO_SCHEMA_REGISTRY_KIND", "tio_kernel:NoOpSchemaRegistry")
+TIO_SCHEMA_REGISTRY_LOCATION = _env.str("TIO_SCHEMA_REGISTRY_LOCATION", None)
+TIO_SCHEMA_REGISTRY_TIMEOUT = _env.int("TIO_SCHEMA_REGISTRY_TIMEOUT", None)
+TIO_SCHEMA_REGISTRY_READONLY = _env.bool("TIO_SCHEMA_REGISTRY_READONLY", None)
+TIO_SCHEMA_REGISTRY_CACHE = _env.bool("TIO_SCHEMA_REGISTRY_CACHE", None)
+
 TIO_SECRET_REGISTRY_KIND = _env.str("TIO_SECRET_REGISTRY_KIND", "tio_kernel:NoOpSecretRegistry")
-TIO_LINEAGE_REGISTRY_KIND = _env.str("TIO_LINEAGE_REGISTRY_KIND", "tio_kernel:NoOpLineageRegistry")
-TIO_METRIC_REGISTRY_KIND = _env.str("TIO_METRIC_REGISTRY_KIND", "tio_kernel:NoOpMetricRegistry")
+TIO_SECRET_REGISTRY_LOCATION = _env.str("TIO_SECRET_REGISTRY_LOCATION", None)
+TIO_SECRET_REGISTRY_TIMEOUT = _env.int("TIO_SECRET_REGISTRY_TIMEOUT", None)
+TIO_SECRET_REGISTRY_READONLY = _env.bool("TIO_SECRET_REGISTRY_READONLY", None)
+TIO_SECRET_REGISTRY_CACHE = _env.bool("TIO_SECRET_REGISTRY_CACHE", None)
+
 TIO_TRANSACTION_REGISTRY_KIND = _env.str(
     "TIO_TRANSACTION_REGISTRY_KIND", "tio_kernel:NoOpTransactionRegistry"
 )
+TIO_TRANSACTION_REGISTRY_LOCATION = _env.str("TIO_TRANSACTION_REGISTRY_LOCATION", None)
+TIO_TRANSACTION_REGISTRY_TIMEOUT = _env.int("TIO_TRANSACTION_REGISTRY_TIMEOUT", None)
+TIO_TRANSACTION_REGISTRY_READONLY = _env.bool("TIO_TRANSACTION_REGISTRY_READONLY", None)
+TIO_TRANSACTION_REGISTRY_CACHE = _env.bool("TIO_TRANSACTION_REGISTRY_CACHE", None)
+
+TIO_LINEAGE_REGISTRY_KIND = _env.str("TIO_LINEAGE_REGISTRY_KIND", "tio_kernel:NoOpLineageRegistry")
+TIO_LINEAGE_REGISTRY_LOCATION = _env.str("TIO_LINEAGE_REGISTRY_LOCATION", None)
+TIO_LINEAGE_REGISTRY_TIMEOUT = _env.int("TIO_LINEAGE_REGISTRY_TIMEOUT", None)
+TIO_LINEAGE_REGISTRY_READONLY = _env.bool("TIO_LINEAGE_REGISTRY_READONLY", None)
+TIO_LINEAGE_REGISTRY_CACHE = _env.bool("TIO_LINEAGE_REGISTRY_CACHE", None)
+
+TIO_METRIC_REGISTRY_KIND = _env.str("TIO_METRIC_REGISTRY_KIND", "tio_kernel:NoOpMetricRegistry")
+TIO_METRIC_REGISTRY_LOCATION = _env.str("TIO_METRIC_REGISTRY_LOCATION", None)
+TIO_METRIC_REGISTRY_TIMEOUT = _env.int("TIO_METRIC_REGISTRY_TIMEOUT", None)
+TIO_METRIC_REGISTRY_READONLY = _env.bool("TIO_METRIC_REGISTRY_READONLY", None)
+TIO_METRIC_REGISTRY_CACHE = _env.bool("TIO_METRIC_REGISTRY_CACHE", None)

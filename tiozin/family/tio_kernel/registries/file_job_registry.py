@@ -14,8 +14,8 @@ class FileJobRegistry(JobRegistry):
     Supported formats: YAML (.yaml, .yml) and JSON (.json).
     """
 
-    def __init__(self, **options):
-        super().__init__(**options)
+    def __init__(self, location: str = None, **options):
+        super().__init__(location=location, **options)
 
     def get(self, identifier: str, version: str = None) -> JobManifest:
         """

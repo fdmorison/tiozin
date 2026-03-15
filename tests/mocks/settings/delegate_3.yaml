@@ -2,26 +2,28 @@ registries:
 
   settings:
     kind: NoOpSettingRegistry
+    name: my-job-registry-3
 
   job:
     kind: FileJobRegistry
+    name: my-job-registry-3
 
   schema:
     kind: NoOpSchemaRegistry
-    verbose: true
+    name: my-schema-registry-3
 
   secret:
     kind: NoOpSecretRegistry
-    verbose: true
+    name: my-secret-registry-3
 
   transaction:
     kind: NoOpTransactionRegistry
-    verbose: true
+    name: my-transaction-registry-3
 
   lineage:
     kind: NoOpLineageRegistry
-    verbose: true
+    name: my-lineage-registry-3
 
   metric:
     kind: NoOpMetricRegistry
-    verbose: true
+    name: my-metric-registry-3

@@ -42,6 +42,4 @@ tiozin_family_unknown = "tio_unknown"
 # ===============================================
 #           Tiozin Configs
 # ===============================================
-tiozin_settings_file = "tiozin.yaml"
-tiozin_settings_path = None
 tiozin_settings_search_paths = ()

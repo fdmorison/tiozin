@@ -2,27 +2,29 @@ registries:
 
   settings:
     kind: FileSettingRegistry
-    path: tests/mocks/settings/delegate_2.yaml
+    name: my-setting-registry-1
+    location: tests/mocks/settings/delegate_2.yaml
 
   job:
     kind: FileJobRegistry
+    name: my-job-registry-1
 
   schema:
     kind: NoOpSchemaRegistry
-    verbose: true
+    name: my-schema-registry-1
 
   secret:
     kind: NoOpSecretRegistry
-    verbose: true
+    name: my-secret-registry-1
 
   transaction:
     kind: NoOpTransactionRegistry
-    verbose: true
+    name: my-transaction-registry-1
 
   lineage:
     kind: NoOpLineageRegistry
-    verbose: true
+    name: my-lineage-registry-1
 
   metric:
     kind: NoOpMetricRegistry
-    verbose: true
+    name: my-metric-registry-1

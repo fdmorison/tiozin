@@ -13,14 +13,39 @@ class Registry(Tiozin, Generic[TMetadata]):
 
     Stores and retrieves metadata for resources, configurations, or entities.
     Subclasses define storage and retrieval implementation.
+
+    Attributes:
+        location: Location of the registry backend. Accepts HTTP/HTTPS URLs, FTP URLs,
+                  local file paths, or cloud storage URIs (e.g., s3://, gs://, az://).
+        readonly: Whether the registry rejects write operations (defaults to False).
+        cache: Whether to cache retrieved metadata in memory (defaults to False).
+        timeout: Request timeout in seconds.
+        ready: Whether the registry has been initialized and is ready to serve requests.
     """
 
-    def __init__(self, **options) -> None:
+    def __init__(
+        self,
+        location: str,
+        readonly: bool = False,
+        cache: bool = False,
+        timeout: int = None,
+        **options,
+    ) -> None:
         super().__init__(**options)
+        self.location = location
+        self.readonly = readonly
+        self.cache = cache
+        self.timeout = timeout
+        self.ready = False
+
+    def setup(self, *args, **kwargs) -> None:
+        self.ready = True
+
+    def teardown(self, *args, **kwargs) -> None:
         self.ready = False
 
     @abstractmethod
-    def get(self, identifier: str, version: str | None = None) -> TMetadata:
+    def get(self, identifier: str = None, version: str = None) -> TMetadata:
         """
         Retrieve metadata by identifier.
 
