@@ -1,5 +1,64 @@
 # Changelog
 
+## [3.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v2.0.0...tiozin-v3.0.0) (2026-03-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** Integrate Settings System into TiozinApp, Lifecycle, and CLI ([#151](https://github.com/fdmorison/tiozin/issues/151))
+* **core:** Rename @self token to @data ([#142](https://github.com/fdmorison/tiozin/issues/142))
+* **core:** ImproveTemplateDate fluent interface ([#136](https://github.com/fdmorison/tiozin/issues/136))
+* **core:** Review exception model and introduce retryable support ([#135](https://github.com/fdmorison/tiozin/issues/135))
+* **core:** Introduce subdomain field ([#129](https://github.com/fdmorison/tiozin/issues/129))
+* **core:** Redesign Context execution model to align with Python context management ([#126](https://github.com/fdmorison/tiozin/issues/126))
+* **core:** Adopt Tiozin and Tio naming across the codebase ([#125](https://github.com/fdmorison/tiozin/issues/125))
+
+### Features
+
+* **core:** Add classproperty decorator and refine tioproxy internals ([#124](https://github.com/fdmorison/tiozin/issues/124)) ([c17f779](https://github.com/fdmorison/tiozin/commit/c17f779c3f7fd079344df889817fdac225994522))
+* **core:** Add deterministic .env resolution order ([#110](https://github.com/fdmorison/tiozin/issues/110)) ([3827a79](https://github.com/fdmorison/tiozin/commit/3827a79e3f4b4902e78581fe83676391be1b8197))
+* **core:** Add Setting System with Registry and Manifest ([#150](https://github.com/fdmorison/tiozin/issues/150)) ([15b0d92](https://github.com/fdmorison/tiozin/commit/15b0d9259aad4a6b82a9ee3d0534c69e2af1f625))
+* **core:** Add slug to Tiozin and Context for safe SQL/filesystem identifier ([#128](https://github.com/fdmorison/tiozin/issues/128)) ([80173e1](https://github.com/fdmorison/tiozin/commit/80173e17d826994c72d61615c46133b81547b541))
+* **core:** ImproveTemplateDate fluent interface ([#136](https://github.com/fdmorison/tiozin/issues/136)) ([1091b0f](https://github.com/fdmorison/tiozin/commit/1091b0f3f086c4ba1797ddbd627571fd37107c0d))
+* **core:** Introduce subdomain field ([#129](https://github.com/fdmorison/tiozin/issues/129)) ([ec2e9b6](https://github.com/fdmorison/tiozin/commit/ec2e9b69ff047ffb487876e942a2bc7f22921a42))
+* **tio_duckdb:** Expand DuckdbFileInput to support advanced read scenarios ([#114](https://github.com/fdmorison/tiozin/issues/114)) ([ede001f](https://github.com/fdmorison/tiozin/commit/ede001fb80e2222b866dd3d3449e33fdad0f5a24))
+* **tio_duckdb:** Introduce DuckdbPostgresOutput ([#144](https://github.com/fdmorison/tiozin/issues/144)) ([a503d0e](https://github.com/fdmorison/tiozin/commit/a503d0e714b30b64668d4fa3623fa61b4a3bb3ba))
+* **tio_duckdb:** Tio DuckDB provider with Runner, Inputs, Outputs, SQL Transforms, and declarative job examples ([#113](https://github.com/fdmorison/tiozin/issues/113)) ([7902b31](https://github.com/fdmorison/tiozin/commit/7902b31f32e99672fe4f9e69e09ad82ef8e017ae))
+* **tio_spark:** Introduce provider-level proxies and SQL-first Spark pipelines ([#108](https://github.com/fdmorison/tiozin/issues/108)) ([9a33fe9](https://github.com/fdmorison/tiozin/commit/9a33fe924af5a754b110511e148ea69b71220dfa))
+
+
+### Bug Fixes
+
+* **core:** Allow [@tioproxy](https://github.com/tioproxy) to accept multiple proxies and reject stacking ([#123](https://github.com/fdmorison/tiozin/issues/123)) ([8939b7b](https://github.com/fdmorison/tiozin/commit/8939b7bf0712e3de4218fd6d0440248805a9e593))
+* **core:** Fix settings delegation and registry configuration ([#152](https://github.com/fdmorison/tiozin/issues/152)) ([affb94e](https://github.com/fdmorison/tiozin/commit/affb94ed215c2f86a5ef89163af1215ffebacca3))
+* **core:** Template rendering in plugin setup and teardown ([#115](https://github.com/fdmorison/tiozin/issues/115)) ([6aa4d80](https://github.com/fdmorison/tiozin/commit/6aa4d802fcfc058258d1749177d2a381d3b3cf97))
+* **security:** Secret leakage and run_id format ([#132](https://github.com/fdmorison/tiozin/issues/132)) ([f54fe65](https://github.com/fdmorison/tiozin/commit/f54fe65490fc498efbf25db4161b893bef27f6ce))
+
+
+### Documentation
+
+* Add complete ETL example and clarify state rules in tiozins guide ([#148](https://github.com/fdmorison/tiozin/issues/148)) ([aadccdd](https://github.com/fdmorison/tiozin/commit/aadccdd626fbc0015bfb5c26b2af97e23c180f58))
+* Add Template Reference ([#138](https://github.com/fdmorison/tiozin/issues/138)) ([139c1e9](https://github.com/fdmorison/tiozin/commit/139c1e92f963ba16b278e2ebe14826121375ffab))
+* Fix documentation inconsistencies and style issues ([#147](https://github.com/fdmorison/tiozin/issues/147)) ([e3c8538](https://github.com/fdmorison/tiozin/commit/e3c8538475df62480aa7fb4dfa83d134b6325a2f))
+* Improve README and write about Tiozin Family model ([#118](https://github.com/fdmorison/tiozin/issues/118)) ([5903943](https://github.com/fdmorison/tiozin/commit/59039438dfaaab58dd336f2ae0ecf5bddc7c7926))
+* Improves README and documentation index ([#133](https://github.com/fdmorison/tiozin/issues/133)) ([7b70fa3](https://github.com/fdmorison/tiozin/commit/7b70fa3ae56c3dccad974ae135ae05580e7bd862))
+* Initial agent specification and test agent ([#139](https://github.com/fdmorison/tiozin/issues/139)) ([64e8583](https://github.com/fdmorison/tiozin/commit/64e85833eb251f18c0a8c053e1285c4adec1ec05))
+* Introduce Object Model and refine Family Model docs ([#134](https://github.com/fdmorison/tiozin/issues/134)) ([d89f94b](https://github.com/fdmorison/tiozin/commit/d89f94b7e74e45742e5c8df08823bd0d98d474ec))
+* Introduce User Guides ([#140](https://github.com/fdmorison/tiozin/issues/140)) ([da91a8e](https://github.com/fdmorison/tiozin/commit/da91a8ed64e91d6c13c8729d2665d764b5283980))
+* Refine user-facing documentation ([#141](https://github.com/fdmorison/tiozin/issues/141)) ([4e947ff](https://github.com/fdmorison/tiozin/commit/4e947fffd27bf100b6b8dc2654f991284d45de89))
+* Review and improve Tiozin Family documentation ([#120](https://github.com/fdmorison/tiozin/issues/120)) ([7553634](https://github.com/fdmorison/tiozin/commit/7553634b550193774cbb5608dfad026b8060a236))
+* Review tio_duckdb and tio_spark reference pages ([#146](https://github.com/fdmorison/tiozin/issues/146)) ([65d9008](https://github.com/fdmorison/tiozin/commit/65d900889280e01a1954d30d72aaa0b1a078638b))
+* Revise families extending guide ([#143](https://github.com/fdmorison/tiozin/issues/143)) ([40537ee](https://github.com/fdmorison/tiozin/commit/40537ee8767654b2ba64e70962d967d8cedd4f19))
+
+
+### Code Refactoring
+
+* **core:** Adopt Tiozin and Tio naming across the codebase ([#125](https://github.com/fdmorison/tiozin/issues/125)) ([ecbee0d](https://github.com/fdmorison/tiozin/commit/ecbee0d3f0b35ce89e683731e8e99024e72fc5a7))
+* **core:** Integrate Settings System into TiozinApp, Lifecycle, and CLI ([#151](https://github.com/fdmorison/tiozin/issues/151)) ([b3d6831](https://github.com/fdmorison/tiozin/commit/b3d68315d00f3b4665d96efc6238fae14b0c1f52))
+* **core:** Redesign Context execution model to align with Python context management ([#126](https://github.com/fdmorison/tiozin/issues/126)) ([81f79c1](https://github.com/fdmorison/tiozin/commit/81f79c1744d89bb0eb4b5418d7d6cd8987ecfb87))
+* **core:** Rename [@self](https://github.com/self) token to [@data](https://github.com/data) ([#142](https://github.com/fdmorison/tiozin/issues/142)) ([ccc1138](https://github.com/fdmorison/tiozin/commit/ccc11387d6f68924997b726ed76ba66c30078f18))
+* **core:** Review exception model and introduce retryable support ([#135](https://github.com/fdmorison/tiozin/issues/135)) ([b627b75](https://github.com/fdmorison/tiozin/commit/b627b754537edc4a9ec7936dcd2f0d1ea1d523b7))
+
 ## [2.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v1.5.0...tiozin-v2.0.0) (2026-01-26)
 
 
