@@ -3,29 +3,27 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.runner_manifest import RunnerManifest
+from tiozin.api.metadata.job_manifest import RunnerManifest
 
 
-def test_manifest_should_accept_minimum_runner():
+def test_manifest_should_have_correct_defaults():
     # Arrange
     data = {
         "kind": "TestRunner",
     }
 
     # Act
-    RunnerManifest(**data)
+    manifest = RunnerManifest(**data)
 
     # Assert
-    assert True
-
-
-def test_manifest_should_reject_runner_without_kind():
-    # Arrange
-    data = {}
-
-    # Act
-    with pytest.raises(ValidationError):
-        RunnerManifest(**data)
+    actual = manifest
+    expected = RunnerManifest(
+        kind="TestRunner",
+        name=None,
+        description=None,
+        streaming=False,
+    )
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -76,21 +74,17 @@ def test_manifest_should_reject_runner_with_invalid_field_types(
         RunnerManifest(**data)
 
 
-def test_manifest_should_have_correct_defaults():
+@pytest.mark.parametrize(
+    "field_to_remove",
+    ["kind"],
+)
+def test_manifest_should_reject_runner_without_required_field(field_to_remove):
     # Arrange
     data = {
         "kind": "TestRunner",
     }
+    del data[field_to_remove]
 
     # Act
-    manifest = RunnerManifest(**data)
-
-    # Assert
-    actual = manifest
-    expected = RunnerManifest(
-        kind="TestRunner",
-        name=None,
-        description=None,
-        streaming=False,
-    )
-    assert actual == expected
+    with pytest.raises(ValidationError):
+        RunnerManifest(**data)

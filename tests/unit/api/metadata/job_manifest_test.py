@@ -18,7 +18,7 @@ from tiozin.exceptions import ManifestError
 # ============================================================================
 
 
-def test_manifest_should_accept_job():
+def test_manifest_should_apply_defaults():
     # Arrange
     data = dict(
         kind="Job",
@@ -31,16 +31,35 @@ def test_manifest_should_accept_job():
         product="test_cases",
         model="some_case",
         runner={"kind": "TestRunner"},
-        inputs=[{"kind": "TestInput", "name": "reader"}],
-        transforms=[{"kind": "TestTransform", "name": "transformer"}],
-        outputs=[{"kind": "TestOutput", "name": "write_something"}],
+        inputs=[{"kind": "TestInput", "name": "read_something"}],
     )
 
     # Act
-    JobManifest(**data)
+    manifest = JobManifest(**data)
 
     # Assert
-    assert True
+    actual = manifest
+    expected = JobManifest(
+        kind="Job",
+        name="test_job",
+        description=None,
+        owner=None,
+        maintainer=None,
+        cost_center=None,
+        labels={},
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        runner=RunnerManifest(kind="TestRunner"),
+        inputs=[InputManifest(kind="TestInput", name="read_something")],
+        transforms=[],
+        outputs=[],
+    )
+    assert actual == expected
 
 
 def test_manifest_should_accept_job_with_multiple_inputs_transforms_and_outputs():
@@ -178,50 +197,6 @@ def test_manifest_should_accept_job_with_optional_fields(optional_field: str, op
     # Assert
     actual = getattr(manifest, optional_field)
     expected = optional_value
-    assert actual == expected
-
-
-def test_manifest_should_apply_defaults():
-    # Arrange
-    data = dict(
-        kind="Job",
-        name="test_job",
-        org="tiozin",
-        region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        layer="test",
-        product="test_cases",
-        model="some_case",
-        runner={"kind": "TestRunner"},
-        inputs=[{"kind": "TestInput", "name": "read_something"}],
-    )
-
-    # Act
-    manifest = JobManifest(**data)
-
-    # Assert
-    actual = manifest
-    expected = JobManifest(
-        kind="Job",
-        name="test_job",
-        description=None,
-        owner=None,
-        maintainer=None,
-        cost_center=None,
-        labels={},
-        org="tiozin",
-        region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        layer="test",
-        product="test_cases",
-        model="some_case",
-        runner=RunnerManifest(kind="TestRunner"),
-        inputs=[InputManifest(kind="TestInput", name="read_something")],
-        transforms=[],
-        outputs=[],
-    )
     assert actual == expected
 
 
@@ -395,14 +370,12 @@ def test_to_yaml_should_not_render_unset_values():
     yaml_string = manifest.to_yaml()
 
     # Assert
-    actual = all(
-        [
-            "description:" in yaml_string,
-            "transforms:" in yaml_string,
-            "outputs:" in yaml_string,
-        ]
+    actual = (
+        "description:" in yaml_string,
+        "transforms:" in yaml_string,
+        "outputs:" in yaml_string,
     )
-    expected = False
+    expected = (False, False, False)
     assert actual == expected
 
 
@@ -491,14 +464,12 @@ def test_to_json_should_not_render_unset_fields():
     json_string = manifest.to_json()
 
     # Assert
-    actual = all(
-        [
-            "description:" in json_string,
-            "transforms:" in json_string,
-            "outputs:" in json_string,
-        ]
+    actual = (
+        "description:" in json_string,
+        "transforms:" in json_string,
+        "outputs:" in json_string,
     )
-    expected = False
+    expected = (False, False, False)
     assert actual == expected
 
 
@@ -682,8 +653,31 @@ def test_try_from_yaml_or_json_should_return_manifest_when_valid_yaml():
     manifest = JobManifest.try_from_yaml_or_json(text)
 
     # Assert
-    actual = manifest is None
-    expected = False
+    assert manifest is not None
+
+
+def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
+    # Arrange
+    data = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        runner=RunnerManifest(kind="TestRunner"),
+        inputs=[InputManifest(kind="TestInput", name="reader")],
+    )
+
+    # Act
+    manifest = JobManifest.try_from_yaml_or_json(data)
+
+    # Assert
+    actual = manifest
+    expected = data
     assert actual == expected
 
 
@@ -726,31 +720,6 @@ def test_try_from_yaml_or_json_should_return_none_when_validation_fails():
     # Assert
     actual = manifest
     expected = None
-    assert actual == expected
-
-
-def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
-    # Arrange
-    data = JobManifest(
-        kind="Job",
-        name="test_job",
-        org="tiozin",
-        region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        layer="test",
-        product="test_cases",
-        model="some_case",
-        runner=RunnerManifest(kind="TestRunner"),
-        inputs=[InputManifest(kind="TestInput", name="reader")],
-    )
-
-    # Act
-    manifest = JobManifest.try_from_yaml_or_json(data)
-
-    # Assert
-    actual = manifest
-    expected = data
     assert actual == expected
 
 
@@ -813,3 +782,83 @@ def test_json_roundtrip_should_preserve_data():
     actual = restored
     expected = original
     assert actual == expected
+
+
+# ============================================================================
+# JobManifest.from_arguments() tests
+# ============================================================================
+
+
+def test_from_arguments_should_create_manifest_from_kwargs():
+    # Arrange
+    data = dict(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+
+    # Act
+    manifest = JobManifest.from_arguments(**data)
+
+    # Assert
+    actual = manifest.name
+    expected = "test_job"
+    assert actual == expected
+
+
+def test_from_arguments_should_raise_manifest_error_when_validation_fails():
+    # Arrange / Act / Assert
+    with pytest.raises(ManifestError):
+        JobManifest.from_arguments(kind="Job")
+
+
+# ============================================================================
+# Manifest string stripping
+# ============================================================================
+
+
+def test_manifest_should_strip_whitespace_from_string_fields():
+    # Arrange
+    data = dict(
+        kind="Job",
+        name="  test_job  ",
+        org="  tiozin  ",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+
+    # Act
+    manifest = JobManifest(**data)
+
+    # Assert
+    actual = (manifest.name, manifest.org)
+    expected = ("test_job", "tiozin")
+    assert actual == expected
+
+
+# ============================================================================
+# JobManifest.from_yaml_or_json() type guard
+# ============================================================================
+
+
+def test_from_yaml_or_json_should_raise_manifest_error_when_not_string():
+    # Arrange
+    data = {"kind": "Job", "name": "test"}
+
+    # Act / Assert
+    with pytest.raises(ManifestError):
+        JobManifest.from_yaml_or_json(data)

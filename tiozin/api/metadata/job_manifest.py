@@ -3,11 +3,90 @@ from __future__ import annotations
 from pydantic import Field
 
 from . import docs
-from .input_manifest import InputManifest
 from .manifest import Manifest
-from .output_manifest import OutputManifest
-from .runner_manifest import RunnerManifest
-from .transform_manifest import TransformManifest
+
+
+class RunnerManifest(Manifest):
+    """
+    Declarative runtime environment definition.
+
+    Specifies the execution backend and runtime behavior for the job.
+    """
+
+    # Identity
+    name: str | None = Field(None, description=docs.RUNNER_NAME)
+    description: str | None = Field(None, description=docs.RUNNER_DESCRIPTION)
+
+    # Specific
+    streaming: bool = Field(False, description=docs.RUNNER_STREAMING)
+
+
+class InputManifest(Manifest):
+    """
+    Declarative data source definition.
+
+    Specifies how and where data is read into the pipeline.
+    """
+
+    # Identity
+    name: str = Field(description=docs.INPUT_NAME)
+    description: str | None = Field(None, description=docs.INPUT_DESCRIPTION)
+
+    # Business Taxonomy
+    org: str | None = Field(None, description=docs.INPUT_ORG)
+    region: str | None = Field(None, description=docs.INPUT_REGION)
+    domain: str | None = Field(None, description=docs.INPUT_DOMAIN)
+    subdomain: str | None = Field(None, description=docs.INPUT_SUBDOMAIN)
+    layer: str | None = Field(None, description=docs.INPUT_LAYER)
+    product: str | None = Field(None, description=docs.INPUT_PRODUCT)
+    model: str | None = Field(None, description=docs.INPUT_MODEL)
+
+    # Specific
+    schema: str | None = Field(None, description=docs.INPUT_SCHEMA)
+    schema_subject: str | None = Field(None, description=docs.INPUT_SCHEMA_SUBJECT)
+    schema_version: str | None = Field(None, description=docs.INPUT_SCHEMA_VERSION)
+
+
+class TransformManifest(Manifest):
+    """
+    Declarative transformation definition.
+
+    Specifies operations that modify or enrich data.
+    """
+
+    # Identity
+    name: str = Field(description=docs.TRANSFORM_NAME)
+    description: str | None = Field(None, description=docs.TRANSFORM_DESCRIPTION)
+
+    # Business Taxonomy
+    org: str | None = Field(None, description=docs.TRANSFORM_ORG)
+    region: str | None = Field(None, description=docs.TRANSFORM_REGION)
+    domain: str | None = Field(None, description=docs.TRANSFORM_DOMAIN)
+    subdomain: str | None = Field(None, description=docs.TRANSFORM_SUBDOMAIN)
+    layer: str | None = Field(None, description=docs.TRANSFORM_LAYER)
+    product: str | None = Field(None, description=docs.TRANSFORM_PRODUCT)
+    model: str | None = Field(None, description=docs.TRANSFORM_MODEL)
+
+
+class OutputManifest(Manifest):
+    """
+    Declarative data destination definition.
+
+    Specifies where and how processed data is written.
+    """
+
+    # Identity
+    name: str = Field(description=docs.OUTPUT_NAME)
+    description: str | None = Field(None, description=docs.OUTPUT_DESCRIPTION)
+
+    # Business Taxonomy
+    org: str | None = Field(None, description=docs.OUTPUT_ORG)
+    region: str | None = Field(None, description=docs.OUTPUT_REGION)
+    domain: str | None = Field(None, description=docs.OUTPUT_DOMAIN)
+    subdomain: str | None = Field(None, description=docs.OUTPUT_SUBDOMAIN)
+    layer: str | None = Field(None, description=docs.OUTPUT_LAYER)
+    product: str | None = Field(None, description=docs.OUTPUT_PRODUCT)
+    model: str | None = Field(None, description=docs.OUTPUT_MODEL)
 
 
 class JobManifest(Manifest):
@@ -19,7 +98,6 @@ class JobManifest(Manifest):
     """
 
     # Identity
-    kind: str = Field(description=docs.KIND)
     name: str = Field(description=docs.JOB_NAME)
     description: str | None = Field(None, description=docs.JOB_DESCRIPTION)
 

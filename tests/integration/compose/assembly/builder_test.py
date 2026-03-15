@@ -8,7 +8,7 @@ from tiozin.api.metadata.job_manifest import (
     TransformManifest,
 )
 from tiozin.compose import JobBuilder
-from tiozin.exceptions import TiozinInputError, TiozinInternalError
+from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
 
 TEST_TAXONOMY = {
@@ -49,10 +49,12 @@ def test_builder_should_accept_job_manifest():
     builder = JobBuilder()
 
     # Act
-    builder.from_manifest(manifest).build()
+    job = builder.from_manifest(manifest).build()
 
     # Assert
-    assert True
+    actual = type(job)
+    expected = LinearJob
+    assert actual == expected
 
 
 def test_builder_should_accept_plugin_dicts():
@@ -97,7 +99,9 @@ def test_builder_should_accept_plugin_dicts():
     )
 
     # Assert
-    assert isinstance(job, LinearJob)
+    actual = type(job)
+    expected = LinearJob
+    assert actual == expected
 
 
 def test_builder_should_accept_plugin_manifests():
@@ -105,7 +109,7 @@ def test_builder_should_accept_plugin_manifests():
     builder = JobBuilder()
 
     # Act
-    (
+    job = (
         builder.with_kind("LinearJob")
         .with_name("test_job")
         .with_org("tiozin")
@@ -131,7 +135,9 @@ def test_builder_should_accept_plugin_manifests():
     )
 
     # Assert
-    assert True
+    actual = type(job)
+    expected = LinearJob
+    assert actual == expected
 
 
 def test_builder_should_accept_plugin_objects():
@@ -139,7 +145,7 @@ def test_builder_should_accept_plugin_objects():
     builder = JobBuilder()
 
     # Act
-    (
+    job = (
         builder.with_kind("LinearJob")
         .with_name("test_job")
         .with_org("tiozin")
@@ -165,7 +171,9 @@ def test_builder_should_accept_plugin_objects():
     )
 
     # Assert
-    assert True
+    actual = type(job)
+    expected = LinearJob
+    assert actual == expected
 
 
 def test_builder_should_accept_multiple_inputs():
@@ -193,7 +201,9 @@ def test_builder_should_accept_multiple_inputs():
     )
 
     # Assert
-    assert len(job.inputs) == 2
+    actual = len(job.inputs)
+    expected = 2
+    assert actual == expected
 
 
 def test_builder_should_accept_multiple_transforms():
@@ -222,7 +232,9 @@ def test_builder_should_accept_multiple_transforms():
     )
 
     # Assert
-    assert len(job.transforms) == 2
+    actual = len(job.transforms)
+    expected = 2
+    assert actual == expected
 
 
 def test_builder_should_accept_multiple_outputs():
@@ -250,7 +262,9 @@ def test_builder_should_accept_multiple_outputs():
     )
 
     # Assert
-    assert len(job.outputs) == 2
+    actual = len(job.outputs)
+    expected = 2
+    assert actual == expected
 
 
 def test_builder_should_set_labels():
@@ -277,7 +291,9 @@ def test_builder_should_set_labels():
     )
 
     # Assert
-    assert job.labels == {"env": "dev", "team": "data"}
+    actual = job.labels
+    expected = {"env": "dev", "team": "data"}
+    assert actual == expected
 
 
 def test_builder_should_set_labels_dict():
@@ -303,7 +319,9 @@ def test_builder_should_set_labels_dict():
     )
 
     # Assert
-    assert job.labels == {"env": "dev", "team": "data"}
+    actual = job.labels
+    expected = {"env": "dev", "team": "data"}
+    assert actual == expected
 
 
 def test_builder_should_set_optional_fields():
@@ -342,7 +360,7 @@ def test_builder_should_handle_unplanned_fields():
     builder = JobBuilder()
 
     # Act
-    (
+    job = (
         builder.with_kind("LinearJob")
         .with_name("test_job")
         .with_org("tiozin")
@@ -360,43 +378,9 @@ def test_builder_should_handle_unplanned_fields():
     )
 
     # Assert
-    assert True
-
-
-def test_builder_should_reject_invalid_runner_type():
-    # Arrange
-    builder = JobBuilder()
-
-    # Act & Assert
-    with pytest.raises(TiozinInputError, match="Invalid runner definition"):
-        builder.with_runner(12345)
-
-
-def test_builder_should_reject_invalid_input_type():
-    # Arrange
-    builder = JobBuilder()
-
-    # Act & Assert
-    with pytest.raises(TiozinInputError, match="Invalid input definition"):
-        builder.with_inputs("invalid")
-
-
-def test_builder_should_reject_invalid_transform_type():
-    # Arrange
-    builder = JobBuilder()
-
-    # Act & Assert
-    with pytest.raises(TiozinInputError, match="Invalid transform definition"):
-        builder.with_transforms(12345)
-
-
-def test_builder_should_reject_invalid_output_type():
-    # Arrange
-    builder = JobBuilder()
-
-    # Act & Assert
-    with pytest.raises(TiozinInputError, match="Invalid output definition"):
-        builder.with_outputs(None)
+    actual = type(job)
+    expected = LinearJob
+    assert actual == expected
 
 
 def test_builder_should_propagate_taxonomy_to_inputs():
@@ -696,6 +680,51 @@ def test_builder_should_not_overwrite_transform_taxonomy_when_already_set():
         "model": "custom_model",
     }
     assert actual == expected
+
+
+def test_builder_should_reject_invalid_runner_type():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act & Assert
+    with pytest.raises(TiozinInputError, match="Invalid runner definition"):
+        builder.with_runner(12345)
+
+
+def test_builder_should_reject_invalid_input_type():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act & Assert
+    with pytest.raises(TiozinInputError, match="Invalid input definition"):
+        builder.with_inputs("invalid")
+
+
+def test_builder_should_reject_invalid_transform_type():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act & Assert
+    with pytest.raises(TiozinInputError, match="Invalid transform definition"):
+        builder.with_transforms(12345)
+
+
+def test_builder_should_reject_invalid_output_type():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act & Assert
+    with pytest.raises(TiozinInputError, match="Invalid output definition"):
+        builder.with_outputs(None)
+
+
+def test_from_manifest_should_raise_when_manifest_is_none():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act / Assert
+    with pytest.raises(RequiredArgumentError):
+        builder.from_manifest(None)
 
 
 def test_builder_should_fail_when_used_twice():

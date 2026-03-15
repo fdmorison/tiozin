@@ -1,10 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.input_manifest import InputManifest
+from tiozin.api.metadata.job_manifest import InputManifest
 
 
-def test_manifest_should_accept_minimum_input():
+def test_manifest_should_have_correct_defaults():
     # Arrange
     data = {
         "kind": "TestInput",
@@ -12,27 +12,26 @@ def test_manifest_should_accept_minimum_input():
     }
 
     # Act
-    InputManifest(**data)
+    manifest = InputManifest(**data)
 
     # Assert
-    assert True
-
-
-@pytest.mark.parametrize(
-    "field_to_remove",
-    ["kind", "name"],
-)
-def test_manifest_should_reject_input_without_required_field(field_to_remove):
-    # Arrange
-    data = {
-        "kind": "TestInput",
-        "name": "test_input",
-    }
-    del data[field_to_remove]
-
-    # Act
-    with pytest.raises(ValidationError):
-        InputManifest(**data)
+    actual = manifest
+    expected = InputManifest(
+        kind="TestInput",
+        name="test_input",
+        description=None,
+        org=None,
+        region=None,
+        domain=None,
+        subdomain=None,
+        layer=None,
+        product=None,
+        model=None,
+        schema=None,
+        schema_subject=None,
+        schema_version=None,
+    )
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -89,31 +88,18 @@ def test_manifest_should_reject_input_with_invalid_field_types(field_name, inval
         InputManifest(**data)
 
 
-def test_manifest_should_have_correct_defaults():
+@pytest.mark.parametrize(
+    "field_to_remove",
+    ["kind", "name"],
+)
+def test_manifest_should_reject_input_without_required_field(field_to_remove):
     # Arrange
     data = {
         "kind": "TestInput",
         "name": "test_input",
     }
+    del data[field_to_remove]
 
     # Act
-    manifest = InputManifest(**data)
-
-    # Assert
-    actual = manifest
-    expected = InputManifest(
-        kind="TestInput",
-        name="test_input",
-        description=None,
-        org=None,
-        region=None,
-        domain=None,
-        subdomain=None,
-        layer=None,
-        product=None,
-        model=None,
-        schema=None,
-        schema_subject=None,
-        schema_version=None,
-    )
-    assert actual == expected
+    with pytest.raises(ValidationError):
+        InputManifest(**data)

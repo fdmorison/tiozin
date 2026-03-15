@@ -3,11 +3,13 @@ from __future__ import annotations
 from io import StringIO
 from typing import Any, Self
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
 from tiozin.exceptions import ManifestError
+
+from . import docs
 
 _yaml = YAML(typ="safe")
 _yaml.allow_duplicate_keys = False
@@ -24,12 +26,25 @@ class Manifest(BaseModel):
     loaded from YAML or JSON.
     """
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(
+        extra="allow",
+        str_strip_whitespace=True,
+        validate_default=True,
+    )
+
+    kind: str = Field(description=docs.KIND)
 
     @classmethod
-    def model_validate(cls, obj, **kwargs) -> None:
+    def model_validate(cls, obj, **kwargs) -> Self:
         try:
             return super().model_validate(obj, **kwargs)
+        except ValidationError as e:
+            raise ManifestError.from_pydantic(cls.__name__, e) from e
+
+    @classmethod
+    def from_arguments(cls, **kwargs) -> Self:
+        try:
+            return cls(**kwargs)
         except ValidationError as e:
             raise ManifestError.from_pydantic(cls.__name__, e) from e
 
@@ -42,6 +57,12 @@ class Manifest(BaseModel):
         Raises:
             ManifestError: If parsing or validation fails.
         """
+        if not isinstance(data, str):
+            raise ManifestError(
+                manifest=cls.__name__,
+                message=f"Manifest data should be a string, but got: {data}",
+            )
+
         try:
             manifest = _yaml.load(data)
             return cls.model_validate(manifest)
@@ -62,7 +83,7 @@ class Manifest(BaseModel):
 
         try:
             return cls.from_yaml_or_json(data)
-        except Exception:
+        except ManifestError:
             return None
 
     def to_yaml(self) -> str:
