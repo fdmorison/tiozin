@@ -3,6 +3,22 @@
 # Common fields
 KIND = "Type of Tiozin plugin, e.g., 'spark', 'kafka', 'bigquery'"
 
+# Registry Common fields
+REGISTRY_NAME = "Unique identifier for this registry (optional)"
+REGISTRY_LOCATION = (
+    "Location of the registry backend. Accepts HTTP/HTTPS URLs, FTP URLs, local file paths, "
+    "or cloud storage URIs (e.g., s3://, gs://, az://)"
+)
+REGISTRY_TIMEOUT = "Request timeout in seconds"
+REGISTRY_READONLY = "Whether the registry rejects write operations (optional, defaults to False)"
+REGISTRY_CACHE = "Whether to cache retrieved metadata in memory (optional, defaults to False)"
+REGISTRY_READY = "Whether the registry has been initialized and is ready to serve requests"
+REGISTRY_LOCATION = (
+    "Location of the settings backend. Accepts local file paths or cloud storage URIs "
+    "(e.g., s3://, gs://, az://)"
+)
+REGISTRY_DESCRIPTION = "Short description of the registry (optional)"
+
 # RunnerManifest
 RUNNER_NAME = "Unique identifier for this runner (optional)"
 RUNNER_DESCRIPTION = "Short description of the runner's execution backend (optional)"

@@ -1,6 +1,6 @@
+from tiozin import SettingRegistry, env
 from tiozin.api import Loggable, Registry
 from tiozin.compose.assembly.tiozin_registry import tiozin_registry
-from tiozin.family.tio_kernel import FileSettingRegistry
 
 
 class Lifecycle(Loggable):
@@ -17,26 +17,35 @@ class Lifecycle(Loggable):
         self.registries: list[Registry] = []
 
     def setup(self) -> None:
-        settings_registry = FileSettingRegistry(self.settings_file)
+        settings_registry: SettingRegistry = tiozin_registry.load(
+            kind=env.TIO_SETTING_REGISTRY_KIND,
+            location=self.settings_file or env.TIO_SETTING_REGISTRY_LOCATION,
+            timeout=env.TIO_SETTING_REGISTRY_TIMEOUT,
+            readonly=env.TIO_SETTING_REGISTRY_READONLY,
+            cache=env.TIO_SETTING_REGISTRY_CACHE,
+        )
         self._setup_registry(settings_registry)
 
         settings_registry = settings_registry.delegate()
         self._setup_registry(settings_registry)
 
-        manifest = settings_registry.get().registries
-        self.job_registry = tiozin_registry.load_manifest(manifest.job)
-        self.metric_registry = tiozin_registry.load_manifest(manifest.metric)
-        self.lineage_registry = tiozin_registry.load_manifest(manifest.lineage)
-        self.schema_registry = tiozin_registry.load_manifest(manifest.schema)
-        self.transaction_registry = tiozin_registry.load_manifest(manifest.transaction)
+        registries = settings_registry.get().registries
+        self.settings_registry = settings_registry
+        self.secret_registry = tiozin_registry.load_manifest(registries.secret)
+        self.schema_registry = tiozin_registry.load_manifest(registries.schema)
+        self.transaction_registry = tiozin_registry.load_manifest(registries.transaction)
+        self.job_registry = tiozin_registry.load_manifest(registries.job)
+        self.metric_registry = tiozin_registry.load_manifest(registries.metric)
+        self.lineage_registry = tiozin_registry.load_manifest(registries.lineage)
 
         self.registries += [
-            settings_registry,
+            self.settings_registry,
+            self.secret_registry,
+            self.schema_registry,
+            self.transaction_registry,
             self.job_registry,
             self.metric_registry,
             self.lineage_registry,
-            self.schema_registry,
-            self.transaction_registry,
         ]
 
         for registry in self.registries:

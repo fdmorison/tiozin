@@ -178,7 +178,7 @@ class TiozinRegistry(Loggable):
         tiozin: type[Tiozin] = next(iter(candidates))
         params = args.copy()
         params.pop("description", None)
-        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined with", **params)
+        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined", **params)
         return tiozin(**args)
 
     def safe_load(self, kind: str, tiozin_role: type[T], **args) -> T:
@@ -211,13 +211,14 @@ class TiozinRegistry(Loggable):
         )
 
         TiozinInputError.raise_if(
-            not role, f"Manifest does not describe a pluggable Tiozin: {type(manifest)}."
+            not role,
+            f"Manifest does not describe a pluggable Tiozin: {type(manifest)}.",
         )
 
         tiozin_instance = self.safe_load(
             kind=manifest.kind,
             tiozin_role=role,
-            **manifest.model_dump(exclude={"kind"}),
+            **manifest.model_dump(exclude={"kind"}, exclude_unset=True),
         )
 
         return tiozin_instance

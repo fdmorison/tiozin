@@ -46,17 +46,15 @@ tiozin_family_unknown = "tio_unknown"
 # ===============================================
 #           Tiozin Configs
 # ===============================================
-tiozin_settings_file = "tiozin.yaml"
-tiozin_settings_path = env.TIO_SETTINGS_PATH
 tiozin_settings_search_paths = (
     # Project-level
-    tiozin_settings_file,
+    "tiozin.yaml",
     # User-level
-    Path.home() / tiozin_settings_file,
-    Path.home() / ".config/tiozin" / tiozin_settings_file,
+    Path.home() / "tiozin.yaml",
+    Path.home() / ".config/tiozin" / "tiozin.yaml",
     # Container-level
-    Path("/etc/tiozin") / tiozin_settings_file,
-    Path("/tiozin") / tiozin_settings_file,
-    Path("/config") / tiozin_settings_file,
-    Path("/") / tiozin_settings_file,
+    Path("/etc/tiozin") / "tiozin.yaml",
+    Path("/tiozin") / "tiozin.yaml",
+    Path("/config") / "tiozin.yaml",
+    Path("/") / "tiozin.yaml",
 )

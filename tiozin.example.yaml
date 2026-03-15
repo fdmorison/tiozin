@@ -1,28 +1,51 @@
 registries:
 
-  settings:
-    kind: FileSettingRegistry
-    path: null
-
   job:
     kind: FileJobRegistry
+    name: my-job-registry
+    description: File-based job registry for local development
 
   schema:
     kind: NoOpSchemaRegistry
-    verbose: true
+    name: my-schema-registry
+    description: Schema registry for schema management
+    location: http://localhost:8081
+    timeout: 30
+    readonly: true
+    cache: true
 
   secret:
     kind: NoOpSecretRegistry
-    verbose: true
+    name: my-secret-registry
+    description: Secret registry for credentials and sensitive configuration
+    location: http://localhost:8200
+    timeout: 15
+    readonly: true
+    cache: false
 
   transaction:
     kind: NoOpTransactionRegistry
-    verbose: true
+    name: my-transaction-registry
+    description: Transaction registry for job execution control
+    location: postgresql://{{ENV.PGUSER}}:{{ENV.PGPASSWORD}}@localhost:5432/tiozin
+    timeout: 30
+    readonly: false
+    cache: false
 
   lineage:
     kind: NoOpLineageRegistry
-    verbose: true
+    name: my-lineage-registry
+    description: Lineage registry for tracking data pipeline provenance
+    location: http://localhost:5000
+    timeout: 20
+    readonly: false
+    cache: false
 
   metric:
     kind: NoOpMetricRegistry
-    verbose: true
+    name: my-metric-registry
+    description: Metric registry for job observability and monitoring
+    location: http://localhost:9091
+    timeout: 10
+    readonly: false
+    cache: false

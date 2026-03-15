@@ -1,8 +1,6 @@
-from typing import Self
-
 from tiozin import config
 from tiozin.api import SettingRegistry, SettingsManifest
-from tiozin.exceptions import SettingsNotFoundError, TiozinInternalError
+from tiozin.exceptions import SettingsNotFoundError
 from tiozin.utils import io
 
 
@@ -10,64 +8,55 @@ class FileSettingRegistry(SettingRegistry):
     """
     File-based settings registry.
 
-    Loads framework configuration from tiozin.yaml file or environment variables.
-    Supports explicit paths, filesystem discovery, and registry delegation.
+    Loads framework configuration from a tiozin.yaml file.
+    Supports explicit paths and registry delegation.
 
-    Resolution order:
-
-    1. Path provided via constructor.
-    2. Path from TIO_SETTINGS_PATH environment variable.
-    3. Project configuration:
-       - ./tiozin.yaml
-    4. User configuration:
-       - ~/tiozin.yaml
-       - ~/.config/tiozin/tiozin.yaml
-    5. Container configuration:
-       - /etc/tiozin/tiozin.yaml
-       - /tiozin/tiozin.yaml
-       - /config/tiozin.yaml
-       - /tiozin.yaml
-    6. Built-in settings derived from environment variables.
+    Direct instantiation requires an explicit ``location``, or the settings
+    file will be discovered via environment variable or filesystem search paths
+    during ``setup()``.
 
     tiozin.yaml may delegate settings resolution to another SettingRegistry
-    (e.g. ConsulSettingRegistry). If delegated registry is also FileSettingRegistry,
-    another settings file is loaded.
+    by setting ``registries.settings`` to a non-null value. The delegation
+    chain is followed by ``SettingRegistry.delegate()``.
 
     Attributes:
-        path: Settings file path. Overrides filesystem discovery when provided.
+        location: Settings file path.
     """
 
-    def __init__(self, path: io.StrOrPath = None, **options) -> None:
-        super().__init__(**options)
-        self.path = path or config.tiozin_settings_path
+    def __init__(self, location: str = None, **options) -> None:
+        super().__init__(location=location, **options)
         self._settings = None
 
-    def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
+    def setup(self) -> None:
         """
-        Load settings manifest from filesystem.
-
-        Args:
-            identifier: Not used in this implementation.
-            version: Not used in this implementation.
-
-        Returns:
-            SettingsManifest instance.
-
-        Raises:
-            SettingsNotFoundError: If an explicit path is set but the file does not exist.
-            ManifestError: If the file contains invalid YAML or fails validation.
+        Resolve settings location and load them.
         """
-        if self._settings:
-            return self._settings
+        if self.ready:
+            return
 
-        data = self._get_from_file() or self._get_from_system()
+        SettingsNotFoundError.raise_if(
+            self.location and not io.exists(self.location),
+            location=self.location,
+        )
 
-        if data:
-            self._settings = SettingsManifest.from_yaml_or_json(data)
-        else:
+        if not self.location:
+            for path in config.tiozin_settings_search_paths:
+                if io.exists(path):
+                    self.location = str(path)
+                    break
+
+        if not self.location:
             self.info("Loading built-in settings")
             self._settings = SettingsManifest.from_arguments()
+        else:
+            self.info(f"Loading settings from '{self.location}'")
+            data = io.read_text(self.location)
+            self._settings = SettingsManifest.from_yaml_or_json(data)
 
+        self.ready = True
+
+    def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
+        self.setup()
         return self._settings
 
     def register(self, identifier: str, value: SettingsManifest) -> None:
@@ -91,56 +80,3 @@ class FileSettingRegistry(SettingRegistry):
             raise ValueError(f"Unsupported settings format: {identifier}")
 
         io.write_text(identifier, data)
-
-    def _get_from_file(self) -> str | None:
-        if not self.path:
-            return None
-
-        self.info(f"Loading settings from '{self.path}'")
-        SettingsNotFoundError.raise_if(
-            not io.exists(self.path),
-            location=self.path,
-        )
-        return io.read_text(self.path)
-
-    def _get_from_system(self) -> str | None:
-        for path in config.tiozin_settings_search_paths:
-            if io.exists(path):
-                self.info(f"Loading settings from '{path}'")
-                return io.read_text(path)
-        return None
-
-    def delegate(self) -> Self:
-        """
-        Resolve the settings registry through delegation.
-
-        Reads ``registries.settings`` from the current manifest. If it points
-        to another ``FileSettingRegistry``, follows the chain. Stops when the
-        manifest points to a different registry kind and loads it.
-
-        Returns:
-            The resolved ``SettingRegistry`` instance.
-
-        Raises:
-            TiozinInternalError: If circular delegation is detected.
-        """
-        from tiozin.compose.assembly.tiozin_registry import tiozin_registry
-
-        visited = []
-        manifest = self.get().registries.settings
-        registry = tiozin_registry.load_manifest(manifest)
-
-        while isinstance(registry, FileSettingRegistry):
-            registry.ready = self.ready
-            if not registry.path:
-                return registry
-
-            TiozinInternalError.raise_if(
-                registry.path in visited,
-                f"Circular settings delegation detected: {visited}",
-            )
-            visited.append(registry.path)
-            manifest = registry.get().registries.settings
-            registry = tiozin_registry.load_manifest(manifest)
-
-        return registry
