@@ -3,7 +3,22 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TypeVar
 
-from tiozin.api import Input, Job, Loggable, Output, Runner, Tiozin, Transform
+from tiozin.api import (
+    Input,
+    Job,
+    JobRegistry,
+    LineageRegistry,
+    Loggable,
+    MetricRegistry,
+    Output,
+    Runner,
+    SchemaRegistry,
+    SecretRegistry,
+    SettingRegistry,
+    Tiozin,
+    TransactionRegistry,
+    Transform,
+)
 from tiozin.api.metadata.job_manifest import (
     InputManifest,
     JobManifest,
@@ -12,9 +27,19 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
+from tiozin.api.metadata.settings_manifest import (
+    JobRegistryManifest,
+    LineageRegistryManifest,
+    MetricRegistryManifest,
+    SchemaRegistryManifest,
+    SecretRegistryManifest,
+    SettingsRegistryManifest,
+    TransactionRegistryManifest,
+)
 from tiozin.exceptions import (
     PluginConflictError,
     PluginNotFoundError,
+    RequiredArgumentError,
     TiozinInputError,
 )
 
@@ -24,11 +49,20 @@ from .tiozin_scanner import TiozinScanner
 T = TypeVar("T", bound=Tiozin)
 
 _MANIFEST_ROLE_MAP = {
+    # ETL
     JobManifest: Job,
     RunnerManifest: Runner,
     InputManifest: Input,
     OutputManifest: Output,
     TransformManifest: Transform,
+    # Registries
+    SettingsRegistryManifest: SettingRegistry,
+    JobRegistryManifest: JobRegistry,
+    SchemaRegistryManifest: SchemaRegistry,
+    SecretRegistryManifest: SecretRegistry,
+    TransactionRegistryManifest: TransactionRegistry,
+    LineageRegistryManifest: LineageRegistry,
+    MetricRegistryManifest: MetricRegistry,
 }
 
 
@@ -73,14 +107,21 @@ class TiozinRegistry(Loggable):
         super().__init__()
         self._index: dict[str, set[type[Tiozin]]] = defaultdict(set)
         self._tiozins: set[type[Tiozin]] = set()
+        self.ready = False
+
+    def setup(self, *args, **kwargs) -> None:
+        if self.ready:
+            return
 
         self.info("Discovering Families...")
-        tios = TiozinScanner().scan()
+        families = TiozinScanner().scan()
 
         self.info("Summoning Tiozins to work...")
-        for tiozins in tios.values():
-            for tiozin in tiozins:
-                self.register(tiozin)
+        for tiozins in families.values():
+            for t in tiozins:
+                self.register(t)
+
+        self.ready = True
 
     def register(self, tiozin: type[Tiozin]) -> None:
         """
@@ -120,6 +161,7 @@ class TiozinRegistry(Loggable):
         Returns:
             A new instance of the resolved Tiozin.
         """
+        self.setup()
         candidates = self._index.get(kind)
 
         PluginNotFoundError.raise_if(
@@ -133,7 +175,7 @@ class TiozinRegistry(Loggable):
             candidates=[p.tiozin_family_path for p in candidates],
         )
 
-        tiozin = next(iter(candidates))
+        tiozin: type[Tiozin] = next(iter(candidates))
         params = args.copy()
         params.pop("description", None)
         self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined with", **params)
@@ -163,15 +205,19 @@ class TiozinRegistry(Loggable):
 
         role = _MANIFEST_ROLE_MAP.get(type(manifest))
 
+        RequiredArgumentError.raise_if_missing(
+            manifest=manifest,
+            manifest_kind=manifest.kind,
+        )
+
         TiozinInputError.raise_if(
-            not role,
-            f"No Tiozin can be load from manifest {type(manifest).__name__}",
+            not role, f"Manifest does not describe a pluggable Tiozin: {type(manifest)}."
         )
 
         tiozin_instance = self.safe_load(
             kind=manifest.kind,
             tiozin_role=role,
-            **manifest.model_dump(exclude="kind"),
+            **manifest.model_dump(exclude={"kind"}),
         )
 
         return tiozin_instance
