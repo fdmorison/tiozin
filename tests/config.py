@@ -33,8 +33,15 @@ log_json_ensure_ascii = False
 log_show_locals = False
 
 # ===============================================
-#           Plugins
+#           Tiozin Plugins
 # ===============================================
 tiozin_family_group = "tiozin.family"
 tiozin_family_prefixes = ["tio_", "tia_"]
 tiozin_family_unknown = "tio_unknown"
+
+# ===============================================
+#           Tiozin Configs
+# ===============================================
+tiozin_settings_file = "tiozin.yaml"
+tiozin_settings_path = None
+tiozin_settings_search_paths = ()

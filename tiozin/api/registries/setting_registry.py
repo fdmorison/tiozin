@@ -1,7 +1,7 @@
-from ..registry import Registry
+from .. import Registry, SettingsManifest
 
 
-class SettingRegistry(Registry[object]):
+class SettingRegistry(Registry[SettingsManifest]):
     """
     Manages system settings and configuration.
 
