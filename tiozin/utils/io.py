@@ -13,6 +13,7 @@ remain focused on execution logic rather than storage-specific concerns.
 
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import fsspec
 
@@ -116,4 +117,29 @@ def create_local_temp_dir(*entries: StrOrPath) -> Path:
         if key:
             path /= key
     path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def join_path(base: str, path: str) -> str | None:
+    """
+    Join ``path`` to ``base`` as a base directory.
+
+    If ``path`` is relative (no URL scheme and not starting with ``/``),
+    and does not already start with ``base``, it is joined to ``base``.
+    Absolute paths and URIs with a scheme are returned unchanged.
+
+    If either argument is ``None``, the other is returned as-is.
+    If both are ``None``, returns ``None``.
+
+    Works uniformly for local paths and remote URIs (``s3://``, ``http://``, etc.).
+    """
+    if base is None:
+        return path
+    if path is None:
+        return base
+    parsed = urlparse(path)
+    if not parsed.scheme and not path.startswith("/"):
+        prefix = base.rstrip("/") + "/"
+        if not path.startswith(prefix):
+            return prefix + path
     return path

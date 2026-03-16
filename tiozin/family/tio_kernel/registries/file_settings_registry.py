@@ -8,30 +8,28 @@ class FileSettingRegistry(SettingRegistry):
     """
     File-based settings registry.
 
-    Loads framework configuration from a tiozin.yaml file.
-    Supports any path or URI accepted by fsspec, including local paths,
-    object storage (``s3://``, ``gs://``, ``az://``), and remote protocols
-    (``http://``, ``https://``, ``ftp://``, ``sftp://``).
+    Loads framework configuration from any path or URI supported by fsspec,
+    including local paths, object storage (``s3://``, ``gs://``, ``az://``),
+    and remote protocols (``http://``, ``https://``, ``ftp://``, ``sftp://``).
 
-    Direct instantiation requires an explicit ``location``, or the settings
-    file will be discovered via environment variable or filesystem search paths
-    during ``setup()``.
-
-    tiozin.yaml may delegate settings resolution to another SettingRegistry
-    by setting ``registries.settings`` to a non-null value. The delegation
-    chain is followed by ``SettingRegistry.delegate()``.
+    If ``location`` is not provided, Tiozin searches standard filesystem paths
+    and falls back to built-in defaults. A ``tiozin.yaml`` can delegate to
+    another ``SettingRegistry`` via ``registries.settings``.
 
     Attributes:
-        location: Settings file path or remote URI.
+        location: Path or URI of the settings file (e.g. a local path, an S3 URI,
+            or an HTTP URL). Optional: discovered automatically if not set.
     """
 
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location, **options)
-        self._settings = None
 
     def setup(self) -> None:
         """
-        Resolve settings location and load them.
+        Resolve the settings file location.
+
+        Searches standard filesystem paths if ``location`` is not set.
+        No-op if already resolved.
         """
         if self.ready:
             return
@@ -47,26 +45,35 @@ class FileSettingRegistry(SettingRegistry):
                     self.location = str(path)
                     break
 
-        if not self.location:
-            self.info("Loading built-in settings")
-            self._settings = SettingsManifest.from_arguments()
-        else:
-            self.info(f"Loading settings from '{self.location}'")
-            data = io.read_text(self.location)
-            self._settings = SettingsManifest.from_yaml_or_json(data)
-
         self.ready = True
 
     def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
+        """
+        Load and return the settings manifest from any fsspec-supported location.
+
+        Args:
+            identifier: Not used in this implementation.
+            version: Not used in this implementation.
+
+        Returns:
+            The SettingsManifest. Falls back to built-in defaults if no settings file found.
+        """
         self.setup()
-        return self._settings
+
+        if not self.location:
+            self.info("Loading built-in settings")
+            return SettingsManifest.from_arguments()
+
+        self.info(f"Loading settings from '{self.location}'")
+        data = io.read_text(self.location)
+        return SettingsManifest.from_yaml_or_json(data)
 
     def register(self, identifier: str, value: SettingsManifest) -> None:
         """
-        Write a settings manifest to the filesystem.
+        Write a settings manifest to any fsspec-supported location.
 
         Args:
-            identifier: File path with a ``.yaml``, ``.yml``, or ``.json`` extension.
+            identifier: File name, relative path, or absolute URI (.yaml, .yml, or .json).
             value: ``SettingsManifest`` instance to serialize and save.
 
         Raises:
