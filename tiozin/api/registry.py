@@ -2,11 +2,13 @@ from abc import abstractmethod
 from typing import Generic, TypeVar
 
 from tiozin.api import Tiozin
+from tiozin.compose import RegistryProxy, tioproxy
 from tiozin.exceptions import TiozinNotFoundError
 
 TMetadata = TypeVar("TMetadata")
 
 
+@tioproxy(RegistryProxy)
 class Registry(Tiozin, Generic[TMetadata]):
     """
     Base class for metadata registries.

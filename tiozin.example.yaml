@@ -27,7 +27,7 @@ registries:
     kind: NoOpTransactionRegistry
     name: my-transaction-registry
     description: Transaction registry for job execution control
-    location: postgresql://{{ENV.PGUSER}}:{{ENV.PGPASSWORD}}@localhost:5432/tiozin
+    location: "postgresql://postgres:{{ENV.PGPASSWORD|default('postgres')}}@localhost:5432/postgres"
     timeout: 30
     readonly: false
     cache: false

@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .assembly.tiozin_registry import TiozinRegistry as TiozinRegistry
     from .assembly.tiozin_scanner import TiozinScanner as TiozinScanner
     from .proxies.job import JobProxy as JobProxy
+    from .proxies.registry import RegistryProxy as RegistryProxy
     from .proxies.runner import RunnerProxy as RunnerProxy
     from .proxies.step import StepProxy as StepProxy
     from .templating.overlay import TiozinTemplateOverlay as TiozinTemplateOverlay
@@ -24,6 +25,7 @@ _DEFERRED = {
     "TiozinRegistry": ".assembly.tiozin_registry",
     "TiozinScanner": ".assembly.tiozin_scanner",
     "JobProxy": ".proxies.job",
+    "RegistryProxy": ".proxies.registry",
     "RunnerProxy": ".proxies.runner",
     "StepProxy": ".proxies.step",
     "TiozinTemplateOverlay": ".templating.overlay",
@@ -51,6 +53,7 @@ __all__ = [
     "tioproxy",
     "TioProxyMeta",
     "JobProxy",
+    "RegistryProxy",
     "RunnerProxy",
     "StepProxy",
     # Templating

@@ -1,0 +1,5 @@
+registries:
+
+  job:
+    kind: FileJobRegistry
+    location: "{{ ENV.TIO_TEST_JOB_LOCATION }}"
