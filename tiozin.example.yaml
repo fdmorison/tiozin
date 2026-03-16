@@ -4,6 +4,7 @@ registries:
     kind: FileJobRegistry
     name: my-job-registry
     description: File-based job registry for local development
+    location: examples/jobs
 
   schema:
     kind: NoOpSchemaRegistry

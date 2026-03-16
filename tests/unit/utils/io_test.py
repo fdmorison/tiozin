@@ -8,6 +8,7 @@ from tiozin.utils.io import (
     create_local_temp_dir,
     ensure_dir,
     exists,
+    join_path,
     read_text,
     remove_dir,
     write_text,
@@ -272,4 +273,76 @@ def test_exists_should_return_false_when_path_does_not_exist(
     # Assert
     actual = result
     expected = False
+    assert actual == expected
+
+
+# ============================================================================
+# Testing join_path()
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "base, path, expected",
+    [
+        ("jobs", "mini.yaml", "jobs/mini.yaml"),
+        ("jobs/", "mini.yaml", "jobs/mini.yaml"),
+        ("s3://bucket/jobs", "mini.yaml", "s3://bucket/jobs/mini.yaml"),
+        ("https://example.com/jobs", "mini.yaml", "https://example.com/jobs/mini.yaml"),
+    ],
+)
+def test_join_path_should_prepend_base_to_relative_path(base: str, path: str, expected: str):
+    # Arrange / Act
+    result = join_path(base, path)
+
+    # Assert
+    actual = result
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/absolute/path/job.yaml",
+        "s3://bucket/job.yaml",
+        "http://example.com/job.yaml",
+        "ftp://host/job.yaml",
+        "sftp://host/job.yaml",
+    ],
+)
+def test_join_path_should_return_path_unchanged_when_non_relative(path: str):
+    # Arrange / Act
+    result = join_path("jobs", path)
+
+    # Assert
+    actual = result
+    expected = path
+    assert actual == expected
+
+
+def test_join_path_should_return_path_unchanged_when_already_starts_with_base():
+    # Arrange / Act
+    result = join_path("jobs", "jobs/mini.yaml")
+
+    # Assert
+    actual = result
+    expected = "jobs/mini.yaml"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "base, path, expected",
+    [
+        (None, "mini.yaml", "mini.yaml"),
+        ("jobs", None, "jobs"),
+        (None, None, None),
+    ],
+)
+def test_join_path_should_not_fail_when_either_argument_is_none(
+    base: str | None, path: str | None, expected: str | None
+):
+    # Arrange / Act
+    result = join_path(base, path)
+
+    # Assert
+    actual = result
     assert actual == expected
