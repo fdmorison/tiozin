@@ -8,8 +8,9 @@ class FileJobRegistry(JobRegistry):
     """
     File-based job manifest storage.
 
-    Reads and writes manifests from filesystem or object storage
-    via fsspec (e.g. local paths, s3://, gs://, az://).
+    Reads and writes manifests from any path or URI supported by fsspec,
+    including local paths, object storage (``s3://``, ``gs://``, ``az://``),
+    and remote protocols (``http://``, ``https://``, ``ftp://``, ``sftp://``).
 
     Supported formats: YAML (.yaml, .yml) and JSON (.json).
     """
@@ -23,6 +24,8 @@ class FileJobRegistry(JobRegistry):
 
         Args:
             identifier: File path or URI with extension (.yaml, .yml, or .json).
+                Accepts any scheme supported by fsspec: local paths,
+                ``s3://``, ``gs://``, ``az://``, ``http://``, ``https://``, ``ftp://``, ``sftp://``.
             version: Not used in this implementation.
 
         Returns:

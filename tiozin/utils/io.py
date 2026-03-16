@@ -4,7 +4,8 @@ Filesystem utilities for Tiozin.
 This module provides a thin, provider-agnostic abstraction over filesystem
 operations using ``fsspec``. It is intended to centralize common I/O behaviors
 such as directory creation, deletion, and existence checks, working uniformly
-across local filesystems and cloud storage (e.g. S3, GCS, Azure).
+across local filesystems, cloud storage (S3, GCS, Azure), and remote
+protocols (HTTP, HTTPS, FTP, SFTP).
 
 By concentrating filesystem semantics here, execution backends and outputs
 remain focused on execution logic rather than storage-specific concerns.
@@ -29,7 +30,8 @@ def read_text(path: StrOrPath, **options) -> str:
     """
     Read and return the full contents of a text file.
 
-    Supports local filesystems and object storage via fsspec.
+    Supports local filesystems, object storage, and remote protocols via fsspec
+    (e.g. ``s3://``, ``gs://``, ``az://``, ``http://``, ``https://``, ``ftp://``, ``sftp://``).
     """
     with fsspec.open(str(path), mode="r", **options) as f:
         return f.read()
@@ -39,7 +41,8 @@ def write_text(path: StrOrPath, data: str, **options) -> None:
     """
     Write text data to a file.
 
-    Supports local filesystems and object storage via fsspec.
+    Supports local filesystems, object storage, and remote protocols via fsspec
+    (e.g. ``s3://``, ``gs://``, ``az://``, ``sftp://``).
     """
     with fsspec.open(str(path), mode="w", **options) as f:
         f.write(data)

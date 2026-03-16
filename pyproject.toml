@@ -31,11 +31,8 @@ dependencies = [
   "jinja2 ~=3.1.6",
   "pendulum ~=3.1.0",
   "python-slugify ~=8.0.4",
-  # Cloud-native filesystems (hyperscalers)
-  "fsspec ~=2026.1",
-  "s3fs ~=2026.1",
-  "gcsfs ~=2026.1",
-  "adlfs ~=2025.8",
+  # Cloud-native and remote filesystems
+  "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
 ]
 
 [project.optional-dependencies]
@@ -43,7 +40,6 @@ tio_spark = [
   "pyspark >=3.5.0,<4.0.0",
 ]
 tio_duckdb = [
-  "pyspark >=3.5.0,<4.0.0",
   "duckdb>=1.4.4,<2.0.0",
 ]
 
