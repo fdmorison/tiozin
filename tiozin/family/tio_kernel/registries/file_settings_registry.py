@@ -9,7 +9,9 @@ class FileSettingRegistry(SettingRegistry):
     File-based settings registry.
 
     Loads framework configuration from a tiozin.yaml file.
-    Supports explicit paths and registry delegation.
+    Supports any path or URI accepted by fsspec, including local paths,
+    object storage (``s3://``, ``gs://``, ``az://``), and remote protocols
+    (``http://``, ``https://``, ``ftp://``, ``sftp://``).
 
     Direct instantiation requires an explicit ``location``, or the settings
     file will be discovered via environment variable or filesystem search paths
@@ -20,7 +22,7 @@ class FileSettingRegistry(SettingRegistry):
     chain is followed by ``SettingRegistry.delegate()``.
 
     Attributes:
-        location: Settings file path.
+        location: Settings file path or remote URI.
     """
 
     def __init__(self, location: str = None, **options) -> None:

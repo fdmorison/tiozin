@@ -57,7 +57,7 @@ Tiozin is a declarative ETL framework. Documentation spans:
 - **Language and libs** — Python 3.11+, Pydantic 2.x, structlog, Pendulum 3.x
 - **Execution engines and storage** — Apache Spark, DuckDB, Flink, Trino, Apache Beam, Redshift, BigQuery, Postgres, Kafka and others via pluggable Tiozin Families
 - **Orchestrators** — Airflow, Dagster, Prefect and others (Tiozin runs inside them, it is not one of them)
-- **Cloud filesystems** — S3 (s3fs), GCS (gcsfs), Azure (adlfs) via fsspec
+- **Cloud filesystems and remote protocols** — S3, GCS, Azure (ADL), HTTP/HTTPS, FTP, SFTP via `fsspec[s3,gcs,adl,sftp]`
 - **Data concepts** — ETL pipelines, data mesh domains, layers (raw/refined), partitioning, metadata, lineage
 
 A Spark concept does not apply to DuckDB. A raw layer pattern does not apply to refined. Verify scope before writing examples.
