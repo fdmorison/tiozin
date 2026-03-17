@@ -4,13 +4,13 @@ from rich.console import Console
 from . import config
 from .app import TiozinApp
 from .exceptions import TiozinUsageError
+from .utils import human_join
 
 REQUIRED = ...
 OPTIONAL = None
 TITLE = f"{config.app_title} v{config.app_version}"
 
 cli = typer.Typer(
-    help=TITLE,
     no_args_is_help=True,
     pretty_exceptions_show_locals=config.log_show_locals,
 )
@@ -30,11 +30,11 @@ console.print(ASCII_TIO)
 
 @cli.command()
 def run(
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job to be run."),
+    jobs: list[str] = typer.Argument(REQUIRED, help="Identifiers of the jobs to run."),
     settings_file: str = typer.Option(None, "--settings-file", help="Path to the settings file."),
 ) -> None:
     """
-    Submit and run a job.
+    Submit and run one or more jobs.
 
     TiozinApp must be responsible for logging and displaying the stacktrace.
     To avoid log duplication, this command only handles exit codes:
@@ -42,11 +42,11 @@ def run(
     - Exit code 2: TiozinError (expected errors like validation, bad state, etc)
     - Exit code 1: TiozinUnexpectedError or Exception (bugs, provider errors, etc)
     """
-    console.print(f"[green]▶ Starting job:[/green] [bold cyan]{job}[/bold cyan]\n")
+    console.print(f"[green]▶ Starting jobs:[/green] [bold cyan]{human_join(jobs)}[/bold cyan]\n")
 
     try:
         app = TiozinApp(settings_file)
-        app.run(job)
+        app.run(*jobs)
     except TiozinUsageError:
         raise typer.Exit(code=2) from None
     except Exception:
@@ -69,7 +69,7 @@ def validate(
     - Exit code 2: TiozinError (invalid manifest, missing fields, unknown identifier, etc)
     - Exit code 1: Unexpected error
     """
-    console.print(f"[green]▶ Validating jobs:[/green] [bold cyan]{', '.join(jobs)}[/bold cyan]\n")
+    console.print(f"[green]▶ Validating jobs:[/green] [bold cyan]{human_join(jobs)}[/bold cyan]\n")
 
     try:
         app = TiozinApp(settings_file)
@@ -83,7 +83,7 @@ def validate(
 @cli.command()
 def version() -> None:
     """Show Tiozin version."""
-    console.print(ASCII_TIO)
+    pass
 
 
 def main() -> None:
