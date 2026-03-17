@@ -3,51 +3,32 @@ from pathlib import Path
 import pytest
 
 from tests.config import app_temp_workdir
-from tiozin.utils.io import (
-    clear_dir,
-    create_local_temp_dir,
-    ensure_dir,
-    exists,
-    join_path,
-    read_text,
-    remove_dir,
-    write_text,
-)
+from tiozin.utils import io
 
 
 # ============================================================================
-# Testing create_local_temp_dir()
+# Testing io.create_local_temp_dir()
 # ============================================================================
 def test_create_local_temp_dir_should_create_directory():
     # Act
-    dir = create_local_temp_dir("my_job")
+    dir = io.create_local_temp_dir("my_job")
 
     # Assert
-    actual = (
-        dir,
-        dir.is_dir(),
-    )
-    expected = (
-        app_temp_workdir / "my_job",
-        True,
-    )
+    actual = dir
+    expected = app_temp_workdir / "my_job"
     assert actual == expected
+    assert dir.is_dir()
 
 
 def test_create_local_temp_dir_should_create_subdirectories():
     # Act
-    dir = create_local_temp_dir("job_name", "run_id", "step_name")
+    dir = io.create_local_temp_dir("job_name", "run_id", "step_name")
 
     # Assert
-    actual = (
-        dir,
-        dir.is_dir(),
-    )
-    expected = (
-        app_temp_workdir / "job_name" / "run_id" / "step_name",
-        True,
-    )
+    actual = dir
+    expected = app_temp_workdir / "job_name" / "run_id" / "step_name"
     assert actual == expected
+    assert dir.is_dir()
 
 
 @pytest.mark.parametrize(
@@ -55,17 +36,19 @@ def test_create_local_temp_dir_should_create_subdirectories():
     ["", None],
 )
 def test_create_local_temp_dir_should_skip_unset_entries(entry: str):
+    # Arrange
+    expected = app_temp_workdir / "job_name" / "step_name"
+
     # Act
-    create_local_temp_dir("job_name", entry, "step_name")
+    io.create_local_temp_dir("job_name", entry, "step_name")
 
     # Assert
-    expected = app_temp_workdir / "job_name" / "step_name"
     assert expected.exists()
 
 
 def test_create_local_temp_dir_should_return_app_temp_dir_when_no_entries():
     # Act
-    dir = create_local_temp_dir()
+    dir = io.create_local_temp_dir()
 
     # Assert
     actual = dir
@@ -74,29 +57,31 @@ def test_create_local_temp_dir_should_return_app_temp_dir_when_no_entries():
 
 
 def test_create_local_temp_dir_should_be_idempotent():
+    # Arrange
+    expected = app_temp_workdir / "my_job" / "run_123"
+
     # Act
-    create_local_temp_dir("my_job", "run_123")
-    create_local_temp_dir("my_job", "run_123")
+    io.create_local_temp_dir("my_job", "run_123")
+    io.create_local_temp_dir("my_job", "run_123")
 
     # Assert
-    expected = app_temp_workdir / "my_job" / "run_123"
     assert expected.exists()
 
 
 def test_create_local_temp_dir_should_accept_path_as_first_entry():
     # Arrange
     base_path = app_temp_workdir / "existing_job"
+    expected = base_path / "step_name"
 
     # Act
-    create_local_temp_dir(base_path, "step_name")
+    io.create_local_temp_dir(base_path, "step_name")
 
     # Assert
-    expected = base_path / "step_name"
     assert expected.exists()
 
 
 # ============================================================================
-# Testing write_text() / read_text()
+# Testing io.write_text() / io.read_text()
 # ============================================================================
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_write_text_should_write_content_to_file(tmp_path: Path, path_type: type[str] | Path):
@@ -105,7 +90,7 @@ def test_write_text_should_write_content_to_file(tmp_path: Path, path_type: type
     path = path_type(file)
 
     # Act
-    write_text(path, "hello")
+    io.write_text(path, "hello")
 
     # Assert
     actual = file.read_text()
@@ -121,7 +106,7 @@ def test_read_text_should_return_file_contents(tmp_path: Path, path_type: type[s
     path = path_type(file)
 
     # Act
-    result = read_text(path)
+    result = io.read_text(path)
 
     # Assert
     actual = result
@@ -130,25 +115,23 @@ def test_read_text_should_return_file_contents(tmp_path: Path, path_type: type[s
 
 
 # ============================================================================
-# Testing ensure_dir()
+# Testing io.mkdirs()
 # ============================================================================
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_ensure_dir_should_create_directory(tmp_path: Path, path_type: type[str] | Path):
+def test_mkdirs_should_create_directory(tmp_path: Path, path_type: type[str] | Path):
     # Arrange
     target = tmp_path / "new_dir"
     path = path_type(target)
 
     # Act
-    ensure_dir(path)
+    io.mkdirs(path)
 
     # Assert
-    actual = target.is_dir()
-    expected = True
-    assert actual == expected
+    assert target.is_dir()
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_ensure_dir_should_not_fail_when_directory_already_exists(
+def test_mkdirs_should_not_fail_when_directory_already_exists(
     tmp_path: Path, path_type: type[str] | Path
 ):
     # Arrange
@@ -157,54 +140,61 @@ def test_ensure_dir_should_not_fail_when_directory_already_exists(
     path = path_type(target)
 
     # Act
-    ensure_dir(path)
+    io.mkdirs(path)
 
     # Assert
-    actual = target.is_dir()
-    expected = True
-    assert actual == expected
+    assert target.is_dir()
 
 
 # ============================================================================
-# Testing remove_dir()
+# Testing io.remove()
 # ============================================================================
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_remove_dir_should_delete_directory(tmp_path: Path, path_type: type[str] | Path):
+def test_remove_should_delete_directory(tmp_path: Path, path_type: type[str] | Path):
     # Arrange
     target = tmp_path / "to_remove"
     target.mkdir()
+    (target / "file.txt").write_text("data")
     path = path_type(target)
 
     # Act
-    remove_dir(path)
+    io.remove(path, recursive=True)
 
     # Assert
-    actual = target.exists()
-    expected = False
-    assert actual == expected
+    assert not target.exists()
 
 
-# ============================================================================
-# Testing remove_dir()
-# ============================================================================
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_remove_dir_should_be_noop_when_path_does_not_exist(
+def test_remove_should_delete_file(tmp_path: Path, path_type: type[str] | Path):
+    # Arrange
+    target = tmp_path / "file.txt"
+    target.write_text("data")
+    path = path_type(target)
+
+    # Act
+    io.remove(path)
+
+    # Assert
+    assert not target.exists()
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_remove_should_be_noop_when_path_does_not_exist(
     tmp_path: Path, path_type: type[str] | Path
 ):
     # Arrange
-    path = path_type(tmp_path / "ghost")
+    ghost = tmp_path / "ghost"
+    path = path_type(ghost)
 
     # Act
-    remove_dir(path)
+    io.remove(path)
 
     # Assert
-    actual = (tmp_path / "ghost").exists()
-    expected = False
-    assert actual == expected
+    assert not ghost.exists()
 
 
 # ============================================================================
-# Testing clear_dir()
+# Testing io.clear_dir()
 # ============================================================================
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_clear_dir_should_remove_contents_and_preserve_directory(
@@ -217,11 +207,11 @@ def test_clear_dir_should_remove_contents_and_preserve_directory(
     path = path_type(target)
 
     # Act
-    clear_dir(path)
+    io.clear_dir(path)
 
     # Assert
-    actual = (target.is_dir(), list(target.iterdir()))
-    expected = (True, [])
+    actual = list(target.iterdir())
+    expected = []
     assert actual == expected
 
 
@@ -235,16 +225,28 @@ def test_clear_dir_should_be_noop_when_directory_is_empty(
     path = path_type(target)
 
     # Act
-    clear_dir(path)
+    io.clear_dir(path)
 
     # Assert
-    actual = (target.is_dir(), list(target.iterdir()))
-    expected = (True, [])
+    actual = list(target.iterdir())
+    expected = []
     assert actual == expected
 
 
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_clear_dir_should_raise_when_path_is_a_file(tmp_path: Path, path_type: type[str] | Path):
+    # Arrange
+    target = tmp_path / "file.txt"
+    target.write_text("data")
+    path = path_type(target)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Not a directory"):
+        io.clear_dir(path)
+
+
 # ============================================================================
-# Testing exists()
+# Testing io.exists()
 # ============================================================================
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_exists_should_return_true_when_path_exists(tmp_path: Path, path_type: type[str] | Path):
@@ -252,7 +254,7 @@ def test_exists_should_return_true_when_path_exists(tmp_path: Path, path_type: t
     path = path_type(tmp_path)
 
     # Act
-    result = exists(path)
+    result = io.exists(path)
 
     # Assert
     actual = result
@@ -268,7 +270,7 @@ def test_exists_should_return_false_when_path_does_not_exist(
     path = path_type(tmp_path / "ghost")
 
     # Act
-    result = exists(path)
+    result = io.exists(path)
 
     # Assert
     actual = result
@@ -277,10 +279,8 @@ def test_exists_should_return_false_when_path_does_not_exist(
 
 
 # ============================================================================
-# Testing join_path()
+# Testing io.join_path()
 # ============================================================================
-
-
 @pytest.mark.parametrize(
     "base, path, expected",
     [
@@ -291,8 +291,8 @@ def test_exists_should_return_false_when_path_does_not_exist(
     ],
 )
 def test_join_path_should_prepend_base_to_relative_path(base: str, path: str, expected: str):
-    # Arrange / Act
-    result = join_path(base, path)
+    # Act
+    result = io.join_path(base, path)
 
     # Assert
     actual = result
@@ -310,8 +310,8 @@ def test_join_path_should_prepend_base_to_relative_path(base: str, path: str, ex
     ],
 )
 def test_join_path_should_return_path_unchanged_when_non_relative(path: str):
-    # Arrange / Act
-    result = join_path("jobs", path)
+    # Act
+    result = io.join_path("jobs", path)
 
     # Assert
     actual = result
@@ -320,8 +320,8 @@ def test_join_path_should_return_path_unchanged_when_non_relative(path: str):
 
 
 def test_join_path_should_return_path_unchanged_when_already_starts_with_base():
-    # Arrange / Act
-    result = join_path("jobs", "jobs/mini.yaml")
+    # Act
+    result = io.join_path("jobs", "jobs/mini.yaml")
 
     # Assert
     actual = result
@@ -340,8 +340,8 @@ def test_join_path_should_return_path_unchanged_when_already_starts_with_base():
 def test_join_path_should_not_fail_when_either_argument_is_none(
     base: str | None, path: str | None, expected: str | None
 ):
-    # Arrange / Act
-    result = join_path(base, path)
+    # Act
+    result = io.join_path(base, path)
 
     # Assert
     actual = result

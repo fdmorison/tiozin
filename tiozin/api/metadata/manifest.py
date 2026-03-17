@@ -1,21 +1,14 @@
 from __future__ import annotations
 
-from io import StringIO
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 
 from tiozin.exceptions import ManifestError
+from tiozin.utils import dump_yaml, load_yaml
 
 from . import docs
-
-_yaml = YAML(typ="safe")
-_yaml.allow_duplicate_keys = False
-_yaml.explicit_start = False
-_yaml.sort_base_mapping_type_on_output = False
-_yaml.default_flow_style = False
 
 
 class Manifest(BaseModel):
@@ -64,7 +57,7 @@ class Manifest(BaseModel):
             )
 
         try:
-            manifest = _yaml.load(data)
+            manifest = load_yaml(data)
             return cls.model_validate(manifest)
         except DuplicateKeyError as e:
             raise ManifestError.from_ruamel(cls.__name__, e) from e
@@ -95,10 +88,8 @@ class Manifest(BaseModel):
         Serialize the manifest to a YAML string.
         Fields not explicitly set are excluded.
         """
-        manifest = self.model_dump(mode="json", exclude_unset=True)
-        data = StringIO()
-        _yaml.dump(manifest, data)
-        return data.getvalue()
+        dyct = self.model_dump(mode="json", exclude_unset=True)
+        return dump_yaml(dyct)
 
     def to_json(self) -> str:
         """
