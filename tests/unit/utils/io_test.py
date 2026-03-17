@@ -154,10 +154,11 @@ def test_remove_should_delete_directory(tmp_path: Path, path_type: type[str] | P
     # Arrange
     target = tmp_path / "to_remove"
     target.mkdir()
+    (target / "file.txt").write_text("data")
     path = path_type(target)
 
     # Act
-    io.remove(path)
+    io.remove(path, recursive=True)
 
     # Assert
     assert not target.exists()

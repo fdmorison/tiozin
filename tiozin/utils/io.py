@@ -103,10 +103,10 @@ def mkdirs(path: StrOrPath) -> None:
 
 def remove(path: StrOrPath, recursive: bool = False) -> None:
     """
-    Remove a directory.
+    Remove a file or directory. No-op if the path does not exist.
 
-    If ``recursive`` is True, removes the directory and all its contents.
-    If False, attempts to remove only the empty directory.
+    Directories with content require `recursive=True`. Without it, the
+    operation will fail if the directory is not empty.
     """
     fs, p = _fs(path)
 
