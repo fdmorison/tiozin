@@ -59,6 +59,29 @@ class TiozinApp(Loggable):
         self.status = self.status.set_shutdown()
         self.info("Application shutdown completed.")
 
+    def validate(self, *jobs: str) -> None:
+        """
+        Validates one or more job raw string manifests without running them.
+
+        Accepts YAML/JSON content strings or job identifier strings.
+        Parses and validates each manifest without building or submitting the job.
+        """
+        for job in as_flat_list(*jobs):
+            try:
+                self.setup()
+                manifest = JobManifest.try_from_yaml_or_json(job)
+                manifest = manifest or self.lifecycle.job_registry.get(job)
+
+                TiozinInputError.raise_if(
+                    manifest is None,
+                    f"Invalid job: {job}.",
+                )
+
+                self.info(f"✓ Job `{job}` is valid")
+            except TiozinUsageError as e:
+                self.error(e.message)
+                raise
+
     def run(self, *jobs: JobInput) -> list[object]:
         """
         Runs one or more jobs in sequence.
