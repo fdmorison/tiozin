@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import tiozin.app
+from tiozin import Job
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.app import AppStatus, TiozinApp
 from tiozin.exceptions import TiozinInternalError
@@ -34,14 +35,7 @@ def created_app() -> TiozinApp:
 @pytest.fixture(scope="function")
 def ready_app(created_app: TiozinApp) -> TiozinApp:
     created_app.lifecycle = MagicMock()
-    created_app.status = AppStatus.WAITING
-    return created_app
-
-
-@pytest.fixture
-def running_app(created_app: TiozinApp) -> TiozinApp:
-    created_app.current_job = MagicMock()
-    created_app.status = AppStatus.RUNNING
+    created_app.status = AppStatus.READY
     return created_app
 
 
@@ -54,26 +48,7 @@ def test_setup_should_leave_application_ready_when_success(
 
     # Assert
     set_booting.assert_called_once()
-    assert created_app.status.is_waiting()
-    assert created_app.status.is_healthy()
     assert created_app.status.is_ready()
-    assert created_app.status.is_idle()
-
-
-def test_setup_should_fail_and_propagate_exception(created_app: TiozinApp):
-    # Arrange
-    created_app.lifecycle.setup.side_effect = RuntimeError("boom")
-
-    # Act
-    with pytest.raises(RuntimeError, match="boom"):
-        created_app.setup()
-
-    # Assert
-    assert created_app.status.is_failure()
-    assert not created_app.status.is_healthy()
-    assert created_app.status.is_ready()
-    assert created_app.status.is_idle()
-    assert created_app.status.is_job_finished()
 
 
 def test_setup_should_set_booting_before_initialization(created_app: TiozinApp):
@@ -122,91 +97,55 @@ def test_setup_should_install_shutdown_hooks(
     mock_atexit.register.assert_called_once_with(created_app.teardown)
 
 
-def test_teardown_should_terminate(ready_app: TiozinApp):
+def test_teardown_should_shutdown(ready_app: TiozinApp):
     # Act
     ready_app.teardown()
 
     # Assert
     ready_app.lifecycle.teardown.assert_called()
-    assert ready_app.status.is_completed()
+    assert ready_app.status.is_shutdown()
 
 
-def test_teardown_should_cancel_running_job(running_app: TiozinApp):
+def test_teardown_should_be_idempotent(ready_app: TiozinApp):
     # Act
-    running_app.teardown()
+    ready_app.teardown()
+    ready_app.teardown()
 
     # Assert
-    running_app.current_job.teardown.assert_called_once()
-    assert running_app.status.is_canceled()
-
-
-def test_teardown_should_be_idempotent(running_app: TiozinApp):
-    # Act
-    running_app.teardown()
-    running_app.teardown()
-
-    # Assert
-    running_app.lifecycle.teardown.assert_called_once()
+    ready_app.lifecycle.teardown.assert_called_once()
 
 
 @patch.object(tiozin.app.Job, "builder")
-def test_run_should_execute_job_and_finish_with_success(
-    job_builder: MagicMock, ready_app: TiozinApp
-):
+def test_run_should_execute_job_and_return_result(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
-    ready_app.run("job://test")
+    result = ready_app.run("job://test")
 
     # Assert
     job.submit.assert_called_once()
-    assert ready_app.status.is_success()
-    assert ready_app.status.is_job_finished()
+    assert result == [job.submit.return_value]
 
 
 @patch.object(tiozin.app.Job, "builder")
 def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job.submit.side_effect = RuntimeError("boom")
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
-    # Act - TiozinApp wraps unexpected exceptions in TiozinUnexpectedError
+    # Act - TiozinApp wraps unexpected exceptions in TiozinInternalError
     with pytest.raises(TiozinInternalError):
         ready_app.run("job://fail")
-
-    # Assert
-    assert ready_app.status.is_failure()
-    assert ready_app.status.is_ready()
-    assert ready_app.status.is_job_finished()
-
-
-@patch.object(tiozin.app.Job, "builder")
-def test_run_should_set_running_before_job_execution(job_builder: MagicMock, ready_app: TiozinApp):
-    # Arrange
-    actual_status: AppStatus = None
-
-    def mocked_job_run(*args, **kwargs):
-        nonlocal actual_status
-        actual_status = ready_app.status
-
-    job = MagicMock()
-    job.submit.side_effect = mocked_job_run
-    job_builder.return_value.from_manifest.return_value.build.return_value = job
-
-    # Act
-    ready_app.run("job://test")
-
-    # Assert
-    assert actual_status.is_running()
 
 
 @patch.object(tiozin.app.Job, "builder")
 def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     ready_app.setup = MagicMock()
+    job_builder.return_value.from_manifest.return_value.build.return_value = MagicMock(spec=Job)
 
     # Act
     ready_app.run("job://any")
@@ -217,14 +156,14 @@ def test_run_should_setup_app_lazily(job_builder: MagicMock, ready_app: TiozinAp
 
 def test_run_should_accept_job_instance_directly(ready_app: TiozinApp):
     # Arrange
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job.name = "test_job"
 
     # Act
     result = ready_app.run(job)
 
     # Assert
-    assert result is job.submit.return_value
+    assert result == [job.submit.return_value]
 
 
 @patch.object(tiozin.app.Job, "builder")
@@ -243,14 +182,14 @@ def test_run_should_accept_job_manifest_instance(job_builder: MagicMock, ready_a
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "reader"}],
     )
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     result = ready_app.run(manifest)
 
     # Assert
-    assert result is job.submit.return_value
+    assert result == [job.submit.return_value]
 
 
 @patch.object(tiozin.app.Job, "builder")
@@ -261,14 +200,14 @@ def test_run_should_accept_yaml_string(job_builder: MagicMock, ready_app: Tiozin
         name: test_job
         description: Test job from YAML
     """
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     result = ready_app.run(yaml_string)
 
     # Assert
-    assert result is job.submit.return_value
+    assert result == [job.submit.return_value]
 
 
 @patch.object(tiozin.app.Job, "builder")
@@ -281,14 +220,14 @@ def test_run_should_accept_json_string(job_builder: MagicMock, ready_app: Tiozin
             "description": "Test job from JSON"
         }
     """
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     result = ready_app.run(json_string)
 
     # Assert
-    assert result is job.submit.return_value
+    assert result == [job.submit.return_value]
 
 
 @patch.object(tiozin.app.Job, "builder")
@@ -309,11 +248,45 @@ def test_run_should_accept_identifier_string_from_registry(
         runner={"kind": "TestRunner"},
         inputs=[{"kind": "TestInput", "name": "reader"}],
     )
-    job = MagicMock()
+    job = MagicMock(spec=Job)
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
     # Act
     result = ready_app.run("job://registered_job")
 
     # Assert
-    assert result is job.submit.return_value
+    assert result == [job.submit.return_value]
+
+
+@patch.object(tiozin.app.Job, "builder")
+def test_run_should_accept_list_of_jobs(job_builder: MagicMock, ready_app: TiozinApp):
+    # Arrange
+    job_a = MagicMock(spec=Job)
+    job_b = MagicMock(spec=Job)
+    job_builder.return_value.from_manifest.return_value.build.side_effect = [job_a, job_b]
+
+    # Act
+    results = ready_app.run(["job://first", "job://second"])
+
+    # Assert
+    assert results == [job_a.submit.return_value, job_b.submit.return_value]
+
+
+@patch.object(tiozin.app.Job, "builder")
+def test_run_should_execute_list_sequentially(job_builder: MagicMock, ready_app: TiozinApp):
+    # Arrange
+    call_order = []
+
+    job_a = MagicMock(spec=Job)
+    job_a.submit.side_effect = lambda: call_order.append("a")
+
+    job_b = MagicMock(spec=Job)
+    job_b.submit.side_effect = lambda: call_order.append("b")
+
+    job_builder.return_value.from_manifest.return_value.build.side_effect = [job_a, job_b]
+
+    # Act
+    ready_app.run(["job://first", "job://second"])
+
+    # Assert
+    assert call_order == ["a", "b"]

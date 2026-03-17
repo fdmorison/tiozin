@@ -43,6 +43,7 @@ def run(
     """
     console.print(ASCII_TIO)
     console.print(f"[green]▶ Starting job:[/green] [bold cyan]{job}[/bold cyan]\n")
+
     try:
         app = TiozinApp(settings_file)
         app.run(job)

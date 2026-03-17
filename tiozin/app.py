@@ -1,135 +1,106 @@
 import atexit
 import signal
-from threading import RLock
 
-from tiozin import Job, logs
+import wrapt
+
+from tiozin import Job, JobManifest, logs
 from tiozin.api import Loggable
-from tiozin.api.metadata.job_manifest import JobManifest
-from tiozin.exceptions import TiozinInternalError, TiozinUsageError
+from tiozin.exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
 from tiozin.lifecycle import Lifecycle
+from tiozin.utils import as_flat_list
 from tiozin.utils.app_status import AppStatus
+
+JobInput = str | JobManifest | Job
 
 
 class TiozinApp(Loggable):
     """
     Main application entrypoint for Tiozin.
 
-    Coordinates job execution and manages the application lifecycle,
-    including registry initialization, context setup, and graceful
-    startup and shutdown handling.
-
-    Jobs are resolved from the job registry, built from manifests,
-    and executed under a controlled runtime environment.
+    Initializes the framework to runs jobs. Handles registry setup, context initialization, and
+    graceful shutdown.
     """
 
     def __init__(self, settings_file: str = None) -> None:
         super().__init__()
         self.status = AppStatus.CREATED
-        self.current_job = None
-        self.lock = RLock()
         self.lifecycle = Lifecycle(settings_file)
 
+    @wrapt.synchronized
     def setup(self) -> None:
-        with self.lock:
-            if self.status.is_ready():
-                return
+        if self.status.is_ready():
+            return
 
-            try:
-                self.info("Application is starting.")
-                self.status = self.status.set_booting()
+        self.info("Application is starting.")
+        self.status = self.status.set_booting()
 
-                # Install Shutdown hooks
-                def on_signal(signum, _) -> None:
-                    sigcode = signal.Signals(signum).name
-                    self.warning(f"🚨 Interrupted by {sigcode}")
-                    raise SystemExit(1)
+        # Install Shutdown hooks
+        def on_signal(signum, _) -> None:
+            sigcode = signal.Signals(signum).name
+            self.warning(f"🚨 Interrupted by {sigcode}")
+            raise SystemExit(1)
 
-                signal.signal(signal.SIGTERM, on_signal)
-                signal.signal(signal.SIGINT, on_signal)
-                signal.signal(signal.SIGHUP, on_signal)
-                atexit.register(self.teardown)
+        signal.signal(signal.SIGTERM, on_signal)
+        signal.signal(signal.SIGINT, on_signal)
+        signal.signal(signal.SIGHUP, on_signal)
+        atexit.register(self.teardown)
 
-                # Start registries
-                self.lifecycle.setup()
-                self.status = self.status.set_waiting()
-                self.info("Application startup completed.")
-            except Exception:
-                self.status = self.status.set_failure()
-                raise
+        # Start registries
+        self.lifecycle.setup()
+        self.status = self.status.set_ready()
+        self.info("Application startup completed, ready to run jobs.")
 
+    @wrapt.synchronized
     def teardown(self) -> None:
-        with self.lock:
-            if self.status.is_app_finished():
-                return
+        if self.status.is_shutdown():
+            return
+        self.info("Application is shutting down...")
+        self.lifecycle.teardown()
+        self.status = self.status.set_shutdown()
+        self.info("Application shutdown completed.")
 
-            self.info(f"{self.status.capitalize()} Application is shutting down...")
-
-            if self.status.is_running():
-                self.current_job.teardown()
-                self.lifecycle.teardown()
-                self.status = self.status.set_canceled()
-            else:
-                self.lifecycle.teardown()
-                self.status = self.status.set_completed()
-
-            self.info("Application shutdown completed.")
-
-    def run(self, job: str | JobManifest | Job) -> Job:
+    def run(self, *jobs: JobInput) -> list[object]:
         """
-        Run a job.
+        Runs one or more jobs in sequence.
 
-        This method accepts multiple input representations and normalizes them
-        into a `Job` instance before execution.
+        Accepts one or more jobs as positional arguments, or a single list.
+        Each item may be a `Job` instance, a `JobManifest`, a YAML/JSON string,
+        or a job identifier string.
 
-        Supported input forms:
-        - `Job`: Executed directly.
-        - `JobManifest`: Used to build the job.
-        - `str` (YAML/JSON): Parsed and validated as a manifest.
-        - `str` (identifier): Resolved from the current job registry.
-
-        The resolved job is executed within the application lifecycle.
-
-        Args:
-            job: A Job instance, JobManifest, YAML/JSON manifest string, or a job identifier.
-
-        Returns:
-            The job execution result, if any.
-
-        Raises:
-            JobNotFoundError: If the job identifier cannot be resolved.
-            ManifestError: If the manifest string is invalid.
+        Returns the job result for a single job, or a list of results otherwise.
         """
+        results = []
 
-        with self.lock:
+        for job in as_flat_list(*jobs):
             try:
                 self.setup()
-                self.current_job = None
-                self.status = self.status.set_running()
 
                 if isinstance(job, (str, JobManifest)):
+                    # Attempt yaml string or JobManifest
                     manifest = JobManifest.try_from_yaml_or_json(job)
-                    if manifest is None:
-                        manifest = self.lifecycle.job_registry.get(identifier=job)
+                    # Attempt identifier string
+                    manifest = manifest or self.lifecycle.job_registry.get(job)
+                    # Manifest is parsed, now build the job
                     job = Job.builder().from_manifest(manifest).build()
 
-                self.current_job = job
-                result = job.submit()
-                self.status = self.status.set_success()
-                return result
+                TiozinInputError.raise_if(
+                    not isinstance(job, Job),
+                    f"Invalid job: {job}.",
+                )
+
+                data = job.submit()
+                results.append(data)
             except TiozinUsageError as e:
                 self.error(e.message)
-                self.status = self.status.set_failure()
                 raise
             except TiozinInternalError as e:
                 self.exception(e.message)
-                self.status = self.status.set_failure()
                 raise
             except Exception as e:
                 self.exception("Unexpected error while executing job.")
-                self.status = self.status.set_failure()
                 raise TiozinInternalError() from e
-            finally:
-                self.current_job = None
+
+        return results
 
 
 logs.setup()

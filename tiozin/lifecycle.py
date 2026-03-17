@@ -30,6 +30,7 @@ class Lifecycle(Loggable):
         self._setup_registry(settings_registry)
 
         registries = settings_registry.get().registries
+
         self.settings_registry = settings_registry
         self.secret_registry = tiozin_registry.load_manifest(registries.secret)
         self.schema_registry = tiozin_registry.load_manifest(registries.schema)
