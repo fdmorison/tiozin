@@ -1,3 +1,5 @@
+import wrapt
+
 from tiozin import config
 from tiozin.api import SettingRegistry, SettingsManifest
 from tiozin.exceptions import SettingsNotFoundError
@@ -24,6 +26,7 @@ class FileSettingRegistry(SettingRegistry):
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location, **options)
 
+    @wrapt.synchronized
     def setup(self) -> None:
         """
         Resolve the settings file location.
@@ -45,6 +48,11 @@ class FileSettingRegistry(SettingRegistry):
                     self.location = str(path)
                     break
 
+        if self.location:
+            self.info(f"Loading settings from '{self.location}'")
+        else:
+            self.info("Loading built-in settings")
+
         self.ready = True
 
     def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
@@ -61,10 +69,8 @@ class FileSettingRegistry(SettingRegistry):
         self.setup()
 
         if not self.location:
-            self.info("Loading built-in settings")
             return SettingsManifest.from_arguments()
 
-        self.info(f"Loading settings from '{self.location}'")
         data = io.read_text(self.location)
         return SettingsManifest.from_yaml_or_json(data)
 
