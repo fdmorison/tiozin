@@ -25,6 +25,7 @@ ASCII_TIO = rf"""
 
   {TITLE} - Your friendly ETL framework 🤓
 """
+console.print(ASCII_TIO)
 
 
 @cli.command()
@@ -41,7 +42,6 @@ def run(
     - Exit code 2: TiozinError (expected errors like validation, bad state, etc)
     - Exit code 1: TiozinUnexpectedError or Exception (bugs, provider errors, etc)
     """
-    console.print(ASCII_TIO)
     console.print(f"[green]▶ Starting job:[/green] [bold cyan]{job}[/bold cyan]\n")
 
     try:
