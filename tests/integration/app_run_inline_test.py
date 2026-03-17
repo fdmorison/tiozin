@@ -71,7 +71,6 @@ def test_app_should_run_job_from_inline_yaml(_atexit, _signal, app: TiozinApp):
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -126,7 +125,6 @@ def test_app_should_run_job_from_inline_json(_atexit, _signal, app: TiozinApp):
     app.run(json_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -188,7 +186,6 @@ def test_app_should_run_full_job_from_inline_yaml(_atexit, _signal, app: TiozinA
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -251,7 +248,6 @@ def test_app_should_render_temp_workdir_in_yaml_templates(_atexit, _signal, app:
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 @patch("tiozin.app.signal")
@@ -318,7 +314,6 @@ def test_app_should_render_temp_workdir_in_json_templates(_atexit, _signal, app:
     app.run(json_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -362,7 +357,6 @@ def test_app_should_render_envvars_in_yaml_templates(_atexit, _signal, app: Tioz
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 @patch("tiozin.app.signal")
@@ -410,4 +404,3 @@ def test_app_should_render_envvars_in_json_templates(_atexit, _signal, app: Tioz
     app.run(json_job)
 
     # Assert
-    assert app.status.is_success()

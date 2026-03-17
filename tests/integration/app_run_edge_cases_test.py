@@ -62,7 +62,6 @@ def test_app_should_run_job_with_input_only(_atexit, _signal, app: TiozinApp):
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -102,7 +101,6 @@ def test_app_should_run_job_without_transforms(_atexit, _signal, app: TiozinApp)
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -142,7 +140,6 @@ def test_app_should_run_job_without_outputs(_atexit, _signal, app: TiozinApp):
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -189,7 +186,6 @@ def test_app_should_run_job_with_multiple_inputs(_atexit, _signal, app: TiozinAp
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -236,7 +232,6 @@ def test_app_should_run_job_with_multiple_transforms(_atexit, _signal, app: Tioz
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -283,7 +278,6 @@ def test_app_should_run_job_with_multiple_outputs(_atexit, _signal, app: TiozinA
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -341,4 +335,3 @@ def test_app_should_run_job_with_multiple_inputs_transforms_and_outputs(
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()

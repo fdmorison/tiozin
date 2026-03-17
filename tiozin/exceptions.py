@@ -97,7 +97,7 @@ class TiozinInternalError(TiozinError):
     """
 
     http_status = 500
-    message = "Tiozin ran into an unexpected internal error."
+    message = "Tiozin ran into an internal error."
 
 
 # ============================================================================

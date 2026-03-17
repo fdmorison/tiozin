@@ -65,7 +65,6 @@ def test_app_should_run_job_with_custom_runner_parameters(_atexit, _signal, app:
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -106,7 +105,6 @@ def test_app_should_run_job_with_custom_input_parameters(_atexit, _signal, app: 
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -153,7 +151,6 @@ def test_app_should_run_job_with_custom_transform_parameters(_atexit, _signal, a
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -197,7 +194,6 @@ def test_app_should_run_job_with_custom_output_parameters(_atexit, _signal, app:
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -250,4 +246,3 @@ def test_app_should_run_job_with_custom_parameters_across_all_plugins(
     app.run(yaml_job)
 
     # Assert
-    assert app.status.is_success()

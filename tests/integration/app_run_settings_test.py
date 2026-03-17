@@ -66,5 +66,5 @@ def test_app_should_render_env_templates_in_registry_location(_atexit, _signal):
         app.teardown()
 
     # Assert: setup completed and the job ran; original template is preserved post-setup
-    assert app.status.is_completed()
+    assert app.status.is_shutdown()
     assert app.lifecycle.job_registry.location == "{{ ENV.TIO_TEST_JOB_LOCATION }}"

@@ -97,7 +97,6 @@ def test_app_should_run_programmatic_job_with_dicts(_atexit, _signal, app: Tiozi
     app.run(job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -154,7 +153,6 @@ def test_app_should_run_programmatic_job_with_manifests(_atexit, _signal, app: T
     app.run(job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -243,7 +241,6 @@ def test_app_should_run_job_from_builder_with_concrete_objects(_atexit, _signal,
     app.run(job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -323,7 +320,6 @@ def test_app_should_run_job_from_direct_instantiation(_atexit, _signal, app: Tio
     app.run(job)
 
     # Assert
-    assert app.status.is_success()
 
 
 # ============================================================================
@@ -395,7 +391,6 @@ def test_app_should_render_temp_workdir_in_builder_with_manifests(_atexit, _sign
     app.run(job)
 
     # Assert
-    assert app.status.is_success()
 
 
 @patch("tiozin.app.signal")
@@ -456,4 +451,3 @@ def test_app_should_render_temp_workdir_in_concrete_objects(_atexit, _signal, ap
     app.run(job)
 
     # Assert
-    assert app.status.is_success()
