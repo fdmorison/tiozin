@@ -3,7 +3,7 @@ from __future__ import annotations
 from duckdb import DuckDBPyRelation
 
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils import as_list, clear_dir, ensure_dir, trim_lower, trim_upper
+from tiozin.utils import as_list, clear_dir, mkdirs, trim_lower, trim_upper
 
 from .. import DuckdbOutput
 from ..typehints import DuckdbCompression, DuckdbPlan, DuckdbTiozinFileFormat, DuckdbWriteMode
@@ -107,7 +107,7 @@ class DuckdbFileOutput(DuckdbOutput):
         if self.mode == "OVERWRITE":
             clear_dir(self.path)
 
-        ensure_dir(self.path)
+        mkdirs(self.path)
 
         args = {
             "FORMAT": self.format,

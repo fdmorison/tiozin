@@ -24,13 +24,18 @@ from tiozin.utils.helpers import (
 
 # Filesystem I/O
 from tiozin.utils.io import (
-    clear_dir,
     create_local_temp_dir,
-    ensure_dir,
+    clear_dir,
+    mkdirs,
     exists,
+    remove,
+    join_path,
     read_text,
-    remove_dir,
     write_text,
+    read_yaml,
+    write_yaml,
+    load_yaml,
+    dump_yaml,
 )
 
 # Runtime
@@ -55,13 +60,18 @@ __all__ = [
     "utcnow",
     "human_join",
     # Filesystem I/O
-    "clear_dir",
-    "ensure_dir",
-    "exists",
-    "read_text",
-    "remove_dir",
-    "write_text",
     "create_local_temp_dir",
+    "clear_dir",
+    "mkdirs",
+    "exists",
+    "remove",
+    "join_path",
+    "read_text",
+    "write_text",
+    "read_yaml",
+    "write_yaml",
+    "load_yaml",
+    "dump_yaml",
     # Runtime
     "bind_data_tokens",
     "tio_alias",

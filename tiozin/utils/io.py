@@ -1,21 +1,17 @@
 """
-Filesystem utilities for Tiozin.
+Common filesystem operations for Tiozin.
 
-This module provides a thin, provider-agnostic abstraction over filesystem
-operations using ``fsspec``. It is intended to centralize common I/O behaviors
-such as directory creation, deletion, and existence checks, working uniformly
-across local filesystems, cloud storage (S3, GCS, Azure), and remote
-protocols (HTTP, HTTPS, FTP, SFTP).
-
-By concentrating filesystem semantics here, execution backends and outputs
-remain focused on execution logic rather than storage-specific concerns.
+Wraps fsspec to work uniformly across local paths, cloud storage (S3, GCS,
+Azure), and remote protocols (HTTP, HTTPS, FTP, SFTP).
 """
 
+from io import StringIO
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 import fsspec
+from ruamel.yaml import YAML
 
 from tiozin import config
 
@@ -25,6 +21,15 @@ StrOrPath = str | Path
 def _fs(path: StrOrPath) -> tuple[Any, str]:
     fs, _, paths = fsspec.get_fs_token_paths(str(path))
     return fs, paths[0]
+
+
+def _yaml() -> YAML:
+    loader = YAML(typ="safe")
+    loader.allow_duplicate_keys = False
+    loader.explicit_start = False
+    loader.sort_base_mapping_type_on_output = False
+    loader.default_flow_style = False
+    return loader
 
 
 def read_text(path: StrOrPath, **options) -> str:
@@ -49,7 +54,43 @@ def write_text(path: StrOrPath, data: str, **options) -> None:
         f.write(data)
 
 
-def ensure_dir(path: StrOrPath) -> None:
+def load_yaml(text: str) -> Any:
+    """
+    Parse a YAML string and return the result.
+    """
+    return _yaml().load(text)
+
+
+def dump_yaml(data: Any) -> str:
+    """
+    Serialize data to a YAML string.
+    """
+    buffer = StringIO()
+    _yaml().dump(data, buffer)
+    return buffer.getvalue()
+
+
+def read_yaml(path: StrOrPath, **options) -> Any:
+    """
+    Read and parse a YAML file.
+
+    Supports local filesystems, object storage, and remote protocols via fsspec
+    (e.g. `s3://`, `gs://`, `az://`, `http://`, `https://`, `ftp://`, `sftp://`).
+    """
+    return load_yaml(read_text(path, **options))
+
+
+def write_yaml(path: StrOrPath, data: Any, **options) -> None:
+    """
+    Serialize and write data to a YAML file.
+
+    Supports local filesystems, object storage, and remote protocols via fsspec
+    (e.g. `s3://`, `gs://`, `az://`, `sftp://`).
+    """
+    write_text(path, dump_yaml(data), **options)
+
+
+def mkdirs(path: StrOrPath) -> None:
     """
     Ensure that a directory exists.
 
@@ -57,14 +98,10 @@ def ensure_dir(path: StrOrPath) -> None:
     No-op if the directory already exists.
     """
     fs, p = _fs(path)
-
-    if fs.exists(p):
-        return
-
     fs.mkdirs(p, exist_ok=True)
 
 
-def remove_dir(path: StrOrPath, recursive: bool = True) -> None:
+def remove(path: StrOrPath, recursive: bool = False) -> None:
     """
     Remove a directory.
 
@@ -88,6 +125,9 @@ def clear_dir(path: StrOrPath) -> None:
     if not fs.exists(p):
         return
 
+    if not fs.isdir(p):
+        raise ValueError(f"Not a directory: {path}")
+
     for entry in fs.ls(p, detail=True):
         name = entry["name"]
         if entry["type"] == "directory":
@@ -106,11 +146,10 @@ def exists(path: StrOrPath) -> bool:
 
 def create_local_temp_dir(*entries: StrOrPath) -> Path:
     """
-    Create a temporary working directory under the application temp root.
+    Create and return a directory under the application temp root.
 
-    Each entry is treated as a path segment and appended in order, producing
-    a hierarchical directory structure. The directory is created if it does
-    not already exist.
+    Each entry becomes a path segment, appended in order. Empty and None
+    entries are skipped. The directory is created if it does not exist.
     """
     path = config.app_temp_workdir
     for key in entries:
@@ -122,16 +161,13 @@ def create_local_temp_dir(*entries: StrOrPath) -> Path:
 
 def join_path(base: str, path: str) -> str | None:
     """
-    Join ``path`` to ``base`` as a base directory.
+    Prepend `base` to `path` if `path` is relative.
 
-    If ``path`` is relative (no URL scheme and not starting with ``/``),
-    and does not already start with ``base``, it is joined to ``base``.
-    Absolute paths and URIs with a scheme are returned unchanged.
+    Relative means: no URL scheme and does not start with `/`. Absolute paths
+    and URIs are returned unchanged. If `path` already starts with `base`,
+    it is also returned unchanged.
 
-    If either argument is ``None``, the other is returned as-is.
-    If both are ``None``, returns ``None``.
-
-    Works uniformly for local paths and remote URIs (``s3://``, ``http://``, etc.).
+    If either argument is None, the other is returned as-is. Both None returns None.
     """
     if base is None:
         return path

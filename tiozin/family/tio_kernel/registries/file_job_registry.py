@@ -1,7 +1,7 @@
 from tiozin.api import JobRegistry
 from tiozin.api.metadata.job_manifest import JobManifest
 from tiozin.exceptions import JobNotFoundError
-from tiozin.utils.io import join_path, read_text, write_text
+from tiozin.utils import join_path, read_text, write_text
 
 
 class FileJobRegistry(JobRegistry):
