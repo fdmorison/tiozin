@@ -41,11 +41,11 @@ class TemplateDate:
 
     __slots__ = ("_dt", "_fmt")
 
-    def __init__(self, dt: DateTime, fmt: Callable[[DateTime], str] | None = None):
-        self._dt = dt
+    def __init__(self, dt: DateTime = None, fmt: Callable[[DateTime], str] = None):
+        self._dt = dt or pendulum.now("UTC")
         self._fmt = fmt
 
-    def _nav(self, dt: DateTime) -> TemplateDate:
+    def _navigate(self, dt: DateTime) -> TemplateDate:
         """Navigate to a new datetime preserving the current fmt."""
         return TemplateDate(dt, self._fmt)
 
@@ -105,7 +105,7 @@ class TemplateDate:
         if not isinstance(offset, int):
             raise TypeError("TemplateDate offset must be an integer")
 
-        return self._nav(self._dt.add(days=offset))
+        return self._navigate(self._dt.add(days=offset))
 
     def __str__(self) -> str:
         """
@@ -344,27 +344,27 @@ class TemplateDate:
     @property
     def yesterday(self) -> TemplateDate:
         """Previous day, eg: D[n].yesterday == D[n-1]"""
-        return self._nav(self._dt.subtract(days=1))
+        return self._navigate(self._dt.subtract(days=1))
 
     @property
     def tomorrow(self) -> TemplateDate:
         """Next day, eg: D[n].tomorrow == D[n+1]"""
-        return self._nav(self._dt.add(days=1))
+        return self._navigate(self._dt.add(days=1))
 
     @property
     def start_of_year(self) -> TemplateDate:
         """Start of the year (Jan 1 00:00:00), eg: D[0].start_of_year.flat_date"""
-        return self._nav(self._dt.start_of("year"))
+        return self._navigate(self._dt.start_of("year"))
 
     @property
     def start_of_month(self) -> TemplateDate:
         """Start of the month (1st 00:00:00), eg: D[0].start_of_month.flat_date"""
-        return self._nav(self._dt.start_of("month"))
+        return self._navigate(self._dt.start_of("month"))
 
     @property
     def start_of_day(self) -> TemplateDate:
         """Start of the day (midnight), eg: D[0].start_of_day.flat_date"""
-        return self._nav(self._dt.start_of("day"))
+        return self._navigate(self._dt.start_of("day"))
 
     @property
     def midnight(self) -> TemplateDate:
@@ -379,17 +379,17 @@ class TemplateDate:
     @property
     def start_of_week(self) -> TemplateDate:
         """Start of the week (Monday 00:00:00), eg: D[0].start_of_week.flat_date"""
-        return self._nav(self._dt.start_of("week"))
+        return self._navigate(self._dt.start_of("week"))
 
     @property
     def start_of_hour(self) -> TemplateDate:
         """Start of the current hour, eg: D[0].start_of_hour.flat_hour"""
-        return self._nav(self._dt.start_of("hour"))
+        return self._navigate(self._dt.start_of("hour"))
 
     @property
     def start_of_minute(self) -> TemplateDate:
         """Start of the current minute, eg: D[0].start_of_minute.flat_minute"""
-        return self._nav(self._dt.start_of("minute"))
+        return self._navigate(self._dt.start_of("minute"))
 
     @property
     def at00(self) -> TemplateDate:

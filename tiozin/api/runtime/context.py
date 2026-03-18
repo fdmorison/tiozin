@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
-from tiozin.compose import SafeEnv, TemplateDate
+from tiozin.compose import TemplateDate, TemplateEnv
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
@@ -283,17 +283,11 @@ class Context:
         }
         result |= context_data
 
-        # ENV namespace
-        result["ENV"] = SafeEnv()
-
-        # TemplateDate fields
-        relative_date = TemplateDate(self.nominal_time)
-        result |= relative_date.to_dict()
-        result["DAY"] = relative_date
-        result["D"] = relative_date
-        result["day"] = relative_date
-        result["d"] = relative_date
-
+        # Template Acessors
+        now = TemplateDate()
+        result |= now.to_dict()
+        result["DAY"] = now
+        result["ENV"] = TemplateEnv()
         return FrozenMapping(result)
 
     # ==================================================

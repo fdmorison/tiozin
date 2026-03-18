@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from tiozin.api.metadata.job_manifest import RunnerManifest
 
 
-def test_manifest_should_have_correct_defaults():
+def test_manifest_should_have_defaults():
     # Arrange
     data = {
         "kind": "TestRunner",
