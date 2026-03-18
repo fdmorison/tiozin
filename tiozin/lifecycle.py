@@ -1,6 +1,6 @@
 from tiozin import SettingRegistry, env
 from tiozin.api import Loggable, Registry
-from tiozin.compose.assembly.tiozin_registry import tiozin_registry
+from tiozin.compose.assembly.tiozin_factory import tiozin_factory
 
 
 class Lifecycle(Loggable):
@@ -17,7 +17,7 @@ class Lifecycle(Loggable):
         self.registries: list[Registry] = []
 
     def setup(self) -> None:
-        setting_registry: SettingRegistry = tiozin_registry.load(
+        setting_registry: SettingRegistry = tiozin_factory.load(
             kind=env.TIO_SETTING_REGISTRY_KIND,
             location=self.settings_file or env.TIO_SETTING_REGISTRY_LOCATION,
             timeout=env.TIO_SETTING_REGISTRY_TIMEOUT,
@@ -32,12 +32,12 @@ class Lifecycle(Loggable):
         registries = setting_registry.get().registries
 
         self.setting_registry = setting_registry
-        self.secret_registry = tiozin_registry.load_manifest(registries.secret)
-        self.schema_registry = tiozin_registry.load_manifest(registries.schema)
-        self.transaction_registry = tiozin_registry.load_manifest(registries.transaction)
-        self.job_registry = tiozin_registry.load_manifest(registries.job)
-        self.metric_registry = tiozin_registry.load_manifest(registries.metric)
-        self.lineage_registry = tiozin_registry.load_manifest(registries.lineage)
+        self.secret_registry = tiozin_factory.load_manifest(registries.secret)
+        self.schema_registry = tiozin_factory.load_manifest(registries.schema)
+        self.transaction_registry = tiozin_factory.load_manifest(registries.transaction)
+        self.job_registry = tiozin_factory.load_manifest(registries.job)
+        self.metric_registry = tiozin_factory.load_manifest(registries.metric)
+        self.lineage_registry = tiozin_factory.load_manifest(registries.lineage)
 
         self.registries += [
             self.setting_registry,

@@ -12,7 +12,7 @@ from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInt
 from tiozin.utils.helpers import trim
 
 from ..reflection import try_get_public_setter
-from .tiozin_registry import tiozin_registry
+from .tiozin_factory import tiozin_factory
 
 InputDefinition: TypeAlias = dict[str, Any] | InputManifest | Input
 OutputDefinition: TypeAlias = dict[str, Any] | OutputManifest | Output
@@ -203,13 +203,13 @@ class JobBuilder:
         manifest.layer = manifest.layer or self._layer
         manifest.product = manifest.product or self._product
         manifest.model = manifest.model or self._model
-        return tiozin_registry.load_manifest(manifest)
+        return tiozin_factory.load_manifest(manifest)
 
     def build(self) -> Job:
         if self._built:
             raise TiozinInternalError("The builder can only be used once")
 
-        job = tiozin_registry.safe_load(
+        job = tiozin_factory.safe_load(
             tiozin_role=Job,
             # identity
             kind=self._kind,
@@ -229,7 +229,7 @@ class JobBuilder:
             product=self._product,
             model=self._model,
             # Pipeline
-            runner=tiozin_registry.load_manifest(self._runner),
+            runner=tiozin_factory.load_manifest(self._runner),
             inputs=[self._build_step(m) for m in self._inputs],
             transforms=[self._build_step(m) for m in self._transforms],
             outputs=[self._build_step(m) for m in self._outputs],

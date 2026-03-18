@@ -12,7 +12,7 @@ from .classproperty import classproperty
 
 if TYPE_CHECKING:
     from .assembly.job_builder import JobBuilder as JobBuilder
-    from .assembly.tiozin_registry import TiozinRegistry as TiozinRegistry
+    from .assembly.tiozin_factory import TiozinFactory as TiozinFactory
     from .assembly.tiozin_scanner import TiozinScanner as TiozinScanner
     from .proxies.job import JobProxy as JobProxy
     from .proxies.registry import RegistryProxy as RegistryProxy
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 _DEFERRED = {
     "JobBuilder": ".assembly.job_builder",
-    "TiozinRegistry": ".assembly.tiozin_registry",
+    "TiozinFactory": ".assembly.tiozin_registry",
     "TiozinScanner": ".assembly.tiozin_scanner",
     "JobProxy": ".proxies.job",
     "RegistryProxy": ".proxies.registry",
@@ -46,7 +46,7 @@ def __getattr__(name: str):
 __all__ = [
     # Assembly
     "JobBuilder",
-    "TiozinRegistry",
+    "TiozinFactory",
     "TiozinScanner",
     # Proxy
     "tioproxy",

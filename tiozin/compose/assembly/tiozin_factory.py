@@ -66,7 +66,7 @@ _MANIFEST_ROLE_MAP = {
 }
 
 
-class TiozinRegistry(Loggable):
+class TiozinFactory(Loggable):
     """
     Discovers, registers, and resolves Tiozin plugins at runtime.
 
@@ -224,4 +224,4 @@ class TiozinRegistry(Loggable):
         return tiozin_instance
 
 
-tiozin_registry = TiozinRegistry()
+tiozin_factory = TiozinFactory()
