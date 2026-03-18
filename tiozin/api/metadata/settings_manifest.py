@@ -12,7 +12,7 @@ BOOL: TypeAlias = bool | None
 INT: TypeAlias = int | None
 
 
-class SettingsRegistryManifest(Manifest):
+class SettingRegistryManifest(Manifest):
     # Identity
     kind: str = Field(env.TIO_SETTING_REGISTRY_KIND)
     name: STR = Field(None, description=docs.REGISTRY_NAME)
@@ -106,7 +106,7 @@ class Registries(BaseModel):
     A None value for ``settings`` signals the end of settings delegation.
     """
 
-    settings: SettingsRegistryManifest | None = None
+    settings: SettingRegistryManifest | None = None
     job: JobRegistryManifest = Field(default_factory=JobRegistryManifest)
     schema: SchemaRegistryManifest = Field(default_factory=SchemaRegistryManifest)
     secret: SecretRegistryManifest = Field(default_factory=SecretRegistryManifest)

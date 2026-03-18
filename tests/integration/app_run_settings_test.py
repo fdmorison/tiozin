@@ -37,7 +37,7 @@ def test_app_should_load_settings_from_custom_file(_atexit, _signal):
     app.teardown()
 
     # Assert
-    actual = app.lifecycle.settings_registry.location
+    actual = app.lifecycle.setting_registry.location
     expected = MOCK_SETTINGS
     assert actual == expected
 
