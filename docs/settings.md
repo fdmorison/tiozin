@@ -130,7 +130,7 @@ Registry templates run at startup, before any job executes. Job variables (`name
 | Variable | Description |
 |---|---|
 | `ENV.<NAME>` | Value of environment variable `NAME` |
-| `DAY`, `D`, `day`, `d` | Current date and time at startup, as a `TemplateDate` |
+| `DAY` | Current date and time at startup, as a `TemplateDate` |
 
 `TemplateDate` exposes the same shorthands as in job templates (`ds`, `ts`, `flat_date`, `flat_year`, `deep_date`, etc.). See [templates.md](templates.md) for the full reference.
 

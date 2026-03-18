@@ -64,29 +64,29 @@ log_level: "{{ ENV.LOG_LEVEL | default('INFO') }}"
 
 ## Date variables
 
-Tiozin injects a **`TemplateDate`** object based on the job's `nominal_time`.
-You can use it directly as `D` (or `DAY`, `day`, `d`, all aliases):
+Tiozin injects a **`TemplateDate`** object anchored to the current time at render,
+available as `DAY`:
 
 ```yaml
 # Just prints the date: 2026-01-17
-path: .output/lake/date={{ D }}
+path: .output/lake/date={{ DAY }}
 
 # Navigate: yesterday
-path: .output/lake/date={{ D[-1] }}
+path: .output/lake/date={{ DAY[-1] }}
 
 # 7 days ahead
-path: .output/lake/date={{ D[7] }}
+path: .output/lake/date={{ DAY[7] }}
 ```
 
 ### Navigating relative to today
 
-`D[n]` moves `n` days from the nominal time:
+`DAY[n]` moves `n` days from the nominal time:
 
 ```yaml
-{{ D[0] }}   → 2026-01-17   (today)
-{{ D[-1] }}  → 2026-01-16   (yesterday)
-{{ D[1] }}   → 2026-01-18   (tomorrow)
-{{ D[-7] }}  → 2026-01-10   (last week)
+{{ DAY[0] }}   → 2026-01-17   (today)
+{{ DAY[-1] }}  → 2026-01-16   (yesterday)
+{{ DAY[1] }}   → 2026-01-18   (tomorrow)
+{{ DAY[-7] }}  → 2026-01-10   (last week)
 ```
 
 ### Chaining formats
@@ -94,15 +94,15 @@ path: .output/lake/date={{ D[7] }}
 Use a format property to control the output:
 
 ```yaml
-{{ D[-1].iso }}          → 2026-01-16T10:30:45+00:00
-{{ D[-1].flat_date }}    → 2026-01-16
-{{ D[-1].deep_date }}    → year=2026/month=01/day=16
+{{ DAY[-1].iso }}          → 2026-01-16T10:30:45+00:00
+{{ DAY[-1].flat_date }}    → 2026-01-16
+{{ DAY[-1].deep_date }}    → year=2026/month=01/day=16
 ```
 
 Chaining is order-independent: format and navigation can come in any order:
 
 ```yaml
-{{ D[-1].flat_hour }}   ==   {{ D.flat_hour.yesterday }}
+{{ DAY[-1].flat_hour }}   ==   {{ DAY.flat_hour.yesterday }}
 ```
 
 ### Convenience shortcuts
@@ -134,27 +134,27 @@ Use `.at<HH>` to jump to a specific hour of the day:
 ### Lake path with partition by date
 
 ```yaml
-path: .output/lake-{{domain}}-{{layer}}/{{product}}/date={{ D[-1] }}
+path: .output/lake-{{domain}}-{{layer}}/{{product}}/date={{ DAY[-1] }}
 ```
 
 ### Deep Hive-style partitioning
 
 ```yaml
-path: .output/lake/{{product}}/{{ D[-1].deep_date }}
+path: .output/lake/{{product}}/{{ DAY[-1].deep_date }}
 # → .output/lake/orders/year=2026/month=01/day=16
 ```
 
 ### Hourly partitioning
 
 ```yaml
-path: .output/lake/{{product}}/{{ D[0].at06.deep_hour }}
+path: .output/lake/{{product}}/{{ DAY[0].at06.deep_hour }}
 # → .output/lake/orders/year=2026/month=01/day=17/hour=06
 ```
 
 ### Filesystem-safe timestamps
 
 ```yaml
-path: .output/archive/{{ D[0].flat_ts }}
+path: .output/archive/{{ DAY[0].flat_ts }}
 # → .output/archive/2026-01-17T10-30-45
 ```
 

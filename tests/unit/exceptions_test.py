@@ -121,7 +121,7 @@ def test_tiozin_unexpected_error_should_have_default_attributes():
 # ============================================================================
 # Testing Categorical Exceptions
 # ============================================================================
-def test_categorical_errors_should_have_correct_http_status():
+def test_categorical_errors_should_have_http_status():
     # Assert
     assert TiozinNotFoundError().http_status == 404
     assert TiozinConflictError().http_status == 409

@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import pendulum
 import pytest
+from freezegun import freeze_time
 
 from tiozin.compose import TemplateDate
 
@@ -55,6 +56,17 @@ def test_coerce_should_raise_type_error_when_value_is_invalid():
 # ============================================================================
 # core
 # ============================================================================
+
+
+@freeze_time(ISO)
+def test_template_date_should_default_to_now_when_no_dt():
+    # Act
+    result = TemplateDate().dt
+
+    # Assert
+    actual = result
+    expected = DT
+    assert actual == expected
 
 
 def test_template_date_should_store_datetime():

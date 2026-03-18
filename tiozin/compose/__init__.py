@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .proxies.tioproxy import tioproxy, TioProxyMeta
-from .templating.safe_env import SafeEnv
+from .templating.env import TemplateEnv as TemplateEnv
+from .templating.date import TemplateDate as TemplateDate
 
 from .classproperty import classproperty
 
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
     from .proxies.runner import RunnerProxy as RunnerProxy
     from .proxies.step import StepProxy as StepProxy
     from .templating.overlay import TiozinTemplateOverlay as TiozinTemplateOverlay
-    from .templating.date import TemplateDate as TemplateDate
 
 _DEFERRED = {
     "JobBuilder": ".assembly.job_builder",
@@ -29,7 +29,6 @@ _DEFERRED = {
     "RunnerProxy": ".proxies.runner",
     "StepProxy": ".proxies.step",
     "TiozinTemplateOverlay": ".templating.overlay",
-    "TemplateDate": ".templating.date",
 }
 
 
@@ -59,7 +58,7 @@ __all__ = [
     # Templating
     "TiozinTemplateOverlay",
     "TemplateDate",
-    "SafeEnv",
+    "TemplateEnv",
     # Other
     "classproperty",
 ]

@@ -2,7 +2,7 @@ import os
 from collections.abc import Mapping
 
 
-class SafeEnv(Mapping[str, str]):
+class TemplateEnv(Mapping[str, str]):
     """
     Environment view for templating.
 

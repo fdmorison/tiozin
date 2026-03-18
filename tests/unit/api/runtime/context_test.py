@@ -221,7 +221,7 @@ def test_build_template_vars_should_exclude_fields_with_template_false(job_conte
     assert actual == expected
 
 
-def test_build_template_vars_should_include_relative_date(
+def test_build_template_vars_should_include_day(
     job_context: Context,
 ):
     # Act
@@ -233,7 +233,8 @@ def test_build_template_vars_should_include_relative_date(
     assert actual == expected
 
 
-def test_build_template_vars_should_expose_correct_relative_date_values(
+@freeze_time(FROZEN_TIME)
+def test_build_template_vars_should_expose_day_values(
     job_context: Context,
 ):
     # Act
@@ -248,11 +249,11 @@ def test_build_template_vars_should_expose_correct_relative_date_values(
         "DD": str(result["DD"]),
     }
     expected = {
-        "ds": job_context.nominal_time.format("YYYY-MM-DD"),
-        "iso": job_context.nominal_time.format("YYYY-MM-DD[T]HH:mm:ssZ"),
-        "YYYY": job_context.nominal_time.format("YYYY"),
-        "MM": job_context.nominal_time.format("MM"),
-        "DD": job_context.nominal_time.format("DD"),
+        "ds": FROZEN_TIME_OBJ.format("YYYY-MM-DD"),
+        "iso": FROZEN_TIME_OBJ.format("YYYY-MM-DD[T]HH:mm:ssZ"),
+        "YYYY": FROZEN_TIME_OBJ.format("YYYY"),
+        "MM": FROZEN_TIME_OBJ.format("MM"),
+        "DD": FROZEN_TIME_OBJ.format("DD"),
     }
     assert actual == expected
 
@@ -279,7 +280,8 @@ def test_build_template_vars_should_override_base_with_context_fields(job_contex
     assert actual == expected
 
 
-def test_build_template_vars_should_override_base_with_relative_date(
+@freeze_time(FROZEN_TIME)
+def test_build_template_vars_should_override_base_with_day(
     job_context: Context,
 ):
     # Arrange
@@ -298,8 +300,8 @@ def test_build_template_vars_should_override_base_with_relative_date(
     }
 
     expected = {
-        "ds": job_context.nominal_time.format("YYYY-MM-DD"),
-        "YYYY": job_context.nominal_time.format("YYYY"),
+        "ds": FROZEN_TIME_OBJ.format("YYYY-MM-DD"),
+        "YYYY": FROZEN_TIME_OBJ.format("YYYY"),
     }
 
     assert actual == expected

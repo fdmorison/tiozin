@@ -5,11 +5,9 @@ from typing import TYPE_CHECKING
 
 import wrapt
 
-from tiozin.utils.helpers import utcnow
-
 from .. import TiozinTemplateOverlay
 from ..templating.date import TemplateDate
-from ..templating.safe_env import SafeEnv
+from ..templating.env import TemplateEnv
 
 if TYPE_CHECKING:
     from tiozin import Registry
@@ -27,9 +25,9 @@ class RegistryProxy(wrapt.ObjectProxy):
     Template variables available during registry setup:
 
     - ``ENV``: read-only view of ``os.environ`` via ``SafeEnv``
-    - ``DAY``, ``D``, ``day``, ``d``: ``TemplateDate`` anchored to the moment
-      ``setup()`` is called, plus all shorthand properties from
-      ``TemplateDate.to_dict()`` (e.g. ``ds``, ``ts``, ``flat_date``, …)
+    - ``DAY``: ``TemplateDate`` anchored to the moment ``setup()`` is called,
+      plus all shorthand properties from ``TemplateDate.to_dict()``
+      (e.g. ``ds``, ``ts``, ``flat_date``, …)
 
     This is an internal implementation detail. Tiozin developers should refer to
     the Registry base class for the public API contract.
@@ -39,15 +37,12 @@ class RegistryProxy(wrapt.ObjectProxy):
 
     def setup(self, *args, **kwargs) -> None:
         registry: Registry = self.__wrapped__
-        now = TemplateDate(utcnow())
+        now = TemplateDate()
         template_vars = FrozenMapping(
             {
-                "ENV": SafeEnv(),
+                "ENV": TemplateEnv(),
                 **now.to_dict(),
                 "DAY": now,
-                "D": now,
-                "day": now,
-                "d": now,
             }
         )
         self._overlay = TiozinTemplateOverlay(registry, template_vars)

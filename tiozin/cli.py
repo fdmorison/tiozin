@@ -16,7 +16,7 @@ cli = typer.Typer(
 )
 console = Console()
 
-ASCII_TIO = rf"""
+TIO_BANNER = rf"""
  _____ ___ ___ ________ _   _
 |_   _|_ _/ _ \__  /_ _| \ | |     _====_
   | |  | | | | |/ / | ||  \| |    @(■ᴗ■⌐)@  Transform Inputs into Outputs,
@@ -25,7 +25,7 @@ ASCII_TIO = rf"""
 
   {TITLE} - Your friendly ETL framework 🤓
 """
-console.print(ASCII_TIO)
+console.print(TIO_BANNER)
 
 
 @cli.command()
@@ -59,7 +59,7 @@ def validate(
     settings_file: str = typer.Option(None, "--settings-file", help="Path to the settings file."),
 ) -> None:
     """
-    Validate one or more job manifests without running them.
+    Validate one or more job without running them.
 
     Accepts one or more job identifiers resolvable via the job registry.
     Useful for CI/CD pipelines to catch manifest errors before execution.
