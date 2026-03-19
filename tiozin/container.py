@@ -3,7 +3,7 @@ from tiozin.api import Loggable, Registry
 from tiozin.compose.assembly.tiozin_factory import tiozin_factory
 
 
-class Lifecycle(Loggable):
+class AppContainer(Loggable):
     """
     Manages application lifecycle for registries.
 

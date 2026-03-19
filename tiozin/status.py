@@ -6,23 +6,14 @@ class AppStatus(StrEnum):
     """
     Represents the lifecycle states of a Tiozin application.
 
-    Tracks application lifecycle only — not job execution state.
+    Tracks application lifecycle only, not job execution state.
     Job execution is independent and not reflected here.
     """
 
     CREATED = auto()
-    # Application instance was created but not initialized yet.
-    # No resources were allocated and no setup was executed.
-
     BOOTING = auto()
-    # Application is initializing, no job can be executed yet.
-
     READY = auto()
-    # Application is fully initialized and accepting jobs.
-
     SHUTDOWN = auto()
-    # Application has shut down (terminal state).
-    # Reached on teardown or on a fatal initialization error.
 
     __transitions__: ClassVar[dict[Self, set[Self]]] = {
         CREATED: {CREATED, BOOTING, SHUTDOWN},
