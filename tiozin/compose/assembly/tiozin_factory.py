@@ -33,7 +33,7 @@ from tiozin.api.metadata.settings_manifest import (
     MetricRegistryManifest,
     SchemaRegistryManifest,
     SecretRegistryManifest,
-    SettingsRegistryManifest,
+    SettingRegistryManifest,
     TransactionRegistryManifest,
 )
 from tiozin.exceptions import (
@@ -56,7 +56,7 @@ _MANIFEST_ROLE_MAP = {
     OutputManifest: Output,
     TransformManifest: Transform,
     # Registries
-    SettingsRegistryManifest: SettingRegistry,
+    SettingRegistryManifest: SettingRegistry,
     JobRegistryManifest: JobRegistry,
     SchemaRegistryManifest: SchemaRegistry,
     SecretRegistryManifest: SecretRegistry,
@@ -66,7 +66,7 @@ _MANIFEST_ROLE_MAP = {
 }
 
 
-class TiozinRegistry(Loggable):
+class TiozinFactory(Loggable):
     """
     Discovers, registers, and resolves Tiozin plugins at runtime.
 
@@ -224,4 +224,4 @@ class TiozinRegistry(Loggable):
         return tiozin_instance
 
 
-tiozin_registry = TiozinRegistry()
+tiozin_factory = TiozinFactory()

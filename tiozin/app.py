@@ -3,12 +3,12 @@ import signal
 
 import wrapt
 
-from tiozin import Job, JobManifest, logs
-from tiozin.api import Loggable
-from tiozin.exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
-from tiozin.lifecycle import Lifecycle
-from tiozin.utils import as_flat_list
-from tiozin.utils.app_status import AppStatus
+from . import logs
+from .api import Job, JobManifest, Loggable
+from .container import AppContainer
+from .exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
+from .status import AppStatus
+from .utils import as_flat_list
 
 JobInput = str | JobManifest | Job
 
@@ -24,7 +24,7 @@ class TiozinApp(Loggable):
     def __init__(self, settings_file: str = None) -> None:
         super().__init__()
         self.status = AppStatus.CREATED
-        self.lifecycle = Lifecycle(settings_file)
+        self.lifecycle = AppContainer(settings_file)
 
     @wrapt.synchronized
     def setup(self) -> None:

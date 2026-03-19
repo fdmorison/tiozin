@@ -31,7 +31,7 @@ class SettingRegistry(Registry[SettingsManifest]):
         Raises:
             TiozinInternalError: If circular delegation is detected.
         """
-        from tiozin.compose.assembly.tiozin_registry import tiozin_registry
+        from tiozin.compose.assembly.tiozin_factory import tiozin_factory
 
         registry = self
         visited = []
@@ -51,7 +51,7 @@ class SettingRegistry(Registry[SettingsManifest]):
             if target_registry is None:
                 break
 
-            next_registry: SettingRegistry = tiozin_registry.load_manifest(target_registry)
+            next_registry: SettingRegistry = tiozin_factory.load_manifest(target_registry)
             TiozinInternalError.raise_if(
                 not next_registry.location,
                 f"Declared settings registry '{next_registry.kind}' has no location.",

@@ -3,8 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import tiozin.app
-from tiozin import Job
-from tiozin.api.metadata.job_manifest import JobManifest
+from tiozin import Job, JobManifest
 from tiozin.app import AppStatus, TiozinApp
 from tiozin.exceptions import TiozinInternalError
 
