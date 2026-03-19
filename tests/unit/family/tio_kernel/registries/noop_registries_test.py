@@ -19,6 +19,14 @@ NOOP_REGISTRY_CLASSES = [
     NoOpTransactionRegistry,
 ]
 
+NOOP_REGISTRY_CLASSES_RETURNING_NONE = [
+    NoOpLineageRegistry,
+    NoOpMetricRegistry,
+    NoOpSchemaRegistry,
+    NoOpSecretRegistry,
+    NoOpTransactionRegistry,
+]
+
 
 # ============================================================================
 # location
@@ -50,7 +58,7 @@ def test_noop_registry_should_use_provided_location_when_given(registry_class: t
 # ============================================================================
 # get()
 # ============================================================================
-@pytest.mark.parametrize("registry_class", NOOP_REGISTRY_CLASSES)
+@pytest.mark.parametrize("registry_class", NOOP_REGISTRY_CLASSES_RETURNING_NONE)
 def test_noop_registry_should_return_none_on_get(registry_class: type[Registry]):
     # Arrange
     registry = registry_class()
@@ -61,4 +69,19 @@ def test_noop_registry_should_return_none_on_get(registry_class: type[Registry])
     # Assert
     actual = result
     expected = None
+    assert actual == expected
+
+
+def test_noop_setting_registry_should_return_empty_manifest_on_get():
+    from tiozin.api import SettingsManifest
+
+    # Arrange
+    registry = NoOpSettingRegistry()
+
+    # Act
+    result = registry.get()
+
+    # Assert
+    actual = isinstance(result, SettingsManifest)
+    expected = True
     assert actual == expected

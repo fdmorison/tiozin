@@ -1,6 +1,6 @@
 registries:
 
-  settings:
+  setting:
     kind: FileSettingRegistry
     name: my-setting-registry-1
     location: tests/mocks/settings/delegate_2.yaml

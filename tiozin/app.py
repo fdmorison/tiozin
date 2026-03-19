@@ -4,7 +4,8 @@ import signal
 import wrapt
 
 from . import logs
-from .api import Job, JobManifest, Loggable
+from .api import Context, Job, JobManifest, Loggable
+from .api.registries.bundle import Registries
 from .container import AppContainer
 from .exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
 from .status import AppStatus
@@ -21,18 +22,22 @@ class TiozinApp(Loggable):
     graceful shutdown.
     """
 
-    def __init__(self, settings_file: str = None) -> None:
+    def __init__(self, settings_path: str = None) -> None:
         super().__init__()
-        self.status = AppStatus.CREATED
-        self.lifecycle = AppContainer(settings_file)
+        self._status = AppStatus.CREATED
+        self._containers = AppContainer(settings_path)
+
+    @property
+    def registries(self) -> Registries:
+        return self._containers.registries
 
     @wrapt.synchronized
     def setup(self) -> None:
-        if self.status.is_ready():
+        if self._status.is_ready():
             return
 
         self.info("Application is starting.")
-        self.status = self.status.set_booting()
+        self._status = self._status.set_booting()
 
         # Install Shutdown hooks
         def on_signal(signum, _) -> None:
@@ -46,17 +51,17 @@ class TiozinApp(Loggable):
         atexit.register(self.teardown)
 
         # Start registries
-        self.lifecycle.setup()
-        self.status = self.status.set_ready()
+        self._containers.setup()
+        self._status = self._status.set_ready()
         self.info("Application startup completed, ready to run jobs.")
 
     @wrapt.synchronized
     def teardown(self) -> None:
-        if self.status.is_shutdown():
+        if self._status.is_shutdown():
             return
         self.info("Application is shutting down...")
-        self.lifecycle.teardown()
-        self.status = self.status.set_shutdown()
+        self._containers.teardown()
+        self._status = self._status.set_shutdown()
         self.info("Application shutdown completed.")
 
     def validate(self, *jobs: str) -> None:
@@ -70,7 +75,7 @@ class TiozinApp(Loggable):
             try:
                 self.setup()
                 manifest = JobManifest.try_from_yaml_or_json(job)
-                manifest = manifest or self.lifecycle.job_registry.get(job)
+                manifest = manifest or self._containers.registries.job.get(job)
 
                 TiozinInputError.raise_if(
                     manifest is None,
@@ -102,7 +107,7 @@ class TiozinApp(Loggable):
                     # Attempt yaml string or JobManifest
                     manifest = JobManifest.try_from_yaml_or_json(job)
                     # Attempt identifier string
-                    manifest = manifest or self.lifecycle.job_registry.get(job)
+                    manifest = manifest or self._containers.registries.job.get(job)
                     # Manifest is parsed, now build the job
                     job = Job.builder().from_manifest(manifest).build()
 
@@ -111,8 +116,10 @@ class TiozinApp(Loggable):
                     f"Invalid job: {job}.",
                 )
 
-                data = job.submit()
-                results.append(data)
+                with Context.for_job(job, registries=self._containers.registries):
+                    data = job.submit()
+                    results.append(data)
+
             except TiozinUsageError as e:
                 self.error(e.message)
                 raise

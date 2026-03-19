@@ -47,7 +47,7 @@ Three ways to point Tiozin at a specific file, in order of precedence:
 **From the CLI:**
 
 ```bash
-tiozin run examples/jobs/dummy.yaml --settings-file tiozin.example.yaml
+tiozin run examples/jobs/dummy.yaml --settings-path tiozin.example.yaml
 ```
 
 **From Python:**
@@ -55,7 +55,7 @@ tiozin run examples/jobs/dummy.yaml --settings-file tiozin.example.yaml
 ```python
 from tiozin import TiozinApp
 
-app = TiozinApp(settings_file="tiozin.example.yaml")
+app = TiozinApp(settings_path="tiozin.example.yaml")
 app.run("examples/jobs/dummy.yaml")
 ```
 
@@ -64,6 +64,36 @@ app.run("examples/jobs/dummy.yaml")
 ```bash
 TIO_SETTING_REGISTRY_LOCATION=tiozin.example.yaml tiozin run examples/jobs/dummy.yaml
 ```
+
+## Validating jobs without running them
+
+`tiozin validate` checks one or more job manifests for errors without executing them.
+
+```bash
+tiozin validate examples/jobs/dummy.yaml
+```
+
+Validate multiple jobs in one call:
+
+```bash
+tiozin validate examples/jobs/ingest.yaml examples/jobs/transform.yaml
+```
+
+Use `--settings-path` to point at a specific settings file:
+
+```bash
+tiozin validate examples/jobs/dummy.yaml --settings-path tiozin.staging.yaml
+```
+
+Exit codes:
+
+| Code | Meaning |
+|---|---|
+| `0` | All jobs are valid |
+| `1` | Unexpected error (bug or provider error) |
+| `2` | Validation error (invalid manifest, missing fields, unknown job identifier) |
+
+Use `tiozin validate` in CI/CD pipelines to catch manifest errors before a job reaches production. It runs the full settings and registry stack but stops before building or submitting the job.
 
 ## Registry configuration
 
@@ -99,7 +129,7 @@ registries:
 
 | Registry | Default kind |
 |---|---|
-| `settings` | `tio_kernel:FileSettingRegistry` |
+| `setting` | `tio_kernel:FileSettingRegistry` |
 | `job` | `tio_kernel:FileJobRegistry` |
 | `schema` | `tio_kernel:NoOpSchemaRegistry` |
 | `secret` | `tio_kernel:NoOpSecretRegistry` |
@@ -140,12 +170,12 @@ Rendered values persist for the registry's entire lifetime. Tiozin restores the 
 
 ## Settings delegation
 
-A `tiozin.yaml` can delegate to another settings source by declaring `registries.settings`. Tiozin follows the chain until it reaches a file with no `settings` key.
+A `tiozin.yaml` can hand off its configuration to another settings file by declaring a `SettingRegistry` under `registries.setting`. Tiozin boots that registry and reads its configuration instead. If that file also declares a `registries.setting`, the process repeats. The chain stops at the first file that has no `setting` key.
 
 ```yaml
 # tiozin.yaml
 registries:
-  settings:
+  setting:
     kind: FileSettingRegistry
     location: shared/tiozin.yaml
 
@@ -155,14 +185,14 @@ registries:
 ```
 
 ```yaml
-# shared/tiozin.yaml (no settings key, delegation stops here)
+# shared/tiozin.yaml — no setting key, delegation stops here
 registries:
   schema:
     kind: NoOpSchemaRegistry
     location: http://schema-registry:8081
 ```
 
-Registries from the final file in the chain take effect. A declared `settings` entry must have a `location`. Declaring one without a location raises an error at startup. Tiozin also detects cycles: if the same location appears twice in the chain, it raises an error.
+The registries from the final file in the chain take effect. A declared `setting` entry must have a `location`. Declaring one without a location raises an error at startup. Tiozin also detects cycles: if the same location appears twice in the chain, it raises an error.
 
 ## Environment-only settings
 

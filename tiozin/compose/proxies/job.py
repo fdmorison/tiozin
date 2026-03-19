@@ -46,7 +46,7 @@ class JobProxy(wrapt.ObjectProxy):
 
     def submit(self) -> Any:
         job: Job = self.__wrapped__
-        context = Context.for_job(job)
+        context = Context.current(required=False) or Context.for_job(job)
 
         with context, TiozinTemplateOverlay(job, context.template_vars):
             try:

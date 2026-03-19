@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from types import MappingProxyType as FrozenMapping
 from typing import TYPE_CHECKING
 
 import wrapt
@@ -37,14 +36,12 @@ class RegistryProxy(wrapt.ObjectProxy):
 
     def setup(self, *args, **kwargs) -> None:
         registry: Registry = self.__wrapped__
+
         now = TemplateDate()
-        template_vars = FrozenMapping(
-            {
-                "ENV": TemplateEnv(),
-                **now.to_dict(),
-                "DAY": now,
-            }
-        )
+        template_vars = now.to_dict()
+        template_vars["DAY"] = now
+        template_vars["ENV"] = TemplateEnv()
+
         self._overlay = TiozinTemplateOverlay(registry, template_vars)
         self._overlay.__enter__()
         registry.setup(*args, **kwargs)

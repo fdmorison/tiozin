@@ -92,20 +92,24 @@ def job_stub(
 
 
 @pytest.fixture()
-def job_context(job_stub: JobStub) -> Context:
-    return Context.for_job(job_stub)
+def job_context(job_stub: JobStub):
+    with Context.for_job(job_stub) as ctx:
+        yield ctx
 
 
 @pytest.fixture()
-def input_context(job_context: Context, input_stub: InputStub) -> Context:
-    return job_context.for_child_step(input_stub)
+def input_context(job_context: Context, input_stub: InputStub):
+    with job_context.for_child_step(input_stub) as ctx:
+        yield ctx
 
 
 @pytest.fixture()
-def transform_context(job_context: Context, transform_stub: TransformStub) -> Context:
-    return job_context.for_child_step(transform_stub)
+def transform_context(job_context: Context, transform_stub: TransformStub):
+    with job_context.for_child_step(transform_stub) as ctx:
+        yield ctx
 
 
 @pytest.fixture()
-def output_context(job_context: Context, output_stub: OutputStub) -> Context:
-    return job_context.for_child_step(output_stub)
+def output_context(job_context: Context, output_stub: OutputStub):
+    with job_context.for_child_step(output_stub) as ctx:
+        yield ctx

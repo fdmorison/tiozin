@@ -28,41 +28,42 @@ def test_for_job_should_create_job_context(
     job = job_stub
 
     # Act
-    context = Context.for_job(job_stub)
-
-    # Assert
-    actual = {
-        f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
-    }
-    expected = {
-        # Root reference
-        "job": context,
-        # Identity
-        "name": job.name,
-        "slug": job.slug,
-        "kind": job.kind,
-        "tiozin_role": job.tiozin_role,
-        # Domain / Governance
-        **fake_domain,
-        **fake_governance,
-        # Tiozin arguments
-        "options": job.options,
-        # Runtime Identity
-        "run_id": ANY,
-        "run_attempt": 1,
-        "nominal_time": FROZEN_TIME_OBJ,
-        # Runtime Lifecycle
-        "runner": job.runner,
-        "setup_at": None,
-        "executed_at": None,
-        "teardown_at": None,
-        "finished_at": None,
-        # Infra
-        "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
-        "template_vars": ANY,
-        "shared": {},
-    }
-    assert actual == expected
+    with Context.for_job(job_stub) as context:
+        # Assert
+        actual = {
+            f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
+        }
+        expected = {
+            # Root reference
+            "job": context,
+            # Identity
+            "name": job.name,
+            "slug": job.slug,
+            "kind": job.kind,
+            "tiozin_role": job.tiozin_role,
+            # Domain / Governance
+            **fake_domain,
+            **fake_governance,
+            # Tiozin arguments
+            "options": job.options,
+            # Runtime Identity
+            "run_id": ANY,
+            "run_attempt": 1,
+            "nominal_time": FROZEN_TIME_OBJ,
+            # Runtime Lifecycle
+            "runner": job.runner,
+            "setup_at": None,
+            "executed_at": None,
+            "teardown_at": None,
+            "finished_at": None,
+            # Registries
+            "registries": ANY,
+            # Infra
+            "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
+            "template_vars": ANY,
+            "shared": {},
+        }
+        assert actual == expected
 
 
 @freeze_time(FROZEN_TIME)
@@ -104,6 +105,8 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "executed_at": None,
         "teardown_at": None,
         "finished_at": None,
+        # Registries
+        "registries": ANY,
         # Infra
         "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
         "template_vars": ANY,
@@ -158,6 +161,8 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "executed_at": None,
         "teardown_at": None,
         "finished_at": None,
+        # Registries (inherited from job context)
+        "registries": job_context.registries,
         # Infra
         "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),
         "template_vars": ANY,
@@ -209,6 +214,7 @@ def test_build_template_vars_should_exclude_fields_with_template_false(job_conte
     # Assert
     excluded = {
         "runner",
+        "registries",
         "shared",
         "template_vars",
         "setup_at",

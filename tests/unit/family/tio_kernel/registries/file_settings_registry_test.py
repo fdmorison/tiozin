@@ -13,7 +13,7 @@ from tiozin.api.metadata.settings_manifest import (
     SecretRegistryManifest,
     TransactionRegistryManifest,
 )
-from tiozin.exceptions import SettingsNotFoundError, TiozinInternalError
+from tiozin.exceptions import SettingsNotFoundError
 from tiozin.family.tio_kernel import FileSettingRegistry
 
 MOCK_DIR = Path("tests/mocks/settings")
@@ -95,13 +95,13 @@ def test_get_should_load_manifest_from_builtin_settings():
     assert actual == expected
 
 
-def test_get_should_fail_when_path_not_found():
+def test_setup_should_fail_when_path_not_found():
     # Arrange
     registry = FileSettingRegistry(location="missing.yaml")
 
     # Act / Assert
     with pytest.raises(SettingsNotFoundError):
-        registry.get()
+        registry.setup()
 
 
 # ============================================================================
@@ -142,74 +142,3 @@ def test_register_should_fail_on_unsupported_extension(tmp_path):
     # Act / Assert
     with pytest.raises(ValueError, match="Unsupported settings format"):
         registry.register(str(tmp_path / "tiozin.toml"), manifest)
-
-
-# ============================================================================
-# delegate()
-# ============================================================================
-def test_delegate_should_load_settings_from_target():
-    # Arrange
-    registry = FileSettingRegistry(location=MOCK_DIR / "delegate_to_default.yaml")
-
-    # Act
-    target_registry = registry.delegate()
-
-    # Assert
-    actual = target_registry.get().model_dump()
-    expected = manifest_mock(1).model_dump()
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "tiozin_yaml",
-    [
-        "delegate_1.yaml",
-        "delegate_2.yaml",
-        "delegate_3.yaml",
-    ],
-)
-def test_delegate_should_resolve_multiple_registries(tiozin_yaml: str):
-    # Arrange
-    registry = FileSettingRegistry(location=MOCK_DIR / tiozin_yaml)
-
-    # Act
-    target_registry = registry.delegate()
-
-    # Assert
-    actual = (
-        target_registry.kind,
-        target_registry.name,
-        target_registry.get(),
-    )
-    expected = (
-        "NoOpSettingRegistry",
-        "my-job-registry-3",
-        None,
-    )
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "tiozin_yaml",
-    [
-        "delegate_to_location_empty.yaml",
-        "delegate_to_location_missing.yaml",
-        "delegate_to_location_null.yaml",
-    ],
-)
-def test_delegate_should_fail_when_declared_registry_has_no_location(tiozin_yaml: str):
-    # Arrange
-    registry = FileSettingRegistry(location=MOCK_DIR / tiozin_yaml)
-
-    # Act / Assert
-    with pytest.raises(TiozinInternalError):
-        registry.delegate()
-
-
-def test_delegate_should_fail_on_circular_reference():
-    # Arrange
-    registry = FileSettingRegistry(location=MOCK_DIR / "delegate_circular.yaml")
-
-    # Act / Assert
-    with pytest.raises(TiozinInternalError, match="Circular settings delegation"):
-        registry.delegate()
