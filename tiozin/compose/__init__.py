@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 _DEFERRED = {
     "JobBuilder": ".assembly.job_builder",
-    "TiozinFactory": ".assembly.tiozin_registry",
+    "TiozinFactory": ".assembly.tiozin_factory",
     "TiozinScanner": ".assembly.tiozin_scanner",
     "JobProxy": ".proxies.job",
     "RegistryProxy": ".proxies.registry",
