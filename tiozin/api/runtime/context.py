@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
+from tiozin.api.registries.bundle import Registries
 from tiozin.compose import TemplateDate, TemplateEnv
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
@@ -107,6 +108,13 @@ class Context:
     finished_at: DateTime | None = field(default=None, metadata={"template": False})
 
     # ==================================================
+    # Registries
+    # ==================================================
+    registries: Registries = field(
+        default_factory=Registries, repr=False, metadata={"template": False}
+    )
+
+    # ==================================================
     # Infra
     # ==================================================
     temp_workdir: Path = field(init=False)
@@ -172,7 +180,7 @@ class Context:
     # ==================================================
 
     @classmethod
-    def for_job(cls, job: Job) -> Context:
+    def for_job(cls, job: Job, registries: Registries = None) -> Context:
         ctx = cls(
             name=job.name,
             slug=job.slug,
@@ -190,6 +198,7 @@ class Context:
             owner=job.owner,
             labels=job.labels,
             options=job.options,
+            registries=registries or Registries(),
         )
         ctx.job = ctx
         ctx.runner = job.runner
@@ -200,7 +209,7 @@ class Context:
         return ctx
 
     @classmethod
-    def for_step(cls, step: EtlStep) -> Context:
+    def for_step(cls, step: EtlStep, registries: Registries = None) -> Context:
         ctx = cls(
             name=step.name,
             slug=step.slug,
@@ -218,6 +227,7 @@ class Context:
             owner=None,
             labels={},
             options=step.options,
+            registries=registries or Registries(),
         )
         ctx.job = None
         ctx.runner = None
@@ -246,6 +256,7 @@ class Context:
             labels=self.labels,
             shared=self.shared,
             options=step.options,
+            registries=self.registries,
         )
         ctx.job = self.job
         ctx.runner = self.job.runner

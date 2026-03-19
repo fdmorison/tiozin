@@ -1,6 +1,6 @@
 registries:
 
-  settings:
+  setting:
     kind: FileSettingRegistry
     nmae: test_registry
     #location: missing

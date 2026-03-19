@@ -8,12 +8,12 @@ from tiozin.app import AppStatus, TiozinApp
 from tiozin.exceptions import TiozinInternalError
 
 
-def test_app_should_forward_settings_file_to_lifecycle():
+def test_app_should_forward_settings_path_to_container():
     # Arrange / Act
-    app = TiozinApp(settings_file="custom/tiozin.yaml")
+    app = TiozinApp(settings_path="custom/tiozin.yaml")
 
     # Assert
-    actual = app.lifecycle.settings_file
+    actual = app._containers.settings_path
     expected = "custom/tiozin.yaml"
     assert actual == expected
 
@@ -24,17 +24,23 @@ def mock_signals():
         yield mock_signal, mock_atexit
 
 
+@pytest.fixture(scope="function", autouse=True)
+def mock_context_for_job():
+    with patch("tiozin.app.Context.for_job", return_value=MagicMock()) as mock:
+        yield mock
+
+
 @pytest.fixture(scope="function")
 def created_app() -> TiozinApp:
     app = TiozinApp()
-    app.lifecycle = MagicMock()
+    app._containers = MagicMock()
     return app
 
 
 @pytest.fixture(scope="function")
 def ready_app(created_app: TiozinApp) -> TiozinApp:
-    created_app.lifecycle = MagicMock()
-    created_app.status = AppStatus.READY
+    created_app._containers = MagicMock()
+    created_app._status = AppStatus.READY
     return created_app
 
 
@@ -47,7 +53,7 @@ def test_setup_should_leave_application_ready_when_success(
 
     # Assert
     set_booting.assert_called_once()
-    assert created_app.status.is_ready()
+    assert created_app._status.is_ready()
 
 
 def test_setup_should_set_booting_before_initialization(created_app: TiozinApp):
@@ -56,9 +62,9 @@ def test_setup_should_set_booting_before_initialization(created_app: TiozinApp):
 
     def mocked_setup():
         nonlocal actual_status
-        actual_status = created_app.status
+        actual_status = created_app._status
 
-    created_app.lifecycle.setup.side_effect = mocked_setup
+    created_app._containers.setup.side_effect = mocked_setup
 
     # Act
     created_app.setup()
@@ -73,7 +79,7 @@ def test_setup_should_be_idempotent(created_app: TiozinApp):
     created_app.setup()
 
     # Assert
-    created_app.lifecycle.setup.assert_called_once()
+    created_app._containers.setup.assert_called_once()
 
 
 def test_setup_should_install_shutdown_hooks(
@@ -101,8 +107,8 @@ def test_teardown_should_shutdown(ready_app: TiozinApp):
     ready_app.teardown()
 
     # Assert
-    ready_app.lifecycle.teardown.assert_called()
-    assert ready_app.status.is_shutdown()
+    ready_app._containers.teardown.assert_called()
+    assert ready_app._status.is_shutdown()
 
 
 def test_teardown_should_be_idempotent(ready_app: TiozinApp):
@@ -111,7 +117,7 @@ def test_teardown_should_be_idempotent(ready_app: TiozinApp):
     ready_app.teardown()
 
     # Assert
-    ready_app.lifecycle.teardown.assert_called_once()
+    ready_app._containers.teardown.assert_called_once()
 
 
 @patch.object(tiozin.app.Job, "builder")
@@ -234,7 +240,7 @@ def test_run_should_accept_identifier_string_from_registry(
     job_builder: MagicMock, ready_app: TiozinApp
 ):
     # Arrange
-    ready_app.lifecycle.job_registry.get.return_value = JobManifest(
+    ready_app._containers.job_registry.get.return_value = JobManifest(
         kind="Job",
         name="test_job",
         org="tiozin",

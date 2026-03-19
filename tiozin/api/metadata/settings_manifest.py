@@ -106,7 +106,7 @@ class Registries(BaseModel):
     A None value for ``settings`` signals the end of settings delegation.
     """
 
-    settings: SettingRegistryManifest | None = None
+    setting: SettingRegistryManifest | None = None
     job: JobRegistryManifest = Field(default_factory=JobRegistryManifest)
     schema: SchemaRegistryManifest = Field(default_factory=SchemaRegistryManifest)
     secret: SecretRegistryManifest = Field(default_factory=SecretRegistryManifest)

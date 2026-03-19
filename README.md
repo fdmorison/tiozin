@@ -113,6 +113,7 @@ Tiozin is human-readable and machine-generatable:
 ### Extending Tiozin
 - [Creating a Provider Family](https://github.com/fdmorison/tiozin/blob/main/docs/extending/families.md)
 - [Creating Pluggable Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/tiozins.md)
+- [Accessing Registries in Plugins](https://github.com/fdmorison/tiozin/blob/main/docs/registries.md)
 - [tio_kernel](https://github.com/fdmorison/tiozin/blob/main/docs/tio_kernel/index.md)
 - [tio_spark](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
 - [tio_duckdb](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)

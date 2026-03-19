@@ -31,7 +31,7 @@ console.print(TIO_BANNER)
 @cli.command()
 def run(
     jobs: list[str] = typer.Argument(REQUIRED, help="Identifiers of the jobs to run."),
-    settings_file: str = typer.Option(None, "--settings-file", help="Path to the settings file."),
+    settings_path: str = typer.Option(None, "--settings-path", help="Path to the settings file."),
 ) -> None:
     """
     Submit and run one or more jobs.
@@ -45,7 +45,7 @@ def run(
     console.print(f"[green]▶ Starting jobs:[/green] [bold cyan]{human_join(jobs)}[/bold cyan]\n")
 
     try:
-        app = TiozinApp(settings_file)
+        app = TiozinApp(settings_path)
         app.run(*jobs)
     except TiozinUsageError:
         raise typer.Exit(code=2) from None
@@ -56,7 +56,7 @@ def run(
 @cli.command()
 def validate(
     jobs: list[str] = typer.Argument(REQUIRED, help="Identifiers of the jobs to validate."),
-    settings_file: str = typer.Option(None, "--settings-file", help="Path to the settings file."),
+    settings_path: str = typer.Option(None, "--settings-path", help="Path to the settings file."),
 ) -> None:
     """
     Validate one or more job without running them.
@@ -72,7 +72,7 @@ def validate(
     console.print(f"[green]▶ Validating jobs:[/green] [bold cyan]{human_join(jobs)}[/bold cyan]\n")
 
     try:
-        app = TiozinApp(settings_file)
+        app = TiozinApp(settings_path)
         app.validate(*jobs)
     except TiozinUsageError:
         raise typer.Exit(code=2) from None

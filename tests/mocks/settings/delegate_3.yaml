@@ -1,6 +1,6 @@
 registries:
 
-  settings:
+  setting:
     kind: NoOpSettingRegistry
     name: my-job-registry-3
 

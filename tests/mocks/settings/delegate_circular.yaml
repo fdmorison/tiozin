@@ -1,5 +1,5 @@
 registries:
 
-  settings:
+  setting:
     kind: FileSettingRegistry
     location: tests/mocks/settings/delegate_circular.yaml

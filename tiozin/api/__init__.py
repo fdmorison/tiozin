@@ -9,6 +9,7 @@ from .registry import Registry as Registry
 from .metadata.job_manifest import JobManifest as JobManifest
 from .metadata.settings_manifest import SettingsManifest as SettingsManifest
 
+from .registries.bundle import Registries as Registries
 from .registries.job_registry import JobRegistry as JobRegistry
 from .registries.lineage_registry import LineageRegistry as LineageRegistry
 from .registries.metric_registry import MetricRegistry as MetricRegistry

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
+from importlib import import_module
 from .proxies.tioproxy import tioproxy, TioProxyMeta
 from .templating.env import TemplateEnv as TemplateEnv
 from .templating.date import TemplateDate as TemplateDate
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from .proxies.job import JobProxy as JobProxy
     from .proxies.registry import RegistryProxy as RegistryProxy
     from .proxies.runner import RunnerProxy as RunnerProxy
+    from .proxies.setting import SettingRegistryProxy as SettingRegistryProxy
     from .proxies.step import StepProxy as StepProxy
     from .templating.overlay import TiozinTemplateOverlay as TiozinTemplateOverlay
 
@@ -27,6 +28,7 @@ _DEFERRED = {
     "JobProxy": ".proxies.job",
     "RegistryProxy": ".proxies.registry",
     "RunnerProxy": ".proxies.runner",
+    "SettingRegistryProxy": ".proxies.setting",
     "StepProxy": ".proxies.step",
     "TiozinTemplateOverlay": ".templating.overlay",
 }
@@ -34,8 +36,6 @@ _DEFERRED = {
 
 def __getattr__(name: str):
     if name in _DEFERRED:
-        from importlib import import_module
-
         mod = import_module(_DEFERRED[name], __name__)
         val = getattr(mod, name)
         globals()[name] = val
@@ -54,6 +54,7 @@ __all__ = [
     "JobProxy",
     "RegistryProxy",
     "RunnerProxy",
+    "SettingRegistryProxy",
     "StepProxy",
     # Templating
     "TiozinTemplateOverlay",

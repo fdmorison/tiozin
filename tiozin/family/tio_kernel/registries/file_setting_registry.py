@@ -66,8 +66,6 @@ class FileSettingRegistry(SettingRegistry):
         Returns:
             The SettingsManifest. Falls back to built-in defaults if no settings file found.
         """
-        self.setup()
-
         if not self.location:
             return SettingsManifest.from_arguments()
 
