@@ -27,6 +27,12 @@ jobs:
             style
             ci
             build
+          scopes: |
+            core
+            tio_kernel
+            tio_duckdb
+            tio_spark
+          requireScope: true
 
   validate-commits:
     runs-on: ubuntu-latest
