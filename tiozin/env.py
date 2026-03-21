@@ -46,6 +46,9 @@ TIO_LOG_JSON_ENSURE_ASCII = _env.bool("TIO_LOG_JSON_ENSURE_ASCII", False)
 # TIO_LOG_SHOW_LOCALS - Show local variables in exception tracebacks.
 TIO_LOG_SHOW_LOCALS = _env.bool("TIO_LOG_SHOW_LOCALS", False)
 
+# TIO_LOG_REDACT_MIN_LENGTH - Minimum secret length to qualify for redaction in logs.
+TIO_LOG_REDACT_MIN_LENGTH = _env.int("TIO_LOG_REDACT_MIN_LENGTH", 3)
+
 # ===============================================
 #           Registry configurations (all attribute defaults are null)
 # ===============================================
