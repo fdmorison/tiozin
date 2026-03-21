@@ -30,7 +30,7 @@ registries:
     cache: false
 
   lineage:
-    kind: NoOpLineageRegistry
+    kind: OpenLineageRegistry
     name: my-lineage-registry
     description: Lineage registry for tracking data pipeline provenance
     location: http://localhost:5000
