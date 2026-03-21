@@ -23,7 +23,6 @@ NOOP_REGISTRY_CLASSES_RETURNING_NONE = [
     NoOpLineageRegistry,
     NoOpMetricRegistry,
     NoOpSchemaRegistry,
-    NoOpSecretRegistry,
     NoOpTransactionRegistry,
 ]
 

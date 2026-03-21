@@ -31,6 +31,7 @@ from .registries.file_setting_registry import FileSettingRegistry
 from .registries.noop_lineage_registry import NoOpLineageRegistry
 from .registries.noop_metric_registry import NoOpMetricRegistry
 from .registries.noop_schema_registry import NoOpSchemaRegistry
+from .registries.env_secret_registry import EnvSecretRegistry
 from .registries.noop_secret_registry import NoOpSecretRegistry
 from .registries.noop_setting_registry import NoOpSettingRegistry
 from .registries.noop_transaction_registry import NoOpTransactionRegistry
@@ -46,6 +47,7 @@ __all__ = [
     "NoOpLineageRegistry",
     "NoOpMetricRegistry",
     "NoOpSchemaRegistry",
+    "EnvSecretRegistry",
     "NoOpSecretRegistry",
     "NoOpSettingRegistry",
     "NoOpTransactionRegistry",

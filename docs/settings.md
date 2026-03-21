@@ -132,7 +132,7 @@ registries:
 | `setting` | `tio_kernel:FileSettingRegistry` |
 | `job` | `tio_kernel:FileJobRegistry` |
 | `schema` | `tio_kernel:NoOpSchemaRegistry` |
-| `secret` | `tio_kernel:NoOpSecretRegistry` |
+| `secret` | `tio_kernel:EnvSecretRegistry` |
 | `transaction` | `tio_kernel:NoOpTransactionRegistry` |
 | `lineage` | `tio_kernel:NoOpLineageRegistry` |
 | `metric` | `tio_kernel:NoOpMetricRegistry` |
@@ -252,7 +252,7 @@ Every registry field has a matching environment variable. These act as defaults:
 
 | Variable | Default |
 |---|---|
-| `TIO_SECRET_REGISTRY_KIND` | `tio_kernel:NoOpSecretRegistry` |
+| `TIO_SECRET_REGISTRY_KIND` | `tio_kernel:EnvSecretRegistry` |
 | `TIO_SECRET_REGISTRY_LOCATION` | `null` |
 | `TIO_SECRET_REGISTRY_TIMEOUT` | `null` |
 | `TIO_SECRET_REGISTRY_READONLY` | `null` |

@@ -24,6 +24,10 @@ from tiozin.exceptions.misc import (
     ProxyError,
     RequiredArgumentError,
 )
+from tiozin.api.metadata.secret.exceptions import (
+    SecretError,
+    SecretNotFoundError,
+)
 from tiozin.api.metadata.job.exceptions import (
     JobAlreadyExistsError,
     JobError,
@@ -68,6 +72,8 @@ __all__ = [
     "SchemaNotFoundError",
     "SettingsError",
     "SettingsNotFoundError",
+    "SecretError",
+    "SecretNotFoundError",
     "PluginError",
     "PluginNotFoundError",
     "PluginConflictError",

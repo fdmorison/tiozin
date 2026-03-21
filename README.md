@@ -52,7 +52,9 @@ model: customers
 
 runner:
   kind: NoOpRunner
+  name: postgres
   log_level: "{{ ENV.LOG_LEVEL }}"
+  db_url: postgres://user:{{ SECRET.FAKE_PASSWORD }}@host:5432/dbname
 
 inputs:
   - kind: NoOpInput

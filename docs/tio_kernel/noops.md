@@ -71,7 +71,7 @@ outputs:
 
 ## NoOp registries
 
-NoOp registries return `None` from `get()` and discard all calls to `register()`. Use them when the real registry is not available.
+NoOp registries do nothing. Use them when the real registry is not available.
 
 | Kind | Contract |
 |---|---|

@@ -1,7 +1,11 @@
+from tiozin.compose import SecretRegistryProxy, tioproxy
+
 from ...registry import Registry
+from .model import Secret
 
 
-class SecretRegistry(Registry[object]):
+@tioproxy(SecretRegistryProxy)
+class SecretRegistry(Registry[Secret]):
     """
     Manages secrets and credentials.
 

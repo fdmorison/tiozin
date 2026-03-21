@@ -9,7 +9,7 @@ registries:
     name: my-schema-registry-1
 
   secret:
-    kind: tio_kernel:NoOpSecretRegistry
+    kind: tio_kernel:EnvSecretRegistry
     name: my-secret-registry-1
 
   transaction:
