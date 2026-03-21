@@ -33,7 +33,7 @@ log_date_format = env.TIO_LOG_DATE_FORMAT
 log_json = env.TIO_LOG_JSON
 log_json_ensure_ascii = env.TIO_LOG_JSON_ENSURE_ASCII
 log_show_locals = env.TIO_LOG_SHOW_LOCALS
-
+log_redact_min_length = env.TIO_LOG_REDACT_MIN_LENGTH
 # ===============================================
 #           Tiozin Plugins
 # ===============================================

@@ -17,15 +17,19 @@ from unittest.mock import patch
 
 import pytest
 
-from tiozin import TiozinApp, logs
+from tiozin import TiozinApp
 from tiozin.exceptions import TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpRunner, NoOpTransform
+from tiozin.logs.service import LogService
 
 
 @pytest.fixture
 def app_secure():
-    with patch("tiozin.config.log_show_locals", False):
-        logs.setup()
+    with (
+        patch("tiozin.config.log_show_locals", False),
+        patch("tiozin.logs.log_service", LogService(propagate=True)) as mock_log_service,
+    ):
+        mock_log_service.setup()
         app = TiozinApp()
         yield app
         app.teardown()
@@ -33,8 +37,11 @@ def app_secure():
 
 @pytest.fixture
 def app_insecure():
-    with patch("tiozin.config.log_show_locals", True):
-        logs.setup()
+    with (
+        patch("tiozin.config.log_show_locals", True),
+        patch("tiozin.logs.log_service", LogService(propagate=True)) as mock_log_service,
+    ):
+        mock_log_service.setup()
         app = TiozinApp()
         yield app
         app.teardown()
@@ -43,7 +50,7 @@ def app_insecure():
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
 def test_exception_traceback_should_not_expose_local_variables(
-    _atexit, _signal, app_secure: TiozinApp, capfd: pytest.CaptureFixture[str]
+    _atexit, _signal, app_secure: TiozinApp, capsys: pytest.CaptureFixture[str]
 ) -> None:
     # Arrange
     fake_secret = "secret123"
@@ -72,14 +79,18 @@ def test_exception_traceback_should_not_expose_local_variables(
         app_secure.run(job)
 
     # Assert
-    output = capfd.readouterr().out
-    assert fake_secret not in output
+    actual = fake_secret in capsys.readouterr().out
+    expected = False
+    assert actual == expected
 
 
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
 def test_exception_traceback_should_expose_local_variables(
-    _atexit, _signal, app_insecure: TiozinApp, capfd: pytest.CaptureFixture[str]
+    _atexit,
+    _signal,
+    app_insecure: TiozinApp,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     # Arrange
     fake_secret = "secret123"
@@ -108,5 +119,4 @@ def test_exception_traceback_should_expose_local_variables(
         app_insecure.run(job)
 
     # Assert
-    output = capfd.readouterr().out
-    assert fake_secret in output
+    assert fake_secret in caplog.text
