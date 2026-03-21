@@ -17,10 +17,44 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d
     networks:
       - tiozin-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tiozin -d tiozin"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  marquez:
+    image: marquezproject/marquez:latest
+    container_name: tiozin-marquez
+    environment:
+      MARQUEZ_CONFIG: /opt/marquez/marquez.yml
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: marquez
+    volumes:
+      - ./docker/marquez/marquez.yml:/opt/marquez/marquez.yml
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tiozin-net
+
+  marquez-web:
+    image: marquezproject/marquez-web:latest
+    container_name: tiozin-marquez-web
+    environment:
+      WEB_PORT: 3000
+      MARQUEZ_HOST: marquez
+      MARQUEZ_PORT: 5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - marquez
+    networks:
+      - tiozin-net
