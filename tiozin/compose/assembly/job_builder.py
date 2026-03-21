@@ -2,7 +2,7 @@ from typing import Any, Self, TypeAlias
 
 from tiozin import logs
 from tiozin.api import EtlStep, Input, Job, JobManifest, Output, Runner, Tiozin, Transform
-from tiozin.api.metadata.job_manifest import (
+from tiozin.api.metadata.job.manifest import (
     InputManifest,
     OutputManifest,
     RunnerManifest,

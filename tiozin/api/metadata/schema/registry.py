@@ -1,4 +1,4 @@
-from ..registry import Registry
+from ...registry import Registry
 
 
 class SchemaRegistry(Registry[object]):

@@ -1,7 +1,4 @@
 # isort: skip_file
-# flake8: noqa
-# noop: 2026-01-22 02:08:00
-
 """
 Tiozin - A friendly ETL framework
 

@@ -32,12 +32,10 @@ from .transforms.sql_transform import DuckdbSqlTransform
 from .transforms.word_count_transform import DuckdbWordCountTransform
 
 __all__ = [
-    # Abstracts
     "DuckdbInput",
     "DuckdbTransform",
     "DuckdbCoTransform",
     "DuckdbOutput",
-    # Concrete implementations
     "DuckdbRunner",
     "DuckdbFileInput",
     "DuckdbFileOutput",

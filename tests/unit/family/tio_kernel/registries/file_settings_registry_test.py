@@ -5,55 +5,16 @@ import pytest
 
 import tiozin.config as config
 from tiozin.api import SettingsManifest
-from tiozin.api.metadata.settings_manifest import (
-    JobRegistryManifest,
-    LineageRegistryManifest,
-    MetricRegistryManifest,
-    SchemaRegistryManifest,
-    SecretRegistryManifest,
-    TransactionRegistryManifest,
-)
 from tiozin.exceptions import SettingsNotFoundError
 from tiozin.family.tio_kernel import FileSettingRegistry
 
 MOCK_DIR = Path("tests/mocks/settings")
 
 
-def manifest_mock(n: int = 1) -> SettingsManifest:
-    return SettingsManifest(
-        registries=dict(
-            job=JobRegistryManifest(
-                kind="FileJobRegistry",
-                name=f"my-job-registry-{n}",
-            ),
-            schema=SchemaRegistryManifest(
-                kind="NoOpSchemaRegistry",
-                name=f"my-schema-registry-{n}",
-            ),
-            secret=SecretRegistryManifest(
-                kind="NoOpSecretRegistry",
-                name=f"my-secret-registry-{n}",
-            ),
-            transaction=TransactionRegistryManifest(
-                kind="NoOpTransactionRegistry",
-                name=f"my-transaction-registry-{n}",
-            ),
-            lineage=LineageRegistryManifest(
-                kind="NoOpLineageRegistry",
-                name=f"my-lineage-registry-{n}",
-            ),
-            metric=MetricRegistryManifest(
-                kind="NoOpMetricRegistry",
-                name=f"my-metric-registry-{n}",
-            ),
-        )
-    )
-
-
 # ============================================================================
 # get()
 # ============================================================================
-def test_get_should_load_manifest_from_file():
+def test_get_should_load_manifest_from_file(default_settings_manifest):
     # Arrange
     registry = FileSettingRegistry(location=MOCK_DIR / "default.yaml")
 
@@ -62,12 +23,12 @@ def test_get_should_load_manifest_from_file():
 
     # Assert
     actual = result
-    expected = manifest_mock(1)
+    expected = default_settings_manifest
     assert actual == expected
 
 
 @patch.object(config, "tiozin_settings_search_paths", (MOCK_DIR / "default.yaml",))
-def test_get_should_load_manifest_from_search_paths():
+def test_get_should_load_manifest_from_search_paths(default_settings_manifest):
     # Arrange
     registry = FileSettingRegistry()
     registry.setup()
@@ -77,7 +38,7 @@ def test_get_should_load_manifest_from_search_paths():
 
     # Assert
     actual = result
-    expected = manifest_mock(1)
+    expected = default_settings_manifest
     assert actual == expected
 
 

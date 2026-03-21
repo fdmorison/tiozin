@@ -1,18 +1,52 @@
 # isort: skip_file
-# flake8: noqa
+"""
+tio_kernel public API.
 
-from .inputs.noop_input import NoOpInput as NoOpInput
-from .outputs.noop_output import NoOpOutput as NoOpOutput
-from .transforms.noop_transform import NoOpTransform as NoOpTransform
-from .runners.noop_runner import NoOpRunner as NoOpRunner
-from .jobs.linear_job import LinearJob as LinearJob
+This module defines the public, stable interface of the kernel provider
+used by Tiozin pipelines.
 
-from .registries.file_job_registry import FileJobRegistry as FileJobRegistry
-from .registries.file_setting_registry import FileSettingRegistry as FileSettingRegistry
+Only the symbols exported here are considered part of the supported API.
+All other modules and classes inside this package are internal implementation
+details and may change without notice.
+"""
 
-from .registries.noop_lineage_registry import NoOpLineageRegistry as NoOpLineageRegistry
-from .registries.noop_metric_registry import NoOpMetricRegistry as NoOpMetricRegistry
-from .registries.noop_schema_registry import NoOpSchemaRegistry as NoOpSchemaRegistry
-from .registries.noop_secret_registry import NoOpSecretRegistry as NoOpSecretRegistry
-from .registries.noop_setting_registry import NoOpSettingRegistry as NoOpSettingRegistry
-from .registries.noop_transaction_registry import NoOpTransactionRegistry as NoOpTransactionRegistry
+# Inputs
+from .inputs.noop_input import NoOpInput
+
+# Outputs
+from .outputs.noop_output import NoOpOutput
+
+# Transforms
+from .transforms.noop_transform import NoOpTransform
+
+# Runners
+from .runners.noop_runner import NoOpRunner
+
+# Jobs
+from .jobs.linear_job import LinearJob
+
+# Registries
+from .registries.file_job_registry import FileJobRegistry
+from .registries.file_setting_registry import FileSettingRegistry
+from .registries.noop_lineage_registry import NoOpLineageRegistry
+from .registries.noop_metric_registry import NoOpMetricRegistry
+from .registries.noop_schema_registry import NoOpSchemaRegistry
+from .registries.noop_secret_registry import NoOpSecretRegistry
+from .registries.noop_setting_registry import NoOpSettingRegistry
+from .registries.noop_transaction_registry import NoOpTransactionRegistry
+
+__all__ = [
+    "NoOpInput",
+    "NoOpOutput",
+    "NoOpRunner",
+    "NoOpTransform",
+    "LinearJob",
+    "FileJobRegistry",
+    "FileSettingRegistry",
+    "NoOpLineageRegistry",
+    "NoOpMetricRegistry",
+    "NoOpSchemaRegistry",
+    "NoOpSecretRegistry",
+    "NoOpSettingRegistry",
+    "NoOpTransactionRegistry",
+]

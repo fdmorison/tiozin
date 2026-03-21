@@ -1,30 +1,67 @@
 # isort: skip_file
-# flake8: noqa
+"""
+Tiozin API public package.
+
+This module defines the public, stable interface for building Tiozin pipelines.
+
+Only the symbols exported here are considered part of the supported API.
+All other modules and classes inside this package are internal implementation
+details and may change without notice.
+"""
+
 from typing import TypeAlias
 
-from .loggable import Loggable as Loggable
-from .tiozin import Tiozin as Tiozin
-from .registry import Registry as Registry
+# Bases
+from .tiozin import Tiozin
+from .registry import Registry
 
-from .metadata.job_manifest import JobManifest as JobManifest
-from .metadata.settings_manifest import SettingsManifest as SettingsManifest
+# Metadata
+from .metadata.job.manifest import JobManifest
+from .metadata.setting.manifest import SettingsManifest
 
-from .registries.bundle import Registries as Registries
-from .registries.job_registry import JobRegistry as JobRegistry
-from .registries.lineage_registry import LineageRegistry as LineageRegistry
-from .registries.metric_registry import MetricRegistry as MetricRegistry
-from .registries.schema_registry import SchemaRegistry as SchemaRegistry
-from .registries.secret_registry import SecretRegistry as SecretRegistry
-from .registries.setting_registry import SettingRegistry as SettingRegistry
-from .registries.transaction_registry import TransactionRegistry as TransactionRegistry
+# Registries
+from .metadata.job.registry import JobRegistry
+from .metadata.lineage.registry import LineageRegistry
+from .metadata.metric.registry import MetricRegistry
+from .metadata.schema.registry import SchemaRegistry
+from .metadata.secret.registry import SecretRegistry
+from .metadata.setting.registry import SettingRegistry
+from .metadata.transaction.registry import TransactionRegistry
 
-from .runtime.context import Context as Context
-from .runtime.runner import Runner as Runner
-from .runtime.input import Input as Input
-from .runtime.transform import Transform as Transform
-from .runtime.transform import CoTransform as CoTransform
-from .runtime.output import Output as Output
-from .runtime.job import Job as Job
+# Runtime
+from .runtime.context import Context
+from .runtime.runner import Runner
+from .runtime.input import Input
+from .runtime.transform import Transform, CoTransform
+from .runtime.output import Output
+from .runtime.job import Job
 
-
+# Type aliases
 EtlStep: TypeAlias = Transform | Input | Output
+
+__all__ = [
+    # Bases
+    "Registry",
+    "Tiozin",
+    # Metadata
+    "JobManifest",
+    "SettingsManifest",
+    # Registries
+    "JobRegistry",
+    "LineageRegistry",
+    "MetricRegistry",
+    "SchemaRegistry",
+    "SecretRegistry",
+    "SettingRegistry",
+    "TransactionRegistry",
+    # Runtime
+    "Context",
+    "Input",
+    "Job",
+    "Output",
+    "Runner",
+    "Transform",
+    "CoTransform",
+    # Type aliases
+    "EtlStep",
+]

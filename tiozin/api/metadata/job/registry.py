@@ -1,4 +1,4 @@
-from .. import JobManifest, Registry
+from ... import JobManifest, Registry
 
 
 class JobRegistry(Registry[JobManifest]):

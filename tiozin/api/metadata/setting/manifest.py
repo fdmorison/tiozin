@@ -4,8 +4,8 @@ from pydantic import BaseModel, Field
 
 from tiozin import env
 
-from . import docs
-from .manifest import Manifest
+from .. import docs
+from ..manifest import Manifest
 
 STR: TypeAlias = str | None
 BOOL: TypeAlias = bool | None

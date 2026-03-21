@@ -1,5 +1,7 @@
 from tiozin import env
-from tiozin.api import Loggable, Registries, Registry, SettingRegistry
+from tiozin.api import Registry, SettingRegistry
+from tiozin.api.loggable import Loggable
+from tiozin.api.metadata.bundle import Registries
 from tiozin.compose.assembly.tiozin_factory import tiozin_factory
 
 

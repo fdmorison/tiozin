@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
-from tiozin.api.registries.bundle import Registries
+from tiozin.api.metadata.bundle import Registries
 from tiozin.compose import TemplateDate, TemplateEnv
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow

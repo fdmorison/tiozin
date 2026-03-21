@@ -1,25 +1,25 @@
 registries:
 
   job:
-    kind: FileJobRegistry
+    kind: tio_kernel:FileJobRegistry
     name: my-job-registry-1
 
   schema:
-    kind: NoOpSchemaRegistry
+    kind: tio_kernel:NoOpSchemaRegistry
     name: my-schema-registry-1
 
   secret:
-    kind: NoOpSecretRegistry
+    kind: tio_kernel:NoOpSecretRegistry
     name: my-secret-registry-1
 
   transaction:
-    kind: NoOpTransactionRegistry
+    kind: tio_kernel:NoOpTransactionRegistry
     name: my-transaction-registry-1
 
   lineage:
-    kind: NoOpLineageRegistry
+    kind: tio_kernel:NoOpLineageRegistry
     name: my-lineage-registry-1
 
   metric:
-    kind: NoOpMetricRegistry
+    kind: tio_kernel:NoOpMetricRegistry
     name: my-metric-registry-1
