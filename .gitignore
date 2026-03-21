@@ -45,6 +45,7 @@ ENV/
 *.log
 **/logs/
 !tiozin/logs/
+!tests/unit/logs/
 **/*.log
 
 # Database files
