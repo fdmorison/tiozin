@@ -20,8 +20,10 @@ unplanned_field: 12345
 
 runner:
   kind: NoOpRunner
+  name: postgres
   streaming: false
   log_level: "{{ ENV.LOG_LEVEL }}"
+  db_url: postgres://user:{{ SECRET.FAKE_PASSWORD }}@host:5432/dbname
 
 inputs:
   - kind: NoOpInput

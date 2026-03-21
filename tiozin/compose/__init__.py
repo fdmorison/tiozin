@@ -7,6 +7,7 @@ from importlib import import_module
 from .proxies.tioproxy import tioproxy, TioProxyMeta
 from .templating.env import TemplateEnv as TemplateEnv
 from .templating.date import TemplateDate as TemplateDate
+from .templating.sensitive import TemplateSecret as TemplateSecret
 
 from .classproperty import classproperty
 
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from .proxies.job import JobProxy as JobProxy
     from .proxies.registry import RegistryProxy as RegistryProxy
     from .proxies.runner import RunnerProxy as RunnerProxy
+    from .proxies.sensitive import SecretRegistryProxy as SecretRegistryProxy
     from .proxies.setting import SettingRegistryProxy as SettingRegistryProxy
     from .proxies.step import StepProxy as StepProxy
     from .templating.overlay import TiozinTemplateOverlay as TiozinTemplateOverlay
@@ -28,6 +30,7 @@ _DEFERRED = {
     "JobProxy": ".proxies.job",
     "RegistryProxy": ".proxies.registry",
     "RunnerProxy": ".proxies.runner",
+    "SecretRegistryProxy": ".proxies.sensitive",
     "SettingRegistryProxy": ".proxies.setting",
     "StepProxy": ".proxies.step",
     "TiozinTemplateOverlay": ".templating.overlay",
@@ -54,12 +57,14 @@ __all__ = [
     "JobProxy",
     "RegistryProxy",
     "RunnerProxy",
+    "SecretRegistryProxy",
     "SettingRegistryProxy",
     "StepProxy",
     # Templating
     "TiozinTemplateOverlay",
     "TemplateDate",
     "TemplateEnv",
+    "TemplateSecret",
     # Other
     "classproperty",
 ]

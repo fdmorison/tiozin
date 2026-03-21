@@ -17,6 +17,7 @@ from .registry import Registry
 
 # Metadata
 from .metadata.job.manifest import JobManifest
+from .metadata.secret.model import Secret
 from .metadata.setting.manifest import SettingsManifest
 
 # Registries
@@ -45,6 +46,7 @@ __all__ = [
     "Tiozin",
     # Metadata
     "JobManifest",
+    "Secret",
     "SettingsManifest",
     # Registries
     "JobRegistry",

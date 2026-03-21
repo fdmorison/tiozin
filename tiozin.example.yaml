@@ -6,6 +6,11 @@ registries:
     description: File-based job registry for local development
     location: examples/jobs
 
+  secret:
+    kind: EnvSecretRegistry
+    name: my-secret-registry
+    description: Secret registry for credentials and sensitive configuration
+
   schema:
     kind: NoOpSchemaRegistry
     name: my-schema-registry
@@ -14,15 +19,6 @@ registries:
     timeout: 30
     readonly: true
     cache: true
-
-  secret:
-    kind: NoOpSecretRegistry
-    name: my-secret-registry
-    description: Secret registry for credentials and sensitive configuration
-    location: http://localhost:8200
-    timeout: 15
-    readonly: true
-    cache: false
 
   transaction:
     kind: NoOpTransactionRegistry

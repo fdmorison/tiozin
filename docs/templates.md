@@ -62,6 +62,34 @@ If the variable is not set, Tiozin raises an error at render time. Use `| defaul
 log_level: "{{ ENV.LOG_LEVEL | default('INFO') }}"
 ```
 
+## Secrets
+
+Use `SECRET.<name>` to fetch a secret from the configured `SecretRegistry` at render time:
+
+```yaml
+runner:
+  kind: SparkRunner
+  url: jdbc:postgresql://host:5432/db?password={{ SECRET.DB_PASSWORD }}
+```
+
+Item access also works:
+
+```yaml
+url: jdbc:postgresql://host:5432/db?password={{ SECRET["DB_PASSWORD"] }}
+```
+
+The retrieved value is a `Secret` object. It behaves as a plain string in all contexts (Jinja templates, Pydantic models, connection libraries) but masks itself in logs and reprs:
+
+```yaml
+url: jdbc:postgresql://host:5432/db?password={{ SECRET.DB_PASSWORD }}
+# rendered value: jdbc:postgresql://host:5432/db?password=mypassword
+# logged as:      jdbc:postgresql://host:5432/db?password=***
+```
+
+If the secret is not found, Tiozin raises `SecretNotFoundError` at render time.
+
+The default registry reads secrets from environment variables. To use a different backend (Vault, AWS Secrets Manager, etc.), configure `registries.secret` in `tiozin.yaml`. See [Settings Reference](settings.md) and [EnvSecretRegistry](tio_kernel/env-secret-registry.md).
+
 ## Date variables
 
 Tiozin injects a **`TemplateDate`** object anchored to the current time at render,
