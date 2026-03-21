@@ -150,9 +150,9 @@ registries:
     location: "postgresql://postgres:{{ ENV.PGPASSWORD | default('postgres') }}@localhost:5432/tiozin"
 
   lineage:
-    kind: NoOpLineageRegistry
-    location: "s3://my-bucket/lineage/{{ DAY.flat_date }}/"
-    # → s3://my-bucket/lineage/2026-03-15/
+    kind: OpenLineageRegistry
+    location: "http://{{ ENV.MARQUEZ_HOST | default('localhost') }}:5000"
+    # → http://marquez:5000
 ```
 
 Registry templates run at startup, before any job executes. Job variables (`name`, `org`, `domain`, `nominal_time`, and all other context fields) are not available here. Only two variables are injected:
