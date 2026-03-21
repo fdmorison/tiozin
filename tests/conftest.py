@@ -1,7 +1,54 @@
 import pytest
 
+from tests import env
 from tests.stubs import InputStub, JobStub, OutputStub, RunnerStub, TransformStub
 from tiozin import Context
+from tiozin.api.metadata.setting.manifest import (
+    JobRegistryManifest,
+    LineageRegistryManifest,
+    MetricRegistryManifest,
+    SchemaRegistryManifest,
+    SecretRegistryManifest,
+    SettingsManifest,
+    TransactionRegistryManifest,
+)
+
+# --------------------------------------------------
+# Settings
+# --------------------------------------------------
+
+
+@pytest.fixture()
+def default_settings_manifest() -> SettingsManifest:
+    return SettingsManifest(
+        registries=dict(
+            job=JobRegistryManifest(
+                kind=env.TIO_JOB_REGISTRY_KIND,
+                name="my-job-registry-1",
+            ),
+            schema=SchemaRegistryManifest(
+                kind=env.TIO_SCHEMA_REGISTRY_KIND,
+                name="my-schema-registry-1",
+            ),
+            secret=SecretRegistryManifest(
+                kind=env.TIO_SECRET_REGISTRY_KIND,
+                name="my-secret-registry-1",
+            ),
+            transaction=TransactionRegistryManifest(
+                kind=env.TIO_TRANSACTION_REGISTRY_KIND,
+                name="my-transaction-registry-1",
+            ),
+            lineage=LineageRegistryManifest(
+                kind=env.TIO_LINEAGE_REGISTRY_KIND,
+                name="my-lineage-registry-1",
+            ),
+            metric=MetricRegistryManifest(
+                kind=env.TIO_METRIC_REGISTRY_KIND,
+                name="my-metric-registry-1",
+            ),
+        )
+    )
+
 
 # --------------------------------------------------
 # Taxonomy

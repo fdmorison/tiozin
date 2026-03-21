@@ -5,7 +5,8 @@ from importlib.metadata import EntryPoint, entry_points
 from types import ModuleType
 
 from tiozin import config
-from tiozin.api import Loggable, Tiozin
+from tiozin.api import Tiozin
+from tiozin.api.loggable import Loggable
 
 from .. import reflection
 from ..policies import FamilyNamePolicy

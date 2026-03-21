@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tiozin.api import Loggable
+from tiozin.api.loggable import Loggable
 
 
 class DummyLoggable(Loggable):

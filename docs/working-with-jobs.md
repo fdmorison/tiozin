@@ -67,7 +67,7 @@ A typed Pydantic object. Use it when jobs come from a database, API, or registry
 
 ```python
 from tiozin import TiozinApp
-from tiozin.api.metadata.job_manifest import (
+from tiozin.api.metadata.job.manifest import (
     InputManifest,
     JobManifest,
     OutputManifest,

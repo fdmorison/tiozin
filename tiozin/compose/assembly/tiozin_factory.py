@@ -8,7 +8,6 @@ from tiozin.api import (
     Job,
     JobRegistry,
     LineageRegistry,
-    Loggable,
     MetricRegistry,
     Output,
     Runner,
@@ -19,7 +18,8 @@ from tiozin.api import (
     TransactionRegistry,
     Transform,
 )
-from tiozin.api.metadata.job_manifest import (
+from tiozin.api.loggable import Loggable
+from tiozin.api.metadata.job.manifest import (
     InputManifest,
     JobManifest,
     Manifest,
@@ -27,7 +27,7 @@ from tiozin.api.metadata.job_manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.api.metadata.settings_manifest import (
+from tiozin.api.metadata.setting.manifest import (
     JobRegistryManifest,
     LineageRegistryManifest,
     MetricRegistryManifest,

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from . import docs
-from .manifest import Manifest
+from .. import docs
+from ..manifest import Manifest
 
 
 class RunnerManifest(Manifest):

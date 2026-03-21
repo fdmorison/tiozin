@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.job_manifest import (
+from tiozin.api.metadata.job.manifest import (
     InputManifest,
     JobManifest,
     OutputManifest,

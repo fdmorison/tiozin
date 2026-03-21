@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from tiozin.api import Loggable
+from tiozin.api.loggable import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
 from tiozin.compose.reflection import detect_family_name, detect_tiozin_role
 from tiozin.utils import slugify

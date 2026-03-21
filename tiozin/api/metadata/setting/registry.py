@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from tiozin.compose import SettingRegistryProxy, tioproxy
 
-from .. import Registry, SettingsManifest
+from ... import Registry, SettingsManifest
 
 
 @tioproxy(SettingRegistryProxy)

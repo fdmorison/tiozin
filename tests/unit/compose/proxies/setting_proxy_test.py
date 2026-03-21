@@ -2,56 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from tiozin.api import SettingsManifest
-from tiozin.api.metadata.settings_manifest import (
-    JobRegistryManifest,
-    LineageRegistryManifest,
-    MetricRegistryManifest,
-    SchemaRegistryManifest,
-    SecretRegistryManifest,
-    TransactionRegistryManifest,
-)
 from tiozin.exceptions import TiozinInternalError
 from tiozin.family.tio_kernel import FileSettingRegistry
 
 MOCK_DIR = Path("tests/mocks/settings")
 
 
-def manifest_mock(n: int = 1) -> SettingsManifest:
-    return SettingsManifest(
-        registries=dict(
-            job=JobRegistryManifest(
-                kind="FileJobRegistry",
-                name=f"my-job-registry-{n}",
-            ),
-            schema=SchemaRegistryManifest(
-                kind="NoOpSchemaRegistry",
-                name=f"my-schema-registry-{n}",
-            ),
-            secret=SecretRegistryManifest(
-                kind="NoOpSecretRegistry",
-                name=f"my-secret-registry-{n}",
-            ),
-            transaction=TransactionRegistryManifest(
-                kind="NoOpTransactionRegistry",
-                name=f"my-transaction-registry-{n}",
-            ),
-            lineage=LineageRegistryManifest(
-                kind="NoOpLineageRegistry",
-                name=f"my-lineage-registry-{n}",
-            ),
-            metric=MetricRegistryManifest(
-                kind="NoOpMetricRegistry",
-                name=f"my-metric-registry-{n}",
-            ),
-        )
-    )
-
-
 # ============================================================================
 # SettingRegistryProxy - delegation
 # ============================================================================
-def test_setup_should_resolve_delegation_to_target():
+def test_setup_should_resolve_delegation_to_target(default_settings_manifest):
     # Arrange
     registry = FileSettingRegistry(location=MOCK_DIR / "delegate_to_default.yaml")
 
@@ -60,7 +20,7 @@ def test_setup_should_resolve_delegation_to_target():
 
     # Assert
     actual = registry.get().model_dump()
-    expected = manifest_mock(1).model_dump()
+    expected = default_settings_manifest.model_dump()
     assert actual == expected
 
 
