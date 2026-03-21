@@ -100,9 +100,10 @@ Tiozin is human-readable and machine-generatable:
 
 ## Documentation
 
-### Getting Started
+### Writing Declarative Jobs
 - [Quick Start](https://github.com/fdmorison/tiozin/blob/main/docs/quick-start.md)
 - [Working with Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/working-with-jobs.md)
+- [Examples](https://github.com/fdmorison/tiozin/blob/main/docs/examples.md)
 
 ### Concepts
 - [Family Model: Tios and Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/family.md)
@@ -110,21 +111,22 @@ Tiozin is human-readable and machine-generatable:
 - [Runners](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/runners.md)
 - [Inputs, Transforms & Outputs](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/steps.md)
 - [Registries](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/registries.md)
-- [Tio Proxy](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/proxies.md)
 
 ### Extending Tiozin
 - [Creating a Provider Family](https://github.com/fdmorison/tiozin/blob/main/docs/extending/families.md)
 - [Creating Pluggable Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/tiozins.md)
-- [Accessing Registries in Plugins](https://github.com/fdmorison/tiozin/blob/main/docs/registries.md)
-- [tio_kernel](https://github.com/fdmorison/tiozin/blob/main/docs/tio_kernel/index.md)
-- [tio_spark](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
-- [tio_duckdb](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
+- [Tio Proxy: Adding Cross Cutting Family Features](https://github.com/fdmorison/tiozin/blob/main/docs/extending/proxies.md)
+- [Accessing Registries in Plugins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/registries.md)
+
+- Reference implementations you can learn from:
+  - [tio_kernel - The Core Family](https://github.com/fdmorison/tiozin/blob/main/docs/tio_kernel/index.md)
+  - [tio_spark - Spark Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
+  - [tio_duckdb - DuckDB Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
 
 ### Reference
-- [Examples](https://github.com/fdmorison/tiozin/blob/main/docs/examples.md)
-- [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
 - [Settings Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
 - [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)
+- [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
 
 ## Contributing
 

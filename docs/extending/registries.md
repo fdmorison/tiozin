@@ -82,4 +82,4 @@ When a job runs, `TiozinApp` passes the full `Registries` bundle into the job's 
 
 Your plugin stays stateless. Configuration lives in `__init__` parameters. Infrastructure access happens through `self.context.registries` at call time. This is the Tiozin model: steps are stateless, infrastructure is contextual.
 
-See [Creating Pluggable Tiozins](extending/tiozins.md) for how to build Input, Transform, and Output plugins. See [Settings Reference](settings.md) for how to configure each registry in `tiozin.yaml`.
+See [Creating Pluggable Tiozins](tiozins.md) for how to build Input, Transform, and Output plugins. See [Settings Reference](../settings.md) for how to configure each registry in `tiozin.yaml`.

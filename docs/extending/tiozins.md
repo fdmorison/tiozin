@@ -327,7 +327,7 @@ Install your package (e.g. `uv sync`, `poetry install`) and the classes become a
 
 Proxies let you add shared methods to every step in your family without repeating code in each class.
 
-See [Tio Proxy](../concepts/proxies.md) for how the proxy chain is built across the class hierarchy.
+See [Tio Proxy](proxies.md) for how the proxy chain is built across the class hierarchy.
 
 ## Stateless steps, stateful runner
 

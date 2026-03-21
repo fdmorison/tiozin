@@ -217,4 +217,4 @@ class MyInput(Input):
 
 Proxy classes must inherit from `wrapt.ObjectProxy`. A class may only use `@tioproxy` once.
 
-See [Tio Proxy](concepts/proxies.md) for details on how the proxy chain is built.
+See [Tio Proxy](extending/proxies.md) for details on how the proxy chain is built.
