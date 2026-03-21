@@ -1,10 +1,13 @@
 from abc import abstractmethod
 
 from tiozin.api.registry import Registry
+from tiozin.compose import tioproxy
+from tiozin.compose.proxies.lineage import LineageRegistryProxy
 
 from .model import RunEvent, RunState
 
 
+@tioproxy(LineageRegistryProxy)
 class LineageRegistry(Registry[RunEvent]):
     """
     Emits OpenLineage run events during pipeline execution.
