@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyRelation
 
+from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, clear_dir, mkdirs, trim_lower, trim_upper
 
@@ -83,6 +84,13 @@ class DuckdbFileOutput(DuckdbOutput):
         self.mode = trim_upper(mode or "append")
         self.partition_by = as_list(partition_by, [])
         self.compression = trim_lower(compression or "snappy")
+
+    def lineage(self) -> Lineage:
+        # ref: https://openlineage.io/docs/spec/naming/
+        return Lineage(
+            inputs=[],
+            outputs=[LineageDataset.from_uri(self.path)],
+        )
 
     def write(self, data: DuckDBPyRelation) -> DuckdbPlan:
         """

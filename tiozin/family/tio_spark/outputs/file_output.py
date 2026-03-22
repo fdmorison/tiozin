@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pyspark.sql import DataFrame, DataFrameWriter
 
+from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim, trim_lower
 
@@ -77,6 +78,13 @@ class SparkFileOutput(SparkOutput):
         self.format = trim_lower(format or "parquet")
         self.mode = trim_lower(mode or "append")
         self.partition_by = as_list(partition_by)
+
+    def lineage(self) -> Lineage:
+        # ref: https://openlineage.io/docs/spec/naming/
+        return Lineage(
+            inputs=[],
+            outputs=[LineageDataset.from_uri(self.path)],
+        )
 
     def write(self, data: DataFrame) -> DataFrameWriter:
         self.info(f"Writing {self.format} to {self.path}")

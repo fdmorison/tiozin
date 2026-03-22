@@ -24,6 +24,10 @@ Output files are named `part-{i}-{uuid}.snappy` by default.
 | `compression` | Compression codec | `snappy` |
 | `**options` | Additional DuckDB writer options | |
 
+## Lineage
+
+The output path is reported as the dataset written by this step following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).
+
 ## Hive-style partitioning
 
 Use `partition_by` to split the output into subdirectories by column values:

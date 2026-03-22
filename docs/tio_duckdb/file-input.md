@@ -87,6 +87,10 @@ inputs:
     explode_filepath: true
 ```
 
+## Lineage
+
+Each path is reported as a separate input dataset following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).
+
 ## Extra reader options
 
 Any property not listed in the parameters table above is forwarded directly to the underlying DuckDB `read_<format>()` call. The full list of options per format is in the [DuckDB data import reference](https://duckdb.org/docs/data/overview).

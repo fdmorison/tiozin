@@ -4,7 +4,7 @@ from tiozin.api.registry import Registry
 from tiozin.compose import tioproxy
 from tiozin.compose.proxies.lineage import LineageRegistryProxy
 
-from .model import LineageRunEvent, LineageRunEventType
+from .model import LineageDataset, LineageRunEvent, LineageRunEventType
 
 
 @tioproxy(LineageRegistryProxy)
@@ -34,7 +34,9 @@ class LineageRegistry(Registry[LineageRunEvent]):
     def register(self, identifier: str, value: LineageRunEvent) -> None:
         """Emit a run event."""
 
-    def start(self, inputs: list[str] = None, outputs: list[str] = None) -> None:
+    def start(
+        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
+    ) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.START,
@@ -43,7 +45,9 @@ class LineageRegistry(Registry[LineageRunEvent]):
         )
         self.register(event.run_id, event)
 
-    def complete(self, inputs: list[str] = None, outputs: list[str] = None) -> None:
+    def complete(
+        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
+    ) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.COMPLETE,
@@ -52,7 +56,9 @@ class LineageRegistry(Registry[LineageRunEvent]):
         )
         self.register(event.run_id, event)
 
-    def fail(self, inputs: list[str] = None, outputs: list[str] = None) -> None:
+    def fail(
+        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
+    ) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.FAIL,
@@ -61,7 +67,9 @@ class LineageRegistry(Registry[LineageRunEvent]):
         )
         self.register(event.run_id, event)
 
-    def abort(self, inputs: list[str] = None, outputs: list[str] = None) -> None:
+    def abort(
+        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
+    ) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.ABORT,

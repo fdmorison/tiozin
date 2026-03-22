@@ -28,9 +28,9 @@ You do not call lineage methods directly. The framework emits events automatical
 
 | State | When |
 |---|---|
-| `START` | After `setup()`, before `submit()` |
+| `START` | After `job.setup()` and `runner.setup()`, before `submit()` |
 | `COMPLETE` | After `submit()` returns successfully |
-| `FAIL` | When `submit()` raises an exception |
+| `FAIL` | When an exception occurs during execution |
 
 ## Event structure
 
@@ -44,26 +44,28 @@ Each event follows the OpenLineage `RunEvent` spec:
     "runId": "job_abc123"
   },
   "job": {
-    "namespace": "acme.us-east.finance.orders.gold",
-    "name": "orders-etl"
+    "namespace": "acme.latam.ecommerce.checkout",
+    "name": "orders_etl"
   },
   "inputs": [
     {
-      "namespace": "acme.us-east.finance.orders.gold",
-      "name": "raw.orders"
+      "namespace": "s3://my-bucket",
+      "name": "raw/orders"
     }
   ],
   "outputs": [
     {
-      "namespace": "acme.us-east.finance.orders.gold",
-      "name": "orders"
+      "namespace": "file",
+      "name": ".output/lake/orders"
     }
   ],
   "producer": "tiozin"
 }
 ```
 
-The `namespace` is built from the job's `org`, `region`, `domain`, `subdomain`, and `layer` fields joined by `.`. The `name` is the job slug.
+The job `namespace` is built from `org`, `region`, `domain`, and `subdomain` joined by `.`. The `name` is the job slug.
+
+Inputs and outputs in the event are the physical datasets reported by each step. File plugins report the actual paths. Postgres plugins report the target table. Steps that do not override `lineage()` fall back to a logical dataset derived from the step's taxonomy fields.
 
 
 ## Authentication

@@ -31,6 +31,10 @@ outputs:
 | `error` | Raises an error if any data already exists at the path |
 | `errorifexists` | Alias for `error` |
 
+## Lineage
+
+The output path is reported as the dataset written by this step following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).
+
 ## Hive-style partitioning
 
 Use `partition_by` to split the output into subdirectories by column values:

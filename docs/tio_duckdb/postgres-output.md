@@ -106,6 +106,10 @@ outputs:
     merge_key: external_id
 ```
 
+## Lineage
+
+The target table is reported as the output dataset following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).
+
 ## Schema evolution
 
 All modes detect new columns automatically. When the incoming batch has a column the target table does not, that column is added to the table before the write runs. Existing rows get `NULL` for the new column.

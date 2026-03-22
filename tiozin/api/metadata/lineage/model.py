@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import pendulum
 from pydantic import BaseModel, ConfigDict, Field
 
 from tiozin import config
-from tiozin.utils import utcnow
+from tiozin.utils import normalize_uri, utcnow
 
 if TYPE_CHECKING:
     from tiozin.api.runtime.context import Context
@@ -41,6 +42,30 @@ class LineageDataset(BaseModel):
     namespace: str
     name: str
 
+    def from_uri(uri: str) -> LineageDataset:
+        # ref: https://openlineage.io/docs/spec/naming/
+        parsed = urlparse(str(uri))
+
+        if not parsed.scheme:
+            # local path without scheme — keep as-is, do not resolve to absolute
+            return LineageDataset(namespace="file", name=str(uri).strip("/"))
+
+        uri = normalize_uri(uri)
+        parsed = urlparse(uri)
+
+        if parsed.netloc:
+            namespace = f"{parsed.scheme}://{parsed.netloc}"
+        else:
+            namespace = parsed.scheme
+
+        name = parsed.path.strip("/")
+        return LineageDataset(namespace=namespace, name=name)
+
+
+class Lineage(BaseModel):
+    inputs: list[LineageDataset]
+    outputs: list[LineageDataset]
+
 
 class LineageRunEvent(BaseModel):
     """
@@ -69,12 +94,12 @@ class LineageRunEvent(BaseModel):
         cls,
         ctx: Context,
         type: LineageRunEventType,
-        inputs: list[str] | None = None,
-        outputs: list[str] | None = None,
+        inputs: list[LineageDataset] | None = None,
+        outputs: list[LineageDataset] | None = None,
     ) -> LineageRunEvent:
         job = ctx.job
-        namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}.{ctx.layer}"
-        job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}.{job.layer}"
+        namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}"
+        job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}"
         return cls(
             type=type.value,
             producer=config.app_identifier,
@@ -108,20 +133,8 @@ class LineageRunEvent(BaseModel):
                 "cost_center": ctx.cost_center,
                 **ctx.labels,
             },
-            inputs=[
-                LineageDataset(
-                    namespace=namespace,
-                    name=n,
-                )
-                for n in (inputs or [])
-            ],
-            outputs=[
-                LineageDataset(
-                    namespace=namespace,
-                    name=n,
-                )
-                for n in (outputs or [])
-            ],
+            inputs=inputs or [],
+            outputs=outputs or [],
         )
 
 
