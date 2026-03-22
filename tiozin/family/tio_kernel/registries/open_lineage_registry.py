@@ -50,8 +50,9 @@ class OpenLineageRegistry(LineageRegistry):
 
     def register(self, identifier: str, value: LineageRunEvent) -> None:
         """Convert a Tiozin lineage event to OpenLineage format and emit it."""
-        event = self._build_run_event(value)
-        self._client.emit(event)
+        self._client.emit(
+            event=self._build_run_event(value),
+        )
 
     def _build_run_event(self, event: LineageRunEvent) -> RunEvent:
         return RunEvent(

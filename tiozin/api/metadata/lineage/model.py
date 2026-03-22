@@ -65,15 +65,15 @@ class LineageRunEvent(BaseModel):
     def from_context(
         cls,
         ctx: Context,
-        state: LineageRunEventType,
-        inputs: list[str] | None,
-        outputs: list[str] | None,
+        type: LineageRunEventType,
+        inputs: list[str] | None = None,
+        outputs: list[str] | None = None,
     ) -> LineageRunEvent:
         job = ctx.job
         namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}.{ctx.layer}"
         job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}.{job.layer}"
         return cls(
-            type=str(state.value),
+            type=type.value,
             timestamp=utcnow().isoformat(timespec="milliseconds"),
             run_id=ctx.run_id,
             producer=config.app_identifier,
