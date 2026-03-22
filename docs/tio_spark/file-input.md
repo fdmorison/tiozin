@@ -58,6 +58,10 @@ inputs:
     explode_filepath: true
 ```
 
+## Lineage
+
+Each path is reported as a separate input dataset following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).
+
 ## Streaming mode
 
 When the runner has `streaming: true`, `SparkFileInput` uses `spark.readStream` instead of `spark.read`. In streaming mode, `path` must be a single directory path. Providing a list of paths raises an error.

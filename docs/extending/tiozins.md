@@ -235,6 +235,53 @@ outputs:
     table: daily_summaries
 ```
 
+## Implementing Lineage
+
+Every Input, Transform, and Output has a `lineage()` method. The framework calls it automatically and sends the result to the configured lineage registry.
+
+You do not have to implement it. If you skip `lineage()`, the framework uses a fallback: a logical dataset built from the step's taxonomy fields (`org.region.domain.subdomain` as namespace, `layer.product.model` as name). Implement it when your step knows the physical location it reads from or writes to. This matters most for Inputs and Outputs. Transforms usually work with in-memory data, so the fallback is fine for them.
+
+### Before you implement
+
+Lineage datasets have two fields: `namespace` and `name`. The rules for what goes in each come from the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/). Read it before deciding.
+
+Datasets are what connect jobs in the lineage graph. When an output dataset from one job matches an input dataset from another (same `namespace` and `name`), the tool draws the link. If they do not match exactly, the graph breaks and the jobs appear disconnected. This is the most common mistake when implementing lineage for a new plugin.
+
+### Building a dataset manually
+
+Use `LineageDataset` directly when your step connects to something with a well-defined identifier. Going back to `SQLiteOutput` from earlier: it writes to a specific table. That table is the physical output dataset. Add `lineage()` to report it:
+
+```python
+from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
+
+
+class SQLiteOutput(Output[str]):
+    def __init__(self, table: str, **options) -> None:
+        super().__init__(**options)
+        self.table = table
+
+    def write(self, data: str) -> SQLiteWriteSpec:
+        sql = f"CREATE TABLE IF NOT EXISTS {self.table} AS {data}"
+        return SQLiteWriteSpec(sql=sql)
+
+    def lineage(self) -> Lineage:
+        return Lineage(
+            inputs=[],
+            outputs=[LineageDataset(namespace="sqlite", name=self.table)],
+        )
+```
+
+The YAML does not change:
+
+```yaml
+outputs:
+  - kind: SQLiteOutput
+    name: orders_sink
+    table: processed_orders
+```
+
+`Lineage` takes two lists: `inputs` (datasets this step reads from) and `outputs` (datasets it writes to). Leave the list that does not apply empty.
+
 ## Implementing a Registry
 
 Extend the appropriate registry class and implement `get()` and `register()`.

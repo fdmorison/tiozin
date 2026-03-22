@@ -119,6 +119,47 @@ Avoid:
 ❌ Incorrect:
     assert result == 5
 
+`expected` must make the expected value visible without mentally executing code.
+Construction expressions (e.g. `spark.createDataFrame(...)`) are allowed when
+all data values inside are explicit literals. What is forbidden is delegating
+the value to a function call that hides what the result actually is.
+
+✔ Correct — data is fully visible:
+    actual = result
+    expected = "file:///home/user/data/file.csv"
+    assert actual == expected
+
+✔ Correct — construction required by the type, but all values are explicit:
+    actual = result
+    expected = spark.createDataFrame(
+        [("lorem", 3), ("ipsum", 1)],
+        schema="`word` STRING, `count` BIGINT",
+    )
+    assert actual == expected
+
+❌ Incorrect — value is hidden inside the call:
+    actual = result
+    expected = Path(path).as_uri()
+    assert actual == expected
+
+`expected` must also be portable — never hardcode local paths, usernames, or
+home directories. Tests must pass on any machine and any OS.
+
+❌ Incorrect — machine-specific path:
+    expected = "file:///home/username/data/file.csv"
+    expected = "file:///Users/username/data/file.csv"
+    expected = "file:///tmp/data/file.csv"  # /tmp is a symlink on macOS
+
+✔ Correct — use tmp_path (pytest guarantees a real, symlink-free path):
+    def test_foo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.chdir(tmp_path)
+        expected = f"file://{tmp_path}/data/file.csv"
+
+✔ Correct — control HOME via monkeypatch:
+    def test_tilde(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        expected = f"file://{tmp_path}/data/file.csv"
+
 Exception — boolean existence checks:
 
 When the assertion is a boolean predicate whose name already makes
