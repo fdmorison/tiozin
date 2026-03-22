@@ -56,9 +56,9 @@ class JobProxy(wrapt.ObjectProxy):
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
                 job.setup()
+                job_lineage = job.lineage()
                 context.executed_at = utcnow()
                 with job.runner():
-                    job_lineage = job.lineage()
                     lineage.start(inputs=job_lineage.inputs, outputs=job_lineage.outputs)
                     result = job.submit()
             except Exception:

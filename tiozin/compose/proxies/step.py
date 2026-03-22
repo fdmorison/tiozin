@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import Context
+from tiozin.api.metadata.lineage.model import Lineage
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import utcnow
 
@@ -39,11 +40,26 @@ class StepProxy(wrapt.ObjectProxy):
     Step plugins.
     """
 
+    @property
+    def context(self) -> Context:
+        step: EtlStep = self.__wrapped__
+        ctx = Context.current(required=False)
+        if ctx is None:
+            return Context.for_step(step)
+        if ctx.slug == step.slug and ctx.kind == step.kind:
+            return ctx
+        return ctx.for_child_step(step)
+
     def setup(self, *args, **kwargs) -> None:
         raise AccessViolationError(self)
 
     def teardown(self, *args, **kwargs) -> None:
         raise AccessViolationError(self)
+
+    def lineage(self) -> Lineage:
+        step: EtlStep = self.__wrapped__
+        with TiozinTemplateOverlay(step, self.context.template_vars):
+            return step.lineage()
 
     def read(self) -> None:
         return self._run("read")
@@ -56,12 +72,7 @@ class StepProxy(wrapt.ObjectProxy):
 
     def _run(self, method_name: str, *args, **kwargs) -> Any:
         step: EtlStep = self.__wrapped__
-
-        context = (
-            current.for_child_step(step)
-            if (current := Context.current(required=False))
-            else Context.for_step(step)
-        )
+        context = self.context
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
