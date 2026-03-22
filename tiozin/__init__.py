@@ -9,7 +9,7 @@ Public API for building data pipelines with Tiozin.
 from tiozin.api import Registry, Tiozin
 
 # Metadata
-from tiozin.api import JobManifest, RunEvent, RunState, Secret, SettingsManifest
+from tiozin.api import JobManifest, LineageRunEvent, Secret, SettingsManifest
 
 # Registries
 from tiozin.api import (
@@ -37,8 +37,7 @@ __all__ = [
     "Registry",
     # Metadata
     "JobManifest",
-    "RunEvent",
-    "RunState",
+    "LineageRunEvent",
     "Secret",
     "SettingsManifest",
     # Registries

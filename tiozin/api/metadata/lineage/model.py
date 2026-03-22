@@ -1,57 +1,131 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 from typing import TYPE_CHECKING
 
-from pendulum import DateTime
+from pydantic import BaseModel, Field
 
+from tiozin import config
 from tiozin.utils import utcnow
 
 if TYPE_CHECKING:
     from tiozin.api.runtime.context import Context
 
 
-class RunState(StrEnum):
+class LineageRunEventType(str, Enum):
     START = "START"
-    RUNNING = "RUNNING"
     COMPLETE = "COMPLETE"
     FAIL = "FAIL"
     ABORT = "ABORT"
 
+    def __str__(self) -> str:
+        return self.value
 
-@dataclass
-class RunEvent:
-    """
-    Represents an OpenLineage run event.
 
-    Captures the state of a job run at a specific point in time,
-    including its identity, inputs, and outputs.
-    """
-
-    state: RunState
-    job: str
+class LineageJob(BaseModel):
     namespace: str
+    name: str
+    job_type: str
+    processing_type: str
+    integration: str
+
+
+class LineageParentRun(BaseModel):
     run_id: str
-    event_time: DateTime
-    inputs: list[str] = field(default_factory=list)
-    outputs: list[str] = field(default_factory=list)
+    job_name: str
+    namespace: str
+
+
+class LineageDataset(BaseModel):
+    namespace: str
+    name: str
+
+
+class LineageRunEvent(BaseModel):
+    """
+    Tiozin's internal representation of a lineage run event.
+
+    Captures the state of a run at a specific point in time, including job identity,
+    inputs, outputs, governance tags, and optional parent context for steps.
+    Backends (e.g. `OpenLineageRegistry`) convert this into their own protocol format.
+    """
+
+    type: LineageRunEventType
+    timestamp: str
+    run_id: str
+    producer: str
+    nominal_time: str
+    job: LineageJob
+    parent: LineageParentRun | None = None
+    inputs: list[LineageDataset] = Field(default_factory=list)
+    outputs: list[LineageDataset] = Field(default_factory=list)
+    tags: dict[str, str]
 
     @classmethod
     def from_context(
         cls,
-        context: Context,
-        state: RunState,
-        inputs: list[str] = None,
-        outputs: list[str] = None,
-    ) -> RunEvent:
-        """Build a `RunEvent` from an active execution context."""
+        ctx: Context,
+        state: LineageRunEventType,
+        inputs: list[str] | None,
+        outputs: list[str] | None,
+    ) -> LineageRunEvent:
+        job = ctx.job
+        namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}.{ctx.layer}"
+        job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}.{job.layer}"
         return cls(
-            state=state,
-            job=context.slug,
-            namespace=f"{context.org}.{context.region}.{context.domain}.{context.subdomain}.{context.layer}",
-            run_id=context.run_id,
-            event_time=utcnow(),
-            inputs=inputs or [],
-            outputs=outputs or [],
+            type=str(state.value),
+            timestamp=utcnow().isoformat(timespec="milliseconds"),
+            run_id=ctx.run_id,
+            producer=config.app_identifier,
+            nominal_time=ctx.nominal_time.isoformat(timespec="milliseconds"),
+            job=LineageJob(
+                namespace=namespace,
+                name=ctx.slug,
+                job_type=ctx.kind,
+                processing_type="STREAMING" if ctx.runner.streaming else "BATCH",
+                integration=ctx.runner.name,
+            ),
+            parent=LineageParentRun(
+                run_id=job.run_id,
+                job_name=job.slug,
+                namespace=job_namespace,
+            )
+            if job is not ctx
+            else None,
+            tags={
+                "org": ctx.org,
+                "region": ctx.region,
+                "domain": ctx.domain,
+                "subdomain": ctx.subdomain,
+                "layer": ctx.layer,
+                "product": ctx.product,
+                "model": ctx.model,
+                "owner": ctx.owner,
+                "maintainer": ctx.maintainer,
+                "cost_center": ctx.cost_center,
+                **ctx.labels,
+            },
+            inputs=[
+                LineageDataset(
+                    namespace=namespace,
+                    name=n,
+                )
+                for n in (inputs or [])
+            ],
+            outputs=[
+                LineageDataset(
+                    namespace=namespace,
+                    name=n,
+                )
+                for n in (outputs or [])
+            ],
         )
+
+
+__all__ = [
+    "LineageRunEventType",
+    "LineageDataset",
+    "LineageJob",
+    "LineageParentRun",
+    "LineageRunEvent",
+]
