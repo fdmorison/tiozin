@@ -1,7 +1,7 @@
 import pytest
 
 from tests.stubs import LineageRegistryStub
-from tiozin.api.metadata.lineage.model import LineageRunEventType
+from tiozin.api.metadata.lineage.model import LineageDataset, LineageRunEventType
 from tiozin.api.runtime.context import Context
 
 # ============================================================================
@@ -49,14 +49,20 @@ def test_start_should_forward_inputs(
     lineage_registry_stub: LineageRegistryStub,
 ):
     # Arrange
-    inputs = ["sales.orders", "sales.customers"]
+    inputs = [
+        LineageDataset(namespace="s3://my-bucket", name="sales/orders"),
+        LineageDataset(namespace="s3://my-bucket", name="sales/customers"),
+    ]
 
     # Act
     lineage_registry_stub.start(inputs=inputs)
 
     # Assert
-    actual = [d.name for d in lineage_registry_stub.captured_event.inputs]
-    expected = ["sales.orders", "sales.customers"]
+    actual = [(d.namespace, d.name) for d in lineage_registry_stub.captured_event.inputs]
+    expected = [
+        ("s3://my-bucket", "sales/orders"),
+        ("s3://my-bucket", "sales/customers"),
+    ]
     assert actual == expected
 
 
@@ -65,12 +71,16 @@ def test_start_should_forward_outputs(
     lineage_registry_stub: LineageRegistryStub,
 ):
     # Arrange
-    outputs = ["sales.summary"]
+    outputs = [
+        LineageDataset(namespace="s3://my-bucket", name="sales/summary"),
+    ]
 
     # Act
     lineage_registry_stub.start(outputs=outputs)
 
     # Assert
-    actual = [d.name for d in lineage_registry_stub.captured_event.outputs]
-    expected = ["sales.summary"]
+    actual = [(d.namespace, d.name) for d in lineage_registry_stub.captured_event.outputs]
+    expected = [
+        ("s3://my-bucket", "sales/summary"),
+    ]
     assert actual == expected

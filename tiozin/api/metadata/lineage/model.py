@@ -43,13 +43,20 @@ class LineageDataset(BaseModel):
     name: str
 
     def from_uri(uri: str) -> LineageDataset:
+        # ref: https://openlineage.io/docs/spec/naming/
+        parsed = urlparse(str(uri))
+
+        if not parsed.scheme:
+            # local path without scheme — keep as-is, do not resolve to absolute
+            return LineageDataset(namespace="file", name=str(uri).lstrip("/"))
+
         uri = normalize_uri(uri)
         parsed = urlparse(uri)
 
         if parsed.netloc:
             namespace = f"{parsed.scheme}://{parsed.netloc}"
         else:
-            namespace = f"{parsed.scheme}://"
+            namespace = parsed.scheme
 
         name = parsed.path.lstrip("/")
         return LineageDataset(namespace=namespace, name=name)
