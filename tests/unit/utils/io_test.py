@@ -354,7 +354,7 @@ def test_join_path_should_not_fail_when_either_argument_is_none(
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_normalize_uri_should_accept_str_and_path(path_type: type[str] | Path):
     # Act
-    result = io.normalize_uri(path_type("file:///absolute/local/file.csv"))
+    result = io.normalize_uri(path_type("/absolute/local/file.csv"))
 
     # Assert
     actual = result

@@ -193,7 +193,7 @@ def normalize_uri(uri: StrOrPath) -> str:
 
     # already a URI
     if parsed.scheme:
-        return uri
+        return str(uri)
 
     # local path → file:// URI
     path = Path(uri).expanduser().resolve()
