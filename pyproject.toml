@@ -31,7 +31,7 @@ dependencies = [
   "jinja2 ~=3.1.6",
   "pendulum ~=3.1.0",
   "python-slugify ~=8.0.4",
-  # Cloud-native and remote filesystems
+  "openlineage-python ~=1.45.0",
   "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
 ]
 
