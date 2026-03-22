@@ -36,6 +36,7 @@ from tiozin.utils.io import (
     write_yaml,
     load_yaml,
     dump_yaml,
+    normalize_uri,
 )
 
 # Runtime
@@ -72,6 +73,7 @@ __all__ = [
     "write_yaml",
     "load_yaml",
     "dump_yaml",
+    "normalize_uri",
     # Runtime
     "bind_data_tokens",
     "tio_alias",

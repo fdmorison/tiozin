@@ -346,3 +346,80 @@ def test_join_path_should_not_fail_when_either_argument_is_none(
     # Assert
     actual = result
     assert actual == expected
+
+
+# ============================================================================
+# Testing io.normalize_uri()
+# ============================================================================
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_normalize_uri_should_accept_str_and_path(path_type: type[str] | Path):
+    # Act
+    result = io.normalize_uri(path_type("file:///absolute/local/file.csv"))
+
+    # Assert
+    actual = result
+    expected = "file:///absolute/local/file.csv"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "uri",
+    [
+        "http://example.com/data/file.csv",
+        "https://example.com/data/file.csv",
+        "s3://my-bucket/data/file.parquet",
+        "gs://my-bucket/data/file.parquet",
+        "az://my-container/data/file.parquet",
+        "ftp://host.example.com/data/file.csv",
+        "sftp://host.example.com/data/file.csv",
+        "file:///absolute/local/file.csv",
+    ],
+)
+def test_normalize_uri_should_return_uri_unchanged_when_scheme_is_present(uri: str):
+    # Act
+    result = io.normalize_uri(uri)
+
+    # Assert
+    actual = result
+    expected = uri
+    assert actual == expected
+
+
+def test_normalize_uri_should_return_file_uri_when_absolute_path(tmp_path: Path):
+    # Act
+    result = io.normalize_uri(tmp_path / "file.csv")
+
+    # Assert
+    actual = result
+    expected = f"file://{tmp_path}/file.csv"
+    assert actual == expected
+
+
+def test_normalize_uri_should_resolve_relative_path_to_absolute_file_uri(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+
+    # Act
+    result = io.normalize_uri("data/file.csv")
+
+    # Assert
+    actual = result
+    expected = f"file://{tmp_path}/data/file.csv"
+    assert actual == expected
+
+
+def test_normalize_uri_should_expand_tilde_when_path_starts_with_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # Arrange
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    # Act
+    result = io.normalize_uri("~/data/file.csv")
+
+    # Assert
+    actual = result
+    expected = f"file://{tmp_path}/data/file.csv"
+    assert actual == expected

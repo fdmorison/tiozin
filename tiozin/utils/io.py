@@ -179,3 +179,22 @@ def join_path(base: str, path: str) -> str | None:
         if not path.startswith(prefix):
             return prefix + path
     return path
+
+
+def normalize_uri(uri: StrOrPath) -> str:
+    """
+    Return a fully qualified URI for the given path or URI.
+
+    If `uri` already has a scheme (e.g. `s3://`, `gs://`, `file://`), it is
+    returned unchanged. Otherwise it is treated as a local filesystem path:
+    `~` is expanded and the path is resolved to an absolute `file://` URI.
+    """
+    parsed = urlparse(str(uri))
+
+    # already a URI
+    if parsed.scheme:
+        return uri
+
+    # local path → file:// URI
+    path = Path(uri).expanduser().resolve()
+    return path.as_uri()
