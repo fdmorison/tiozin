@@ -2,6 +2,7 @@ import pytest
 from openlineage.client.generated.parent_run import ParentRunFacet
 
 from tests.mocks.lineage.run_event import job_start_event, step_start_event
+from tiozin import config
 from tiozin.api.metadata.lineage.model import (
     LineageDataset,
     LineageRunEventType,
@@ -12,6 +13,71 @@ from tiozin.family.tio_kernel import OpenLineageRegistry
 @pytest.fixture()
 def registry() -> OpenLineageRegistry:
     return OpenLineageRegistry(location="http://localhost:5000").__wrapped__
+
+
+# ============================================================================
+# Constructor defaults
+# ============================================================================
+
+
+def test_registry_should_default_location_to_none():
+    # Act
+    registry = OpenLineageRegistry().__wrapped__
+
+    # Assert
+    actual = registry.location
+    expected = None
+    assert actual == expected
+
+
+def test_registry_should_default_verify_to_true():
+    # Act
+    registry = OpenLineageRegistry().__wrapped__
+
+    # Assert
+    actual = registry.verify
+    expected = True
+    assert actual == expected
+
+
+def test_registry_should_default_api_key_to_none():
+    # Act
+    registry = OpenLineageRegistry().__wrapped__
+
+    # Assert
+    actual = registry.api_key
+    expected = None
+    assert actual == expected
+
+
+def test_registry_should_default_timeout_from_config():
+    # Act
+    registry = OpenLineageRegistry().__wrapped__
+
+    # Assert
+    actual = registry.timeout
+    expected = config.registry_default_timeout
+    assert actual == expected
+
+
+def test_registry_should_default_readonly_from_config():
+    # Act
+    registry = OpenLineageRegistry().__wrapped__
+
+    # Assert
+    actual = registry.readonly
+    expected = config.registry_default_readonly
+    assert actual == expected
+
+
+def test_registry_should_default_cache_from_config():
+    # Act
+    registry = OpenLineageRegistry().__wrapped__
+
+    # Assert
+    actual = registry.cache
+    expected = config.registry_default_cache
+    assert actual == expected
 
 
 # ============================================================================
