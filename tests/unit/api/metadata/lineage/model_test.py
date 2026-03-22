@@ -82,6 +82,24 @@ def test_from_uri_should_keep_relative_path_as_is_when_no_scheme():
     assert actual == expected
 
 
+@pytest.mark.parametrize(
+    "uri, expected_name",
+    [
+        ("s3://my-bucket/data/orders/", "data/orders"),
+        (".output/lake-ecommerce-raw/orders/", ".output/lake-ecommerce-raw/orders"),
+    ],
+    ids=["object-storage-trailing-slash", "relative-path-trailing-slash"],
+)
+def test_from_uri_should_strip_trailing_slash_from_name(uri: str, expected_name: str):
+    # Act
+    result = LineageDataset.from_uri(uri)
+
+    # Assert
+    actual = result.name
+    expected = expected_name
+    assert actual == expected
+
+
 # ============================================================================
 # LineageRunEvent.from_context — job identity and fields
 # ============================================================================

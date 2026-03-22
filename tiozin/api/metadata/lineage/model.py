@@ -48,7 +48,7 @@ class LineageDataset(BaseModel):
 
         if not parsed.scheme:
             # local path without scheme — keep as-is, do not resolve to absolute
-            return LineageDataset(namespace="file", name=str(uri).lstrip("/"))
+            return LineageDataset(namespace="file", name=str(uri).strip("/"))
 
         uri = normalize_uri(uri)
         parsed = urlparse(uri)
@@ -58,7 +58,7 @@ class LineageDataset(BaseModel):
         else:
             namespace = parsed.scheme
 
-        name = parsed.path.lstrip("/")
+        name = parsed.path.strip("/")
         return LineageDataset(namespace=namespace, name=name)
 
 
