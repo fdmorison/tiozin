@@ -19,6 +19,8 @@ artifact_version = get_version(artifact_name, Path(__file__).parent.parent)
 app_name = "tiozin"
 app_title = "Tiozin"
 app_version = artifact_version
+app_identifier = f"{app_name}/{app_version}"
+
 app_host = env.HOSTNAME
 app_description = "Tiozin, your friendly ETL framework"
 app_timezone = ZoneInfo("UTC")
