@@ -11,6 +11,7 @@ from pyspark.sql.functions import (
 )
 
 from tiozin.api import conventions
+from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, trim_lower
 
@@ -83,6 +84,13 @@ class SparkFileInput(SparkInput):
         self.path = as_list(path)
         self.format = trim_lower(format or "parquet")
         self.explode_filepath = explode_filepath
+
+    def lineage(self) -> Lineage:
+        # ref: https://openlineage.io/docs/spec/naming/
+        return Lineage(
+            inputs=[LineageDataset.from_uri(p) for p in self.path],
+            outputs=[],
+        )
 
     def read(self) -> DataFrame:
         self.info(f"Reading {self.format} from {self.path}")

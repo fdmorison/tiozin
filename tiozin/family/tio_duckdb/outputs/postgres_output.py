@@ -4,6 +4,7 @@ from typing import get_args
 
 from duckdb import DuckDBPyRelation
 
+from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, randstr, trim_lower, trim_upper
 
@@ -194,6 +195,18 @@ class DuckdbPostgresOutput(DuckdbOutput):
     @property
     def _probe(self) -> str:
         return f"{self._database}.{self._pg_probe}"
+
+    def lineage(self) -> Lineage:
+        # ref: https://openlineage.io/docs/spec/naming/
+        return Lineage(
+            inputs=[],
+            outputs=[
+                LineageDataset(
+                    namespace=f"postgres://{self.host}:{self.port}",
+                    name=f"{self.database}.{self.schema}.{self.table}",
+                )
+            ],
+        )
 
     def setup(self, data: DuckDBPyRelation) -> None:
         self.duckdb.execute(
