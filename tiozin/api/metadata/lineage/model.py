@@ -87,12 +87,12 @@ class LineageRunEvent(BaseModel):
         cls,
         ctx: Context,
         type: LineageRunEventType,
-        inputs: list[str] | None = None,
-        outputs: list[str] | None = None,
+        inputs: list[LineageDataset] | None = None,
+        outputs: list[LineageDataset] | None = None,
     ) -> LineageRunEvent:
         job = ctx.job
-        namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}.{ctx.layer}"
-        job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}.{job.layer}"
+        namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}"
+        job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}"
         return cls(
             type=type.value,
             producer=config.app_identifier,
@@ -126,20 +126,8 @@ class LineageRunEvent(BaseModel):
                 "cost_center": ctx.cost_center,
                 **ctx.labels,
             },
-            inputs=[
-                LineageDataset(
-                    namespace=namespace,
-                    name=n,
-                )
-                for n in (inputs or [])
-            ],
-            outputs=[
-                LineageDataset(
-                    namespace=namespace,
-                    name=n,
-                )
-                for n in (outputs or [])
-            ],
+            inputs=inputs or [],
+            outputs=outputs or [],
         )
 
 

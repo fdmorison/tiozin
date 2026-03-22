@@ -5,6 +5,7 @@ from tiozin.compose import StepProxy, tioproxy
 
 from ...exceptions import RequiredArgumentError
 from .. import Tiozin
+from ..metadata.lineage.model import Lineage, LineageDataset
 
 TData = TypeVar("TData")
 
@@ -71,3 +72,14 @@ class Output(Tiozin, Generic[TData]):
 
     def teardown(self, data: TData) -> None:
         return None
+
+    def lineage(self) -> Lineage:
+        return Lineage(
+            inputs=[],
+            outputs=[
+                LineageDataset(
+                    namespace=f"{self.org}.{self.region}.{self.domain}.{self.subdomain}",
+                    name=f"{self.layer}.{self.product}.{self.model}",
+                )
+            ],
+        )

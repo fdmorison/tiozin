@@ -10,6 +10,7 @@ from tiozin.api import (
     Tiozin,
     Transform,
 )
+from tiozin.api.metadata.lineage.model import Lineage
 from tiozin.compose import JobProxy, tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
@@ -133,3 +134,9 @@ class Job(Tiozin, Generic[TData]):
 
     def teardown(self) -> None:
         return None
+
+    def lineage(self) -> Lineage:
+        return Lineage(
+            inputs=[d for i in self.inputs for d in i.lineage().inputs],
+            outputs=[d for o in self.outputs for d in o.lineage().outputs],
+        )
