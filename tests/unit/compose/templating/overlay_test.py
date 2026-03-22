@@ -4,16 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from tests.stubs import (
-    InputStub,
-    JobStub,
-    LineageRegistryStub,
-    OutputStub,
-    RunnerStub,
-    TransformStub,
-)
+from tests.stubs import InputStub, JobStub, OutputStub, RunnerStub, TransformStub
 from tiozin import Context
-from tiozin.api.metadata.bundle import Registries
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import TiozinInputError
 from tiozin.family.tio_kernel import NoOpInput
@@ -529,11 +521,8 @@ def test_overlay_should_render_job_templates_across_all_phases(fake_domain: dict
         runner=RunnerStub(),
         inputs=[InputStub(name="test")],
     )
-    registries = Registries(lineage=LineageRegistryStub())
-
     # Act
-    with Context.for_job(job, registries=registries):
-        job.submit()
+    job.submit()
 
     # Assert
     actual = (
