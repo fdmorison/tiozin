@@ -1,4 +1,4 @@
-from openlineage.client import OpenLineageClient
+from openlineage.client import OpenLineageClient, OpenLineageClientOptions
 from openlineage.client.generated.base import (
     InputDataset,
     Job,
@@ -20,24 +20,85 @@ class OpenLineageRegistry(LineageRegistry):
     """
     OpenLineage-compatible lineage registry.
 
-    Emits run events to any OpenLineage-compatible backend (e.g. Marquez, OpenMetadata)
-    via the standard HTTP API at `POST /api/v1/lineage`.
+    Emits run events to OpenLineage backends (e.g. Marquez, OpenMetadata) using the standard
+    HTTP API (`POST /api/v1/lineage`) or a custom transport (e.g. Kafka) when configured
+    via `options`.
+
+    See the OpenLineage Python client documentation for supported transports and configuration:
+    https://openlineage.io/docs/client/python/#transport
 
     Attributes:
-        location: Base URL of the OpenLineage backend (e.g. `http://localhost:5000`).
+        location:
+            Base URL of the OpenLineage backend (e.g. `http://localhost:5000`).
+            Not required when using a custom transport.
+        verify:
+            Whether to verify TLS certificates. Defaults to `True`.
+        api_key:
+            Optional bearer token sent with HTTP requests.
+        options:
+            Extra keyword arguments forwarded to `OpenLineageClient`.
+            Use this to configure custom transports (e.g. `transport={...}`).
+
+    Examples:
+
+        ```python
+        OpenLineageRegistry(
+            location="http://marquez:5000",
+            api_key="{{ ENV.LINEAGE_API_KEY }}"
+        )
+        ```
+
+        To configure via `tiozin.yaml`, declare the registry under `registries.lineage`:
+
+        ```yaml
+        registries:
+          lineage:
+            kind: tio_kernel:OpenLineageRegistry
+            location: http://marquez:5000
+            api_key: "{{ ENV.LINEAGE_API_KEY }}"
+        ```
+
+        Any extra field in `tiozin.yaml` is forwarded as a keyword argument to `OpenLineageClient`,
+        which allows configuring alternative transports. The example below uses Kafka:
+
+        ```yaml
+        registries:
+          lineage:
+            kind: tio_kernel:OpenLineageRegistry
+            transport:
+              type: kafka
+              topicName: openlineage.events
+              messageKey: some-value
+              properties:
+                bootstrap.servers: localhost:9092,another.host:9092
+                acks: all
+                retries: 3
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
+                value.serializer: org.apache.kafka.common.serialization.StringSerializer
+        ```
     """
 
-    def __init__(self, location: str, **options) -> None:
+    def __init__(
+        self,
+        location: str = None,
+        verify: bool = True,
+        api_key: str = None,
+        **options,
+    ) -> None:
         super().__init__(location=location, **options)
+        self.verify = verify
+        self.api_key = api_key
         self._client: OpenLineageClient = None
 
     def setup(self) -> None:
         self._client = OpenLineageClient(
             url=self.location,
-            config={
-                **self.options,
-                "timeout": self.timeout or 3,
-            },
+            options=OpenLineageClientOptions(
+                timeout=self.timeout,
+                api_key=self.api_key,
+                verify=self.verify,
+            ),
+            **self.options,
         )
         self.ready = True
 
@@ -46,6 +107,7 @@ class OpenLineageRegistry(LineageRegistry):
         self.ready = False
 
     def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:
+        # TODO
         return None
 
     def register(self, identifier: str, value: LineageRunEvent) -> None:
