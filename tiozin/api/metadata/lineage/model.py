@@ -3,7 +3,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+import pendulum
+from pydantic import BaseModel, ConfigDict, Field
 
 from tiozin import config
 from tiozin.utils import utcnow
@@ -50,11 +51,13 @@ class LineageRunEvent(BaseModel):
     Backends (e.g. `OpenLineageRegistry`) convert this into their own protocol format.
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     type: LineageRunEventType
-    timestamp: str
-    run_id: str
     producer: str
-    nominal_time: str
+    timestamp: pendulum.DateTime
+    nominal_time: pendulum.DateTime
+    run_id: str
     job: LineageJob
     parent: LineageParentRun | None = None
     inputs: list[LineageDataset] = Field(default_factory=list)
@@ -74,10 +77,10 @@ class LineageRunEvent(BaseModel):
         job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}.{job.layer}"
         return cls(
             type=type.value,
-            timestamp=utcnow().isoformat(timespec="milliseconds"),
-            run_id=ctx.run_id,
             producer=config.app_identifier,
-            nominal_time=ctx.nominal_time.isoformat(timespec="milliseconds"),
+            timestamp=ctx.executed_at or utcnow(),
+            nominal_time=ctx.nominal_time,
+            run_id=ctx.run_id,
             job=LineageJob(
                 namespace=namespace,
                 name=ctx.slug,

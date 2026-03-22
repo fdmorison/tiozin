@@ -34,7 +34,7 @@ def test_build_run_event_should_map_run_fields(registry: OpenLineageRegistry):
     )
     expected = (
         LineageRunEventType.START,
-        "2024-01-01T00:00:00.000",
+        "2024-01-01T00:00:00.000+00:00",
         "tiozin/test",
     )
     assert actual == expected

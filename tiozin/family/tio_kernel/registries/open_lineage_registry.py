@@ -57,12 +57,14 @@ class OpenLineageRegistry(LineageRegistry):
     def _build_run_event(self, event: LineageRunEvent) -> RunEvent:
         return RunEvent(
             eventType=event.type,
-            eventTime=event.timestamp,
+            eventTime=event.timestamp.isoformat(timespec="milliseconds"),
             producer=event.producer,
             run=Run(
                 runId=event.run_id.split("_", 1)[-1],
                 facets={
-                    "nominalTime": NominalTimeRunFacet(nominalStartTime=event.nominal_time),
+                    "nominalTime": NominalTimeRunFacet(
+                        nominalStartTime=event.nominal_time.isoformat(timespec="milliseconds")
+                    ),
                     "tags": TagsRunFacet(
                         tags=[TagsRunFacetFields(key=k, value=v) for k, v in event.tags.items()]
                     ),

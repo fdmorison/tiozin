@@ -1,3 +1,4 @@
+import pendulum
 import pytest
 
 from tests import config
@@ -32,6 +33,33 @@ def test_from_context_should_map_job_fields(job_context: Context):
         "test_runner",
     )
     assert actual == expected
+
+
+def test_from_context_should_use_executed_at_as_timestamp(job_context: Context):
+    # Arrange
+    executed_at = pendulum.datetime(2024, 6, 15, 12, 0, 0, tz="UTC")
+    job_context.executed_at = executed_at
+
+    # Act
+    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+
+    # Assert
+    actual = result.timestamp
+    expected = executed_at
+    assert actual == expected
+
+
+def test_from_context_should_fallback_timestamp_to_utcnow_when_executed_at_is_none(
+    job_context: Context,
+):
+    # Arrange
+    job_context.executed_at = None
+
+    # Act
+    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+
+    # Assert
+    assert isinstance(result.timestamp, pendulum.DateTime)
 
 
 def test_from_context_should_map_run_identity_fields(job_context: Context):
