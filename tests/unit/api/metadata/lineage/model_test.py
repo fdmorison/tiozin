@@ -1,12 +1,93 @@
+from pathlib import Path
+
 import pendulum
 import pytest
 
 from tests import config
 from tiozin.api.metadata.lineage.model import (
+    LineageDataset,
     LineageRunEvent,
     LineageRunEventType,
 )
 from tiozin.api.runtime.context import Context
+
+# ============================================================================
+# LineageDataset.from_uri
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "uri, expected_namespace, expected_name",
+    [
+        ("s3://my-bucket/data/file.parquet", "s3://my-bucket", "data/file.parquet"),
+        ("gs://my-bucket/data/file.parquet", "gs://my-bucket", "data/file.parquet"),
+        ("az://my-container/data/file.parquet", "az://my-container", "data/file.parquet"),
+    ],
+)
+def test_from_uri_should_split_object_storage_uri_into_bucket_and_path(
+    uri: str, expected_namespace: str, expected_name: str
+):
+    # Act
+    result = LineageDataset.from_uri(uri)
+
+    # Assert
+    actual = (result.namespace, result.name)
+    expected = (expected_namespace, expected_name)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "uri, expected_namespace",
+    [
+        ("http://example.com/data/file.csv", "http://example.com"),
+        ("https://example.com/data/file.csv", "https://example.com"),
+    ],
+)
+def test_from_uri_should_split_http_uri_into_host_namespace_and_path_name(
+    uri: str, expected_namespace: str
+):
+    # Act
+    result = LineageDataset.from_uri(uri)
+
+    # Assert
+    actual = (result.namespace, result.name)
+    expected = (
+        expected_namespace,
+        "data/file.csv",
+    )
+    assert actual == expected
+
+
+def test_from_uri_should_split_file_uri_into_empty_netloc_namespace_and_path():
+    # Act
+    result = LineageDataset.from_uri("file:///data/warehouse/file.parquet")
+
+    # Assert
+    actual = (result.namespace, result.name)
+    expected = (
+        "file://",
+        "data/warehouse/file.parquet",
+    )
+    assert actual == expected
+
+
+def test_from_uri_should_normalize_local_path_when_no_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+
+    # Act
+    result = LineageDataset.from_uri("data/file.parquet")
+
+    # Assert
+    actual = (result.namespace, result.name)
+    expected = (
+        "file://",
+        f"{str(tmp_path).lstrip('/')}/data/file.parquet",
+    )
+    assert actual == expected
+
 
 # ============================================================================
 # LineageRunEvent.from_context — job identity and fields

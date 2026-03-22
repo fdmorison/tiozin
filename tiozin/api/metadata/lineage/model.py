@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import pendulum
 from pydantic import BaseModel, ConfigDict, Field
 
 from tiozin import config
-from tiozin.utils import utcnow
+from tiozin.utils import normalize_uri, utcnow
 
 if TYPE_CHECKING:
     from tiozin.api.runtime.context import Context
@@ -40,6 +41,23 @@ class LineageParentRun(BaseModel):
 class LineageDataset(BaseModel):
     namespace: str
     name: str
+
+    def from_uri(uri: str) -> LineageDataset:
+        uri = normalize_uri(uri)
+        parsed = urlparse(uri)
+
+        if parsed.netloc:
+            namespace = f"{parsed.scheme}://{parsed.netloc}"
+        else:
+            namespace = f"{parsed.scheme}://"
+
+        name = parsed.path.lstrip("/")
+        return LineageDataset(namespace=namespace, name=name)
+
+
+class Lineage(BaseModel):
+    inputs: list[LineageDataset]
+    outputs: list[LineageDataset]
 
 
 class LineageRunEvent(BaseModel):
