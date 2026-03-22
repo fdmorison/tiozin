@@ -13,8 +13,14 @@ registries:
 
 | Property | Description | Default |
 |---|---|---|
-| `location` | Base URL of the OpenLineage backend | required |
-| `timeout` | HTTP request timeout in seconds | `10` |
+| `location` | Base URL of the OpenLineage backend | none |
+| `timeout` | HTTP request timeout in seconds | `3` |
+| `verify` | Verify TLS certificates | `true` |
+| `api_key` | Bearer token for API key authentication | none |
+| `readonly` | Reject write operations | `false` |
+| `cache` | Cache retrieved metadata in memory | `false` |
+| `name` | Display name for this registry instance | class name |
+| `description` | Human-readable description | none |
 
 ## How it works
 
@@ -59,23 +65,42 @@ Each event follows the OpenLineage `RunEvent` spec:
 
 The `namespace` is built from the job's `org`, `region`, `domain`, `subdomain`, and `layer` fields joined by `.`. The `name` is the job slug.
 
-## Inputs and outputs
 
-`inputs` and `outputs` are empty by default. Pass dataset names when calling `register()` directly:
+## Authentication
 
-```python
-self.context.registries.lineage.register(
-    event.run_id,
-    RunEvent.from_context(
-        self.context,
-        RunState.COMPLETE,
-        inputs=["finance.raw_orders"],
-        outputs=["finance.orders"],
-    ),
-)
+Set `api_key` to send a `Bearer` token with every request:
+
+```yaml
+registries:
+  lineage:
+    kind: tio_kernel:OpenLineageRegistry
+    location: http://openmetadata:4000
+    api_key: "{{ ENV.OPENLINEAGE_API_KEY }}"
 ```
 
-For the automatic lifecycle events emitted by `JobProxy`, `inputs` and `outputs` are always empty. Dataset-level lineage requires explicit calls.
+## Custom transport
+
+Any extra field in the manifest is forwarded as a keyword argument to `OpenLineageClient`. This lets you configure transports beyond the default HTTP setup.
+
+The example below uses Kafka. The `transport` field is passed directly as `transport=` to `OpenLineageClient`:
+
+```yaml
+registries:
+  lineage:
+    kind: tio_kernel:OpenLineageRegistry
+    transport:
+      type: kafka
+      topicName: openlineage.events
+      messageKey: some-value
+      properties:
+        bootstrap.servers: localhost:9092,another.host:9092
+        acks: all
+        retries: 3
+        key.serializer: org.apache.kafka.common.serialization.StringSerializer
+        value.serializer: org.apache.kafka.common.serialization.StringSerializer
+```
+
+For the full list of transport types and their options, see the [OpenLineage client configuration reference](https://openlineage.io/docs/client/python/#transport).
 
 ## Using with Marquez
 
