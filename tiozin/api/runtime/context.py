@@ -273,8 +273,8 @@ class Context:
     def _generate_step_run_id(slug: str, job: Context | None = None) -> str:
         if job:
             job_run_id = job.run_id.removeprefix("job_")
-            return f"step_{job_run_id}_{slug}"
-        return generate_id(prefix="step", suffix=slug)
+            return f"step_{job_run_id}"
+        return generate_id(prefix="step")
 
     def _build_template_vars(
         self,

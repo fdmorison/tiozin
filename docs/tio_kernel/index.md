@@ -10,4 +10,5 @@ All defaults it provides can be overridden by plugins from other families.
 - [FileJobRegistry](file-job-registry.md)
 - [FileSettingRegistry](file-setting-registry.md)
 - [EnvSecretRegistry](env-secret-registry.md)
+- [OpenLineageRegistry](open-lineage-registry.md)
 - [NoOp components](noops.md)

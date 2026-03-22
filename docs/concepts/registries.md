@@ -20,9 +20,16 @@ The framework defines seven registry contracts:
 
 ## Built-in registries
 
-The `tio_kernel` family ships NoOp implementations for optional registries: `SettingRegistry`, `SecretRegistry`, `SchemaRegistry`, `LineageRegistry`, `MetricRegistry`, and `TransactionRegistry`. They return `None` or discard events. They work fine for local development and testing.
+The `tio_kernel` family ships several production-ready implementations:
 
-`JobRegistry` is covered by `FileJobRegistry` and `SettingRegistry` is covered by `FileSettingRegistry`. Both are production-ready implementations that load YAML or JSON manifests from any location [fsspec](https://filesystem-spec.readthedocs.io/en/latest/) supports: local paths, object storage (`s3://`, `gs://`, `az://`), or remote protocols (`http://`, `https://`, `ftp://`, `sftp://`).
+| Plugin | Registry | Description |
+|---|---|---|
+| `FileJobRegistry` | `JobRegistry` | Loads job manifests from any fsspec-supported location |
+| `FileSettingRegistry` | `SettingRegistry` | Loads framework configuration from any fsspec-supported location |
+| `EnvSecretRegistry` | `SecretRegistry` | Reads secrets from environment variables |
+| `OpenLineageRegistry` | `LineageRegistry` | Sends run events to any OpenLineage-compatible backend via HTTP |
+
+For registries without a production implementation in `tio_kernel`, NoOp versions are provided: `NoOpSchemaRegistry`, `NoOpMetricRegistry`, and `NoOpTransactionRegistry`. They return `None` or discard events. Use them in local development and testing.
 
 `FileJobRegistry` is the registry used when you run `tiozin run path/to/job.yaml`. Set `location` to a folder, S3 prefix, or HTTP base URL and jobs are loaded by name relative to it:
 

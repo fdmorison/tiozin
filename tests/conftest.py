@@ -1,7 +1,14 @@
 import pytest
 
 from tests import env
-from tests.stubs import InputStub, JobStub, OutputStub, RunnerStub, TransformStub
+from tests.stubs import (
+    InputStub,
+    JobStub,
+    LineageRegistryStub,
+    OutputStub,
+    RunnerStub,
+    TransformStub,
+)
 from tiozin import Context
 from tiozin.api.metadata.setting.manifest import (
     JobRegistryManifest,
@@ -131,6 +138,11 @@ def job_stub(
         outputs=[output_stub],
         **fake_domain,
     )
+
+
+@pytest.fixture()
+def lineage_registry_stub() -> LineageRegistryStub:
+    return LineageRegistryStub()
 
 
 # --------------------------------------------------

@@ -152,7 +152,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         # Tiozin arguments
         "options": step.options,
         # Runtime Identity
-        "run_id": f"step_{job_context.run_id.removeprefix('job_')}_{step.slug}",
+        "run_id": f"step_{job_context.run_id.removeprefix('job_')}",
         "run_attempt": 1,
         "nominal_time": job_context.nominal_time,
         # Runtime Lifecycle

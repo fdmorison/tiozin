@@ -1,9 +1,11 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
+from tiozin import config
 from tiozin.api import Tiozin
 from tiozin.compose import RegistryProxy, tioproxy
 from tiozin.exceptions import TiozinNotFoundError
+from tiozin.utils import default
 
 TMetadata = TypeVar("TMetadata")
 
@@ -28,16 +30,16 @@ class Registry(Tiozin, Generic[TMetadata]):
     def __init__(
         self,
         location: str,
-        readonly: bool = False,
-        cache: bool = False,
+        readonly: bool = None,
+        cache: bool = None,
         timeout: int = None,
         **options,
     ) -> None:
         super().__init__(**options)
         self.location = location
-        self.readonly = readonly
-        self.cache = cache
-        self.timeout = timeout
+        self.readonly = default(readonly, config.registry_default_readonly)
+        self.cache = default(cache, config.registry_default_cache)
+        self.timeout = default(timeout, config.registry_default_timeout)
         self.ready = False
 
     def setup(self, *args, **kwargs) -> None:

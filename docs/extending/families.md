@@ -25,6 +25,7 @@ tio_dilbert/
 │   ├── inputs/
 │   ├── outputs/
 │   ├── transforms/
+│   ├── registries/
 │   ├── proxies/        ← optional: cross-cutting behavior
 │   └── compose/        ← optional: assembly helpers, utilities
 ```
@@ -124,11 +125,14 @@ Its purpose is to guarantee that the system is always complete and executable, e
 
 ### Functional defaults
 
-`tio_kernel` ships one production-ready implementation:
+`tio_kernel` ships production-ready implementations for common infrastructure needs:
 
 | Plugin | Description |
 |---|---|
 | `FileJobRegistry` | Loads and stores job manifests from the filesystem (local paths or object storage via fsspec). Supports YAML and JSON |
+| `FileSettingRegistry` | Loads framework configuration from any path or URI supported by fsspec |
+| `EnvSecretRegistry` | Reads secrets from environment variables |
+| `OpenLineageRegistry` | Sends run events to any OpenLineage-compatible backend (Marquez, OpenMetadata) via HTTP |
 
 ### No-op defaults
 

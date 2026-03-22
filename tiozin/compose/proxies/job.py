@@ -56,12 +56,16 @@ class JobProxy(wrapt.ObjectProxy):
                 context.setup_at = utcnow()
                 job.setup()
                 context.executed_at = utcnow()
+                lineage = context.registries.lineage
+                lineage.start()
                 with job.runner():
                     result = job.submit()
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
+                lineage.fail()
                 raise
             else:
+                lineage.complete()
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
                 return result
             finally:

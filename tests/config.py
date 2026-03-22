@@ -17,6 +17,7 @@ artifact_version = "test"
 app_name = "tiozin"
 app_title = "Tiozin"
 app_version = artifact_version
+app_identifier = f"{app_name}/{app_version}"
 app_host = env.HOSTNAME
 app_description = "Test"
 app_timezone = ZoneInfo("UTC")
@@ -40,6 +41,13 @@ log_redact_min_length = env.TIO_LOG_REDACT_MIN_LENGTH
 tiozin_family_group = "tiozin.family"
 tiozin_family_prefixes = ["tio_", "tia_"]
 tiozin_family_unknown = "tio_unknown"
+
+# ===============================================
+#           Tiozin Registries
+# ===============================================
+registry_default_timeout = 3
+registry_default_readonly = False
+registry_default_cache = False
 
 # ===============================================
 #           Tiozin Configs
