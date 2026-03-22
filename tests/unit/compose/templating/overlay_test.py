@@ -5,7 +5,9 @@ from datetime import datetime
 import pytest
 
 from tests.stubs import InputStub, JobStub, OutputStub, RunnerStub, TransformStub
+from tests.stubs.lineage import LineageRegistryStub
 from tiozin import Context
+from tiozin.api.metadata.bundle import Registries
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import TiozinInputError
 from tiozin.family.tio_kernel import NoOpInput
@@ -513,7 +515,9 @@ def test_overlay_should_render_and_restore_templates_with_jinja2_expressions(
 # ============================================================================
 
 
-def test_overlay_should_render_job_templates_across_all_phases(fake_domain: dict):
+def test_overlay_should_render_job_templates_across_all_phases(
+    fake_domain: dict, lineage_registry_stub: LineageRegistryStub
+):
     # Arrange
     job = JobStub(
         name="test",
@@ -521,8 +525,10 @@ def test_overlay_should_render_job_templates_across_all_phases(fake_domain: dict
         runner=RunnerStub(),
         inputs=[InputStub(name="test")],
     )
+
     # Act
-    job.submit()
+    with Context.for_job(job, registries=Registries(lineage=lineage_registry_stub)):
+        job.submit()
 
     # Assert
     actual = (
