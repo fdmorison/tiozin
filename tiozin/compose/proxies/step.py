@@ -6,7 +6,7 @@ import wrapt
 
 from tiozin.api import Context
 from tiozin.api.metadata.lineage.model import Lineage
-from tiozin.exceptions import AccessViolationError
+from tiozin.exceptions import AccessViolationError, TiozinInternalError
 from tiozin.utils import utcnow
 
 from .. import TiozinTemplateOverlay
@@ -17,27 +17,10 @@ if TYPE_CHECKING:
 
 class StepProxy(wrapt.ObjectProxy):
     """
-    Runtime proxy that enriches a Step with Tiozin's core capabilities.
+    Wraps an Input, Transform, or Output to add Tiozin's runtime behavior.
 
-    The StepProxy adds cross-cutting runtime features such as templating, logging, context
-    propagation, and lifecycle control to Input, Transform, and Output implementations without
-    modifying the original class. This is the recommended way to implement features
-    in a Tio provider.
-
-    The wrapped Step remains unaware of the proxy and is expected to focus exclusively on
-    domain-specific ETL logic, while the proxy handles boilerplate concerns.
-
-    Core responsibilities include:
-    - Managing the execution lifecycle (setup, execute, teardown)
-    - Constructing and providing a Context from a Context
-    - Propagating template variables and shared session state
-    - Enforcing runtime constraints and access policies
-    - Providing standardized logging, timing, and error handling
-
-    This proxy belongs to Tiozin's runtime layer and is not an orchestration mechanism.
-    It does not schedule executions, manage dependencies, or define execution order.
-    Its responsibility is to provide a consistent and safe execution environment for
-    Step plugins.
+    The wrapped step focuses on ETL logic. The proxy handles everything else:
+    context propagation, template rendering, lifecycle hooks, logging, and timing.
     """
 
     @property
@@ -62,15 +45,17 @@ class StepProxy(wrapt.ObjectProxy):
             return step.lineage()
 
     def read(self) -> None:
-        return self._run("read")
+        return self._run()
 
     def transform(self, *args, **kwargs) -> None:
-        return self._run("transform", *args, **kwargs)
+        return self._run(*args, **kwargs)
 
     def write(self, *args, **kwargs) -> None:
-        return self._run("write", *args, **kwargs)
+        return self._run(*args, **kwargs)
 
-    def _run(self, method_name: str, *args, **kwargs) -> Any:
+    def _run(self, *args, **kwargs) -> Any:
+        from tiozin import Input, Output, Transform
+
         step: EtlStep = self.__wrapped__
         context = self.context
 
@@ -81,8 +66,15 @@ class StepProxy(wrapt.ObjectProxy):
                 context.setup_at = utcnow()
                 step.setup(*args, **kwargs)
                 context.executed_at = utcnow()
-                execute = getattr(step, method_name)
-                result = execute(*args, **kwargs)
+                match step:
+                    case Input():
+                        result = step.read(*args, **kwargs)
+                    case Transform():
+                        result = step.transform(*args, **kwargs)
+                    case Output():
+                        result = step.write(*args, **kwargs)
+                    case _:
+                        raise TiozinInternalError(f"Not a Tiozin: {step}")
             except Exception:
                 step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
                 raise

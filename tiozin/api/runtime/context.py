@@ -303,8 +303,16 @@ class Context:
         return FrozenMapping(result)
 
     # ==================================================
-    # Metrics
+    # Properties
     # ==================================================
+
+    @property
+    def namespace(self) -> str:
+        return f"{self.org}.{self.region}.{self.domain}.{self.subdomain}"
+
+    @property
+    def dataset_name(self) -> str:
+        return f"{self.layer}.{self.product}.{self.model}"
 
     @property
     def delay(self) -> float:

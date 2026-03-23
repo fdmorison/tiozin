@@ -113,16 +113,16 @@ def test_from_context_should_map_job_fields(job_context: Context):
     actual = (
         result.job.namespace,
         result.job.name,
-        result.job.job_type,
+        result.job.type,
         result.job.processing_type,
         result.job.integration,
     )
     expected = (
         "acme.latam.ecommerce.checkout",
         "test_job",
-        "JobStub",
+        "JOB",
         "BATCH",
-        "test_runner",
+        "TIOZIN",
     )
     assert actual == expected
 
@@ -216,7 +216,7 @@ def test_from_context_should_set_parent_when_step_context(
     # Assert
     actual = (
         result.parent.run_id,
-        result.parent.job_name,
+        result.parent.name,
         result.parent.namespace,
     )
     expected = (

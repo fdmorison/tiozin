@@ -1,73 +1,66 @@
 from __future__ import annotations
 
-from enum import Enum
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-from urllib.parse import urlparse
 
 import pendulum
-from pydantic import BaseModel, ConfigDict, Field
 
 from tiozin import config
-from tiozin.utils import normalize_uri, utcnow
+from tiozin.utils import utcnow
+
+from .dataset import LineageDataset
+from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
 if TYPE_CHECKING:
-    from tiozin.api.runtime.context import Context
+    from tiozin.api import Context
 
 
-class LineageRunEventType(str, Enum):
-    START = "START"
-    COMPLETE = "COMPLETE"
-    FAIL = "FAIL"
-    ABORT = "ABORT"
-
-    def __str__(self) -> str:
-        return self.value
-
-
-class LineageJob(BaseModel):
-    namespace: str
-    name: str
-    job_type: str
-    processing_type: str
-    integration: str
-
-
-class LineageParentRun(BaseModel):
-    run_id: str
-    job_name: str
-    namespace: str
-
-
-class LineageDataset(BaseModel):
-    namespace: str
-    name: str
-
-    def from_uri(uri: str) -> LineageDataset:
-        # ref: https://openlineage.io/docs/spec/naming/
-        parsed = urlparse(str(uri))
-
-        if not parsed.scheme:
-            # local path without scheme — keep as-is, do not resolve to absolute
-            return LineageDataset(namespace="file", name=str(uri).strip("/"))
-
-        uri = normalize_uri(uri)
-        parsed = urlparse(uri)
-
-        if parsed.netloc:
-            namespace = f"{parsed.scheme}://{parsed.netloc}"
-        else:
-            namespace = parsed.scheme
-
-        name = parsed.path.strip("/")
-        return LineageDataset(namespace=namespace, name=name)
-
-
-class Lineage(BaseModel):
+@dataclass(frozen=True)
+class Lineage:
     inputs: list[LineageDataset]
     outputs: list[LineageDataset]
 
 
-class LineageRunEvent(BaseModel):
+@dataclass(frozen=True)
+class LineageJob:
+    namespace: str
+    name: str
+    type: LineageJobType
+    processing_type: LineageProcessingType
+    integration: str
+
+    @classmethod
+    def from_context(cls, ctx: Context) -> LineageJob:
+        return cls(
+            namespace=ctx.namespace,
+            name=ctx.slug,
+            type=LineageJobType.JOB,
+            processing_type=LineageProcessingType.STREAMING
+            if ctx.runner.streaming
+            else LineageProcessingType.BATCH,
+            integration=config.app_name.upper(),
+        )
+
+
+@dataclass(frozen=True)
+class LineageParentRun:
+    run_id: str
+    name: str
+    namespace: str
+
+    @classmethod
+    def from_context(cls, ctx: Context) -> LineageParentRun | None:
+        if ctx.job is ctx:
+            return None
+        return cls(
+            run_id=ctx.job.run_id,
+            name=ctx.job.slug,
+            namespace=ctx.job.namespace,
+        )
+
+
+@dataclass(frozen=True)
+class LineageRunEvent:
     """
     Tiozin's internal representation of a lineage run event.
 
@@ -76,18 +69,16 @@ class LineageRunEvent(BaseModel):
     Backends (e.g. `OpenLineageRegistry`) convert this into their own protocol format.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     type: LineageRunEventType
     producer: str
     timestamp: pendulum.DateTime
     nominal_time: pendulum.DateTime
     run_id: str
     job: LineageJob
-    parent: LineageParentRun | None = None
-    inputs: list[LineageDataset] = Field(default_factory=list)
-    outputs: list[LineageDataset] = Field(default_factory=list)
     tags: dict[str, str]
+    parent: LineageParentRun | None = None
+    inputs: list[LineageDataset] = field(default_factory=list)
+    outputs: list[LineageDataset] = field(default_factory=list)
 
     @classmethod
     def from_context(
@@ -97,29 +88,14 @@ class LineageRunEvent(BaseModel):
         inputs: list[LineageDataset] | None = None,
         outputs: list[LineageDataset] | None = None,
     ) -> LineageRunEvent:
-        job = ctx.job
-        namespace = f"{ctx.org}.{ctx.region}.{ctx.domain}.{ctx.subdomain}"
-        job_namespace = f"{job.org}.{job.region}.{job.domain}.{job.subdomain}"
         return cls(
             type=type.value,
             producer=config.app_identifier,
             timestamp=ctx.executed_at or utcnow(),
             nominal_time=ctx.nominal_time,
             run_id=ctx.run_id,
-            job=LineageJob(
-                namespace=namespace,
-                name=ctx.slug,
-                job_type=ctx.kind,
-                processing_type="STREAMING" if ctx.runner.streaming else "BATCH",
-                integration=ctx.runner.name,
-            ),
-            parent=LineageParentRun(
-                run_id=job.run_id,
-                job_name=job.slug,
-                namespace=job_namespace,
-            )
-            if job is not ctx
-            else None,
+            job=LineageJob.from_context(ctx),
+            parent=LineageParentRun.from_context(ctx),
             tags={
                 "org": ctx.org,
                 "region": ctx.region,
@@ -136,12 +112,3 @@ class LineageRunEvent(BaseModel):
             inputs=inputs or [],
             outputs=outputs or [],
         )
-
-
-__all__ = [
-    "LineageRunEventType",
-    "LineageDataset",
-    "LineageJob",
-    "LineageParentRun",
-    "LineageRunEvent",
-]

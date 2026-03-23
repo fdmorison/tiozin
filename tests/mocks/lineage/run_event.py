@@ -18,7 +18,7 @@ job_start_event = LineageRunEvent(
     job=LineageJob(
         namespace="acme.latam.ecommerce.checkout.raw",
         name="test_job",
-        job_type="JobStub",
+        type="JobStub",
         processing_type="BATCH",
         integration="test_runner",
     ),
@@ -37,13 +37,13 @@ step_start_event = LineageRunEvent(
     job=LineageJob(
         namespace="acme.latam.ecommerce.checkout.raw",
         name="test_input",
-        job_type="InputStub",
+        type="InputStub",
         processing_type="BATCH",
         integration="test_runner",
     ),
     parent=LineageParentRun(
         run_id="job_018f1a2b-3c4d-7e8f-9a0b-1c2d3e4f5a6b",
-        job_name="test_job",
+        name="test_job",
         namespace="acme.latam.ecommerce.checkout.raw",
     ),
     inputs=[],
