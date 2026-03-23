@@ -80,7 +80,6 @@ class SparkFileOutput(SparkOutput):
         self.partition_by = as_list(partition_by)
 
     def lineage(self) -> Lineage:
-        # ref: https://openlineage.io/docs/spec/naming/
         return Lineage(
             inputs=[],
             outputs=[LineageDataset.from_uri(self.path)],

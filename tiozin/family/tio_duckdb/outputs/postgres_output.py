@@ -197,13 +197,11 @@ class DuckdbPostgresOutput(DuckdbOutput):
         return f"{self._database}.{self._pg_probe}"
 
     def lineage(self) -> Lineage:
-        # ref: https://openlineage.io/docs/spec/naming/
         return Lineage(
             inputs=[],
             outputs=[
-                LineageDataset(
-                    namespace=f"postgres://{self.host}:{self.port}",
-                    name=f"{self.database}.{self.schema}.{self.table}",
+                LineageDataset.from_postgres(
+                    self.host, self.port, self.database, self.schema, self.table
                 )
             ],
         )

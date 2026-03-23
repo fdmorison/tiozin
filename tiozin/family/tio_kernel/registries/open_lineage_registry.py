@@ -135,7 +135,7 @@ class OpenLineageRegistry(LineageRegistry):
                             "parent": ParentRunFacet(
                                 run=ParentRun(runId=event.parent.run_id.split("_", 1)[-1]),
                                 job=ParentJob(
-                                    namespace=event.parent.namespace, name=event.parent.job_name
+                                    namespace=event.parent.namespace, name=event.parent.name
                                 ),
                             )
                         }
@@ -151,7 +151,7 @@ class OpenLineageRegistry(LineageRegistry):
                     "jobType": JobTypeJobFacet(
                         processingType=event.job.processing_type,
                         integration=event.job.integration,
-                        jobType=event.job.job_type,
+                        jobType=event.job.type,
                     ),
                 },
             ),

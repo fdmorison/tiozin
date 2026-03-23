@@ -1,3 +1,5 @@
+import dataclasses
+
 import pytest
 from openlineage.client.generated.parent_run import ParentRunFacet
 
@@ -87,7 +89,7 @@ def test_registry_should_default_cache_from_config():
 
 def test_build_run_event_should_map_run_fields(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -108,7 +110,7 @@ def test_build_run_event_should_map_run_fields(registry: OpenLineageRegistry):
 
 def test_build_run_event_should_strip_job_run_id_prefix(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -121,7 +123,7 @@ def test_build_run_event_should_strip_job_run_id_prefix(registry: OpenLineageReg
 
 def test_build_run_event_should_strip_step_run_id_prefix(registry: OpenLineageRegistry):
     # Arrange
-    event = step_start_event.model_copy()
+    event = step_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -139,7 +141,7 @@ def test_build_run_event_should_strip_step_run_id_prefix(registry: OpenLineageRe
 
 def test_build_run_event_should_map_job_fields(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -158,7 +160,7 @@ def test_build_run_event_should_map_job_fields(registry: OpenLineageRegistry):
 
 def test_build_run_event_should_include_job_type_facet(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -185,7 +187,7 @@ def test_build_run_event_should_include_job_type_facet(registry: OpenLineageRegi
 
 def test_build_run_event_should_omit_parent_facet_when_no_parent(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -198,7 +200,7 @@ def test_build_run_event_should_omit_parent_facet_when_no_parent(registry: OpenL
 
 def test_build_run_event_should_include_parent_facet_when_parent_set(registry: OpenLineageRegistry):
     # Arrange
-    event = step_start_event.model_copy()
+    event = step_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -220,7 +222,7 @@ def test_build_run_event_should_include_parent_facet_when_parent_set(registry: O
 
 def test_build_run_event_should_strip_parent_run_id_prefix(registry: OpenLineageRegistry):
     # Arrange
-    event = step_start_event.model_copy()
+    event = step_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -238,7 +240,7 @@ def test_build_run_event_should_strip_parent_run_id_prefix(registry: OpenLineage
 
 def test_build_run_event_should_map_tags(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
@@ -257,11 +259,13 @@ def test_build_run_event_should_map_tags(registry: OpenLineageRegistry):
 
 def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
-    event.inputs = [
-        LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.orders"),
-        LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.customers"),
-    ]
+    event = dataclasses.replace(
+        job_start_event,
+        inputs=[
+            LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.orders"),
+            LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.customers"),
+        ],
+    )
 
     # Act
     result = registry._build_run_event(event)
@@ -277,10 +281,12 @@ def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry
 
 def test_build_run_event_should_map_output_datasets(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
-    event.outputs = [
-        LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.summary"),
-    ]
+    event = dataclasses.replace(
+        job_start_event,
+        outputs=[
+            LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.summary"),
+        ],
+    )
 
     # Act
     result = registry._build_run_event(event)
@@ -295,7 +301,7 @@ def test_build_run_event_should_map_output_datasets(registry: OpenLineageRegistr
 
 def test_build_run_event_should_default_datasets_to_empty(registry: OpenLineageRegistry):
     # Arrange
-    event = job_start_event.model_copy()
+    event = job_start_event
 
     # Act
     result = registry._build_run_event(event)
