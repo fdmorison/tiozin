@@ -86,7 +86,6 @@ class SparkFileInput(SparkInput):
         self.explode_filepath = explode_filepath
 
     def lineage(self) -> Lineage:
-        # ref: https://openlineage.io/docs/spec/naming/
         return Lineage(
             inputs=[LineageDataset.from_uri(p) for p in self.path],
             outputs=[],

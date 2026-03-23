@@ -86,7 +86,6 @@ class DuckdbFileOutput(DuckdbOutput):
         self.compression = trim_lower(compression or "snappy")
 
     def lineage(self) -> Lineage:
-        # ref: https://openlineage.io/docs/spec/naming/
         return Lineage(
             inputs=[],
             outputs=[LineageDataset.from_uri(self.path)],
