@@ -1,8 +1,7 @@
 import pytest
 
 from tests.stubs import LineageRegistryStub
-from tiozin.api.metadata.lineage.model import LineageDataset, LineageRunEventType
-from tiozin.api.runtime.context import Context
+from tiozin import Context, LineageDataset, LineageRunEvent
 
 # ============================================================================
 # LineageRegistry helpers — event type and identifier
@@ -12,17 +11,17 @@ from tiozin.api.runtime.context import Context
 @pytest.mark.parametrize(
     "method,expected_type",
     [
-        ("start", LineageRunEventType.START),
-        ("complete", LineageRunEventType.COMPLETE),
-        ("fail", LineageRunEventType.FAIL),
-        ("abort", LineageRunEventType.ABORT),
+        ("start", LineageRunEvent.START),
+        ("complete", LineageRunEvent.COMPLETE),
+        ("fail", LineageRunEvent.FAIL),
+        ("abort", LineageRunEvent.ABORT),
     ],
 )
 def test_helper_should_emit_event_with_correct_type(
     lineage_registry_stub: LineageRegistryStub,
     job_context: Context,
     method: str,
-    expected_type: LineageRunEventType,
+    expected_type: str,
 ):
     # Act
     getattr(lineage_registry_stub, method)()

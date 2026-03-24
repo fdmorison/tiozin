@@ -5,14 +5,13 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import Context
-from tiozin.api.metadata.lineage.model import Lineage
 from tiozin.exceptions import AccessViolationError, TiozinInternalError
 from tiozin.utils import utcnow
 
 from .. import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
-    from tiozin import EtlStep
+    from tiozin import EtlStep, Lineage
 
 
 class StepProxy(wrapt.ObjectProxy):
@@ -23,41 +22,32 @@ class StepProxy(wrapt.ObjectProxy):
     context propagation, template rendering, lifecycle hooks, logging, and timing.
     """
 
-    @property
-    def context(self) -> Context:
-        step: EtlStep = self.__wrapped__
-        ctx = Context.current(required=False)
-        if ctx is None:
-            return Context.for_step(step)
-        if ctx.slug == step.slug and ctx.kind == step.kind:
-            return ctx
-        return ctx.for_child_step(step)
-
     def setup(self, *args, **kwargs) -> None:
         raise AccessViolationError(self)
 
     def teardown(self, *args, **kwargs) -> None:
         raise AccessViolationError(self)
 
-    def lineage(self) -> Lineage:
-        step: EtlStep = self.__wrapped__
-        with TiozinTemplateOverlay(step, self.context.template_vars):
-            return step.lineage()
-
     def read(self) -> None:
-        return self._run()
+        return self._execute()
 
     def transform(self, *args, **kwargs) -> None:
-        return self._run(*args, **kwargs)
+        return self._execute(*args, **kwargs)
 
     def write(self, *args, **kwargs) -> None:
-        return self._run(*args, **kwargs)
+        return self._execute(*args, **kwargs)
 
-    def _run(self, *args, **kwargs) -> Any:
+    def lineage(self) -> Lineage:
+        step: EtlStep = self.__wrapped__
+        context = Context.for_step(step)
+        with context, TiozinTemplateOverlay(step, context.template_vars):
+            return step.lineage()
+
+    def _execute(self, *args, **kwargs) -> Any:
         from tiozin import Input, Output, Transform
 
         step: EtlStep = self.__wrapped__
-        context = self.context
+        context = Context.for_step(step)
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:

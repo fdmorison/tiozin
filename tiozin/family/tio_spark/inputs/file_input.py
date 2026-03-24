@@ -10,8 +10,8 @@ from pyspark.sql.functions import (
     when,
 )
 
+from tiozin import Lineage, LineageDataset
 from tiozin.api import conventions
-from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, trim_lower
 

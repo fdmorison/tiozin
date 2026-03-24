@@ -1,28 +1,21 @@
-from enum import StrEnum, auto
+from enum import auto
+
+from ..domain import UppercaseEnum
 
 
-class LineageEnum(StrEnum):
-    @staticmethod
-    def _generate_next_value_(name: str, *_) -> str:
-        return name.upper()
-
-    def __repr__(self) -> str:
-        return self.value
-
-
-class LineageRunEventType(LineageEnum):
+class LineageRunEventType(UppercaseEnum):
     START = auto()
     COMPLETE = auto()
     FAIL = auto()
     ABORT = auto()
 
 
-class LineageProcessingType(LineageEnum):
+class LineageProcessingType(UppercaseEnum):
     BATCH = auto()
     STREAMING = auto()
 
 
-class LineageJobType(LineageEnum):
+class LineageJobType(UppercaseEnum):
     QUERY = auto()
     COMMAND = auto()
     DAG = auto()

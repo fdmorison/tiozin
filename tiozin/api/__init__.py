@@ -17,7 +17,7 @@ from .registry import Registry
 
 # Metadata
 from .metadata.job.manifest import JobManifest
-from .metadata.lineage.model import LineageRunEvent
+from .metadata.lineage.model import LineageRunEvent, Lineage, LineageDataset
 from .metadata.secret.model import Secret
 from .metadata.setting.manifest import SettingsManifest
 
@@ -47,6 +47,8 @@ __all__ = [
     "Tiozin",
     # Metadata
     "JobManifest",
+    "Lineage",
+    "LineageDataset",
     "LineageRunEvent",
     "Secret",
     "SettingsManifest",

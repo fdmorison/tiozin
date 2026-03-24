@@ -1,7 +1,6 @@
 from typing import Literal
 
-from tiozin import Input
-from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
+from tiozin import Input, Lineage, LineageDataset
 
 
 class InputStub(Input):

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, ClassVar
 
-import pendulum
+from pydantic import Field
 
 from tiozin import config
 from tiozin.utils import utcnow
 
+from ..domain import ImmutableModel
 from .dataset import LineageDataset
 from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
@@ -15,14 +16,19 @@ if TYPE_CHECKING:
     from tiozin.api import Context
 
 
-@dataclass(frozen=True)
-class Lineage:
+class Lineage(ImmutableModel):
     inputs: list[LineageDataset]
     outputs: list[LineageDataset]
 
 
-@dataclass(frozen=True)
-class LineageJob:
+class LineageJob(ImmutableModel):
+    QUERY: ClassVar = LineageJobType.QUERY
+    COMMAND: ClassVar = LineageJobType.COMMAND
+    DAG: ClassVar = LineageJobType.DAG
+    TASK: ClassVar = LineageJobType.TASK
+    JOB: ClassVar = LineageJobType.JOB
+    MODEL: ClassVar = LineageJobType.MODEL
+
     namespace: str
     name: str
     type: LineageJobType
@@ -42,15 +48,14 @@ class LineageJob:
         )
 
 
-@dataclass(frozen=True)
-class LineageParentRun:
+class LineageParentRun(ImmutableModel):
     run_id: str
     name: str
     namespace: str
 
     @classmethod
     def from_context(cls, ctx: Context) -> LineageParentRun | None:
-        if ctx.job is ctx:
+        if ctx.is_root:
             return None
         return cls(
             run_id=ctx.job.run_id,
@@ -59,8 +64,7 @@ class LineageParentRun:
         )
 
 
-@dataclass(frozen=True)
-class LineageRunEvent:
+class LineageRunEvent(ImmutableModel):
     """
     Tiozin's internal representation of a lineage run event.
 
@@ -69,16 +73,21 @@ class LineageRunEvent:
     Backends (e.g. `OpenLineageRegistry`) convert this into their own protocol format.
     """
 
+    START: ClassVar = LineageRunEventType.START
+    COMPLETE: ClassVar = LineageRunEventType.COMPLETE
+    FAIL: ClassVar = LineageRunEventType.FAIL
+    ABORT: ClassVar = LineageRunEventType.ABORT
+
     type: LineageRunEventType
     producer: str
-    timestamp: pendulum.DateTime
-    nominal_time: pendulum.DateTime
+    timestamp: datetime
+    nominal_time: datetime
     run_id: str
     job: LineageJob
     tags: dict[str, str]
     parent: LineageParentRun | None = None
-    inputs: list[LineageDataset] = field(default_factory=list)
-    outputs: list[LineageDataset] = field(default_factory=list)
+    inputs: list[LineageDataset] = Field(default_factory=list)
+    outputs: list[LineageDataset] = Field(default_factory=list)
 
     @classmethod
     def from_context(
@@ -89,7 +98,7 @@ class LineageRunEvent:
         outputs: list[LineageDataset] | None = None,
     ) -> LineageRunEvent:
         return cls(
-            type=type.value,
+            type=LineageRunEventType(type),
             producer=config.app_identifier,
             timestamp=ctx.executed_at or utcnow(),
             nominal_time=ctx.nominal_time,

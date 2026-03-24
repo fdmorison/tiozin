@@ -15,7 +15,7 @@ from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 if TYPE_CHECKING:
-    from tiozin import EtlStep, Job, Runner
+    from tiozin import EtlStep, Job, Runner, Tiozin
 
 
 _current_context: ContextVar[Context | None] = ContextVar(
@@ -140,42 +140,6 @@ class Context:
     )
 
     # ==================================================
-    # Active Context Management
-    # ==================================================
-
-    def __enter__(self) -> Context:
-        """
-        Activate this Context as the current execution scope.
-
-        Context is reentrant and supports nested activation. Each
-        __enter__ call pushes a new ContextVar token onto an internal
-        stack, and __exit__ restores the previous scope accordingly.
-        """
-        token = _current_context.set(self)
-        self._tokens.append(token)
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> None:
-        """
-        Deactivate the current execution scope and restore the previous one.
-
-        Supports nested scopes by popping the most recent activation token.
-        """
-        if not self._tokens:
-            return
-        token = self._tokens.pop()
-        _current_context.reset(token)
-
-    @staticmethod
-    def current(required: bool = True) -> Context | None:
-        ctx = _current_context.get()
-        TiozinInternalError.raise_if(
-            required and ctx is None,
-            "Tiozin has no active execution context",
-        )
-        return ctx
-
-    # ==================================================
     # Factories
     # ==================================================
 
@@ -210,6 +174,13 @@ class Context:
 
     @classmethod
     def for_step(cls, step: EtlStep, registries: Registries = None) -> Context:
+        parent = cls.current(required=False)
+
+        if parent:
+            if parent.belongs_to(step):
+                return parent
+            return parent.for_child_step(step)
+
         ctx = cls(
             name=step.name,
             slug=step.slug,
@@ -267,6 +238,89 @@ class Context:
         return ctx
 
     # ==================================================
+    # Context Management
+    # ==================================================
+
+    def __enter__(self) -> Context:
+        """
+        Activate this Context as the current execution scope.
+
+        Context is reentrant and supports nested activation. Each
+        __enter__ call pushes a new ContextVar token onto an internal
+        stack, and __exit__ restores the previous scope accordingly.
+        """
+        token = _current_context.set(self)
+        self._tokens.append(token)
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        """
+        Deactivate the current execution scope and restore the previous one.
+
+        Supports nested scopes by popping the most recent activation token.
+        """
+        if not self._tokens:
+            return
+        token = self._tokens.pop()
+        _current_context.reset(token)
+
+    # ==================================================
+    # Utilities
+    # ==================================================
+
+    @staticmethod
+    def current(required: bool = True) -> Context | None:
+        ctx = _current_context.get()
+        TiozinInternalError.raise_if(
+            required and ctx is None,
+            "Tiozin has no active execution context",
+        )
+        return ctx
+
+    def belongs_to(self, plugin: Tiozin) -> bool:
+        return self.slug == plugin.slug and self.kind == plugin.tiozin_name
+
+    @property
+    def is_root(self) -> bool:
+        return self.job is self
+
+    @property
+    def namespace(self) -> str:
+        return f"{self.org}.{self.region}.{self.domain}.{self.subdomain}"
+
+    @property
+    def dataset(self) -> str:
+        return f"{self.layer}.{self.product}.{self.model}"
+
+    @property
+    def delay(self) -> float:
+        now = utcnow()
+        begin = self.setup_at or now
+        end = self.finished_at or now
+        return (end - begin).total_seconds()
+
+    @property
+    def setup_delay(self) -> float:
+        now = utcnow()
+        begin = self.setup_at or now
+        end = self.executed_at or now
+        return (end - begin).total_seconds()
+
+    @property
+    def execution_delay(self) -> float:
+        now = utcnow()
+        begin = self.executed_at or now
+        end = self.teardown_at or now
+        return (end - begin).total_seconds()
+
+    @property
+    def teardown_delay(self) -> float:
+        now = utcnow()
+        begin = self.teardown_at or now
+        end = self.finished_at or now
+        return (end - begin).total_seconds()
+
+    # ==================================================
     # Private Utilities
     # ==================================================
     @staticmethod
@@ -301,43 +355,3 @@ class Context:
         result["ENV"] = TemplateEnv()
         result["SECRET"] = TemplateSecret(self.registries.secret) if self.registries.secret else {}
         return FrozenMapping(result)
-
-    # ==================================================
-    # Properties
-    # ==================================================
-
-    @property
-    def namespace(self) -> str:
-        return f"{self.org}.{self.region}.{self.domain}.{self.subdomain}"
-
-    @property
-    def dataset_name(self) -> str:
-        return f"{self.layer}.{self.product}.{self.model}"
-
-    @property
-    def delay(self) -> float:
-        now = utcnow()
-        begin = self.setup_at or now
-        end = self.finished_at or now
-        return (end - begin).total_seconds()
-
-    @property
-    def setup_delay(self) -> float:
-        now = utcnow()
-        begin = self.setup_at or now
-        end = self.executed_at or now
-        return (end - begin).total_seconds()
-
-    @property
-    def execution_delay(self) -> float:
-        now = utcnow()
-        begin = self.executed_at or now
-        end = self.teardown_at or now
-        return (end - begin).total_seconds()
-
-    @property
-    def teardown_delay(self) -> float:
-        now = utcnow()
-        begin = self.teardown_at or now
-        end = self.finished_at or now
-        return (end - begin).total_seconds()

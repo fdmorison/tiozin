@@ -1,4 +1,4 @@
-from tiozin.api.metadata.lineage.model import LineageRunEvent
+from tiozin import LineageRunEvent
 from tiozin.api.metadata.lineage.registry import LineageRegistry
 
 

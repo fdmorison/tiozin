@@ -1,14 +1,8 @@
-import dataclasses
-
 import pytest
 from openlineage.client.generated.parent_run import ParentRunFacet
 
 from tests.mocks.lineage.run_event import job_start_event, step_start_event
-from tiozin import config
-from tiozin.api.metadata.lineage.model import (
-    LineageDataset,
-    LineageRunEventType,
-)
+from tiozin import LineageDataset, LineageRunEvent, config
 from tiozin.family.tio_kernel import OpenLineageRegistry
 
 
@@ -101,7 +95,7 @@ def test_build_run_event_should_map_run_fields(registry: OpenLineageRegistry):
         result.producer,
     )
     expected = (
-        LineageRunEventType.START,
+        LineageRunEvent.START,
         "2024-01-01T00:00:00.000+00:00",
         "tiozin/test",
     )
@@ -173,7 +167,7 @@ def test_build_run_event_should_include_job_type_facet(registry: OpenLineageRegi
         job_type_facet.integration,
     )
     expected = (
-        "JobStub",
+        "JOB",
         "BATCH",
         "test_runner",
     )
@@ -259,12 +253,15 @@ def test_build_run_event_should_map_tags(registry: OpenLineageRegistry):
 
 def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry):
     # Arrange
-    event = dataclasses.replace(
-        job_start_event,
-        inputs=[
-            LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.orders"),
-            LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.customers"),
-        ],
+    event = job_start_event.model_copy(
+        update={
+            "inputs": [
+                LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.orders"),
+                LineageDataset(
+                    namespace="acme.latam.ecommerce.checkout.raw", name="sales.customers"
+                ),
+            ],
+        }
     )
 
     # Act
@@ -281,11 +278,12 @@ def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry
 
 def test_build_run_event_should_map_output_datasets(registry: OpenLineageRegistry):
     # Arrange
-    event = dataclasses.replace(
-        job_start_event,
-        outputs=[
-            LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.summary"),
-        ],
+    event = job_start_event.model_copy(
+        update={
+            "outputs": [
+                LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.summary"),
+            ],
+        }
     )
 
     # Act

@@ -62,7 +62,7 @@ class Output(Tiozin, Generic[TData]):
         self.model = model
 
     def setup(self, data: TData) -> None:
-        return None
+        pass
 
     @abstractmethod
     def write(self, data: TData) -> TData:
@@ -71,7 +71,7 @@ class Output(Tiozin, Generic[TData]):
         """
 
     def teardown(self, data: TData) -> None:
-        return None
+        pass
 
     def lineage(self) -> Lineage:
         return Lineage(
