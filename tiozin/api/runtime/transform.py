@@ -61,14 +61,14 @@ class Transform(Tiozin, Generic[TData]):
         self.model = model
 
     def setup(self, data: TData) -> None:
-        return None
+        pass
 
     @abstractmethod
     def transform(self, data: TData) -> TData:
         """Apply transformation logic. Providers must implement."""
 
     def teardown(self, data: TData) -> None:
-        return None
+        pass
 
     def lineage(self) -> Lineage:
         return Lineage(
@@ -109,11 +109,11 @@ class CoTransform(Transform[TData]):
     """
 
     def setup(self, data: TData, *others: TData) -> None:
-        return None
+        pass
 
     @abstractmethod
     def transform(self, data: TData, *others: TData) -> TData:
         """Apply cooperative transformation logic. Providers must implement."""
 
     def teardown(self, data: TData, *others: TData) -> None:
-        return None
+        pass

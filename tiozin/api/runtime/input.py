@@ -72,14 +72,14 @@ class Input(Tiozin, Generic[TData]):
         self.model = model
 
     def setup(self) -> None:
-        return None
+        pass
 
     @abstractmethod
     def read(self) -> TData:
         """Read data from source. Providers must implement."""
 
     def teardown(self) -> None:
-        return None
+        pass
 
     def lineage(self) -> Lineage:
         return Lineage(

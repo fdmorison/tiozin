@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pyspark.sql import DataFrame, DataFrameWriter
 
-from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
+from tiozin import Lineage, LineageDataset
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim, trim_lower
 

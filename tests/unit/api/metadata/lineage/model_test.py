@@ -2,11 +2,7 @@ import pendulum
 import pytest
 
 from tests import config
-from tiozin.api.metadata.lineage.model import (
-    LineageDataset,
-    LineageRunEvent,
-    LineageRunEventType,
-)
+from tiozin import LineageDataset, LineageRunEvent
 from tiozin.api.runtime.context import Context
 
 # ============================================================================
@@ -107,7 +103,7 @@ def test_from_uri_should_strip_trailing_slash_from_name(uri: str, expected_name:
 
 def test_from_context_should_map_job_fields(job_context: Context):
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     actual = (
@@ -133,7 +129,7 @@ def test_from_context_should_use_executed_at_as_timestamp(job_context: Context):
     job_context.executed_at = executed_at
 
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     actual = result.timestamp
@@ -148,7 +144,7 @@ def test_from_context_should_fallback_timestamp_to_utcnow_when_executed_at_is_no
     job_context.executed_at = None
 
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     assert isinstance(result.timestamp, pendulum.DateTime)
@@ -156,7 +152,7 @@ def test_from_context_should_fallback_timestamp_to_utcnow_when_executed_at_is_no
 
 def test_from_context_should_map_run_identity_fields(job_context: Context):
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     actual = (
@@ -172,7 +168,7 @@ def test_from_context_should_map_run_identity_fields(job_context: Context):
 
 def test_from_context_should_map_governance_tags(job_context: Context):
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     actual = result.tags
@@ -199,7 +195,7 @@ def test_from_context_should_map_governance_tags(job_context: Context):
 
 def test_from_context_should_unset_parent_when_job_context(job_context: Context):
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     actual = result.parent
@@ -211,7 +207,7 @@ def test_from_context_should_set_parent_when_step_context(
     input_context: Context, job_context: Context
 ):
     # Act
-    result = LineageRunEvent.from_context(input_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(input_context, LineageRunEvent.START)
 
     # Assert
     actual = (
@@ -240,7 +236,7 @@ def test_from_context_should_map_inputs(job_context: Context):
     ]
 
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START, inputs)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START, inputs)
 
     # Assert
     actual = [(d.namespace, d.name) for d in result.inputs]
@@ -260,7 +256,7 @@ def test_from_context_should_map_outputs(job_context: Context):
     # Act
     result = LineageRunEvent.from_context(
         ctx=job_context,
-        type=LineageRunEventType.COMPLETE,
+        type=LineageRunEvent.COMPLETE,
         outputs=outputs,
     )
 
@@ -274,7 +270,7 @@ def test_from_context_should_map_outputs(job_context: Context):
 
 def test_from_context_should_default_datasets_to_empty(job_context: Context):
     # Act
-    result = LineageRunEvent.from_context(job_context, LineageRunEventType.START)
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
 
     # Assert
     actual = (result.inputs, result.outputs)
@@ -290,14 +286,14 @@ def test_from_context_should_default_datasets_to_empty(job_context: Context):
 @pytest.mark.parametrize(
     "event_type,expected_value",
     [
-        (LineageRunEventType.START, "START"),
-        (LineageRunEventType.COMPLETE, "COMPLETE"),
-        (LineageRunEventType.FAIL, "FAIL"),
-        (LineageRunEventType.ABORT, "ABORT"),
+        (LineageRunEvent.START, "START"),
+        (LineageRunEvent.COMPLETE, "COMPLETE"),
+        (LineageRunEvent.FAIL, "FAIL"),
+        (LineageRunEvent.ABORT, "ABORT"),
     ],
 )
 def test_from_context_should_map_event_type(
-    job_context: Context, event_type: LineageRunEventType, expected_value: str
+    job_context: Context, event_type: str, expected_value: str
 ):
     # Act
     result = LineageRunEvent.from_context(job_context, event_type)
@@ -322,7 +318,7 @@ def test_from_context_should_use_streaming_when_runner_is_streaming(
     # Act
     result = LineageRunEvent.from_context(
         job_context,
-        LineageRunEventType.START,
+        LineageRunEvent.START,
     )
 
     # Assert

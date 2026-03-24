@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin.api import (
     Input,
+    Lineage,
     Output,
     Runner,
     Tiozin,
     Transform,
 )
-from tiozin.api.metadata.lineage.model import Lineage
 from tiozin.compose import JobProxy, tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
@@ -126,14 +126,14 @@ class Job(Tiozin, Generic[TData]):
         return JobBuilder()
 
     def setup(self) -> None:
-        return None
+        pass
 
     @abstractmethod
     def submit(self) -> TData:
         pass
 
     def teardown(self) -> None:
-        return None
+        pass
 
     def lineage(self) -> Lineage:
         return Lineage(

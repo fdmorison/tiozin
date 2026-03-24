@@ -252,7 +252,7 @@ Datasets are what connect jobs in the lineage graph. When an output dataset from
 Use `LineageDataset` directly when your step connects to something with a well-defined identifier. Going back to `SQLiteOutput` from earlier: it writes to a specific table. That table is the physical output dataset. Add `lineage()` to report it:
 
 ```python
-from tiozin.api.metadata.lineage.model import Lineage, LineageDataset
+from tiozin import Lineage, LineageDataset
 
 
 class SQLiteOutput(Output[str]):
