@@ -11,7 +11,9 @@ class DomainModel(BaseModel):
     """
 
     model_config = ConfigDict(
-        str_strip_whitespace=True, validate_default=True, use_enum_values=True
+        str_strip_whitespace=True,
+        validate_default=True,
+        use_enum_values=True,
     )
 
 
@@ -23,7 +25,10 @@ class ImmutableModel(DomainModel):
     """
 
     model_config = ConfigDict(
-        frozen=True, str_strip_whitespace=True, validate_default=True, use_enum_values=True
+        frozen=True,
+        str_strip_whitespace=True,
+        validate_default=True,
+        use_enum_values=True,
     )
 
 
