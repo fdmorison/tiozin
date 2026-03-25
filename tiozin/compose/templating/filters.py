@@ -76,23 +76,15 @@ def fs_safe(value: Any) -> str:
 
 
 # =============================================================================
-# Environment factory
+# Shared Jinja2 environment
 # =============================================================================
-def create_jinja_environment() -> Environment:
-    """
-    Create and return a preconfigured Jinja2 environment.
-
-    The environment uses ``StrictUndefined`` and registers the custom
-    string normalization filters provided by this module.
-    """
-    env = Environment(
-        undefined=StrictUndefined,
-        autoescape=False,
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-    env.filters["nodash"] = nodash
-    env.filters["notz"] = notz
-    env.filters["compact"] = compact
-    env.filters["fs_safe"] = fs_safe
-    return env
+JINJA = Environment(
+    undefined=StrictUndefined,
+    autoescape=False,
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
+JINJA.filters["nodash"] = nodash
+JINJA.filters["notz"] = notz
+JINJA.filters["compact"] = compact
+JINJA.filters["fs_safe"] = fs_safe

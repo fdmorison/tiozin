@@ -209,7 +209,7 @@ def test_context_should_calculate_lifecycle_delays(job_context: Context):
 
 def test_build_template_vars_should_exclude_fields_with_template_false(job_context: Context):
     # Act
-    result = job_context._build_template_vars()
+    job_context._build_template_vars()
 
     # Assert
     excluded = {
@@ -222,7 +222,7 @@ def test_build_template_vars_should_exclude_fields_with_template_false(job_conte
         "teardown_at",
         "finished_at",
     }
-    actual = excluded.intersection(result.keys())
+    actual = excluded.intersection(job_context.template_vars.keys())
     expected = set()
     assert actual == expected
 
@@ -231,10 +231,10 @@ def test_build_template_vars_should_include_day(
     job_context: Context,
 ):
     # Act
-    result = job_context._build_template_vars()
+    job_context._build_template_vars()
 
     # Assert
-    actual = isinstance(result["DAY"], TemplateDate)
+    actual = isinstance(job_context.template_vars["DAY"], TemplateDate)
     expected = True
     assert actual == expected
 
@@ -244,15 +244,15 @@ def test_build_template_vars_should_expose_day_values(
     job_context: Context,
 ):
     # Act
-    result = job_context._build_template_vars()
+    job_context._build_template_vars()
 
     # Assert
     actual = {
-        "ds": str(result["ds"]),
-        "iso": str(result["iso"]),
-        "YYYY": str(result["YYYY"]),
-        "MM": str(result["MM"]),
-        "DD": str(result["DD"]),
+        "ds": str(job_context.template_vars["ds"]),
+        "iso": str(job_context.template_vars["iso"]),
+        "YYYY": str(job_context.template_vars["YYYY"]),
+        "MM": str(job_context.template_vars["MM"]),
+        "DD": str(job_context.template_vars["DD"]),
     }
     expected = {
         "ds": FROZEN_TIME_OBJ.format("YYYY-MM-DD"),
@@ -272,12 +272,12 @@ def test_build_template_vars_should_override_base_with_context_fields(job_contex
     }
 
     # Act
-    result = job_context._build_template_vars(base=base)
+    job_context._build_template_vars(base=base)
 
     # Assert
     actual = (
-        result["name"],
-        result["custom_key"],
+        job_context.template_vars["name"],
+        job_context.template_vars["custom_key"],
     )
     expected = (
         job_context.name,
@@ -297,29 +297,27 @@ def test_build_template_vars_should_override_base_with_day(
     }
 
     # Act
-    result = job_context._build_template_vars(base=base)
+    job_context._build_template_vars(base=base)
 
     # Assert
     actual = {
-        "ds": str(result["ds"]),
-        "YYYY": str(result["YYYY"]),
+        "ds": str(job_context.template_vars["ds"]),
+        "YYYY": str(job_context.template_vars["YYYY"]),
     }
-
     expected = {
         "ds": FROZEN_TIME_OBJ.format("YYYY-MM-DD"),
         "YYYY": FROZEN_TIME_OBJ.format("YYYY"),
     }
-
     assert actual == expected
 
 
-def test_build_template_vars_should_return_immutable_result(job_context: Context):
+def test_build_template_vars_should_store_immutable_result(job_context: Context):
     # Act
-    result = job_context._build_template_vars()
+    job_context._build_template_vars()
 
     # Assert
     with pytest.raises(TypeError):
-        result["new_key"] = "value"
+        job_context.template_vars["new_key"] = "value"
 
 
 # =============================================================================
@@ -335,10 +333,10 @@ def test_build_template_vars_should_include_env_from_os(
     monkeypatch.setenv("TIOZIN_BUILD_TEST", "hello")
 
     # Act
-    result = job_context._build_template_vars()
+    job_context._build_template_vars()
 
     # Assert
-    actual = result["ENV"]["TIOZIN_BUILD_TEST"]
+    actual = job_context.template_vars["ENV"]["TIOZIN_BUILD_TEST"]
     expected = "hello"
     assert actual == expected
 
@@ -351,15 +349,32 @@ def test_build_template_vars_should_isolate_env_from_context_fields(
     monkeypatch.setenv("name", "from_os")
 
     # Act
-    result = job_context._build_template_vars()
+    job_context._build_template_vars()
 
     # Assert
     actual = (
-        result["name"],
-        result["ENV"]["name"],
+        job_context.template_vars["name"],
+        job_context.template_vars["ENV"]["name"],
     )
     expected = (
         job_context.name,
         "from_os",
     )
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Context.render
+# =============================================================================
+
+
+def test_render_should_resolve_context_variable_when_variable_is_in_template(job_context: Context):
+    # Arrange
+    template = "{{ name }}"
+
+    # Act
+    actual = job_context.render(template)
+
+    # Assert
+    expected = job_context.name
     assert actual == expected

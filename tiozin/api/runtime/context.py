@@ -11,6 +11,7 @@ from pendulum import DateTime
 
 from tiozin.api.metadata.bundle import Registries
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
+from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
@@ -79,7 +80,7 @@ class Context:
     model: str
 
     # ==================================================
-    # Governance
+    # Ownership
     # ==================================================
     maintainer: str | None = None
     cost_center: str | None = None
@@ -146,10 +147,12 @@ class Context:
     @classmethod
     def for_job(cls, job: Job, registries: Registries = None) -> Context:
         ctx = cls(
+            # Identity — always from job
             name=job.name,
             slug=job.slug,
             kind=job.tiozin_name,
             tiozin_role=job.tiozin_role,
+            # Domain — always from job
             org=job.org,
             region=job.region,
             domain=job.domain,
@@ -157,11 +160,14 @@ class Context:
             layer=job.layer,
             product=job.product,
             model=job.model,
+            # Ownership — always from job
             maintainer=job.maintainer,
             cost_center=job.cost_center,
             owner=job.owner,
             labels=job.labels,
+            # Arguments — always from job
             options=job.options,
+            # Runtime — injected externally (eg: from TiozinApp, tests, etc)
             registries=registries or Registries(),
         )
         ctx.job = ctx
@@ -169,7 +175,7 @@ class Context:
         ctx.run_id = generate_id(prefix="job")
         ctx.nominal_time = utcnow()
         ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
-        ctx.template_vars = ctx._build_template_vars()
+        ctx._build_template_vars()
         return ctx
 
     @classmethod
@@ -182,10 +188,12 @@ class Context:
             return parent.for_child_step(step)
 
         ctx = cls(
+            # Identity — always from step
             name=step.name,
             slug=step.slug,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
+            # Domain — always from step
             org=step.org,
             region=step.region,
             domain=step.domain,
@@ -193,11 +201,14 @@ class Context:
             layer=step.layer,
             product=step.product,
             model=step.model,
+            # Ownership — not available at step level
             maintainer=None,
             cost_center=None,
             owner=None,
             labels={},
+            # Arguments — always from step
             options=step.options,
+            # Runtime — injected externally  (eg: tests, etc)
             registries=registries or Registries(),
         )
         ctx.job = None
@@ -205,15 +216,19 @@ class Context:
         ctx.run_id = cls._generate_step_run_id(step.slug)
         ctx.nominal_time = utcnow()
         ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
-        ctx.template_vars = ctx._build_template_vars()
+        ctx._build_template_vars()
         return ctx
 
     def for_child_step(self, step: EtlStep) -> Context:
         ctx = Context(
+            # Identity — always from step
             name=step.name,
             slug=step.slug,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
+            # Arguments — always from step
+            options=step.options,
+            # Domain — step value, fallback to parent
             org=step.org or self.org,
             region=step.region or self.region,
             domain=step.domain or self.domain,
@@ -221,12 +236,13 @@ class Context:
             layer=step.layer or self.layer,
             product=step.product or self.product,
             model=step.model or self.model,
+            # Ownership — always inherited from parent
             maintainer=self.maintainer,
             cost_center=self.cost_center,
             owner=self.owner,
             labels=self.labels,
+            # Runtime — always inherited from parent
             shared=self.shared,
-            options=step.options,
             registries=self.registries,
         )
         ctx.job = self.job
@@ -234,7 +250,7 @@ class Context:
         ctx.run_id = self._generate_step_run_id(step.slug, self.job)
         ctx.nominal_time = self.job.nominal_time
         ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
-        ctx.template_vars = ctx._build_template_vars(base=self.template_vars)
+        ctx._build_template_vars(base=self.template_vars)
         return ctx
 
     # ==================================================
@@ -279,6 +295,9 @@ class Context:
 
     def belongs_to(self, plugin: Tiozin) -> bool:
         return self.slug == plugin.slug and self.kind == plugin.tiozin_name
+
+    def render(self, value: str) -> str:
+        return JINJA.from_string(value).render(self.template_vars)
 
     @property
     def is_root(self) -> bool:
@@ -330,17 +349,14 @@ class Context:
             return f"step_{job_run_id}"
         return generate_id(prefix="step")
 
-    def _build_template_vars(
-        self,
-        base: Mapping[str, Any] | None = None,
-    ) -> Mapping[str, Any]:
-        result: dict[str, Any] = {}
+    def _build_template_vars(self, base: Mapping[str, Any] | None = None) -> None:
+        result = dict(self.template_vars)
 
         # defaults
         if base:
             result |= base
 
-        # context (authoritative)
+        # context fields
         context_data = {
             field.name: getattr(self, field.name)
             for field in fields(self)
@@ -354,4 +370,4 @@ class Context:
         result["DAY"] = now
         result["ENV"] = TemplateEnv()
         result["SECRET"] = TemplateSecret(self.registries.secret) if self.registries.secret else {}
-        return FrozenMapping(result)
+        self.template_vars = FrozenMapping(result)
