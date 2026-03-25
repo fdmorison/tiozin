@@ -1,18 +1,28 @@
 import pytest
-from jinja2 import StrictUndefined, UndefinedError
+from assertpy import assert_that
 
 from tiozin.compose.templating.filters import (
+    JINJA,
     compact,
-    create_jinja_environment,
     fs_safe,
     nodash,
     notz,
 )
 
 
-# ============================================================================
-# Testing string filters
-# ============================================================================
+def test_filters_should_be_available_in_public_api():
+    """
+    Detects regressions where a filter function exists but is not registered in JINJA.
+    """
+    # Arrange / Act
+    public_filters = JINJA.filters
+
+    # Assert
+    actual = public_filters
+    expected = {"nodash", "notz", "compact", "fs_safe"}
+    assert_that(actual).contains_key(*expected)
+
+
 def test_nodash_should_remove_dashes():
     # Arrange / Act
     actual = nodash("2026-01-14")
@@ -88,36 +98,3 @@ def test_sanitize_date_should_return_none_when_none():
 
     # Assert
     assert actual is None
-
-
-# ============================================================================
-# Testing create_jinja_environment
-# ============================================================================
-def test_create_jinja_environment_should_use_strict_undefined():
-    # Arrange / Act
-    env = create_jinja_environment()
-
-    # Assert
-    actual = env.undefined
-    expected = StrictUndefined
-    assert actual == expected
-
-
-def test_create_jinja_environment_should_raise_on_undefined():
-    # Arrange
-    env = create_jinja_environment()
-    template = env.from_string("{{ undefined_var }}")
-
-    # Act / Assert
-    with pytest.raises(UndefinedError):
-        template.render()
-
-
-def test_create_jinja_environment_should_register_all_filters():
-    # Arrange / Act
-    env = create_jinja_environment()
-
-    # Assert
-    expected_filters = {"nodash", "notz", "compact", "fs_safe"}
-    actual = {k for k in expected_filters if k in env.filters}
-    assert actual == expected_filters

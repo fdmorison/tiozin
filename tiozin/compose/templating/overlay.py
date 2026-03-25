@@ -10,7 +10,7 @@ from tiozin.exceptions import TiozinInputError
 from .. import reflection
 from . import filters
 
-JINJA_ENV = filters.create_jinja_environment()
+JINJA_ENV = filters.JINJA
 
 TEMPLATE_PATTERN = re.compile(r"\{\{[^}]*\}\}")
 
