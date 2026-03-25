@@ -54,7 +54,7 @@ def test_proxy_should_forbid_teardown_access(tiozin: NoOpInput | NoOpTransform |
 
 
 # =============================================================================
-# Testing StepProxy.lineage — template rendering uses step context, not job's
+# Testing StepProxy.lineage_datasets — template rendering uses step context, not job's
 # =============================================================================
 
 
@@ -72,7 +72,7 @@ def test_proxy_should_render_lineage_templates_when_step_inherits_job_context(
     step = InputStub(name="orders_input", domain=None, layer=None)
 
     # Act
-    result = step.lineage()
+    result = step.lineage_datasets()
 
     # Assert
     actual = (
@@ -102,7 +102,7 @@ def test_proxy_should_render_lineage_templates_using_step_template_vars(
     step = StepProxy(InputStub(name="orders_input", domain="finance", layer="trusted"))
 
     # Act
-    result = step.lineage()
+    result = step.lineage_datasets()
 
     # Assert
     actual = (

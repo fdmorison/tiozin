@@ -21,7 +21,7 @@ class InputStub(Input):
     def teardown(self) -> None:
         self.captured_teardown = self.path
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         return Lineage(
             inputs=[LineageDataset.from_uri(self.path)],
             outputs=[],

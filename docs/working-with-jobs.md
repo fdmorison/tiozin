@@ -35,7 +35,7 @@ kind: LinearJob
 name: orders_daily_summary
 
 org: acme
-region: us-east
+region: latam
 domain: ecommerce
 subdomain: retail
 layer: refined
@@ -79,7 +79,7 @@ manifest = JobManifest(
     kind="LinearJob",
     name="orders_daily_summary",
     org="acme",
-    region="us-east",
+    region="latam",
     domain="ecommerce",
     subdomain="retail",
     layer="refined",
@@ -109,7 +109,7 @@ job = (
     .with_kind("LinearJob")
     .with_name("orders_daily_summary")
     .with_org("acme")
-    .with_region("us-east")
+    .with_region("latam")
     .with_domain("ecommerce")
     .with_subdomain("retail")
     .with_layer("refined")
@@ -143,7 +143,7 @@ from tiozin.family.tio_kernel import (
 job = LinearJob(
     name="orders_daily_summary",
     org="acme",
-    region="us-east",
+    region="latam",
     domain="ecommerce",
     subdomain="retail",
     layer="refined",
@@ -245,6 +245,45 @@ outputs:
     name: write_to_cache
   - kind: NoOpOutput
     name: write_to_archive
+```
+
+## namespace
+
+Every job has a `namespace` field. Set it to any string:
+
+```yaml
+name: orders_daily_summary
+namespace: acme-ecommerce
+description: Daily order summary pipeline
+```
+
+It also accepts a Jinja template rendered with the job's domain fields:
+
+```yaml
+namespace: "{{org}}.{{domain}}"
+# → acme.ecommerce
+
+org: acme
+region: latam
+domain: ecommerce
+subdomain: checkout
+layer: refined
+product: orders
+model: daily_summary
+```
+
+Available variables: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`.
+
+When `namespace` is not set, the value comes from `TIO_JOB_NAMESPACE_TEMPLATE`, which is itself a Jinja template with the same available variables:
+
+```bash
+# default
+TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{region}}.{{domain}}.{{subdomain}}"
+# → acme.latam.ecommerce.checkout
+
+# custom deployment-wide
+TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{domain}}"
+# → acme.ecommerce
 ```
 
 ## Templating

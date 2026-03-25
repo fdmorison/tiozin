@@ -39,7 +39,7 @@ class LineageJob(ImmutableModel):
     def from_context(cls, ctx: Context) -> LineageJob:
         return cls(
             namespace=ctx.namespace,
-            name=ctx.slug,
+            name=ctx.qualified_slug,
             type=LineageJobType.JOB,
             processing_type=LineageProcessingType.STREAMING
             if ctx.runner.streaming

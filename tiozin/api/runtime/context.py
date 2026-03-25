@@ -78,6 +78,7 @@ class Context:
     layer: str
     product: str
     model: str
+    namespace: str | None
 
     # ==================================================
     # Ownership
@@ -160,6 +161,7 @@ class Context:
             layer=job.layer,
             product=job.product,
             model=job.model,
+            namespace=job.namespace,
             # Ownership — always from job
             maintainer=job.maintainer,
             cost_center=job.cost_center,
@@ -201,6 +203,8 @@ class Context:
             layer=step.layer,
             product=step.product,
             model=step.model,
+            # Namespace — not available at step level
+            namespace=None,
             # Ownership — not available at step level
             maintainer=None,
             cost_center=None,
@@ -236,6 +240,8 @@ class Context:
             layer=step.layer or self.layer,
             product=step.product or self.product,
             model=step.model or self.model,
+            # Namespace — always inherited from parent
+            namespace=self.namespace,
             # Ownership — always inherited from parent
             maintainer=self.maintainer,
             cost_center=self.cost_center,
@@ -304,12 +310,10 @@ class Context:
         return self.job is self
 
     @property
-    def namespace(self) -> str:
-        return f"{self.org}.{self.region}.{self.domain}.{self.subdomain}"
-
-    @property
-    def dataset(self) -> str:
-        return f"{self.layer}.{self.product}.{self.model}"
+    def qualified_slug(self) -> str:
+        if self.is_root:
+            return self.slug
+        return f"{self.job.slug}.{self.slug}"
 
     @property
     def delay(self) -> float:

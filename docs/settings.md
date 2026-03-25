@@ -214,6 +214,12 @@ These settings have no `tiozin.yaml` equivalent. They can only be set via enviro
 | `TIO_LOG_JSON_ENSURE_ASCII` | `false` | Force ASCII encoding in JSON logs |
 | `TIO_LOG_SHOW_LOCALS` | `false` | Include local variables in exception tracebacks |
 
+### Job
+
+| Variable | Default | Description |
+|---|---|---|
+| `TIO_JOB_NAMESPACE_TEMPLATE` | `{{org}}.{{region}}.{{domain}}.{{subdomain}}` | Jinja template used to derive `namespace` when not set on the job. Available variables: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model` |
+
 ## Registry environment variables
 
 Every registry field has a matching environment variable. These act as defaults: a value in `tiozin.yaml` always overrides the environment variable for the same field.

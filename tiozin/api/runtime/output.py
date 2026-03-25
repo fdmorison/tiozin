@@ -73,13 +73,13 @@ class Output(Tiozin, Generic[TData]):
     def teardown(self, data: TData) -> None:
         pass
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         return Lineage(
             inputs=[],
             outputs=[
                 LineageDataset(
-                    namespace=f"{self.org}.{self.region}.{self.domain}.{self.subdomain}",
-                    name=f"{self.layer}.{self.product}.{self.model}",
+                    namespace=self.context.namespace,
+                    name=self.context.qualified_slug,
                 )
             ],
         )

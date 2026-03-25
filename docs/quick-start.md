@@ -11,7 +11,7 @@ kind: LinearJob
 name: my_first_job
 
 org: acme
-region: us-east
+region: latam
 domain: ecommerce
 subdomain: retail
 layer: refined
@@ -69,7 +69,7 @@ These seven fields define where this job lives in your data organization. They a
 
 ```yaml
 org: acme
-region: us-east
+region: latam
 domain: ecommerce
 subdomain: retail
 layer: refined
@@ -153,7 +153,7 @@ labels:
   criticality: high
 
 org: acme
-region: us-east
+region: latam
 domain: ecommerce
 subdomain: retail
 layer: refined

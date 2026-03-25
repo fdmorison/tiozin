@@ -85,7 +85,7 @@ class DuckdbFileOutput(DuckdbOutput):
         self.partition_by = as_list(partition_by, [])
         self.compression = trim_lower(compression or "snappy")
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         return Lineage(
             inputs=[],
             outputs=[LineageDataset.from_uri(self.path)],

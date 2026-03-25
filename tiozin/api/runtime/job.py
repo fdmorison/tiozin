@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
+from tiozin import config
 from tiozin.api import (
     Input,
     Lineage,
@@ -12,6 +13,7 @@ from tiozin.api import (
     Transform,
 )
 from tiozin.compose import JobProxy, tioproxy
+from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
 
 if TYPE_CHECKING:
@@ -55,6 +57,8 @@ class Job(Tiozin, Generic[TData]):
         layer: Data layer this job represents (e.g., raw, trusted, refined).
         product: Data product being produced.
         model: Data model being produced (e.g., table, topic, collection).
+        namespace: Job namespace. Defaults to `org.region.domain.subdomain`
+            when not provided. Can be customized via `TIO_JOB_NAMESPACE_TEMPLATE`.
         runner: Runtime environment where the job runs.
         inputs: Sources that provide data to the job.
         transforms: Steps that modify the data.
@@ -76,6 +80,7 @@ class Job(Tiozin, Generic[TData]):
         layer: str = None,
         product: str = None,
         model: str = None,
+        namespace: str = None,
         runner: Runner = None,
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
@@ -109,6 +114,17 @@ class Job(Tiozin, Generic[TData]):
         self.layer = layer
         self.product = product
         self.model = model
+        self.namespace = JINJA.from_string(
+            namespace or config.tiozin_job_namespace_template
+        ).render(
+            org=org,
+            region=region,
+            domain=domain,
+            subdomain=subdomain,
+            layer=layer,
+            product=product,
+            model=model,
+        )
 
         self.runner = runner
         self.inputs = inputs or []
@@ -137,6 +153,6 @@ class Job(Tiozin, Generic[TData]):
 
     def lineage(self) -> Lineage:
         return Lineage(
-            inputs=[d for i in self.inputs for d in i.lineage().inputs],
-            outputs=[d for o in self.outputs for d in o.lineage().outputs],
+            inputs=[d for i in self.inputs for d in i.lineage_datasets().inputs],
+            outputs=[d for o in self.outputs for d in o.lineage_datasets().outputs],
         )
