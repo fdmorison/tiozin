@@ -1,11 +1,11 @@
+from tiozin import Context
 from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpTransform
 
 # ============================================================================
-# Default lineage() fallback — Input, Output, Transform
+# Default lineage_datasets() fallback — Input, Output, Transform
 # ============================================================================
 
 _KWARGS = dict(
-    name="test",
     org="acme",
     region="latam",
     domain="ecommerce",
@@ -16,12 +16,14 @@ _KWARGS = dict(
 )
 
 
-def test_input_should_return_logical_dataset_as_input_when_lineage_is_not_overridden():
+def test_input_should_return_logical_dataset_as_input_when_lineage_is_not_overridden(
+    job_context: Context,
+):
     # Arrange
-    step = NoOpInput(**_KWARGS)
+    step = NoOpInput(name="test_input", **_KWARGS)
 
     # Act
-    result = step.lineage()
+    result = step.lineage_datasets()
 
     # Assert
     actual = (
@@ -29,18 +31,20 @@ def test_input_should_return_logical_dataset_as_input_when_lineage_is_not_overri
         result.inputs[0].name,
     )
     expected = (
-        "acme.latam.ecommerce.checkout",
-        "raw.sales.orders",
+        job_context.namespace,
+        f"{job_context.slug}.{step.slug}",
     )
     assert actual == expected
 
 
-def test_output_should_return_logical_dataset_as_output_when_lineage_is_not_overridden():
+def test_output_should_return_logical_dataset_as_output_when_lineage_is_not_overridden(
+    job_context: Context,
+):
     # Arrange
-    step = NoOpOutput(**_KWARGS)
+    step = NoOpOutput(name="test_output", **_KWARGS)
 
     # Act
-    result = step.lineage()
+    result = step.lineage_datasets()
 
     # Assert
     actual = (
@@ -48,18 +52,20 @@ def test_output_should_return_logical_dataset_as_output_when_lineage_is_not_over
         result.outputs[0].name,
     )
     expected = (
-        "acme.latam.ecommerce.checkout",
-        "raw.sales.orders",
+        job_context.namespace,
+        f"{job_context.slug}.{step.slug}",
     )
     assert actual == expected
 
 
-def test_transform_should_return_logical_dataset_as_output_when_lineage_is_not_overridden():
+def test_transform_should_return_logical_dataset_as_output_when_lineage_is_not_overridden(
+    job_context: Context,
+):
     # Arrange
-    step = NoOpTransform(**_KWARGS)
+    step = NoOpTransform(name="test_transform", **_KWARGS)
 
     # Act
-    result = step.lineage()
+    result = step.lineage_datasets()
 
     # Assert
     actual = (
@@ -67,7 +73,7 @@ def test_transform_should_return_logical_dataset_as_output_when_lineage_is_not_o
         result.outputs[0].name,
     )
     expected = (
-        "acme.latam.ecommerce.checkout",
-        "raw.sales.orders",
+        job_context.namespace,
+        f"{job_context.slug}.{step.slug}",
     )
     assert actual == expected

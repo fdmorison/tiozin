@@ -196,7 +196,7 @@ class DuckdbPostgresOutput(DuckdbOutput):
     def _probe(self) -> str:
         return f"{self._database}.{self._pg_probe}"
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         return Lineage(
             inputs=[],
             outputs=[

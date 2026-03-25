@@ -95,3 +95,13 @@ TIO_METRIC_REGISTRY_LOCATION = _env.str("TIO_METRIC_REGISTRY_LOCATION", None)
 TIO_METRIC_REGISTRY_TIMEOUT = _env.int("TIO_METRIC_REGISTRY_TIMEOUT", None)
 TIO_METRIC_REGISTRY_READONLY = _env.bool("TIO_METRIC_REGISTRY_READONLY", None)
 TIO_METRIC_REGISTRY_CACHE = _env.bool("TIO_METRIC_REGISTRY_CACHE", None)
+
+# ===============================================
+#           Tiozin Customizations
+# ===============================================
+# TIO_JOB_NAMESPACE_TEMPLATE - Jinja template for the job namespace.
+# Available variables: org, region, domain, subdomain, layer, product, model.
+TIO_JOB_NAMESPACE_TEMPLATE = _env.str(
+    "TIO_JOB_NAMESPACE_TEMPLATE",
+    "{{org}}.{{region}}.{{domain}}.{{subdomain}}",
+)

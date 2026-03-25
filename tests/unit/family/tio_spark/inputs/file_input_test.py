@@ -3,7 +3,7 @@ import pytest
 from tiozin.family.tio_spark import SparkFileInput
 
 # ============================================================================
-# Testing SparkFileInput.lineage — one dataset per path
+# Testing SparkFileInput.lineage_datasets — one dataset per path
 # ============================================================================
 
 
@@ -29,7 +29,7 @@ def test_file_input_should_return_one_dataset_per_path(path, expected):
     step = SparkFileInput(name="test", path=path)
 
     # Act
-    result = step.lineage()
+    result = step.lineage_datasets()
 
     # Assert
     actual = [(d.namespace, d.name) for d in result.inputs]

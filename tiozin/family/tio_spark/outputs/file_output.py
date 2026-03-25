@@ -79,7 +79,7 @@ class SparkFileOutput(SparkOutput):
         self.mode = trim_lower(mode or "append")
         self.partition_by = as_list(partition_by)
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         return Lineage(
             inputs=[],
             outputs=[LineageDataset.from_uri(self.path)],

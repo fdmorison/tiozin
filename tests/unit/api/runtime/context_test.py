@@ -43,6 +43,7 @@ def test_for_job_should_create_job_context(
             "tiozin_role": job.tiozin_role,
             # Domain / Governance
             **fake_domain,
+            "namespace": "acme.latam.ecommerce.checkout",
             **fake_governance,
             # Tiozin arguments
             "options": job.options,
@@ -88,6 +89,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "tiozin_role": step.tiozin_role,
         # Domain / Governance
         **fake_domain,
+        "namespace": None,
         # Governance inheritance
         "maintainer": None,
         "cost_center": None,
@@ -144,6 +146,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "layer": job_context.layer,
         "product": job_context.product,
         "model": job_context.model,
+        "namespace": job_context.namespace,
         # Governance inheritance
         "maintainer": job_context.maintainer,
         "cost_center": job_context.cost_center,
@@ -168,6 +171,27 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "template_vars": ANY,
         "shared": job_context.shared,
     }
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Context.qualified_slug
+# =============================================================================
+
+
+def test_qualified_slug_should_return_slug_when_context_is_root(job_context: Context):
+    # Assert
+    actual = job_context.qualified_slug
+    expected = job_context.slug
+    assert actual == expected
+
+
+def test_qualified_slug_should_return_job_slug_and_step_slug_when_context_is_child(
+    job_context: Context, input_context: Context
+):
+    # Assert
+    actual = input_context.qualified_slug
+    expected = f"{job_context.slug}.{input_context.slug}"
     assert actual == expected
 
 

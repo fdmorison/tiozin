@@ -58,3 +58,8 @@ TIO_METRIC_REGISTRY_LOCATION = None
 TIO_METRIC_REGISTRY_TIMEOUT = None
 TIO_METRIC_REGISTRY_READONLY = None
 TIO_METRIC_REGISTRY_CACHE = None
+
+# ===============================================
+#           Tiozin Customizations
+# ===============================================
+TIO_JOB_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"

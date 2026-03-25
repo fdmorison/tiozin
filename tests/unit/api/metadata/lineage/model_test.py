@@ -203,6 +203,24 @@ def test_from_context_should_unset_parent_when_job_context(job_context: Context)
     assert actual == expected
 
 
+def test_from_context_should_use_qualified_slug_as_job_name_when_step_context(
+    input_context: Context,
+):
+    # Act
+    result = LineageRunEvent.from_context(input_context, LineageRunEvent.START)
+
+    # Assert
+    actual = (
+        result.job.namespace,
+        result.job.name,
+    )
+    expected = (
+        input_context.namespace,
+        input_context.qualified_slug,
+    )
+    assert actual == expected
+
+
 def test_from_context_should_set_parent_when_step_context(
     input_context: Context, job_context: Context
 ):

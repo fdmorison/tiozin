@@ -37,11 +37,11 @@ class StepProxy(wrapt.ObjectProxy):
     def write(self, *args, **kwargs) -> None:
         return self._execute(*args, **kwargs)
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         step: EtlStep = self.__wrapped__
         context = Context.for_step(step)
         with context, TiozinTemplateOverlay(step, context.template_vars):
-            return step.lineage()
+            return step.lineage_datasets()
 
     def _execute(self, *args, **kwargs) -> Any:
         from tiozin import Input, Output, Transform

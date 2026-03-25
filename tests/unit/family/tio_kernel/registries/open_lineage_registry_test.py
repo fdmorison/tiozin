@@ -146,7 +146,7 @@ def test_build_run_event_should_map_job_fields(registry: OpenLineageRegistry):
         result.job.name,
     )
     expected = (
-        "acme.latam.ecommerce.checkout.raw",
+        "acme.latam.ecommerce.checkout",
         "test_job",
     )
     assert actual == expected
@@ -209,7 +209,7 @@ def test_build_run_event_should_include_parent_facet_when_parent_set(registry: O
     expected = (
         "018f1a2b-3c4d-7e8f-9a0b-1c2d3e4f5a6b",
         "test_job",
-        "acme.latam.ecommerce.checkout.raw",
+        "acme.latam.ecommerce.checkout",
     )
     assert actual == expected
 
@@ -256,10 +256,8 @@ def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry
     event = job_start_event.model_copy(
         update={
             "inputs": [
-                LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.orders"),
-                LineageDataset(
-                    namespace="acme.latam.ecommerce.checkout.raw", name="sales.customers"
-                ),
+                LineageDataset(namespace="acme.latam.ecommerce.checkout", name="sales.orders"),
+                LineageDataset(namespace="acme.latam.ecommerce.checkout", name="sales.customers"),
             ],
         }
     )
@@ -270,8 +268,8 @@ def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry
     # Assert
     actual = [(d.namespace, d.name) for d in result.inputs]
     expected = [
-        ("acme.latam.ecommerce.checkout.raw", "sales.orders"),
-        ("acme.latam.ecommerce.checkout.raw", "sales.customers"),
+        ("acme.latam.ecommerce.checkout", "sales.orders"),
+        ("acme.latam.ecommerce.checkout", "sales.customers"),
     ]
     assert actual == expected
 
@@ -281,7 +279,7 @@ def test_build_run_event_should_map_output_datasets(registry: OpenLineageRegistr
     event = job_start_event.model_copy(
         update={
             "outputs": [
-                LineageDataset(namespace="acme.latam.ecommerce.checkout.raw", name="sales.summary"),
+                LineageDataset(namespace="acme.latam.ecommerce.checkout", name="sales.summary"),
             ],
         }
     )
@@ -292,7 +290,7 @@ def test_build_run_event_should_map_output_datasets(registry: OpenLineageRegistr
     # Assert
     actual = [(d.namespace, d.name) for d in result.outputs]
     expected = [
-        ("acme.latam.ecommerce.checkout.raw", "sales.summary"),
+        ("acme.latam.ecommerce.checkout", "sales.summary"),
     ]
     assert actual == expected
 

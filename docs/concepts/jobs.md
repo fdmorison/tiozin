@@ -6,7 +6,7 @@ A Job is Tiozin's top-level unit. It groups an execution engine, data sources, t
 
 `Job` is an abstract base class. Any class that extends it and registers as a Tiozin plugin becomes a valid job type.
 
-Three lifecycle methods define the contract:
+Three lifecycle methods define the execution contract:
 
 | Method | Required | Description |
 |---|---|---|
@@ -15,6 +15,58 @@ Three lifecycle methods define the contract:
 | `teardown()` | no | Called after `submit()`, even on failure. Override to run cleanup |
 
 The framework wraps every job in a `JobProxy` before execution. The proxy handles context creation, template rendering, logging, and lifecycle sequencing. Your job implementation focuses only on coordinating its steps.
+
+## Properties
+
+### Identity
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `kind` | yes | `str` | | Job type, used to resolve the plugin |
+| `name` | yes | `str` | | Unique job identifier. Not the execution ID |
+| `description` | no | `str` | `None` | Short description of the pipeline |
+
+### Ownership
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `owner` | no | `str` | `None` | Team that requested this job |
+| `maintainer` | no | `str` | `None` | Team that maintains this job |
+| `cost_center` | no | `str` | `None` | Team that pays for this job |
+| `labels` | no | `dict[str, str]` | `{}` | Free-form key-value metadata |
+
+### Domain
+
+These fields declare the organizational context and lineage of the data this job produces. All seven domain fields are required. They are also available as template variables in any YAML string property.
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `org` | yes | `str` | | Organization that owns and produces this data |
+| `region` | yes | `str` | | Business region of the domain team. This is a business territory (`latam`, `north-america`, `emea`), not a cloud infrastructure region like an AWS availability zone or GCP region |
+| `domain` | yes | `str` | | Business domain that owns this pipeline (e.g. `ecommerce`, `marketing`) |
+| `subdomain` | yes | `str` | | More specific area within the domain (e.g. `retail`, `campaigns`) |
+| `layer` | yes | `str` | | Data layer: `raw`, `trusted`, `refined`, or any custom label |
+| `product` | yes | `str` | | Data product being produced. A product groups one or more related models |
+| `model` | yes | `str` | | Specific data representation within the product: a table, topic, file, collection, or any other structure. A product can expose one or more models |
+| `namespace` | no | `str` | `TIO_JOB_NAMESPACE_TEMPLATE` | Job namespace. Accepts a plain string or a Jinja template rendered with the domain fields. When omitted, the value is derived from `TIO_JOB_NAMESPACE_TEMPLATE` |
+
+### Pipeline components
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `runner` | yes | `Runner` | | Execution engine for this pipeline |
+| `inputs` | yes | `list[Input]` | min 1 | Sources that provide data |
+| `transforms` | no | `list[Transform]` | `[]` | Steps that modify the data |
+| `outputs` | no | `list[Output]` | `[]` | Destinations where data is written |
+
+## Invariants
+
+These constraints apply to all job types:
+
+- `name`, `runner`, `org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model` are required. Missing any one raises an error at construction time.
+- `inputs` must contain at least one element.
+- `transforms` and `outputs` are optional. A job with no outputs is valid: the runner receives an empty plan.
+- Unknown fields in YAML are silently ignored. You can annotate job definitions with custom fields without breaking execution.
 
 ## LinearJob
 
@@ -54,62 +106,12 @@ class MyJob(Job[Any]):
 
 Register it as a `tiozin.family` entry point and use `kind: MyJob` in YAML. See [Creating Pluggable Tiozins](../extending/tiozins.md) for registration details.
 
-## Properties
-
-### Identity
-
-| Property | Required | Type | Default | Description |
-|---|---|---|---|---|
-| `kind` | yes | `str` | | Job type, used to resolve the plugin |
-| `name` | yes | `str` | | Unique job identifier. Not the execution ID |
-| `description` | no | `str` | `None` | Short description of the pipeline |
-
-### Ownership
-
-| Property | Required | Type | Default | Description |
-|---|---|---|---|---|
-| `owner` | no | `str` | `None` | Team that requested this job |
-| `maintainer` | no | `str` | `None` | Team that maintains this job |
-| `cost_center` | no | `str` | `None` | Team that pays for this job |
-| `labels` | no | `dict[str, str]` | `{}` | Free-form key-value metadata |
-
-### Domain
-
-These fields declare the organizational context and lineage of the data this job produces. All seven are required. They are also available as template variables in any YAML string property.
-
-| Property | Required | Type | Description |
-|---|---|---|---|
-| `org` | yes | `str` | Organization that owns and produces this data |
-| `region` | yes | `str` | Business region of the domain team. This is a business territory (`us-east`, `latam`, `emea`), not a cloud infrastructure region like an AWS availability zone or GCP region |
-| `domain` | yes | `str` | Business domain that owns this pipeline (e.g. `ecommerce`, `marketing`) |
-| `subdomain` | yes | `str` | More specific area within the domain (e.g. `retail`, `campaigns`) |
-| `layer` | yes | `str` | Data layer: `raw`, `trusted`, `refined`, or any custom label |
-| `product` | yes | `str` | Data product being produced. A product groups one or more related models |
-| `model` | yes | `str` | Specific data representation within the product: a table, topic, file, collection, or any other structure. A product can expose one or more models |
-
-### Pipeline components
-
-| Property | Required | Type | Default | Description |
-|---|---|---|---|---|
-| `runner` | yes | `Runner` | | Execution engine for this pipeline |
-| `inputs` | yes | `list[Input]` | min 1 | Sources that provide data |
-| `transforms` | no | `list[Transform]` | `[]` | Steps that modify the data |
-| `outputs` | no | `list[Output]` | `[]` | Destinations where data is written |
-
-## Invariants
-
-These constraints apply to all job types, including `LinearJob`:
-
-- `name`, `runner`, `org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model` are required. Missing any one raises an error at construction time.
-- `inputs` must contain at least one element.
-- `transforms` and `outputs` are optional. A job with no outputs is valid: the runner receives an empty plan.
-- Unknown fields in YAML are silently ignored. You can annotate job definitions with custom fields without breaking execution.
-
 ## A complete job
 
 ```yaml
 kind: LinearJob
 name: orders_daily_summary
+namespace: acme.ecommerce
 description: Aggregates daily order totals by region.
 
 owner: data-platform
@@ -119,7 +121,7 @@ labels:
   criticality: high
 
 org: acme
-region: us-east
+region: latam
 domain: ecommerce
 subdomain: retail
 layer: refined
@@ -160,13 +162,14 @@ from tiozin.family.tio_kernel import (
 
 job = LinearJob(
     name="orders_daily_summary",
+    namespace="acme.ecommerce",
     description="Aggregates daily order totals by region.",
     owner="data-platform",
     maintainer="analytics-team",
     cost_center="tio_scrooge",
     labels={"criticality": "high"},
     org="acme",
-    region="us-east",
+    region="latam",
     domain="ecommerce",
     subdomain="retail",
     layer="refined",
