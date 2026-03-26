@@ -73,4 +73,4 @@ class VaultSecretRegistry(SecretRegistry):
 
 `try_get()` is provided by the base class. It returns `None` instead of raising when the item is not found.
 
-Once implemented, register your registry as a Tiozin via Python `entry_points`. See [Creating Pluggable Tiozins](../extending/tiozins.md).
+Once implemented, register your registry as a Tiozin via Python `entry_points`. See [Working with Registries](../extending/registry.md).
