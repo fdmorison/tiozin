@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+from tiozin.utils.io import normalize_uri
+
 from ...domain import ImmutableModel
 
 
@@ -22,18 +24,18 @@ class LineageDataset(ImmutableModel):
 
     @staticmethod
     def from_uri(uri: str) -> LineageDataset:
-        parsed = urlparse(str(uri))
+        uri = normalize_uri(uri, absolute=False, strip_glob=True)
+        parsed = urlparse(uri)
 
         if not parsed.scheme:
-            # local path without scheme — keep as-is, do not resolve to absolute
-            return LineageDataset(namespace="file", name=str(uri).strip("/"))
+            return LineageDataset(namespace="file", name=uri)
 
         if parsed.netloc:
             namespace = f"{parsed.scheme}://{parsed.netloc}"
         else:
             namespace = parsed.scheme
 
-        name = parsed.path.strip("/")
+        name = parsed.path.lstrip("/")
         return LineageDataset(namespace=namespace, name=name)
 
     # --- SQL databases (database.schema.table) ---
