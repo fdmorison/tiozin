@@ -5,7 +5,7 @@ import pytest
 from freezegun import freeze_time
 
 from tiozin.api import Input, Runner
-from tiozin.api.metadata.job.manifest import (
+from tiozin.api.metadata.job.model import (
     InputManifest,
     OutputManifest,
     RunnerManifest,

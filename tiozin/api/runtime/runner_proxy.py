@@ -8,7 +8,7 @@ import wrapt
 
 from tiozin.exceptions import AccessViolationError
 
-from .. import TiozinTemplateOverlay
+from ...compose import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
     from tiozin import Runner

@@ -1,8 +1,8 @@
 import pytest
 
 from tests.stubs import InputStub
-from tiozin.api.runtime.context import Context
-from tiozin.compose import StepProxy
+from tiozin.api.context import Context
+from tiozin.api.runtime.step_proxy import StepProxy
 from tiozin.exceptions import AccessViolationError
 from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpTransform
 

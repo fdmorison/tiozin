@@ -19,7 +19,7 @@ from tiozin.api import (
     Transform,
 )
 from tiozin.api.loggable import Loggable
-from tiozin.api.metadata.job.manifest import (
+from tiozin.api.metadata.job.model import (
     InputManifest,
     JobManifest,
     Manifest,
@@ -27,7 +27,7 @@ from tiozin.api.metadata.job.manifest import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.api.metadata.setting.manifest import (
+from tiozin.api.metadata.setting.model import (
     JobRegistryManifest,
     LineageRegistryManifest,
     MetricRegistryManifest,

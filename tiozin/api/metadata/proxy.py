@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import wrapt
 
-from .. import TiozinTemplateOverlay
-from ..templating.date import TemplateDate
-from ..templating.env import TemplateEnv
+from tiozin.compose import TiozinTemplateOverlay
+from tiozin.compose.templating.date import TemplateDate
+from tiozin.compose.templating.env import TemplateEnv
 
 if TYPE_CHECKING:
     from tiozin import Registry

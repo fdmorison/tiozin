@@ -9,7 +9,7 @@ from tiozin.compose.reflection import detect_family_name, detect_tiozin_role
 from tiozin.utils import slugify
 
 if TYPE_CHECKING:
-    from .runtime.context import Context
+    from .context import Context
 
 
 class Tiozin(Loggable, metaclass=TioProxyMeta):
@@ -103,7 +103,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         Raises:
             TiozinUnexpectedError if no execution scope is active.
         """
-        from .runtime.context import Context
+        from .context import Context
 
         return Context.current()
 

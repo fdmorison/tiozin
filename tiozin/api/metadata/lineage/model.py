@@ -8,7 +8,7 @@ from pydantic import Field
 from tiozin import config
 from tiozin.utils import utcnow
 
-from ..domain import ImmutableModel
+from ...domain import ImmutableModel
 from .dataset import LineageDataset
 from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
@@ -59,7 +59,7 @@ class LineageParentRun(ImmutableModel):
             return None
         return cls(
             run_id=ctx.job.run_id,
-            name=ctx.job.slug,
+            name=ctx.job.qualified_slug,
             namespace=ctx.job.namespace,
         )
 

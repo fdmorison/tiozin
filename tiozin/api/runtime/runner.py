@@ -1,11 +1,10 @@
-from __future__ import annotations
-
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from tiozin.compose import RunnerProxy, tioproxy
+from tiozin.compose import tioproxy
 
-from .. import Tiozin
+from ..tiozin import Tiozin
+from .runner_proxy import RunnerProxy
 
 TPlan = TypeVar("TPlan")
 TSession = TypeVar("TSession")

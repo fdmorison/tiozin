@@ -44,9 +44,9 @@ ENV/
 # Logs
 *.log
 **/logs/
+**/*.log
 !tiozin/logs/
 !tests/unit/logs/
-**/*.log
 
 # Database files
 *.db
@@ -63,3 +63,4 @@ metastore_db
 spark-warehouse
 .scratch
 tiozin.yaml
+!secret.py

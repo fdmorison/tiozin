@@ -4,17 +4,17 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin import config
-from tiozin.api import (
-    Input,
-    Lineage,
-    Output,
-    Runner,
-    Tiozin,
-    Transform,
-)
-from tiozin.compose import JobProxy, tioproxy
+from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
+
+from ..metadata.lineage.model import Lineage
+from ..tiozin import Tiozin
+from .input import Input
+from .job_proxy import JobProxy
+from .output import Output
+from .runner import Runner
+from .transform import Transform
 
 if TYPE_CHECKING:
     from tiozin.compose import JobBuilder
@@ -151,7 +151,7 @@ class Job(Tiozin, Generic[TData]):
     def teardown(self) -> None:
         pass
 
-    def lineage(self) -> Lineage:
+    def lineage_datasets(self) -> Lineage:
         return Lineage(
             inputs=[d for i in self.inputs for d in i.lineage_datasets().inputs],
             outputs=[d for o in self.outputs for d in o.lineage_datasets().outputs],

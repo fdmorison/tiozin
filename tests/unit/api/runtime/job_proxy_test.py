@@ -1,6 +1,6 @@
 import pytest
 
-from tiozin.compose import JobProxy
+from tiozin.api.runtime.job_proxy import JobProxy
 from tiozin.exceptions import AccessViolationError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpRunner
 

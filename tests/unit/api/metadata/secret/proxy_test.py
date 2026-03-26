@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from tiozin.api.metadata.secret.model import Secret
-from tiozin.compose.proxies.sensitive import SecretRegistryProxy
+from tiozin.api.metadata.secret.proxy import SecretRegistryProxy
 from tiozin.exceptions import SecretNotFoundError
 
 # ============================================================================

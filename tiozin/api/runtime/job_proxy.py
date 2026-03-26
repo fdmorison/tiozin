@@ -8,7 +8,7 @@ from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import human_join, utcnow
 
-from .. import TiozinTemplateOverlay
+from ...compose import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
     from tiozin import Job
@@ -56,7 +56,7 @@ class JobProxy(wrapt.ObjectProxy):
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
                 job.setup()
-                job_lineage = job.lineage()
+                job_lineage = job.lineage_datasets()
                 context.executed_at = utcnow()
                 with job.runner():
                     lineage.start(inputs=job_lineage.inputs, outputs=job_lineage.outputs)

@@ -9,11 +9,12 @@ from typing import TYPE_CHECKING, Any
 
 from pendulum import DateTime
 
-from tiozin.api.metadata.bundle import Registries
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
+
+from .metadata.bundle import Registries
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner, Tiozin

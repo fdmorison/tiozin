@@ -1,11 +1,12 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from tiozin.compose import StepProxy, tioproxy
+from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
-from .. import Tiozin
 from ..metadata.lineage.model import Lineage, LineageDataset
+from ..tiozin import Tiozin
+from .step_proxy import StepProxy
 
 TData = TypeVar("TData")
 

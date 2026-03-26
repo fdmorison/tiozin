@@ -1,6 +1,6 @@
 import pytest
 
-from tiozin.compose import StepProxy
+from tiozin.api.runtime.step_proxy import StepProxy
 from tiozin.family.tio_kernel import NoOpInput, NoOpRunner
 
 # ============================================================================

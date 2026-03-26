@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
-from ..domain import ImmutableModel
+from ...domain import ImmutableModel
 
 
 class LineageDataset(ImmutableModel):
