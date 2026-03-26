@@ -10,7 +10,7 @@ from tests.stubs import (
     TransformStub,
 )
 from tiozin import Context
-from tiozin.api.metadata.setting.manifest import (
+from tiozin.api.metadata.setting.model import (
     JobRegistryManifest,
     LineageRegistryManifest,
     MetricRegistryManifest,

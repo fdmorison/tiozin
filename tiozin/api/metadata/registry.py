@@ -3,9 +3,11 @@ from typing import Generic, TypeVar
 
 from tiozin import config
 from tiozin.api import Tiozin
-from tiozin.compose import RegistryProxy, tioproxy
+from tiozin.compose import tioproxy
 from tiozin.exceptions import TiozinNotFoundError
 from tiozin.utils import default
+
+from .proxy import RegistryProxy
 
 TMetadata = TypeVar("TMetadata")
 

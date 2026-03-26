@@ -1,10 +1,10 @@
 from abc import abstractmethod
 
-from tiozin.api.registry import Registry
 from tiozin.compose import tioproxy
-from tiozin.compose.proxies.lineage import LineageRegistryProxy
 
+from ..registry import Registry
 from .model import LineageDataset, LineageRunEvent, LineageRunEventType
+from .proxy import LineageRegistryProxy
 
 
 @tioproxy(LineageRegistryProxy)

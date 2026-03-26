@@ -23,7 +23,7 @@ class SettingRegistryProxy(wrapt.ObjectProxy):
     """
 
     def setup(self, *args, **kwargs) -> None:
-        from ..assembly.tiozin_factory import tiozin_factory
+        from tiozin.compose.assembly.tiozin_factory import tiozin_factory
 
         registry: SettingRegistry = self.__wrapped__
         visited = []

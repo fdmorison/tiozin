@@ -1,6 +1,6 @@
 from enum import auto
 
-from ..domain import UppercaseEnum
+from ...domain import UppercaseEnum
 
 
 class LineageRunEventType(UppercaseEnum):

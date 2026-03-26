@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.job.manifest import TransformManifest
+from tiozin.api.metadata.job.model import TransformManifest
 
 
 def test_manifest_should_have_defaults():

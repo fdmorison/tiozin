@@ -1,7 +1,7 @@
 from freezegun import freeze_time
 from pytest import MonkeyPatch
 
-from tiozin.compose import RegistryProxy
+from tiozin.api.metadata.proxy import RegistryProxy
 from tiozin.family.tio_kernel import NoOpSettingRegistry
 
 

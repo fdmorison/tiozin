@@ -64,7 +64,7 @@ inputs:
 
 transforms:
   - kind: NoOpTransform
-    name: do_something
+    name: process_it
     strategy: sha256
 
 outputs:

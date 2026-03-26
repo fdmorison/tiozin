@@ -3,7 +3,7 @@ import pytest
 
 from tests import config
 from tiozin import LineageDataset, LineageRunEvent
-from tiozin.api.runtime.context import Context
+from tiozin.api.context import Context
 
 # ============================================================================
 # LineageDataset.from_uri

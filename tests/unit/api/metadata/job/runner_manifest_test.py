@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.job.manifest import RunnerManifest
+from tiozin.api.metadata.job.model import RunnerManifest
 
 
 def test_manifest_should_have_defaults():

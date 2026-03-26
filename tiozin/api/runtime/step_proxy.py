@@ -8,7 +8,7 @@ from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError, TiozinInternalError
 from tiozin.utils import utcnow
 
-from .. import TiozinTemplateOverlay
+from ...compose import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Lineage

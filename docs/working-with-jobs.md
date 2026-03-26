@@ -66,8 +66,8 @@ When you pass a raw string or a `JobManifest` object, Tiozin bypasses the regist
 A typed Pydantic object. Use it when jobs come from a database, API, or registry and you want validation at construction time:
 
 ```python
-from tiozin import TiozinApp
-from tiozin.api.metadata.job.manifest import (
+from tiozin import (
+    TiozinApp,
     InputManifest,
     JobManifest,
     OutputManifest,

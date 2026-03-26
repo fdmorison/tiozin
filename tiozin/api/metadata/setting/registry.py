@@ -1,8 +1,8 @@
-from __future__ import annotations
+from tiozin.compose import tioproxy
 
-from tiozin.compose import SettingRegistryProxy, tioproxy
-
-from ... import Registry, SettingsManifest
+from ..registry import Registry
+from .model import SettingsManifest
+from .proxy import SettingRegistryProxy
 
 
 @tioproxy(SettingRegistryProxy)

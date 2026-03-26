@@ -10,7 +10,11 @@ from tiozin.api import Registry, Tiozin
 
 # Metadata
 from tiozin.api import (
+    InputManifest,
     JobManifest,
+    OutputManifest,
+    RunnerManifest,
+    TransformManifest,
     LineageRunEvent,
     Secret,
     SettingsManifest,
@@ -43,7 +47,11 @@ __all__ = [
     "Tiozin",
     "Registry",
     # Metadata
+    "InputManifest",
     "JobManifest",
+    "OutputManifest",
+    "RunnerManifest",
+    "TransformManifest",
     "Lineage",
     "LineageDataset",
     "LineageRunEvent",

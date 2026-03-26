@@ -24,7 +24,7 @@ from unittest.mock import patch
 import pytest
 
 from tiozin import Job, TiozinApp
-from tiozin.api.metadata.job.manifest import (
+from tiozin.api.metadata.job.model import (
     InputManifest,
     OutputManifest,
     RunnerManifest,
