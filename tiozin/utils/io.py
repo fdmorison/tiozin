@@ -8,7 +8,7 @@ Azure), and remote protocols (HTTP, HTTPS, FTP, SFTP).
 from io import StringIO
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 import fsspec
 from ruamel.yaml import YAML
@@ -181,20 +181,46 @@ def join_path(base: str, path: str) -> str | None:
     return path
 
 
-def normalize_uri(uri: StrOrPath) -> str:
+def normalize_uri(
+    uri: StrOrPath,
+    *,
+    as_absolute: bool = False,
+    strip_glob: bool = False,
+    strip_partitions: bool = False,
+) -> str:
     """
-    Return a fully qualified URI for the given path or URI.
+    Normalize a URI or path.
 
-    If `uri` already has a scheme (e.g. `s3://`, `gs://`, `file://`), it is
-    returned unchanged. Otherwise it is treated as a local filesystem path:
-    `~` is expanded and the path is resolved to an absolute `file://` URI.
+    Removes trailing slashes and, optionally:
+
+    - `strip_glob`: removes a glob pattern from the last path segment (``*``, ``?``, ``[``).
+    - `strip_partitions`: removes Hive-style partition segments (``key=value``) from the
+      right until a non-partition segment is reached.
+
+    Preserves scheme/authority for URIs. For local paths, returns a `file://`
+    URI when `as_absolute=True`, otherwise a normalized relative path.
     """
-    parsed = urlparse(str(uri))
+    uri = str(uri)
 
-    # already a URI
+    def _strip_glob(path: str) -> str:
+        p = Path(path)
+        return str(p.parent) if any(c in p.name for c in "*?[") else path
+
+    def _strip_partitions(path: str) -> str:
+        p = Path(path)
+        while "=" in p.name:
+            p = p.parent
+        return str(p)
+
+    parsed = urlparse(uri)
+    path = _strip_glob(parsed.path) if strip_glob else parsed.path
+    path = _strip_partitions(path) if strip_partitions else path
+    path = path.rstrip("/") or "/"
+
     if parsed.scheme:
-        return str(uri)
+        return urlunparse(parsed._replace(path=path))
 
-    # local path → file:// URI
-    path = Path(uri).expanduser().resolve()
-    return path.as_uri()
+    if not as_absolute:
+        return path
+
+    return Path(path).expanduser().resolve().as_uri()

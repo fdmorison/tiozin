@@ -354,7 +354,7 @@ def test_join_path_should_not_fail_when_either_argument_is_none(
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_normalize_uri_should_accept_str_and_path(path_type: type[str] | Path):
     # Act
-    result = io.normalize_uri(path_type("/absolute/local/file.csv"))
+    result = io.normalize_uri(path_type("/absolute/local/file.csv"), as_absolute=True)
 
     # Assert
     actual = result
@@ -387,7 +387,7 @@ def test_normalize_uri_should_return_uri_unchanged_when_scheme_is_present(uri: s
 
 def test_normalize_uri_should_return_file_uri_when_absolute_path(tmp_path: Path):
     # Act
-    result = io.normalize_uri(tmp_path / "file.csv")
+    result = io.normalize_uri(tmp_path / "file.csv", as_absolute=True)
 
     # Assert
     actual = result
@@ -402,7 +402,7 @@ def test_normalize_uri_should_resolve_relative_path_to_absolute_file_uri(
     monkeypatch.chdir(tmp_path)
 
     # Act
-    result = io.normalize_uri("data/file.csv")
+    result = io.normalize_uri("data/file.csv", as_absolute=True)
 
     # Assert
     actual = result
@@ -417,9 +417,106 @@ def test_normalize_uri_should_expand_tilde_when_path_starts_with_home(
     monkeypatch.setenv("HOME", str(tmp_path))
 
     # Act
-    result = io.normalize_uri("~/data/file.csv")
+    result = io.normalize_uri("~/data/file.csv", as_absolute=True)
 
     # Assert
     actual = result
     expected = f"file://{tmp_path}/data/file.csv"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "uri, expected",
+    [
+        ("s3://my-bucket/data/shakespeare/*.txt", "s3://my-bucket/data/shakespeare"),
+        ("gs://my-bucket/logs/**/*.parquet", "gs://my-bucket/logs/**"),
+        ("s3://my-bucket/data/orders/", "s3://my-bucket/data/orders"),
+    ],
+    ids=["s3-glob", "gs-double-star-glob", "s3-trailing-slash"],
+)
+def test_normalize_uri_should_strip_glob_and_trailing_slash_when_scheme_is_present(
+    uri: str, expected: str
+):
+    # Act
+    result = io.normalize_uri(uri, strip_glob=True)
+
+    # Assert
+    actual = result
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "uri, expected",
+    [
+        ("examples/data/shakespeare/*.txt", "examples/data/shakespeare"),
+        ("logs/**/*.parquet", "logs/**"),
+        ("data/orders/", "data/orders"),
+    ],
+    ids=["local-glob", "local-double-star-glob", "local-trailing-slash"],
+)
+def test_normalize_uri_should_strip_glob_and_trailing_slash_when_absolute_is_false(
+    uri: str, expected: str
+):
+    # Act
+    result = io.normalize_uri(uri, strip_glob=True)
+
+    # Assert
+    actual = result
+    assert actual == expected
+
+
+def test_normalize_uri_should_strip_glob_before_resolving_absolute_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+
+    # Act
+    result = io.normalize_uri("data/shakespeare/*.txt", as_absolute=True, strip_glob=True)
+
+    # Assert
+    actual = result
+    expected = f"file://{tmp_path}/data/shakespeare"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "uri, expected",
+    [
+        (
+            "s3://my-bucket/data/orders/year=2024/month=01",
+            "s3://my-bucket/data/orders",
+        ),
+        (
+            "data/orders/year=2024/month=01",
+            "data/orders",
+        ),
+        (
+            "s3://my-bucket/data/orders/year=2024/month=01/*.parquet",
+            "s3://my-bucket/data/orders",
+        ),
+    ],
+    ids=["s3-partitions", "local-partitions", "s3-partitions-and-glob"],
+)
+def test_normalize_uri_should_strip_hive_partition_segments(uri: str, expected: str):
+    # Act
+    result = io.normalize_uri(uri, strip_glob=True, strip_partitions=True)
+
+    # Assert
+    actual = result
+    assert actual == expected
+
+
+def test_normalize_uri_should_strip_trailing_slash_before_resolving_absolute_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+
+    # Act
+    result = io.normalize_uri("data/orders/", as_absolute=True)
+
+    # Assert
+    actual = result
+    expected = f"file://{tmp_path}/data/orders"
     assert actual == expected
