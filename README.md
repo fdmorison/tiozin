@@ -116,15 +116,12 @@ Tiozin is human-readable and machine-generatable:
 - [Creating a Provider Family](https://github.com/fdmorison/tiozin/blob/main/docs/extending/families.md)
 - [Creating Pluggable Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/tiozins.md)
 - [Tio Proxy: Adding Cross Cutting Family Features](https://github.com/fdmorison/tiozin/blob/main/docs/extending/proxies.md)
-- [Accessing Registries in Plugins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/registries.md)
-
-- Reference implementations you can learn from:
-  - [tio_kernel - The Core Family](https://github.com/fdmorison/tiozin/blob/main/docs/tio_kernel/index.md)
-  - [tio_spark - Spark Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
-  - [tio_duckdb - DuckDB Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
+- [Tio Kernel - The Core Family](https://github.com/fdmorison/tiozin/blob/main/docs/tio_kernel/index.md)
+- [Tio Spark - Spark Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
+- [Tio Duckdb - DuckDB Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
 
 ### Reference
-- [Settings Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
+- [Settings Reference: tiozin.yaml](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
 - [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)
 - [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
 
