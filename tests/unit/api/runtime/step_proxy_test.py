@@ -81,7 +81,7 @@ def test_proxy_should_render_lineage_templates_when_step_inherits_job_context(
     )
     expected = (
         "file",
-        "./data/ecommerce/raw",
+        "data/ecommerce/raw",
     )
     assert actual == expected
 
@@ -111,6 +111,6 @@ def test_proxy_should_render_lineage_templates_using_step_template_vars(
     )
     expected = (
         "file",
-        "./data/finance/trusted",
+        "data/finance/trusted",
     )
     assert actual == expected

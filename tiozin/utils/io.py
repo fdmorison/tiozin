@@ -181,13 +181,24 @@ def join_path(base: str, path: str) -> str | None:
     return path
 
 
-def normalize_uri(uri: StrOrPath, *, absolute: bool = False, strip_glob: bool = False) -> str:
+def normalize_uri(
+    uri: StrOrPath,
+    *,
+    as_absolute: bool = False,
+    strip_glob: bool = False,
+    strip_partitions: bool = False,
+) -> str:
     """
     Normalize a URI or path.
 
-    Removes trailing slashes and, optionally, a glob in the last path segment.
+    Removes trailing slashes and, optionally:
+
+    - `strip_glob`: removes a glob pattern from the last path segment (``*``, ``?``, ``[``).
+    - `strip_partitions`: removes Hive-style partition segments (``key=value``) from the
+      right until a non-partition segment is reached.
+
     Preserves scheme/authority for URIs. For local paths, returns a `file://`
-    URI when `absolute=True`, otherwise a normalized relative path.
+    URI when `as_absolute=True`, otherwise a normalized relative path.
     """
     uri = str(uri)
 
@@ -195,14 +206,21 @@ def normalize_uri(uri: StrOrPath, *, absolute: bool = False, strip_glob: bool = 
         p = Path(path)
         return str(p.parent) if any(c in p.name for c in "*?[") else path
 
+    def _strip_partitions(path: str) -> str:
+        p = Path(path)
+        while "=" in p.name:
+            p = p.parent
+        return str(p)
+
     parsed = urlparse(uri)
     path = _strip_glob(parsed.path) if strip_glob else parsed.path
+    path = _strip_partitions(path) if strip_partitions else path
     path = path.rstrip("/") or "/"
 
     if parsed.scheme:
         return urlunparse(parsed._replace(path=path))
 
-    if not absolute:
+    if not as_absolute:
         return path
 
     return Path(path).expanduser().resolve().as_uri()

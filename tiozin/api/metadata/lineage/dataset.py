@@ -24,7 +24,7 @@ class LineageDataset(ImmutableModel):
 
     @staticmethod
     def from_uri(uri: str) -> LineageDataset:
-        uri = normalize_uri(uri, absolute=False, strip_glob=True)
+        uri = normalize_uri(uri, as_absolute=False, strip_glob=True, strip_partitions=True)
         parsed = urlparse(uri)
 
         if not parsed.scheme:
