@@ -1,0 +1,44 @@
+name: customers
+physicalName: customers
+physicalType: table
+description: Raw customer master data ingested from source system.
+
+properties:
+
+  - name: id
+    logicalType: integer
+    physicalType: integer
+    required: true
+    primaryKey: true
+    primaryKeyPosition: 1
+    description: Unique customer identifier
+
+  - name: name
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Full name of the customer
+
+  - name: email
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Email address of the customer
+
+  - name: country
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Country of the customer
+
+  - name: created_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    description: Timestamp when the customer was created
+
+  - name: updated_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    description: Timestamp when the customer was last updated
