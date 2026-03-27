@@ -1,7 +1,8 @@
 from ..registry import Registry
+from .model import SchemaManifest
 
 
-class SchemaRegistry(Registry[object]):
+class SchemaRegistry(Registry[SchemaManifest]):
     """
     Retrieves and stores schemas.
 
