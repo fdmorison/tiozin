@@ -27,6 +27,7 @@ from .jobs.linear_job import LinearJob
 
 # Registries
 from .registries.file_job_registry import FileJobRegistry
+from .registries.file_schema_registry import FileSchemaRegistry
 from .registries.file_setting_registry import FileSettingRegistry
 from .registries.noop_lineage_registry import NoOpLineageRegistry
 from .registries.open_lineage_registry import OpenLineageRegistry
@@ -44,6 +45,7 @@ __all__ = [
     "NoOpTransform",
     "LinearJob",
     "FileJobRegistry",
+    "FileSchemaRegistry",
     "FileSettingRegistry",
     "NoOpLineageRegistry",
     "OpenLineageRegistry",
