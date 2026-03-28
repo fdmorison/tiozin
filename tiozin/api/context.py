@@ -171,7 +171,7 @@ class Context:
             # Arguments — always from job
             options=job.options,
             # Runtime — injected externally (eg: from TiozinApp, tests, etc)
-            registries=registries or Registries(),
+            registries=registries or Registries.from_baseline(),
         )
         ctx.job = ctx
         ctx.runner = job.runner
@@ -214,7 +214,7 @@ class Context:
             # Arguments — always from step
             options=step.options,
             # Runtime — injected externally  (eg: tests, etc)
-            registries=registries or Registries(),
+            registries=registries or Registries.from_baseline(),
         )
         ctx.job = None
         ctx.runner = None
