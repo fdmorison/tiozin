@@ -4,7 +4,7 @@ from tiozin.api.metadata.lineage.registry import LineageRegistry
 
 class LineageRegistryStub(LineageRegistry):
     def __init__(self):
-        super().__init__(location="noop://stub")
+        super().__init__(location="stub://lineage")
         self.captured_identifier = None
         self.captured_event: LineageRunEvent = None
 
@@ -18,7 +18,7 @@ class LineageRegistryStub(LineageRegistry):
 
 class FailingLineageRegistryStub(LineageRegistry):
     def __init__(self):
-        super().__init__(location="noop://failing")
+        super().__init__(location="stub://lineage")
         self.register_called = False
 
     def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:

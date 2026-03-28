@@ -3,13 +3,20 @@ import pytest
 from tests import env
 from tests.stubs import (
     InputStub,
+    JobRegistryStub,
     JobStub,
     LineageRegistryStub,
+    MetricRegistryStub,
     OutputStub,
     RunnerStub,
+    SchemaRegistryStub,
+    SecretRegistryStub,
+    SettingRegistryStub,
+    TransactionRegistryStub,
     TransformStub,
 )
 from tiozin import Context
+from tiozin.api.metadata.bundle import Registries
 from tiozin.api.metadata.setting.model import (
     JobRegistryManifest,
     LineageRegistryManifest,
@@ -141,6 +148,36 @@ def job_stub(
 
 
 @pytest.fixture()
+def setting_registry_stub() -> SettingRegistryStub:
+    return SettingRegistryStub()
+
+
+@pytest.fixture()
+def secret_registry_stub() -> SecretRegistryStub:
+    return SecretRegistryStub()
+
+
+@pytest.fixture()
+def schema_registry_stub() -> SchemaRegistryStub:
+    return SchemaRegistryStub()
+
+
+@pytest.fixture()
+def transaction_registry_stub() -> TransactionRegistryStub:
+    return TransactionRegistryStub()
+
+
+@pytest.fixture()
+def job_registry_stub() -> JobRegistryStub:
+    return JobRegistryStub()
+
+
+@pytest.fixture()
+def metric_registry_stub() -> MetricRegistryStub:
+    return MetricRegistryStub()
+
+
+@pytest.fixture()
 def lineage_registry_stub() -> LineageRegistryStub:
     return LineageRegistryStub()
 
@@ -152,7 +189,16 @@ def lineage_registry_stub() -> LineageRegistryStub:
 
 @pytest.fixture()
 def job_context(job_stub: JobStub):
-    with Context.for_job(job_stub) as ctx:
+    registries = Registries(
+        setting=SettingRegistryStub(),
+        secret=SecretRegistryStub(),
+        schema=SchemaRegistryStub(),
+        transaction=TransactionRegistryStub(),
+        job=JobRegistryStub(),
+        metric=MetricRegistryStub(),
+        lineage=LineageRegistryStub(),
+    )
+    with Context.for_job(job_stub, registries) as ctx:
         yield ctx
 
 

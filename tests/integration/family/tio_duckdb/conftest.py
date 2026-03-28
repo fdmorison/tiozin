@@ -8,8 +8,19 @@ from duckdb import DuckDBPyConnection
 from testcontainers.compose import DockerCompose
 
 from tests.integration.family.tio_duckdb import env
-from tests.stubs import JobStub, RunnerStub
+from tests.stubs import (
+    JobRegistryStub,
+    JobStub,
+    LineageRegistryStub,
+    MetricRegistryStub,
+    RunnerStub,
+    SchemaRegistryStub,
+    SecretRegistryStub,
+    SettingRegistryStub,
+    TransactionRegistryStub,
+)
 from tiozin import Context
+from tiozin.api.metadata.bundle import Registries
 from tiozin.utils import randstr
 
 TEST_ID = f"tiozin-test-{randstr()}"
@@ -38,7 +49,16 @@ def duckdb_job_stub(job_stub: JobStub, duckdb_runner_stub: RunnerStub) -> JobStu
 
 @pytest.fixture(autouse=True)
 def duckdb_session(duckdb_job_stub: JobStub) -> Generator[Any, Any, None]:
-    with Context.for_job(duckdb_job_stub) as context:
+    registries = Registries(
+        setting=SettingRegistryStub(),
+        secret=SecretRegistryStub(),
+        schema=SchemaRegistryStub(),
+        transaction=TransactionRegistryStub(),
+        job=JobRegistryStub(),
+        metric=MetricRegistryStub(),
+        lineage=LineageRegistryStub(),
+    )
+    with Context.for_job(duckdb_job_stub, registries) as context:
         yield context.runner.session
 
 

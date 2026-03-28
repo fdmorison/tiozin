@@ -1,7 +1,7 @@
 import pytest
-from pydantic import ValidationError
 
-from tiozin.api.metadata.job.model import OutputManifest
+from tiozin import OutputManifest
+from tiozin.exceptions import ModelError
 
 
 def test_manifest_should_have_defaults():
@@ -78,7 +78,7 @@ def test_manifest_should_reject_output_with_invalid_field_types(field_name, inva
     }
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         OutputManifest(**data)
 
 
@@ -95,5 +95,5 @@ def test_manifest_should_reject_output_without_required_field(field_to_remove):
     del data[field_to_remove]
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         OutputManifest(**data)

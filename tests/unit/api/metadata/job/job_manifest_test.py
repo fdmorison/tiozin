@@ -2,7 +2,6 @@ from textwrap import dedent
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
 
 from tiozin.api.metadata.job.model import (
     InputManifest,
@@ -11,7 +10,7 @@ from tiozin.api.metadata.job.model import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.exceptions import ManifestError
+from tiozin.exceptions import ModelError
 
 # ============================================================================
 # JobManifest.__init__ tests
@@ -236,7 +235,7 @@ def test_manifest_should_reject_job_without_required_field(field_to_remove):
     del data[field_to_remove]
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         JobManifest(**data)
 
 
@@ -259,7 +258,7 @@ def test_manifest_should_reject_job_with_empty_inputs():
     )
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         JobManifest(**data)
 
 
@@ -293,7 +292,7 @@ def test_manifest_should_reject_job_with_invalid_field_types(field_name, invalid
     data[field_name] = invalid_value
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         JobManifest(**data)
 
 
@@ -474,11 +473,11 @@ def test_to_json_should_not_render_unset_fields():
 
 
 # ============================================================================
-# JobManifest.from_yaml_or_json() tests
+# JobManifest.from_yaml() tests
 # ============================================================================
 
 
-def test_from_yaml_or_json_should_deserialize_yaml():
+def test_from_yaml_should_deserialize_yaml():
     # Arrange
     text = dedent("""
         kind: Job
@@ -506,7 +505,7 @@ def test_from_yaml_or_json_should_deserialize_yaml():
     """).lstrip()
 
     # Act
-    manifest = JobManifest.from_yaml_or_json(text)
+    manifest = JobManifest.from_yaml(text)
 
     # Assert
     actual = manifest
@@ -528,7 +527,7 @@ def test_from_yaml_or_json_should_deserialize_yaml():
     assert actual == expected
 
 
-def test_from_yaml_or_json_should_deserialize_json():
+def test_from_yaml_should_deserialize_json():
     # Arrange
     text = dedent("""
     {
@@ -568,7 +567,7 @@ def test_from_yaml_or_json_should_deserialize_json():
     """).strip()
 
     # Act
-    manifest = JobManifest.from_yaml_or_json(text)
+    manifest = JobManifest.from_yaml(text)
 
     # Assert
     actual = manifest
@@ -590,7 +589,7 @@ def test_from_yaml_or_json_should_deserialize_json():
     assert actual == expected
 
 
-def test_from_yaml_or_json_should_fail_when_manifest_has_duplicated_keys():
+def test_from_yaml_should_fail_when_manifest_has_duplicated_keys():
     # Arrange
     text = dedent("""
         kind: Job
@@ -619,16 +618,16 @@ def test_from_yaml_or_json_should_fail_when_manifest_has_duplicated_keys():
     """).lstrip()
 
     # Act
-    with pytest.raises(ManifestError, match="duplicate key"):
-        JobManifest.from_yaml_or_json(text)
+    with pytest.raises(ModelError, match="duplicate key"):
+        JobManifest.from_yaml(text)
 
 
 # ============================================================================
-# JobManifest.try_from_yaml_or_json() tests
+# JobManifest.try_from_yaml() tests
 # ============================================================================
 
 
-def test_try_from_yaml_or_json_should_return_manifest_when_valid_yaml():
+def test_try_from_yaml_should_return_manifest_when_valid_yaml():
     # Arrange
     text = dedent("""
         kind: Job
@@ -650,13 +649,13 @@ def test_try_from_yaml_or_json_should_return_manifest_when_valid_yaml():
     """).lstrip()
 
     # Act
-    manifest = JobManifest.try_from_yaml_or_json(text)
+    manifest = JobManifest.try_from_yaml(text)
 
     # Assert
     assert manifest is not None
 
 
-def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
+def test_try_from_yaml_should_return_manifest_when_already_manifest():
     # Arrange
     data = JobManifest(
         kind="Job",
@@ -673,7 +672,7 @@ def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
     )
 
     # Act
-    manifest = JobManifest.try_from_yaml_or_json(data)
+    manifest = JobManifest.try_from_yaml(data)
 
     # Assert
     actual = manifest
@@ -681,12 +680,12 @@ def test_try_from_yaml_or_json_should_return_manifest_when_already_manifest():
     assert actual == expected
 
 
-def test_try_from_yaml_or_json_should_return_none_when_invalid_yaml():
+def test_try_from_yaml_should_return_none_when_invalid_yaml():
     # Arrange
     text = "invalid: yaml: content: ["
 
     # Act
-    manifest = JobManifest.try_from_yaml_or_json(text)
+    manifest = JobManifest.try_from_yaml(text)
 
     # Assert
     actual = manifest
@@ -694,12 +693,12 @@ def test_try_from_yaml_or_json_should_return_none_when_invalid_yaml():
     assert actual == expected
 
 
-def test_try_from_yaml_or_json_should_return_none_when_not_string():
+def test_try_from_yaml_should_return_none_when_not_string():
     # Arrange
     data = {"kind": "Job", "name": "test"}
 
     # Act
-    manifest = JobManifest.try_from_yaml_or_json(data)
+    manifest = JobManifest.try_from_yaml(data)
 
     # Assert
     actual = manifest
@@ -707,7 +706,7 @@ def test_try_from_yaml_or_json_should_return_none_when_not_string():
     assert actual == expected
 
 
-def test_try_from_yaml_or_json_should_return_none_when_validation_fails():
+def test_try_from_yaml_should_return_none_when_validation_fails():
     # Arrange
     text = dedent("""
         kind: Job
@@ -715,7 +714,7 @@ def test_try_from_yaml_or_json_should_return_none_when_validation_fails():
     """).lstrip()
 
     # Act
-    manifest = JobManifest.try_from_yaml_or_json(text)
+    manifest = JobManifest.try_from_yaml(text)
 
     # Assert
     actual = manifest
@@ -748,7 +747,7 @@ def test_yaml_roundtrip_should_preserve_data():
 
     # Act
     text = manifest.to_yaml()
-    restored = JobManifest.from_yaml_or_json(text)
+    restored = JobManifest.from_yaml(text)
 
     # Assert
     actual = restored
@@ -776,48 +775,12 @@ def test_json_roundtrip_should_preserve_data():
 
     # Act
     text = original.to_json()
-    restored = JobManifest.from_yaml_or_json(text)
+    restored = JobManifest.from_yaml(text)
 
     # Assert
     actual = restored
     expected = original
     assert actual == expected
-
-
-# ============================================================================
-# JobManifest.from_arguments() tests
-# ============================================================================
-
-
-def test_from_arguments_should_create_manifest_from_kwargs():
-    # Arrange
-    data = dict(
-        kind="Job",
-        name="test_job",
-        org="tiozin",
-        region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        layer="test",
-        product="test_cases",
-        model="some_case",
-        runner={"kind": "TestRunner"},
-        inputs=[{"kind": "TestInput", "name": "reader"}],
-    )
-
-    # Act
-    manifest = JobManifest.from_arguments(**data)
-
-    # Assert
-    actual = manifest.name
-    expected = "test_job"
-    assert actual == expected
-
-
-def test_from_arguments_should_raise_manifest_error_when_validation_fails():
-    # Arrange / Act / Assert
-    with pytest.raises(ManifestError):
-        JobManifest.from_arguments(kind="Job")
 
 
 # ============================================================================
@@ -851,14 +814,14 @@ def test_manifest_should_strip_whitespace_from_string_fields():
 
 
 # ============================================================================
-# JobManifest.from_yaml_or_json() type guard
+# JobManifest.from_yaml() type guard
 # ============================================================================
 
 
-def test_from_yaml_or_json_should_raise_manifest_error_when_not_string():
+def test_from_yaml_should_raise_manifest_error_when_not_string():
     # Arrange
     data = {"kind": "Job", "name": "test"}
 
     # Act / Assert
-    with pytest.raises(ManifestError):
-        JobManifest.from_yaml_or_json(data)
+    with pytest.raises(ModelError):
+        JobManifest.from_yaml(data)

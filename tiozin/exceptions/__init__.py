@@ -18,7 +18,7 @@ from tiozin.exceptions.misc import (
     AccessViolationError,
     AlreadyFinishedError,
     AlreadyRunningError,
-    ManifestError,
+    ModelError,
     NotInitializedError,
     PolicyViolationError,
     ProxyError,
@@ -63,7 +63,7 @@ __all__ = [
     "TiozinUnavailableError",
     "TiozinNotImplementedError",
     # Domain
-    "ManifestError",
+    "ModelError",
     "JobError",
     "JobNotFoundError",
     "JobAlreadyExistsError",

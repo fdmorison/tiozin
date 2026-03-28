@@ -10,34 +10,31 @@ from tiozin.exceptions.categories import TiozinConflictError, TiozinInputError
 from tiozin.utils import human_join
 
 
-class ManifestError(TiozinInputError):
+class ModelError(TiozinInputError):
     """
-    Raised when a declarative manifest fails parsing or validation.
+    Raised when a model fails parsing or validation.
 
-    Applies to any resource defined via YAML or Pydantic models, not
-    exclusively to jobs. Factory methods are provided for the most
-    common error sources.
+    Applies to any user-provided input loaded from YAML or Python data
+    and validated via Pydantic.
     """
 
-    message = "Invalid `{manifest}`: {msg}"
+    message = "{model}: {msg}"
 
-    def __init__(self, manifest: str, message: str) -> None:
-        super().__init__(manifest=manifest, msg=message)
+    def __init__(self, model: str, message: str) -> None:
+        super().__init__(model=model, msg=message)
 
     @classmethod
-    def from_pydantic(cls, manifest: str, error: ValidationError) -> Self:
+    def from_pydantic(cls, model: str, error: ValidationError) -> Self:
         from tiozin.utils.messages import MessageTemplates
 
         messages = MessageTemplates.format_friendly_message(error)
-        message = human_join(messages)
-        return cls(manifest, message)
+        return cls(model, human_join(messages))
 
     @classmethod
-    def from_ruamel(cls, manifest: str, error: MarkedYAMLError) -> Self:
+    def from_ruamel(cls, model: str, error: MarkedYAMLError) -> Self:
         info = str(error.problem).capitalize()
-        line = str(error.problem_mark).strip()
-        message = f"{info} {line}"
-        return cls(manifest, message)
+        location = str(error.problem_mark).strip()
+        return cls(model, f"{info} {location}")
 
 
 class AlreadyRunningError(TiozinConflictError):

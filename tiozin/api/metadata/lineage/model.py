@@ -8,7 +8,7 @@ from pydantic import Field
 from tiozin import config
 from tiozin.utils import utcnow
 
-from ...domain import ImmutableModel
+from ..model import Model
 from .dataset import LineageDataset
 from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
@@ -16,12 +16,12 @@ if TYPE_CHECKING:
     from tiozin.api import Context
 
 
-class Lineage(ImmutableModel):
+class Lineage(Model):
     inputs: list[LineageDataset]
     outputs: list[LineageDataset]
 
 
-class LineageJob(ImmutableModel):
+class LineageJob(Model):
     QUERY: ClassVar = LineageJobType.QUERY
     COMMAND: ClassVar = LineageJobType.COMMAND
     DAG: ClassVar = LineageJobType.DAG
@@ -48,7 +48,7 @@ class LineageJob(ImmutableModel):
         )
 
 
-class LineageParentRun(ImmutableModel):
+class LineageParentRun(Model):
     run_id: str
     name: str
     namespace: str
@@ -64,7 +64,7 @@ class LineageParentRun(ImmutableModel):
         )
 
 
-class LineageRunEvent(ImmutableModel):
+class LineageRunEvent(Model):
     """
     Tiozin's internal representation of a lineage run event.
 

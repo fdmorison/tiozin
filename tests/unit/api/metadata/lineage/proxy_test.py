@@ -6,7 +6,7 @@ Calling register() on a stub already goes through the proxy.
 """
 
 from tests.mocks.lineage.run_event import job_start_event as event
-from tests.stubs import FailingLineageRegistryStub
+from tests.stubs import FailingLineageRegistryStub, LineageRegistryStub
 
 
 def test_proxy_should_silence_exception():
@@ -43,12 +43,12 @@ def test_proxy_should_invoke_register():
 
 def test_proxy_should_pass_through_attribute_access():
     # Arrange
-    registry = FailingLineageRegistryStub()
+    registry = LineageRegistryStub()
 
     # Act
     result = registry.location
 
     # Assert
     actual = result
-    expected = "noop://failing"
+    expected = "stub://lineage"
     assert actual == expected

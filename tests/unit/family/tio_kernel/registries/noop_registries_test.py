@@ -1,6 +1,6 @@
 import pytest
 
-from tiozin import Registry
+from tiozin import Context, Registry
 from tiozin.family.tio_kernel import (
     NoOpLineageRegistry,
     NoOpMetricRegistry,
@@ -22,7 +22,6 @@ NOOP_REGISTRY_CLASSES = [
 NOOP_REGISTRY_CLASSES_RETURNING_NONE = [
     NoOpLineageRegistry,
     NoOpMetricRegistry,
-    NoOpSchemaRegistry,
     NoOpTransactionRegistry,
 ]
 
@@ -61,6 +60,19 @@ def test_noop_registry_should_use_provided_location_when_given(registry_class: t
 def test_noop_registry_should_return_none_on_get(registry_class: type[Registry]):
     # Arrange
     registry = registry_class()
+
+    # Act
+    result = registry.get()
+
+    # Assert
+    actual = result
+    expected = None
+    assert actual == expected
+
+
+def test_noop_schema_registry_should_return_none_on_get(input_context: Context):
+    # Arrange
+    registry = NoOpSchemaRegistry()
 
     # Act
     result = registry.get()

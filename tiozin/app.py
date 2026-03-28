@@ -76,7 +76,7 @@ class TiozinApp(Loggable):
         for job in as_flat_list(*jobs):
             try:
                 self.setup()
-                manifest = JobManifest.try_from_yaml_or_json(job)
+                manifest = JobManifest.try_from_yaml(job)
                 manifest = manifest or self._containers.registries.job.get(job)
 
                 TiozinInputError.raise_if(
@@ -107,7 +107,7 @@ class TiozinApp(Loggable):
 
                 if isinstance(job, (str, JobManifest)):
                     # Attempt yaml string or JobManifest
-                    manifest = JobManifest.try_from_yaml_or_json(job)
+                    manifest = JobManifest.try_from_yaml(job)
                     # Attempt identifier string
                     manifest = manifest or self._containers.registries.job.get(job)
                     # Manifest is parsed, now build the job
