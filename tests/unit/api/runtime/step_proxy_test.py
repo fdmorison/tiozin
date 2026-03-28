@@ -76,7 +76,7 @@ def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: 
         step.read()
 
     # Assert
-    schema_registry.get.assert_called_with("acme.orders", "v1")
+    schema_registry.try_get.assert_called_with("acme.orders", "v1")
 
 
 # =============================================================================
