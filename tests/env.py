@@ -63,3 +63,6 @@ TIO_METRIC_REGISTRY_CACHE = None
 #           Tiozin Customizations
 # ===============================================
 TIO_JOB_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
+TIO_SCHEMA_SUBJECT_TEMPLATE = (
+    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
+)

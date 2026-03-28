@@ -1,7 +1,11 @@
+from tiozin.compose import tioproxy
+
 from ..registry import Registry
 from .model import SchemaManifest
+from .proxy import SchemaRegistryProxy
 
 
+@tioproxy(SchemaRegistryProxy)
 class SchemaRegistry(Registry[SchemaManifest]):
     """
     Retrieves and stores schemas.

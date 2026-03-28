@@ -54,6 +54,7 @@ registry_default_cache = False
 #           Tiozin Customizations
 # ===============================================
 tiozin_job_namespace_template = env.TIO_JOB_NAMESPACE_TEMPLATE
+tiozin_schema_subject_template = env.TIO_SCHEMA_SUBJECT_TEMPLATE
 tiozin_settings_search_paths = (
     # Project-level
     "tiozin.yaml",
