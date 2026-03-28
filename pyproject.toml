@@ -111,7 +111,7 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
-ignore = ["B008", "B904"]
+ignore = ["B008", "B904", "B021"]
 
 [tool.ruff.lint.pycodestyle]
 max-doc-length = 100
