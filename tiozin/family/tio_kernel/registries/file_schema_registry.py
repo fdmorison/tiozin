@@ -1,60 +1,36 @@
-from open_data_contract_standard.model import SchemaObject
-
 from tiozin.api import SchemaRegistry
 from tiozin.api.metadata.schema.model import SchemaManifest
 from tiozin.exceptions import SchemaNotFoundError
-from tiozin.utils import join_path, read_yaml, write_yaml
+from tiozin.utils import join_path, write_text
 
 
 class FileSchemaRegistry(SchemaRegistry):
     """
-    File-based schema manifest storage.
+    File-based schema storage.
 
-    Reads and writes schemas from any path or URI supported by fsspec,
-    including local paths, object storage (``s3://``, ``gs://``, ``az://``),
-    and remote protocols (``http://``, ``https://``, ``ftp://``, ``sftp://``).
+    Each file at `location` is a plain YAML representation of a schema.
 
-    Supported format: YAML.
+    Supports local paths and remote URIs via fsspec:
+    s3://, gs://, az://, http://, https://, ftp://, sftp://.
+
+    Format: YAML (.yaml, .yml).
 
     Attributes:
-        location: Root path or URI where schema manifests are stored (e.g. a local folder,
-            an S3 prefix, or an HTTP base URL).
+        location: Root path or URI where schema files are stored.
     """
 
-    def __init__(self, location: str = None, **options):
+    def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location, **options)
 
     def get(self, identifier: str, version: str = None) -> SchemaManifest:
-        """
-        Retrieve a schema manifest from any fsspec-supported location.
-
-        Args:
-            identifier: File name, relative path, or absolute URI (.yaml or .yml).
-            version: Not used in this implementation.
-
-        Returns:
-            Validated SchemaManifest instance.
-
-        Raises:
-            SchemaNotFoundError: If the file does not exist.
-        """
         try:
             path = join_path(self.location, f"{identifier}.yaml")
-            self.info(f"Reading file `{path}`")
-            data = read_yaml(path, **self.options)
-            spec = SchemaObject(**data)
-            return SchemaManifest(subject=spec.name, schema=spec)
+            self.info(f"Reading schema from {path}")
+            return SchemaManifest.from_file(path, **self.options)
         except FileNotFoundError as e:
             raise SchemaNotFoundError(identifier) from e
 
     def register(self, identifier: str, value: SchemaManifest) -> None:
-        """
-        Register a schema manifest to any fsspec-supported location.
-
-        Args:
-            identifier: File name, relative path, or absolute URI (.yaml or .yml).
-            value: SchemaManifest instance to serialize and save.
-        """
-        path = join_path(self.location, identifier)
-        self.info(f"Writing to file `{path}`")
-        write_yaml(path, value.schema.model_dump(), **self.options)
+        path = join_path(self.location, f"{identifier}.yaml")
+        self.info(f"Writing schema to {path}")
+        write_text(path, value.to_yaml(), **self.options)
