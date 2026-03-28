@@ -6,22 +6,21 @@ from tiozin.exceptions import TiozinInternalError
 from .exceptions import SchemaNotFoundError
 from .model import SchemaManifest
 
-DEFAULT_SUBJECT_TEMPLATE = config.tiozin_schema_subject_template
-
 
 class SchemaRegistryProxy(wrapt.ObjectProxy):
-    f"""
+    """
     Internal proxy that wraps a SchemaRegistry with subject resolution.
 
-    Intercepts `get()` to resolve the schema subject from either the provided `identifier` or the
-    default template `{DEFAULT_SUBJECT_TEMPLATE}`, rendered with the active context variables (e.g.
-    `acme.eu.sales.orders.raw.crm.order`). Defaults the version to `"latest"`when not specified.
+    Intercepts `get()` to render `identifier` with the active context variables,
+    defaulting to `TIO_SCHEMA_SUBJECT_TEMPLATE` when `identifier` is not given.
+    Defaults `version` to `TIO_SCHEMA_DEFAULT_VERSION` when not specified.
 
-    Raises `SchemaNotFoundError` when no schema is found, including when the registry returns
-    `None`. Use `try_get()` on the registry to silently return `None` instead.
+    Raises `SchemaNotFoundError` when no schema is found, including when the
+    registry returns `None`. Use `try_get()` on the registry to silently return
+    `None` instead.
 
-    This is an internal implementation detail. Callers rely on the `SchemaRegistry` interface and
-    should not interact with this proxy directly.
+    This is an internal implementation detail. Callers rely on the
+    `SchemaRegistry` interface and should not interact with this proxy directly.
     """
 
     def get(self, identifier: str = None, version: str = None) -> SchemaManifest:
@@ -30,8 +29,8 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
         registry: SchemaRegistry = self.__wrapped__
         context = registry.context
 
-        subject = context.render(identifier or DEFAULT_SUBJECT_TEMPLATE)
-        version = version or "latest"
+        subject = context.render(identifier or config.tiozin_schema_subject_template)
+        version = version or config.tiozin_schema_default_version
 
         registry.info(f"🔍 `{context.name}` searching for schema subject `{subject}`")
         schema = registry.get(subject, version)

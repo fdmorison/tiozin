@@ -97,12 +97,11 @@ def test_get_should_retrieve_schema_by_version():
     assert actual == expected
 
 
-@pytest.mark.parametrize("args", [(), (None, None)])
-def test_get_should_retrieve_schema_by_default_parameters(args):
+def test_get_should_retrieve_schema_by_default_config_args():
     # Arrange
     template = "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
     subject = "acme.eu.sales.orders.raw.crm.order"
-    version = "latest"
+    version = "v2"
 
     schema = MagicMock(spec=SchemaManifest)
     wrapped_registry = MagicMock()
@@ -110,8 +109,11 @@ def test_get_should_retrieve_schema_by_default_parameters(args):
     wrapped_registry.get.return_value = schema
 
     # Act
-    with patch("tiozin.api.metadata.schema.proxy.DEFAULT_SUBJECT_TEMPLATE", template):
-        SchemaRegistryProxy(wrapped_registry).get(*args)
+    with (
+        patch("tiozin.config.tiozin_schema_subject_template", template),
+        patch("tiozin.config.tiozin_schema_default_version", version),
+    ):
+        SchemaRegistryProxy(wrapped_registry).get()
 
     # Assert
     wrapped_registry.get.assert_called_with(subject, version)

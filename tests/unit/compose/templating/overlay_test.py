@@ -261,13 +261,13 @@ def test_overlay_should_render_and_restore_templates_with_multiple_variables(
     assert actual == expected
 
 
-def test_overlay_should_not_modify_strings_when_no_template_vars():
+def test_overlay_should_not_modify_string_without_template(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.path = "./data/static"
 
     # Act
-    with TiozinTemplateOverlay(tiozin):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.path
     restored = tiozin.path
 
@@ -321,13 +321,13 @@ def test_overlay_should_render_and_restore_deeply_nested_structures(fake_domain:
     "value",
     [42, True, False, 3.14, None, datetime.now(), logging.getLogger("test")],
 )
-def test_overlay_should_not_modify_non_string_values(value):
+def test_overlay_should_not_modify_non_string_values(value, fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
     tiozin.value = value
 
     # Act
-    with TiozinTemplateOverlay(tiozin):
+    with TiozinTemplateOverlay(tiozin, fake_domain):
         rendered = tiozin.value
     restored = tiozin.value
 
