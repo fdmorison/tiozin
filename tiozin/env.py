@@ -112,3 +112,9 @@ TIO_SCHEMA_SUBJECT_TEMPLATE = _env.str(
     "TIO_SCHEMA_SUBJECT_TEMPLATE",
     "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}",
 )
+
+# TIO_DEFAULT_SCHEMA_VERSION - Default schema version used when not specified on the Input.
+TIO_SCHEMA_DEFAULT_VERSION = _env.str(
+    "TIO_DEFAULT_SCHEMA_VERSION",
+    "latest",
+)

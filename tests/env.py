@@ -14,6 +14,7 @@ TIO_LOG_JSON = False
 TIO_LOG_JSON_ENSURE_ASCII = False
 TIO_LOG_SHOW_LOCALS = False
 TIO_LOG_REDACT_MIN_LENGTH = 3
+
 # ===============================================
 #           Registry configurations
 # ===============================================
@@ -66,3 +67,4 @@ TIO_JOB_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
 TIO_SCHEMA_SUBJECT_TEMPLATE = (
     "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
 )
+TIO_SCHEMA_DEFAULT_VERSION = "latest"

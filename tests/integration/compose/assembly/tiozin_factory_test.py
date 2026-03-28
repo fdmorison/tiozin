@@ -4,6 +4,7 @@ from unittest.mock import ANY
 import pytest
 from freezegun import freeze_time
 
+from tests import config
 from tiozin.api import Input, Runner
 from tiozin.api.metadata.job.model import (
     InputManifest,
@@ -122,8 +123,8 @@ def test_load_should_load_input_plugin(factory: TiozinFactory, kind: str):
         product="revenue",
         model="daily",
         schema=None,
-        schema_subject=None,
-        schema_version=None,
+        schema_subject=config.tiozin_schema_subject_template,
+        schema_version=config.tiozin_schema_default_version,
         options={},
         verbose=True,
         force_error=False,
