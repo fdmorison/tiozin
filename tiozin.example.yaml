@@ -2,7 +2,6 @@ registries:
 
   job:
     kind: FileJobRegistry
-    name: JobRegistry
     description: File-based job registry for local development
     location: examples/jobs
     timeout: 5
@@ -11,17 +10,7 @@ registries:
 
   secret:
     kind: EnvSecretRegistry
-    name: SecretRegistry
     description: Secret registry for credentials and sensitive configuration
-    timeout: 5
-    readonly: false
-    cache: false
-
-  lineage:
-    kind: NoOpLineageRegistry
-    name: LineageRegistry
-    description: Lineage registry for tracking data pipeline provenance
-    location: http://localhost:5000
     timeout: 5
     readonly: false
     cache: false
@@ -35,9 +24,16 @@ registries:
     readonly: true
     cache: true
 
+  lineage:
+    kind: NoOpLineageRegistry
+    description: Lineage registry for tracking data pipeline provenance
+    location: http://localhost:5000
+    timeout: 5
+    readonly: false
+    cache: false
+
   transaction:
     kind: NoOpTransactionRegistry
-    name: TransactionRegistry
     description: Transaction registry for job execution control
     location: "postgresql://postgres:{{ENV.PGPASSWORD|default('postgres')}}@localhost:5432/postgres"
     timeout: 5
@@ -46,7 +42,6 @@ registries:
 
   metric:
     kind: NoOpMetricRegistry
-    name: MetricRegistry
     description: Metric registry for job observability and monitoring
     location: http://localhost:9091
     timeout: 5
