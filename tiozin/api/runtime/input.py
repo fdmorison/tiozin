@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
+from tiozin import config
 from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
@@ -61,8 +62,8 @@ class Input(Tiozin, Generic[TData]):
             name=name,
         )
         self.schema = schema
-        self.schema_subject = schema_subject
-        self.schema_version = schema_version
+        self.schema_subject = schema_subject or config.tiozin_schema_subject_template
+        self.schema_version = schema_version or config.tiozin_schema_default_version
 
         self.org = org
         self.region = region
