@@ -1,7 +1,6 @@
 import wrapt
 
-from tiozin import config
-from tiozin.api import SettingRegistry, SettingsManifest
+from tiozin import SettingRegistry, SettingsManifest, config
 from tiozin.exceptions import SettingsNotFoundError
 from tiozin.utils import io
 
@@ -10,17 +9,17 @@ class FileSettingRegistry(SettingRegistry):
     """
     File-based settings registry.
 
-    Loads framework configuration from any path or URI supported by fsspec,
-    including local paths, object storage (``s3://``, ``gs://``, ``az://``),
-    and remote protocols (``http://``, ``https://``, ``ftp://``, ``sftp://``).
+    Resolves settings location and delegates I/O to the model layer.
 
-    If ``location`` is not provided, Tiozin searches standard filesystem paths
-    and falls back to built-in defaults. A ``tiozin.yaml`` can delegate to
-    another ``SettingRegistry`` via ``registries.settings``.
+    Supports local paths and remote URIs via fsspec:
+    s3://, gs://, az://, http://, https://, ftp://, sftp://.
+
+    Formats: YAML (.yaml, .yml) and JSON (.json).
 
     Attributes:
-        location: Path or URI of the settings file (e.g. a local path, an S3 URI,
-            or an HTTP URL). Optional: discovered automatically if not set.
+        location: Path or URI of the ``tiozin.yaml`` file. If not provided,
+            searches paths defined in ``config.tiozin_settings_search_paths``
+            and falls back to built-in defaults if none are found.
     """
 
     def __init__(self, location: str = None, **options) -> None:
@@ -56,40 +55,11 @@ class FileSettingRegistry(SettingRegistry):
         self.ready = True
 
     def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
-        """
-        Load and return the settings manifest from any fsspec-supported location.
-
-        Args:
-            identifier: Not used in this implementation.
-            version: Not used in this implementation.
-
-        Returns:
-            The SettingsManifest. Falls back to built-in defaults if no settings file found.
-        """
         if not self.location:
-            return SettingsManifest.from_arguments()
+            return SettingsManifest()
 
-        data = io.read_text(self.location)
-        return SettingsManifest.from_yaml_or_json(data)
+        return SettingsManifest.from_file(self.location, **self.options)
 
     def register(self, identifier: str, value: SettingsManifest) -> None:
-        """
-        Write a settings manifest to any fsspec-supported location.
-
-        Args:
-            identifier: File name, relative path, or absolute URI (.yaml, .yml, or .json).
-            value: ``SettingsManifest`` instance to serialize and save.
-
-        Raises:
-            ValueError: If the file extension is not supported.
-        """
         self.info(f"Writing settings manifest to {identifier}")
-
-        if identifier.endswith((".yaml", ".yml")):
-            data = value.to_yaml()
-        elif identifier.endswith(".json"):
-            data = value.to_json()
-        else:
-            raise ValueError(f"Unsupported settings format: {identifier}")
-
-        io.write_text(identifier, data)
+        value.to_file(identifier, **self.options)

@@ -101,5 +101,5 @@ def test_register_should_fail_on_unsupported_extension(tmp_path):
     manifest = SettingsManifest()
 
     # Act / Assert
-    with pytest.raises(ValueError, match="Unsupported settings format"):
+    with pytest.raises(ValueError, match="Unsupported file format"):
         registry.register(str(tmp_path / "tiozin.toml"), manifest)

@@ -4,7 +4,7 @@ from tiozin.exceptions import (
     AccessViolationError,
     AlreadyFinishedError,
     AlreadyRunningError,
-    ManifestError,
+    ModelError,
     NotInitializedError,
     PolicyViolationError,
     ProxyError,
@@ -19,11 +19,11 @@ def test_manifest_error_should_format_manifest_name_when_provided():
     job = "my_job"
 
     # Act
-    error = ManifestError(job, message)
+    error = ModelError(job, message)
 
     # Assert
     actual = error.message
-    expected = "Invalid `my_job`: something is wrong"
+    expected = "my_job: something is wrong"
     assert actual == expected
 
 
@@ -38,11 +38,11 @@ def test_manifest_error_from_pydantic_should_format_validation_errors():
         TestModel(name="not-an-int")
 
     # Act
-    error = ManifestError.from_pydantic("test_job", exc.value)
+    error = ModelError.from_pydantic("test_job", exc.value)
 
     # Assert
-    assert isinstance(error, ManifestError)
-    assert error.message.startswith("Invalid `test_job`:")
+    assert isinstance(error, ModelError)
+    assert error.message.startswith("test_job:")
 
 
 def test_manifest_error_from_ruamel_should_format_yaml_errors():
@@ -60,11 +60,11 @@ def test_manifest_error_from_ruamel_should_format_yaml_errors():
     with pytest.raises(MarkedYAMLError) as exc:
         yaml.load(yaml_content)
 
-    error = ManifestError.from_ruamel("test_job", exc.value)
+    error = ModelError.from_ruamel("test_job", exc.value)
 
     # Assert
-    assert isinstance(error, ManifestError)
-    assert error.message.startswith("Invalid `test_job`:")
+    assert isinstance(error, ModelError)
+    assert error.message.startswith("test_job:")
 
 
 def test_already_running_error_should_format_resource_name_in_message():

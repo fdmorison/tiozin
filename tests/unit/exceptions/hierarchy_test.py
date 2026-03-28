@@ -7,7 +7,7 @@ from tiozin.exceptions import (
     JobAlreadyExistsError,
     JobError,
     JobNotFoundError,
-    ManifestError,
+    ModelError,
     NotInitializedError,
     PluginConflictError,
     PluginError,
@@ -46,7 +46,7 @@ from tiozin.exceptions import (
         JobError(),
         JobNotFoundError(name="x"),
         JobAlreadyExistsError(name="x"),
-        ManifestError(message="x", manifest="y"),
+        ModelError(message="x", model="y"),
         SchemaError(),
         SchemaViolationError(),
         SchemaNotFoundError(subject="x"),
@@ -95,7 +95,7 @@ def test_errors_should_be_catchable_as_conflict(error):
 @pytest.mark.parametrize(
     "error",
     [
-        ManifestError(message="x", manifest="y"),
+        ModelError(message="x", model="y"),
         SchemaViolationError(),
         PolicyViolationError(policy=object),
     ],

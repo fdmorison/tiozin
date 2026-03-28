@@ -1,21 +1,21 @@
 from enum import auto
 
-from ...domain import UppercaseEnum
+from ..model import UpperEnum
 
 
-class LineageRunEventType(UppercaseEnum):
+class LineageRunEventType(UpperEnum):
     START = auto()
     COMPLETE = auto()
     FAIL = auto()
     ABORT = auto()
 
 
-class LineageProcessingType(UppercaseEnum):
+class LineageProcessingType(UpperEnum):
     BATCH = auto()
     STREAMING = auto()
 
 
-class LineageJobType(UppercaseEnum):
+class LineageJobType(UpperEnum):
     QUERY = auto()
     COMMAND = auto()
     DAG = auto()

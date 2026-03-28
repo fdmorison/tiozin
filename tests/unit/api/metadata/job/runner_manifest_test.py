@@ -1,9 +1,9 @@
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
 
-from tiozin.api.metadata.job.model import RunnerManifest
+from tiozin import RunnerManifest
+from tiozin.exceptions import ModelError
 
 
 def test_manifest_should_have_defaults():
@@ -70,7 +70,7 @@ def test_manifest_should_reject_runner_with_invalid_field_types(
     }
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         RunnerManifest(**data)
 
 
@@ -86,5 +86,5 @@ def test_manifest_should_reject_runner_without_required_field(field_to_remove):
     del data[field_to_remove]
 
     # Act
-    with pytest.raises(ValidationError):
+    with pytest.raises(ModelError):
         RunnerManifest(**data)

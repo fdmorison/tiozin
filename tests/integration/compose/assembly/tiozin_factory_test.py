@@ -11,7 +11,7 @@ from tiozin.api.metadata.job.model import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.api.metadata.manifest import Manifest
+from tiozin.api.metadata.model import Manifest
 from tiozin.compose import TiozinFactory
 from tiozin.exceptions import (
     PluginConflictError,
