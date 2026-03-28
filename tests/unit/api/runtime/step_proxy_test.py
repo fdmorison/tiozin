@@ -1,7 +1,10 @@
+from unittest.mock import MagicMock
+
 import pytest
 
-from tests.stubs import InputStub
+from tests.stubs import InputStub, JobStub
 from tiozin.api.context import Context
+from tiozin.api.metadata.bundle import Registries
 from tiozin.api.runtime.step_proxy import StepProxy
 from tiozin.exceptions import AccessViolationError
 from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpTransform
@@ -51,6 +54,29 @@ def test_proxy_should_forbid_teardown_access(tiozin: NoOpInput | NoOpTransform |
     # Act/Assert
     with pytest.raises(AccessViolationError):
         proxy.teardown(None)
+
+
+# =============================================================================
+# Testing StepProxy.read — schema
+# =============================================================================
+
+
+def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: dict):
+    # Arrange
+    schema_registry = MagicMock()
+    step = InputStub(
+        name="orders",
+        schema_subject="acme.orders",
+        schema_version="v1",
+        **fake_domain,
+    )
+
+    # Act
+    with Context.for_job(job_stub, Registries(schema=schema_registry)):
+        step.read()
+
+    # Assert
+    schema_registry.get.assert_called_with("acme.orders", "v1")
 
 
 # =============================================================================

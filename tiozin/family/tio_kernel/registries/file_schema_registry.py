@@ -39,13 +39,13 @@ class FileSchemaRegistry(SchemaRegistry):
             SchemaNotFoundError: If the file does not exist.
         """
         try:
-            path = join_path(self.location, identifier)
-            self.info(f"Reading schema manifest from {path}")
+            path = join_path(self.location, f"{identifier}.yaml")
+            self.info(f"Reading file `{path}`")
             data = read_yaml(path, **self.options)
             spec = SchemaObject(**data)
             return SchemaManifest(subject=spec.name, schema=spec)
         except FileNotFoundError as e:
-            raise SchemaNotFoundError("No schema found at path `{name}`", name=path) from e
+            raise SchemaNotFoundError(identifier) from e
 
     def register(self, identifier: str, value: SchemaManifest) -> None:
         """
@@ -56,5 +56,5 @@ class FileSchemaRegistry(SchemaRegistry):
             value: SchemaManifest instance to serialize and save.
         """
         path = join_path(self.location, identifier)
-        self.info(f"Writing schema manifest to {path}")
+        self.info(f"Writing to file `{path}`")
         write_yaml(path, value.schema.model_dump(), **self.options)

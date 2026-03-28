@@ -59,6 +59,8 @@ def test_for_job_should_create_job_context(
             "finished_at": None,
             # Registries
             "registries": ANY,
+            # Schema
+            "schema": None,
             # Infra
             "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
             "template_vars": ANY,
@@ -109,6 +111,8 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "finished_at": None,
         # Registries
         "registries": ANY,
+        # Schema
+        "schema": None,
         # Infra
         "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
         "template_vars": ANY,
@@ -166,6 +170,8 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "finished_at": None,
         # Registries (inherited from job context)
         "registries": job_context.registries,
+        # Schema
+        "schema": None,
         # Infra
         "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),
         "template_vars": ANY,
@@ -239,6 +245,7 @@ def test_build_template_vars_should_exclude_fields_with_template_false(job_conte
     excluded = {
         "runner",
         "registries",
+        "schema",
         "shared",
         "template_vars",
         "setup_at",

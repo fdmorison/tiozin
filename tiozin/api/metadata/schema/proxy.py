@@ -27,13 +27,14 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
 
     def get(self, identifier: str = None, version: str = None) -> SchemaManifest:
         registry: Registry = self.__wrapped__
+        context = registry.context
 
         subject = identifier or DEFAULT_SUBJECT_TEMPLATE
         subject = registry.context.render(subject)
         version = version or "latest"
 
         try:
-            registry.info(f"Downloading schema `{subject}`")
+            registry.info(f"🔍 `{context.name}` searching for schema subject `{subject}`")
             return registry.get(subject, version)
         except SchemaNotFoundError:
             registry.warning(f"Schema `{subject}` was not found.")
