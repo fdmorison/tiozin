@@ -67,5 +67,6 @@ class Registry(Tiozin, Generic[TMetadata]):
         """Retrieve metadata or return None if not found."""
         try:
             return self.get(identifier, version)
-        except TiozinNotFoundError:
+        except TiozinNotFoundError as e:
+            self.warning(e.message)
             return None

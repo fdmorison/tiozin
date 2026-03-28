@@ -30,25 +30,30 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
         registry: SchemaRegistry = self.__wrapped__
         context = registry.context
 
-        subject = identifier or DEFAULT_SUBJECT_TEMPLATE
-        subject = context.render(subject)
+        subject = context.render(identifier or DEFAULT_SUBJECT_TEMPLATE)
         version = version or "latest"
 
-        try:
-            registry.info(f"🔍 `{context.name}` searching for schema subject `{subject}`")
-            schema = registry.get(subject, version)
-            if schema is None:
-                raise SchemaNotFoundError(subject)
-        except SchemaNotFoundError as e:
-            registry.warning(e.message)
-            raise
+        registry.info(f"🔍 `{context.name}` searching for schema subject `{subject}`")
+        schema = registry.get(subject, version)
+
+        SchemaNotFoundError.raise_if(
+            schema is None,
+            subject=subject,
+        )
 
         TiozinInternalError.raise_if(
             not isinstance(schema, SchemaManifest),
-            f"Schema registry returned unexpected object for `{subject}`: `{type(schema)}`.",
+            f"Schema registry returned unexpected object: `{type(schema)}`.",
         )
 
         if registry.show_schema:
             registry.info(f"Schema `{subject}`:\n{schema.to_yaml()}")
 
         return schema
+
+    def try_get(self, identifier: str = None, version: str = None) -> SchemaManifest | None:
+        try:
+            return self.get(identifier, version)
+        except SchemaNotFoundError as e:
+            self.warning(e.message)
+            return None
