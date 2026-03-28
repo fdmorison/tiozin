@@ -16,6 +16,7 @@ registries:
     cache: false
 
   schema:
+<<<<<<< HEAD
     kind: NoOpSchemaRegistry
     name: SchemaRegistry
     description: Schema registry for schema management
@@ -26,6 +27,18 @@ registries:
 
   lineage:
     kind: NoOpLineageRegistry
+=======
+    kind: FileSchemaRegistry
+    description: File-based schema registry for local development
+    location: examples/schemas
+    timeout: 5
+    readonly: false
+    cache: false
+
+  lineage:
+    kind: NoOpLineageRegistry
+    name: LineageRegistry
+>>>>>>> a148f2d (docs: add FileSchemaRegistry to configuration examples)
     description: Lineage registry for tracking data pipeline provenance
     location: http://localhost:5000
     timeout: 5
