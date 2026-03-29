@@ -29,5 +29,9 @@ class SchemaConverter(ABC, Generic[T]):
                 from .odcs import OdcsSchemaConverter
 
                 return OdcsSchemaConverter()
+            case "openlineage":
+                from .openlineage import OpenLineageConverter
+
+                return OpenLineageConverter()
             case _:
                 raise ValueError(f"Unsupported export format: {format}")

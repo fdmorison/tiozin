@@ -34,8 +34,9 @@ class Schema(SchemaObject, Metadata):
         Converts this schema to another format.
 
         Supported formats include:
-        - "odcs": returns a SchemaObject from open_data_contract_standard
-        - "spark": returns a StructType from pyspark.sql.types
+        - "odcs": returns a `SchemaObject` from `open_data_contract_standard`
+        - "spark": returns a `StructType` from `pyspark.sql.types`
+        - "openlineage": returns a `SchemaDatasetFacet` from `openlineage.client`
 
         Raises an exception if the format is not supported.
         """
@@ -47,8 +48,10 @@ class Schema(SchemaObject, Metadata):
         Creates a Schema from another format.
 
         Supported formats include:
-        - "odcs": expects a SchemaObject from open_data_contract_standard
-        - "spark": expects a StructType from pyspark.sql.types
+        - "odcs": expects a `SchemaObject` from `open_data_contract_standard`
+        - "spark": expects a `StructType` from `pyspark.sql.types`
+
+        The "openlineage" format does not support import.
 
         Raises an exception if the format is not supported.
         """

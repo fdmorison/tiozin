@@ -13,7 +13,7 @@ from openlineage.client.generated.parent_run import ParentRunFacet
 from openlineage.client.generated.parent_run import Run as ParentRun
 from openlineage.client.generated.tags_run import TagsRunFacet, TagsRunFacetFields
 
-from tiozin.api import LineageRegistry, LineageRunEvent
+from tiozin import LineageDataset, LineageRegistry, LineageRunEvent
 
 
 class OpenLineageRegistry(LineageRegistry):
@@ -155,6 +155,28 @@ class OpenLineageRegistry(LineageRegistry):
                     ),
                 },
             ),
-            inputs=[InputDataset(namespace=d.namespace, name=d.name) for d in event.inputs],
-            outputs=[OutputDataset(namespace=d.namespace, name=d.name) for d in event.outputs],
+            inputs=[self._build_input(d) for d in event.inputs],
+            outputs=[self._build_output(d) for d in event.outputs],
         )
+
+    @classmethod
+    def _build_input(cls, dataset: LineageDataset) -> InputDataset:
+        return InputDataset(
+            namespace=dataset.namespace,
+            name=dataset.name,
+            facets=cls._dataset_facets(dataset),
+        )
+
+    @classmethod
+    def _build_output(cls, dataset: LineageDataset) -> OutputDataset:
+        return OutputDataset(
+            namespace=dataset.namespace,
+            name=dataset.name,
+            facets=cls._dataset_facets(dataset),
+        )
+
+    @classmethod
+    def _dataset_facets(cls, dataset: LineageDataset) -> dict:
+        if dataset.schema is None:
+            return {}
+        return {"schema": dataset.schema.export("openlineage")}

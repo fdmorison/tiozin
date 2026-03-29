@@ -1,5 +1,5 @@
 kind: LinearJob
-name: orders_ingestion_job
+name: order_ingestion_job
 description: Ingests order data from source to raw layer.
 
 owner: data@tiozin.com
@@ -7,11 +7,11 @@ maintainer: tiozin
 cost_center: tio_scrooge
 
 org: tiozin
-region: europe
+region: eu
 domain: ecommerce
-subdomain: retail
+subdomain: sales
 layer: raw
-product: orders
+product: order
 model: orders
 
 runner:
