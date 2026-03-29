@@ -7,13 +7,13 @@ from open_data_contract_standard.model import (
     SchemaObject,
 )
 
-from tiozin.api.metadata.model import Model
+from tiozin.api.metadata.model import Metadata
 
 from .converters import SchemaConverter
 from .exceptions import SchemaNotFoundError
 
 
-class Schema(SchemaObject, Model):
+class Schema(SchemaObject, Metadata):
     @classmethod
     def from_contract(cls, contract: OpenDataContractStandard, name: str) -> Schema:
         """

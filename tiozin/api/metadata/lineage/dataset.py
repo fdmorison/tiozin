@@ -4,10 +4,10 @@ from urllib.parse import urlparse
 
 from tiozin.utils.io import normalize_uri
 
-from ..model import Model
+from ..model import Metadata
 
 
-class LineageDataset(Model):
+class LineageDataset(Metadata):
     """
     Represents a dataset in lineage.
 
