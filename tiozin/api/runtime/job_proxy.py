@@ -47,7 +47,7 @@ class JobProxy(wrapt.ObjectProxy):
     def submit(self) -> Any:
         job: Job = self.__wrapped__
         context = Context.current(required=False) or Context.for_job(job)
-        lineage = context.registries.lineage
+        lineage_registry = context.registries.lineage
 
         with context, TiozinTemplateOverlay(job, context.template_vars):
             try:
@@ -56,18 +56,20 @@ class JobProxy(wrapt.ObjectProxy):
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
                 context.setup_at = utcnow()
                 job.setup()
-                job_lineage = job.lineage_datasets()
                 context.executed_at = utcnow()
                 with job.runner():
-                    lineage.start(inputs=job_lineage.inputs, outputs=job_lineage.outputs)
+                    lineage = job.lineage_datasets()
+                    lineage_registry.start(inputs=lineage.inputs, outputs=lineage.outputs)
                     result = job.submit()
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
-                lineage.fail(inputs=job_lineage.inputs, outputs=job_lineage.outputs)
+                lineage = job.lineage_datasets()
+                lineage_registry.fail(inputs=lineage.inputs, outputs=lineage.outputs)
                 raise
             else:
-                lineage.complete(inputs=job_lineage.inputs, outputs=job_lineage.outputs)
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
+                lineage = job.lineage_datasets()
+                lineage_registry.complete(inputs=lineage.inputs, outputs=lineage.outputs)
                 return result
             finally:
                 context.teardown_at = utcnow()

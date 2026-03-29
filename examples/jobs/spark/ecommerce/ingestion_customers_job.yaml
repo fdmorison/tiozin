@@ -7,11 +7,11 @@ maintainer: tiozin
 cost_center: tio_scrooge
 
 org: tiozin
-region: europe
+region: eu
 domain: ecommerce
-subdomain: retail
+subdomain: sales
 layer: raw
-product: customers
+product: order
 model: customers
 
 runner:
@@ -45,3 +45,4 @@ outputs:
     description: Raw customer data in parquet format.
     path: .output/lake-{{domain}}-{{layer}}/{{product}}
     format: parquet
+    mode: overwrite

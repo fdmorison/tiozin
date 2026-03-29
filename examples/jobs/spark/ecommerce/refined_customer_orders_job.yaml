@@ -9,11 +9,11 @@ maintainer: tiozin
 cost_center: tio_scrooge
 
 org: tiozin
-region: europe
+region: eu
 domain: ecommerce
-subdomain: retail
+subdomain: sales
 layer: refined
-product: high_value_orders
+product: order
 model: high_value_orders
 
 runner:
@@ -23,12 +23,16 @@ inputs:
   - kind: SparkFileInput
     name: customers
     description: Customer master data from raw layer.
+    layer: raw
+    model: customers
     path: .output/lake-ecommerce-raw/customers
     format: parquet
 
   - kind: SparkFileInput
     name: orders
     description: Order transactions from raw layer.
+    layer: raw
+    model: orders
     path: .output/lake-ecommerce-raw/orders
     format: parquet
 
@@ -78,6 +82,7 @@ outputs:
     name: high_value_orders_refined
     description: High-value completed orders enriched with customer data.
     format: parquet
+    mode: overwrite
     path: .output/lake-{{domain}}-{{layer}}/{{product}}
     partition_by:
       - country

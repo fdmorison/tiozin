@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from typing import Self
 from urllib.parse import urlparse
 
 from tiozin.utils.io import normalize_uri
 
 from ..model import Metadata
+from ..schema.model import Schema
 
 
 class LineageDataset(Metadata):
@@ -21,6 +23,16 @@ class LineageDataset(Metadata):
 
     namespace: str
     name: str
+    schema: Schema | None = None
+
+    def merge(self, dataset: LineageDataset) -> Self:
+        self.namespace = self.namespace or dataset.namespace
+        self.name = self.name or dataset.name
+        self.schema = self.schema or dataset.schema
+        return self
+
+    def schema_facet():
+        pass
 
     @staticmethod
     def from_uri(uri: str) -> LineageDataset:

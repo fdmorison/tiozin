@@ -9,11 +9,11 @@ maintainer: tiozin
 cost_center: tio_scrooge
 
 org: tiozin
-region: europe
+region: eu
 domain: ecommerce
-subdomain: retail
+subdomain: sales
 layer: refined
-product: high_value_orders
+product: order
 model: high_value_orders
 
 runner:
@@ -23,12 +23,16 @@ inputs:
   - kind: DuckdbFileInput
     name: customers
     description: Customer master data from raw layer.
+    layer: raw
+    model: customers
     path: .output/lake-ecommerce-raw/customers
     format: parquet
 
   - kind: DuckdbFileInput
     name: orders
     description: Order transactions from raw layer.
+    layer: raw
+    model: orders
     path: .output/lake-ecommerce-raw/orders
     format: parquet
 

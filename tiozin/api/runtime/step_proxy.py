@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.api import Context
+from tiozin.api import Context, LineageDataset
 from tiozin.exceptions import AccessViolationError, TiozinInternalError
 from tiozin.utils import utcnow
 
@@ -21,6 +21,10 @@ class StepProxy(wrapt.ObjectProxy):
     The wrapped step focuses on ETL logic. The proxy handles everything else:
     context propagation, template rendering, lifecycle hooks, logging, and timing.
     """
+
+    def __init__(self, wrapped) -> None:
+        super().__init__(wrapped)
+        self._self_schema = None
 
     def setup(self, *args, **kwargs) -> None:
         raise AccessViolationError(self)
@@ -41,7 +45,15 @@ class StepProxy(wrapt.ObjectProxy):
         step: EtlStep = self.__wrapped__
         context = Context.for_step(step)
         with context, TiozinTemplateOverlay(step, context.template_vars):
-            return step.lineage_datasets()
+            runtime_dataset = LineageDataset(
+                namespace=context.namespace,
+                name=context.qualified_slug,
+                schema=self._self_schema,
+            )
+            static_datasets = step.lineage_datasets()
+            for dataset in static_datasets.inputs:
+                dataset.merge(runtime_dataset)
+            return static_datasets
 
     def _execute(self, *args, **kwargs) -> Any:
         from tiozin import Input, Output, Transform
@@ -62,6 +74,7 @@ class StepProxy(wrapt.ObjectProxy):
                             step.schema_subject,
                             step.schema_version,
                         )
+                        self._self_schema = context.schema
                         result = step.read(*args, **kwargs)
                     case Transform():
                         result = step.transform(*args, **kwargs)
