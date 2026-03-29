@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tiozin.api.metadata.schema.exceptions import SchemaNotFoundError
-from tiozin.api.metadata.schema.model import SchemaManifest
+from tiozin.api.metadata.schema.model import Schema
 from tiozin.api.metadata.schema.proxy import SchemaRegistryProxy
 from tiozin.exceptions import TiozinInternalError
 
@@ -14,7 +14,7 @@ from tiozin.exceptions import TiozinInternalError
 
 def test_proxy_should_delegate_get():
     # Arrange
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     subject = "acme.eu.sales.orders.raw.crm.order"
     version = "v2"
     wrapped_registry = MagicMock()
@@ -30,7 +30,7 @@ def test_proxy_should_delegate_get():
 
 def test_proxy_should_delegate_register():
     # Arrange
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     subject = "acme.eu.sales.orders.raw.crm.order"
     wrapped_registry = MagicMock()
 
@@ -62,7 +62,7 @@ def test_proxy_should_delegate_attribute_access():
 
 def test_get_should_retrieve_schema():
     # Arrange
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     subject = "acme.eu.sales.orders.raw.crm.order"
 
     wrapped_registry = MagicMock()
@@ -80,7 +80,7 @@ def test_get_should_retrieve_schema():
 
 def test_get_should_retrieve_schema_by_version():
     # Arrange
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     subject = "acme.eu.sales.orders.raw.crm.order"
     version = "v2"
 
@@ -103,7 +103,7 @@ def test_get_should_retrieve_schema_by_default_config_args():
     subject = "acme.eu.sales.orders.raw.crm.order"
     version = "v2"
 
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     wrapped_registry = MagicMock()
     wrapped_registry.context.render.return_value = subject
     wrapped_registry.get.return_value = schema
@@ -160,7 +160,7 @@ def test_get_should_raise_when_registry_returns_wrong_type():
 
 def test_get_should_log_schema_when_show_schema_is_true():
     # Arrange
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     schema.to_yaml.return_value = "name: orders\n"
     subject = "acme.eu.sales.orders.raw.crm.order"
 
@@ -185,7 +185,7 @@ def test_get_should_log_schema_when_show_schema_is_true():
 
 def test_try_get_should_retrieve_schema():
     # Arrange
-    schema = MagicMock(spec=SchemaManifest)
+    schema = MagicMock(spec=Schema)
     subject = "acme.eu.sales.orders.raw.crm.order"
 
     wrapped_registry = MagicMock()

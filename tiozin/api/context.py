@@ -15,7 +15,7 @@ from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 from .metadata.bundle import Registries
-from .metadata.schema.model import SchemaManifest
+from .metadata.schema.model import Schema
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner, Tiozin
@@ -118,7 +118,7 @@ class Context:
         default_factory=Registries, repr=False, metadata={"template": False}
     )
 
-    schema: SchemaManifest | None = field(
+    schema: Schema | None = field(
         init=False,
         repr=False,
         default=None,

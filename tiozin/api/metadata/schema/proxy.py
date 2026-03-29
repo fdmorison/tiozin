@@ -4,7 +4,7 @@ from tiozin import config
 from tiozin.exceptions import TiozinInternalError
 
 from .exceptions import SchemaNotFoundError
-from .model import SchemaManifest
+from .model import Schema
 
 
 class SchemaRegistryProxy(wrapt.ObjectProxy):
@@ -23,7 +23,7 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
     `SchemaRegistry` interface and should not interact with this proxy directly.
     """
 
-    def get(self, identifier: str = None, version: str = None) -> SchemaManifest:
+    def get(self, identifier: str = None, version: str = None) -> Schema:
         from .registry import SchemaRegistry
 
         registry: SchemaRegistry = self.__wrapped__
@@ -41,7 +41,7 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
         )
 
         TiozinInternalError.raise_if(
-            not isinstance(schema, SchemaManifest),
+            not isinstance(schema, Schema),
             f"Schema registry returned unexpected object: `{type(schema)}`.",
         )
 
@@ -50,7 +50,7 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
 
         return schema
 
-    def try_get(self, identifier: str = None, version: str = None) -> SchemaManifest | None:
+    def try_get(self, identifier: str = None, version: str = None) -> Schema | None:
         try:
             return self.get(identifier, version)
         except SchemaNotFoundError as e:

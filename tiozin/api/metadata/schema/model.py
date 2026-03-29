@@ -1,65 +1,55 @@
 from __future__ import annotations
 
-from typing import Any, TypeAlias
+from typing import Any
 
-from open_data_contract_standard.model import OpenDataContractStandard, SchemaObject
-from pydantic import Field, ValidationError
-from ruamel.yaml.constructor import DuplicateKeyError
+from open_data_contract_standard.model import (
+    OpenDataContractStandard,
+    SchemaObject,
+)
 
-from tiozin import config
-from tiozin.exceptions import ModelError
-from tiozin.utils import dump_yaml, load_yaml
+from tiozin.api.metadata.model import Model
 
-from ..model import Model
 from .converters import SchemaConverter
 from .exceptions import SchemaNotFoundError
 
-Schema: TypeAlias = SchemaObject
 
-
-class SchemaManifest(Model):
-    subject: str = Field(...)
-    version: str = Field(config.tiozin_schema_default_version)
-    schema: Schema = Field(...)
-
+class Schema(SchemaObject, Model):
     @classmethod
-    def from_yaml(cls, data: str) -> SchemaManifest:
-        if not isinstance(data, str):
-            raise ModelError(cls.__name__, f"Expected a model string, got: {data}")
-
-        try:
-            schema = SchemaObject.model_validate(load_yaml(data))
-            return cls(subject=schema.name, schema=schema)
-        except DuplicateKeyError as e:
-            raise ModelError.from_ruamel(cls.__name__, e) from e
-        except ValidationError as e:
-            raise ModelError.from_pydantic(cls.__name__, e) from e
-        except ModelError:
-            raise
-        except Exception as e:
-            raise ModelError(cls.__name__, str(e)) from e
-
-    def to_yaml(self) -> str:
-        return dump_yaml(self.schema.model_dump(mode="json", exclude_unset=True))
-
-    def to_json(self) -> str:
-        return self.schema.model_dump_json(indent=2, exclude_unset=True, ensure_ascii=False) + "\n"
+    def from_contract(cls, contract: OpenDataContractStandard, name: str) -> Schema:
+        """
+        Creates a Schema from an Open Data Contract.
+        Looks up a schema by name and converts it using the "odcs" format.
+        Raises an exception if the schema is not found.
+        """
+        contract = contract.schema_ or []
+        schema = next((schema for schema in contract if schema.name == name), None)
+        SchemaNotFoundError.raise_if(
+            schema is None,
+            name=name,
+        )
+        return cls.import_("odcs", schema)
 
     def export(self, format: str) -> Any:
-        converter = SchemaConverter.for_format(format)
-        return converter.export(self.schema)
+        """
+        Converts this schema to another format.
+
+        Supported formats include:
+        - "odcs": returns a SchemaObject from open_data_contract_standard
+        - "spark": returns a StructType from pyspark.sql.types
+
+        Raises an exception if the format is not supported.
+        """
+        return SchemaConverter.for_format(format).export(self)
 
     @classmethod
-    def import_(cls, format: str, data: Any) -> SchemaManifest:
-        converter = SchemaConverter.for_format(format)
-        schema = converter.import_(data)
-        return SchemaManifest(subject=schema.name, schema=schema)
+    def import_(cls, format: str, data: Any) -> Schema:
+        """
+        Creates a Schema from another format.
 
-    @classmethod
-    def from_contract(cls, contract: OpenDataContractStandard, schema_name: str) -> SchemaManifest:
-        schemas = contract.schema_ or []
-        schema = next((s for s in schemas if s.name == schema_name), None)
-        if schema is None:
-            raise SchemaNotFoundError(schema_name)
-        schema = SchemaConverter.for_format("odcs").import_(schema)
-        return cls(subject=schema.name, schema=schema)
+        Supported formats include:
+        - "odcs": expects a SchemaObject from open_data_contract_standard
+        - "spark": expects a StructType from pyspark.sql.types
+
+        Raises an exception if the format is not supported.
+        """
+        return SchemaConverter.for_format(format).import_(data)

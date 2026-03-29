@@ -20,7 +20,7 @@ from tiozin.api import (
     SettingsManifest,
     Lineage,
     LineageDataset,
-    SchemaManifest,
+    Schema,
 )
 
 # Registries
@@ -58,7 +58,7 @@ __all__ = [
     "LineageRunEvent",
     "Secret",
     "SettingsManifest",
-    "SchemaManifest",
+    "Schema",
     # Registries
     "JobRegistry",
     "LineageRegistry",
