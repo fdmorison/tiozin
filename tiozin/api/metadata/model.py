@@ -14,7 +14,7 @@ from tiozin.utils.io import StrOrPath
 from . import docs
 
 
-class Model(BaseModel):
+class Metadata(BaseModel):
     """
     Base model for Tiozin models.
 
@@ -85,7 +85,7 @@ class Model(BaseModel):
             raise ModelError(cls.__name__, str(e)) from e
 
     @classmethod
-    def try_from_yaml(cls, data: str | Model | Any) -> Self | None:
+    def try_from_yaml(cls, data: str | Metadata | Any) -> Self | None:
         if isinstance(data, cls):
             return data
         if not isinstance(data, str):
@@ -127,7 +127,7 @@ class Model(BaseModel):
         write_text(path, data, **options)
 
 
-class ImmutableModel(Model):
+class ImmutableMetadata(Metadata):
     """
     Base model for Tiozin immutable models.
 
@@ -142,7 +142,7 @@ class ImmutableModel(Model):
     )
 
 
-class Manifest(Model):
+class Manifest(Metadata):
     """
     Base model for Tiozin manifests.
 
