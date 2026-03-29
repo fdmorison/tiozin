@@ -33,12 +33,17 @@ dependencies = [
   "python-slugify ~=8.0.4",
   "openlineage-python ~=1.45.0",
   "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
+  # NOTE: Temporary dependencies (to be removed)
+  # Required to reuse schema converters, but most converters are bugged
   "datacontract-cli ~=0.11.7",
 ]
 
 [project.optional-dependencies]
 tio_spark = [
   "pyspark >=3.5.0,<4.0.0",
+  # NOTE: Temporary dependencies (to be removed)
+  # Required due to unnecessary runtime imports in datacontract-cli schema converters
+  "databricks-sdk ~=0.102.0",
 ]
 tio_duckdb = [
   "duckdb>=1.4.4,<2.0.0",

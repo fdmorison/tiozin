@@ -1,0 +1,31 @@
+name: users
+physicalName: users
+physicalType: table
+logicalType: object
+description: User data with friends and profile.
+
+properties:
+
+  - name: name
+    logicalType: string
+    physicalType: string
+
+  - name: profile
+    logicalType: object
+    physicalType: record
+    properties:
+      - name: age
+        logicalType: integer
+        physicalType: int
+
+  - name: friends
+    logicalType: array
+    physicalType: array
+    items:
+      name: items
+      logicalType: object
+      physicalType: record
+      properties:
+        - name: name
+          logicalType: string
+          physicalType: string

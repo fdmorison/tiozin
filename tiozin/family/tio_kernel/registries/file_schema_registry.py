@@ -27,8 +27,8 @@ class FileSchemaRegistry(SchemaRegistry):
             path = join_path(self.location, f"{identifier}.yaml")
             self.info(f"Reading schema from {path}")
             return SchemaManifest.from_file(path, **self.options)
-        except FileNotFoundError as e:
-            raise SchemaNotFoundError(identifier) from e
+        except FileNotFoundError:
+            raise SchemaNotFoundError(identifier) from None
 
     def register(self, identifier: str, value: SchemaManifest) -> None:
         path = join_path(self.location, f"{identifier}.yaml")

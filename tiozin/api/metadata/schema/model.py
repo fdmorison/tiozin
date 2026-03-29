@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import json
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 from open_data_contract_standard.model import OpenDataContractStandard, SchemaObject
 from pydantic import Field, ValidationError
@@ -12,6 +11,7 @@ from tiozin.exceptions import ModelError
 from tiozin.utils import dump_yaml, load_yaml
 
 from ..model import Model
+from .converters import SchemaConverter
 from .exceptions import SchemaNotFoundError
 
 Schema: TypeAlias = SchemaObject
@@ -23,26 +23,13 @@ class SchemaManifest(Model):
     schema: Schema = Field(...)
 
     @classmethod
-    def from_contract(cls, contract: OpenDataContractStandard, subject: str) -> SchemaManifest:
-        schemas = contract.schema_ or []
-        schema = next((schema for schema in schemas if schema.name == subject), None)
-        if schema is None:
-            raise SchemaNotFoundError(subject)
-        return cls.from_contract_schema(schema)
-
-    @classmethod
-    def from_contract_schema(cls, schema: SchemaObject) -> SchemaManifest:
-        return cls(subject=schema.name, schema=schema)
-
-    @classmethod
     def from_yaml(cls, data: str) -> SchemaManifest:
         if not isinstance(data, str):
             raise ModelError(cls.__name__, f"Expected a model string, got: {data}")
 
         try:
-            return cls.from_contract_schema(
-                SchemaObject.model_validate(load_yaml(data)),
-            )
+            schema = SchemaObject.model_validate(load_yaml(data))
+            return cls(subject=schema.name, schema=schema)
         except DuplicateKeyError as e:
             raise ModelError.from_ruamel(cls.__name__, e) from e
         except ValidationError as e:
@@ -58,27 +45,21 @@ class SchemaManifest(Model):
     def to_json(self) -> str:
         return self.schema.model_dump_json(indent=2, exclude_unset=True, ensure_ascii=False) + "\n"
 
-    def to(self, format: str) -> str:
-        from datacontract.export.avro_exporter import to_avro_schema_json
-        from datacontract.export.bigquery_exporter import to_bigquery_fields_array
-        from datacontract.export.jsonschema_exporter import to_jsonschema_json
-        from datacontract.export.sql_exporter import _to_sql_table
+    def export(self, format: str) -> Any:
+        converter = SchemaConverter.for_format(format)
+        return converter.export(self.schema)
 
-        match format:
-            case "avro":
-                return to_avro_schema_json(self.subject, self.schema)
-            case "jsonschema":
-                return to_jsonschema_json(self.subject, self.schema)
-            case "postgres":
-                return _to_sql_table(self.subject, self.schema, "postgres")
-            case "spark":
-                from datacontract.export.spark_exporter import to_spark_schema
+    @classmethod
+    def import_(cls, format: str, data: Any) -> SchemaManifest:
+        converter = SchemaConverter.for_format(format)
+        schema = converter.import_(data)
+        return SchemaManifest(subject=schema.name, schema=schema)
 
-                return to_spark_schema(self.schema)
-            case "bigquery":
-                return json.dumps(
-                    {"fields": to_bigquery_fields_array(self.schema.properties or [])},
-                    indent=2,
-                )
-            case _:
-                raise ValueError(f"Unsupported export format: {format}")
+    @classmethod
+    def from_contract(cls, contract: OpenDataContractStandard, schema_name: str) -> SchemaManifest:
+        schemas = contract.schema_ or []
+        schema = next((s for s in schemas if s.name == schema_name), None)
+        if schema is None:
+            raise SchemaNotFoundError(schema_name)
+        schema = SchemaConverter.for_format("odcs").import_(schema)
+        return cls(subject=schema.name, schema=schema)
