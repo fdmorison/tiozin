@@ -342,6 +342,20 @@ wheels = [
 ]
 
 [[package]]
+name = "boto3"
+version = "1.42.19"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+    { name = "jmespath" },
+    { name = "s3transfer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/36/045babbc2978fe3bf051a002e9ee492a815e50b90aea514b811d12aa33cb/boto3-1.42.19.tar.gz", hash = "sha256:5933696a28bf8eb62fc54e4de5583f78a0efef59c8164ee1850436aa22f53aa7", size = 112803, upload-time = "2025-12-30T20:29:30.785Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f1/ca/2b46e9fa3953c21a258b06e33f14452d97646ffbe7ace125e6aec62d4d7c/boto3-1.42.19-py3-none-any.whl", hash = "sha256:c55b8b303c64931272536813a476f130b90ea7041d7b79c154d89cf1c18256b4", size = 140576, upload-time = "2025-12-30T20:29:29.319Z" },
+]
+
+[[package]]
 name = "botocore"
 version = "1.42.19"
 source = { registry = "https://pypi.org/simple" }
@@ -692,6 +706,60 @@ wheels = [
 ]
 
 [[package]]
+name = "databricks-sdk"
+version = "0.102.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-auth" },
+    { name = "protobuf" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/b3/41ff1c3afe092df9085e084e0dc81c45bca5ed65f7b60dc59df0ade43c76/databricks_sdk-0.102.0.tar.gz", hash = "sha256:8fa5f82317ee27cc46323c6e2543d2cfefb4468653f92ba558271043c6f72fb9", size = 887450, upload-time = "2026-03-19T08:15:54.428Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/8c/d082bd5f72d7613524d5b35dfe1f71732b2246be2704fad68cd0e3fdd020/databricks_sdk-0.102.0-py3-none-any.whl", hash = "sha256:75d1253276ee8f3dd5e7b00d62594b7051838435e618f74a8570a6dbd723ec12", size = 838533, upload-time = "2026-03-19T08:15:52.248Z" },
+]
+
+[[package]]
+name = "datacontract-cli"
+version = "0.11.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "boto3" },
+    { name = "datacontract-specification" },
+    { name = "fastjsonschema" },
+    { name = "jinja-partials" },
+    { name = "jinja2" },
+    { name = "open-data-contract-standard" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "python-multipart" },
+    { name = "pytz" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "setuptools" },
+    { name = "sqlglot" },
+    { name = "typer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4c/08/260c62e52d56d9c5b4712f021d7a9bd0cf58e95a588bdda31268736e3596/datacontract_cli-0.11.7.tar.gz", hash = "sha256:79cd941e0066bcf81b04e517428cf188aab312e90e6295af96cbacf53f4b6949", size = 334477, upload-time = "2026-03-24T19:04:19.106Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/dd/a197cc26c23274c5546f741103f034f8f27bc687c36756da2593776e3f88/datacontract_cli-0.11.7-py3-none-any.whl", hash = "sha256:92443a808c67f57939e863c93b02756c985c925c5051d74ef487c4633329f9ac", size = 292988, upload-time = "2026-03-24T19:04:17.177Z" },
+]
+
+[[package]]
+name = "datacontract-specification"
+version = "1.2.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d3/a5/3ee2bc8671b08e0c350091308386d2171bb03f8255647466ddcfab8717ca/datacontract_specification-1.2.3.tar.gz", hash = "sha256:5fc612255667581321b480e3f646c76ece618632a4aca4cd6ea5f647d98cbb61", size = 16162, upload-time = "2025-09-25T14:25:49.494Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/0e/ec63c117fbdb5ecfd6625e7527a267b85eaf26b4227e94a144509859a3dd/datacontract_specification-1.2.3-py3-none-any.whl", hash = "sha256:3d5a998a33be33ca95a20e3681a693b4d720baf0b956ff8970f3e85a77d6f35a", size = 15231, upload-time = "2025-09-25T14:25:48.107Z" },
+]
+
+[[package]]
 name = "decorator"
 version = "5.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -770,6 +838,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/75/06801d5beeb398ed3903167af9376bb81c4ac41c44a53d45193065ebb1a8/environs-14.5.0.tar.gz", hash = "sha256:f7b8f6fcf3301bc674bc9c03e39b5986d116126ffb96764efd34c339ed9464ee", size = 35426, upload-time = "2025-11-02T21:30:36.78Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d3/f3/6961beb9a1e77d01dee1dd48f00fb3064429c8abcfa26aa863eb7cb2b6dd/environs-14.5.0-py3-none-any.whl", hash = "sha256:1abd3e3a5721fb09797438d6c902bc2f35d4580dfaffe68b8ee588b67b504e13", size = 17202, upload-time = "2025-11-02T21:30:35.186Z" },
+]
+
+[[package]]
+name = "fastjsonschema"
+version = "2.21.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/b5/23b216d9d985a956623b6bd12d4086b60f0059b27799f23016af04a74ea1/fastjsonschema-2.21.2.tar.gz", hash = "sha256:b1eb43748041c880796cd077f1a07c3d94e93ae84bba5ed36800a33554ae05de", size = 374130, upload-time = "2025-08-14T18:49:36.666Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/a8/20d0723294217e47de6d9e2e40fd4a9d2f7c4b6ef974babd482a59743694/fastjsonschema-2.21.2-py3-none-any.whl", hash = "sha256:1c797122d0a86c5cace2e54bf4e819c36223b552017172f32c5c024a6b77e463", size = 24024, upload-time = "2025-08-14T18:49:34.776Z" },
 ]
 
 [[package]]
@@ -1256,6 +1333,18 @@ wheels = [
 ]
 
 [[package]]
+name = "jinja-partials"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jinja2" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/6b/b8728a82d84bf6bd3a34b64e249568f41da21225489c9e1c244befa153ca/jinja_partials-0.3.1.tar.gz", hash = "sha256:0c53d6e6489617a7efd403506040d5be7a138b95b7051e727cd8f42b0d8159a2", size = 2970250, upload-time = "2026-01-28T20:48:25.84Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/29/cd2a7241e67733f8352cc20d920cdd6bd5a7b3ebf6c0f82b57b13416ace8/jinja_partials-0.3.1-py3-none-any.whl", hash = "sha256:f8569e70fd98d5d2b1b5bc9f3acfece1e75330d7acd5cd6d7154009f7c2d4619", size = 7358, upload-time = "2026-01-28T20:48:27.411Z" },
+]
+
+[[package]]
 name = "jinja2"
 version = "3.1.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1563,6 +1652,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0b/5f/19930f824ffeb0ad4372da4812c50edbd1434f678c90c2733e1188edfc63/oauthlib-3.3.1.tar.gz", hash = "sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9", size = 185918, upload-time = "2025-06-19T22:48:08.269Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/be/9c/92789c596b8df838baa98fa71844d84283302f7604ed565dafe5a6b5041a/oauthlib-3.3.1-py3-none-any.whl", hash = "sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1", size = 160065, upload-time = "2025-06-19T22:48:06.508Z" },
+]
+
+[[package]]
+name = "open-data-contract-standard"
+version = "3.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4e/8a/81076b5398c08444f50f749a363f43f0f063b05f7de232da7437129ef458/open_data_contract_standard-3.1.2.tar.gz", hash = "sha256:9da18e1e961388bca6110e5a394c85bdf69de3e9966b2acf3f81f0092694d714", size = 18095, upload-time = "2025-12-17T12:43:56.88Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/9c/ed60cc0d1fcbfe9605abf7449f0301d215d15db8a000f3b2402c04407789/open_data_contract_standard-3.1.2-py3-none-any.whl", hash = "sha256:da801b93af6f18704100387a830388c7d78f8811ce834d84505241f22b882213", size = 17253, upload-time = "2025-12-17T12:43:55.533Z" },
 ]
 
 [[package]]
@@ -2234,6 +2336,15 @@ wheels = [
 ]
 
 [[package]]
+name = "python-multipart"
+version = "0.0.22"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/01/979e98d542a70714b0cb2b6728ed0b7c46792b695e3eaec3e20711271ca3/python_multipart-0.0.22.tar.gz", hash = "sha256:7340bef99a7e0032613f56dc36027b959fd3b30a787ed62d310e951f7c3a3a58", size = 37612, upload-time = "2026-01-25T10:15:56.219Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1b/d0/397f9626e711ff749a95d96b7af99b9c566a9bb5129b8e4c10fc4d100304/python_multipart-0.0.22-py3-none-any.whl", hash = "sha256:2b2cd894c83d21bf49d702499531c7bafd057d730c201782048f7945d82de155", size = 24579, upload-time = "2026-01-25T10:15:54.811Z" },
+]
+
+[[package]]
 name = "python-slugify"
 version = "8.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2431,6 +2542,27 @@ wheels = [
 ]
 
 [[package]]
+name = "s3transfer"
+version = "0.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/05/04/74127fc843314818edfa81b5540e26dd537353b123a4edc563109d8f17dd/s3transfer-0.16.0.tar.gz", hash = "sha256:8e990f13268025792229cd52fa10cb7163744bf56e719e0b9cb925ab79abf920", size = 153827, upload-time = "2025-12-01T02:30:59.114Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fc/51/727abb13f44c1fcf6d145979e1535a35794db0f6e450a0cb46aa24732fe2/s3transfer-0.16.0-py3-none-any.whl", hash = "sha256:18e25d66fed509e3868dc1572b3f427ff947dd2c56f844a5bf09481ad3f3b2fe", size = 86830, upload-time = "2025-12-01T02:30:57.729Z" },
+]
+
+[[package]]
+name = "setuptools"
+version = "82.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz", hash = "sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9", size = 1152316, upload-time = "2026-03-09T12:47:17.221Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl", hash = "sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb", size = 1006223, upload-time = "2026-03-09T12:47:15.026Z" },
+]
+
+[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2455,6 +2587,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
+]
+
+[[package]]
+name = "sqlglot"
+version = "28.10.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/66/b2b300f325227044aa6f511ea7c9f3109a1dc74b13a0897931c1754b504e/sqlglot-28.10.1.tar.gz", hash = "sha256:66e0dae43b4bce23314b80e9aef41b8c88fea0e17ada62de095b45262084a8c5", size = 5739510, upload-time = "2026-02-09T23:36:23.671Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/ff/5a768b34202e1ee485737bfa167bd84592585aa40383f883a8e346d767cc/sqlglot-28.10.1-py3-none-any.whl", hash = "sha256:214aef51fd4ce16407022f81cfc80c173409dab6d0f6ae18c52b43f43b31d4dd", size = 597053, upload-time = "2026-02-09T23:36:21.385Z" },
 ]
 
 [[package]]
@@ -2496,6 +2637,7 @@ name = "tiozin"
 version = "2.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "datacontract-cli" },
     { name = "environs" },
     { name = "fsspec", extra = ["adl", "gcs", "s3", "sftp"] },
     { name = "jinja2" },
@@ -2516,6 +2658,7 @@ tio-duckdb = [
     { name = "duckdb" },
 ]
 tio-spark = [
+    { name = "databricks-sdk" },
     { name = "pyspark" },
 ]
 
@@ -2553,6 +2696,8 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "databricks-sdk", marker = "extra == 'tio-spark'", specifier = "~=0.102.0" },
+    { name = "datacontract-cli", specifier = "~=0.11.7" },
     { name = "duckdb", marker = "extra == 'tio-duckdb'", specifier = ">=1.4.4,<2.0.0" },
     { name = "environs", specifier = "~=14.3" },
     { name = "fsspec", extras = ["s3", "gcs", "adl", "sftp"], specifier = "~=2026.2.0" },

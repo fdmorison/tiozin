@@ -16,16 +16,16 @@ registries:
     cache: false
 
   schema:
-    kind: NoOpSchemaRegistry
-    name: SchemaRegistry
-    description: Schema registry for schema management
-    location: http://localhost:8081
+    kind: FileSchemaRegistry
+    description: File-based schema registry for local development
+    location: examples/schemas
     timeout: 5
-    readonly: true
-    cache: true
+    readonly: false
+    cache: false
 
   lineage:
     kind: NoOpLineageRegistry
+    name: LineageRegistry
     description: Lineage registry for tracking data pipeline provenance
     location: http://localhost:5000
     timeout: 5

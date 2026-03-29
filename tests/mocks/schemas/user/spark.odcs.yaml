@@ -1,0 +1,31 @@
+name: ''
+physicalName: ''
+physicalType: table
+logicalType: object
+description: null
+
+properties:
+
+  - name: name
+    logicalType: string
+    physicalType: StringType()
+
+  - name: profile
+    logicalType: object
+    physicalType: StructType([StructField('age', IntegerType(), True)])
+    properties:
+      - name: age
+        logicalType: integer
+        physicalType: IntegerType()
+
+  - name: friends
+    logicalType: array
+    physicalType: "ArrayType(StructType([StructField('name', StringType(), True)]), True)"
+    items:
+      name: items
+      logicalType: object
+      physicalType: StructType([StructField('name', StringType(), True)])
+      properties:
+        - name: name
+          logicalType: string
+          physicalType: StringType()

@@ -75,7 +75,7 @@ def test_noop_schema_registry_should_return_none_on_get(input_context: Context):
     registry = NoOpSchemaRegistry()
 
     # Act
-    result = registry.get()
+    result = registry.try_get("acme.eu.sales.orders.raw.crm.order")
 
     # Assert
     actual = result

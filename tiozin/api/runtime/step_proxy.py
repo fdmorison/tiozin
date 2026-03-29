@@ -58,6 +58,10 @@ class StepProxy(wrapt.ObjectProxy):
                 context.executed_at = utcnow()
                 match step:
                     case Input():
+                        context.schema = context.registries.schema.try_get(
+                            step.schema_subject,
+                            step.schema_version,
+                        )
                         result = step.read(*args, **kwargs)
                     case Transform():
                         result = step.transform(*args, **kwargs)

@@ -1,0 +1,38 @@
+name: orders
+physicalName: orders
+physicalType: table
+description: Raw order transaction data ingested from source system.
+
+properties:
+
+  - name: id
+    logicalType: integer
+    physicalType: integer
+    required: true
+    primaryKey: true
+    primaryKeyPosition: 1
+    description: Unique order identifier
+
+  - name: customer_id
+    logicalType: integer
+    physicalType: integer
+    required: true
+    description: Reference to the customer who placed the order
+
+  - name: total
+    logicalType: number
+    physicalType: decimal
+    required: true
+    description: Total amount of the order
+
+  - name: status
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Current status of the order
+
+  - name: created_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    description: Timestamp when the order was placed

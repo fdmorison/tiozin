@@ -26,6 +26,7 @@ from .metadata.job.model import (
 from .metadata.lineage.model import LineageRunEvent, Lineage, LineageDataset
 from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
+from .metadata.schema.model import Schema
 
 # Registries
 from .metadata.job.registry import JobRegistry
@@ -62,6 +63,7 @@ __all__ = [
     "LineageRunEvent",
     "Secret",
     "SettingsManifest",
+    "Schema",
     # Registries
     "JobRegistry",
     "LineageRegistry",
