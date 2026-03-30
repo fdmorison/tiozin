@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from tiozin.utils import slugify
+
 from .dataset import Dataset
 
 if TYPE_CHECKING:
@@ -33,22 +35,23 @@ class RuntimeCatalog:
     def register(
         self,
         step: Step,
-        inputs: list[Dataset] = (),
+        inputs: list[Dataset] = None,
         output: Dataset = None,
     ) -> StepRecord:
         record = self._steps.setdefault(step.slug, StepRecord(step))
+        inputs = inputs or []
 
         if inputs:
             record.inputs.extend(Dataset.wrap(i) for i in inputs)
 
-        if output:
+        if output is not None:
             dataset = Dataset.wrap(output)
-            record.output = dataset if not record.output else record.output.merge(dataset)
+            record.output = dataset if record.output is None else record.output.merge(dataset)
 
         return record
 
     def get(self, step: Step | str) -> StepRecord | None:
-        key = step if isinstance(step, str) else step.slug
+        key = slugify(step) if isinstance(step, str) else step.slug
         return self._steps.get(key)
 
     def get_all(self, steps: list[Step | str]) -> list[StepRecord]:
@@ -63,6 +66,6 @@ class RuntimeCatalog:
     def get_output_datasets(self, steps: list[Step | str]) -> list[Dataset]:
         result = []
         for record in self.get_all(steps):
-            if record.output:
+            if record.output is not None:
                 result.append(record.output)
         return result
