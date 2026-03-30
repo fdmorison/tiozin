@@ -4,7 +4,7 @@ from typing import get_args
 
 from duckdb import DuckDBPyRelation
 
-from tiozin import Lineage, LineageDataset
+from tiozin import Dataset, Datasets
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, randstr, trim_lower, trim_upper
 
@@ -196,13 +196,10 @@ class DuckdbPostgresOutput(DuckdbOutput):
     def _probe(self) -> str:
         return f"{self._database}.{self._pg_probe}"
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
-            inputs=[],
+    def static_datasets(self) -> Datasets:
+        return Datasets(
             outputs=[
-                LineageDataset.postgres(
-                    self.host, self.port, self.database, self.schema, self.table
-                )
+                Dataset.postgres(self.host, self.port, self.database, self.schema, self.table)
             ],
         )
 

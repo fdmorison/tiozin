@@ -1,6 +1,6 @@
 from typing import Literal
 
-from tiozin import Input, Lineage, LineageDataset
+from tiozin import Dataset, Datasets, Input
 
 
 class InputStub(Input):
@@ -21,8 +21,7 @@ class InputStub(Input):
     def teardown(self) -> None:
         self.captured_teardown = self.path
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
-            inputs=[LineageDataset.from_uri(self.path)],
-            outputs=[],
+    def static_datasets(self) -> Datasets:
+        return Datasets(
+            inputs=[Dataset.from_uri(self.path)],
         )

@@ -15,6 +15,21 @@ class Datasets:
 
 
 class Dataset(wrapt.ObjectProxy):
+    """
+    Wraps a data object (DataFrame, Relation, etc.) with identity and schema metadata.
+
+    Datasets are identified by a `(namespace, name)` pair following OpenLineage naming
+    conventions, and carry an optional `Schema` for lineage facet emission.
+
+    Factory methods cover the most common systems out of the box:
+
+        Dataset.from_uri("s3://bucket/path/")
+        Dataset.postgres(host, port, database, schema, table)
+        Dataset.kafka(bootstrap_server, port, topic)
+
+    https://openlineage.io/docs/spec/naming/
+    """
+
     def __init__(self, data=None, schema=None, namespace=None, name=None):
         super().__init__(data)
         self._self_schema = schema

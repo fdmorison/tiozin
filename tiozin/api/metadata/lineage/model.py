@@ -16,11 +16,6 @@ if TYPE_CHECKING:
     from tiozin.api import Context
 
 
-class Lineage(Metadata):
-    inputs: list[Dataset]
-    outputs: list[Dataset]
-
-
 class LineageJob(Metadata):
     QUERY: ClassVar = LineageJobType.QUERY
     COMMAND: ClassVar = LineageJobType.COMMAND
