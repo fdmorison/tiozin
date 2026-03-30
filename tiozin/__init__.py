@@ -18,8 +18,8 @@ from tiozin.api import (
     LineageRunEvent,
     Secret,
     SettingsManifest,
-    Lineage,
-    LineageDataset,
+    Dataset,
+    Datasets,
     Schema,
 )
 
@@ -53,8 +53,8 @@ __all__ = [
     "OutputManifest",
     "RunnerManifest",
     "TransformManifest",
-    "Lineage",
-    "LineageDataset",
+    "Dataset",
+    "Datasets",
     "LineageRunEvent",
     "Secret",
     "SettingsManifest",

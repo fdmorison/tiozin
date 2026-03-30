@@ -23,7 +23,7 @@ from .metadata.job.model import (
     RunnerManifest,
     TransformManifest,
 )
-from .metadata.lineage.model import LineageRunEvent, Lineage, LineageDataset
+from .metadata.lineage.model import LineageRunEvent
 from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
 from .metadata.schema.model import Schema
@@ -44,6 +44,7 @@ from .runtime.input import Input
 from .runtime.transform import Transform, CoTransform
 from .runtime.output import Output
 from .runtime.job import Job
+from .runtime.dataset import Dataset, Datasets
 
 # Type aliases
 EtlStep: TypeAlias = Transform | Input | Output
@@ -58,8 +59,8 @@ __all__ = [
     "OutputManifest",
     "RunnerManifest",
     "TransformManifest",
-    "Lineage",
-    "LineageDataset",
+    "Dataset",
+    "Datasets",
     "LineageRunEvent",
     "Secret",
     "SettingsManifest",
