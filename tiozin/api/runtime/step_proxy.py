@@ -45,13 +45,12 @@ class StepProxy(wrapt.ObjectProxy):
         context = Context.for_step(step)
         catalog = context.catalog
 
-        static = step.static_datasets()
-
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
                 step.info(f"▶️  Starting to {context.tiozin_role} data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
+                static = step.static_datasets()
                 catalog.register(step, inputs=[*static.inputs, *args])
 
                 context.setup_at = utcnow()
@@ -87,11 +86,9 @@ class StepProxy(wrapt.ObjectProxy):
                     dataset.merge(static_output)
 
                 # runtime fallback
-                dataset.with_namespace(context.namespace).with_name(context.qualified_slug)
-
-                # schema fallback
-                if context.schema:
-                    dataset.with_schema(context.schema)
+                dataset.with_namespace(context.namespace).with_name(
+                    context.qualified_slug
+                ).with_schema(context.schema)
 
                 catalog.register(step, output=dataset)
 
