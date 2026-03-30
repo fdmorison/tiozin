@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import Context
+from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import AccessViolationError, TiozinInternalError
 from tiozin.utils import utcnow
 
-from ...compose import TiozinTemplateOverlay
 from .dataset import Dataset
 
 if TYPE_CHECKING:

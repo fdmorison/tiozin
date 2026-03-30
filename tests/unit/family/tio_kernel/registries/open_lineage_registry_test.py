@@ -2,7 +2,7 @@ import pytest
 from openlineage.client.generated.parent_run import ParentRunFacet
 
 from tests.mocks.lineage.run_event import job_start_event, step_start_event
-from tiozin import LineageDataset, LineageRunEvent, config
+from tiozin import Dataset, LineageRunEvent, config
 from tiozin.family.tio_kernel import OpenLineageRegistry
 
 
@@ -256,8 +256,8 @@ def test_build_run_event_should_map_input_datasets(registry: OpenLineageRegistry
     event = job_start_event.model_copy(
         update={
             "inputs": [
-                LineageDataset(namespace="acme.latam.ecommerce.checkout", name="sales.orders"),
-                LineageDataset(namespace="acme.latam.ecommerce.checkout", name="sales.customers"),
+                Dataset(data=[], namespace="acme.latam.ecommerce.checkout", name="sales.orders"),
+                Dataset(data=[], namespace="acme.latam.ecommerce.checkout", name="sales.customers"),
             ],
         }
     )
@@ -279,7 +279,7 @@ def test_build_run_event_should_map_output_datasets(registry: OpenLineageRegistr
     event = job_start_event.model_copy(
         update={
             "outputs": [
-                LineageDataset(namespace="acme.latam.ecommerce.checkout", name="sales.summary"),
+                Dataset(data=[], namespace="acme.latam.ecommerce.checkout", name="sales.summary"),
             ],
         }
     )

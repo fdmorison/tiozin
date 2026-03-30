@@ -10,13 +10,11 @@ from tiozin import config
 from tiozin.utils import utcnow
 
 from ..model import Metadata
+from ..schema.model import Schema
 from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
 if TYPE_CHECKING:
-    from tiozin.api import Context
-    from tiozin.api.runtime.dataset import Dataset
-
-    from ..schema.model import Schema
+    from tiozin.api import Context, Dataset
 
 
 class LineageDataset(Metadata):
