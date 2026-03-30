@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, ClassVar
 from pydantic import Field
 
 from tiozin import config
+from tiozin.api.runtime.dataset import Dataset
 from tiozin.utils import utcnow
 
 from ..model import Metadata
-from .dataset import LineageDataset
 from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
 if TYPE_CHECKING:
@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 
 
 class Lineage(Metadata):
-    inputs: list[LineageDataset]
-    outputs: list[LineageDataset]
+    inputs: list[Dataset]
+    outputs: list[Dataset]
 
 
 class LineageJob(Metadata):
@@ -86,16 +86,16 @@ class LineageRunEvent(Metadata):
     job: LineageJob
     tags: dict[str, str]
     parent: LineageParentRun | None = None
-    inputs: list[LineageDataset] = Field(default_factory=list)
-    outputs: list[LineageDataset] = Field(default_factory=list)
+    inputs: list[Dataset] = Field(default_factory=list)
+    outputs: list[Dataset] = Field(default_factory=list)
 
     @classmethod
     def from_context(
         cls,
         ctx: Context,
         type: LineageRunEventType,
-        inputs: list[LineageDataset] | None = None,
-        outputs: list[LineageDataset] | None = None,
+        inputs: list[Dataset] | None = None,
+        outputs: list[Dataset] | None = None,
     ) -> LineageRunEvent:
         return cls(
             type=LineageRunEventType(type),
