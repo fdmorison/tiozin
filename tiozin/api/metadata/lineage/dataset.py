@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Self
 from urllib.parse import urlparse
 
+from openlineage.client.generated.base import InputDataset, OutputDataset
+
 from tiozin.utils.io import normalize_uri
 
 from ..model import Metadata
@@ -31,8 +33,25 @@ class LineageDataset(Metadata):
         self.schema = self.schema or dataset.schema
         return self
 
-    def schema_facet():
-        pass
+    def facets(self) -> dict:
+        result = {}
+        if self.schema:
+            result["schema"] = self.schema.export("openlineage")
+        return result
+
+    def as_input(self) -> InputDataset:
+        return InputDataset(
+            namespace=self.namespace,
+            name=self.name,
+            facets=self.facets(),
+        )
+
+    def as_output(self) -> OutputDataset:
+        return OutputDataset(
+            namespace=self.namespace,
+            name=self.name,
+            facets=self.facets(),
+        )
 
     @staticmethod
     def from_uri(uri: str) -> LineageDataset:
