@@ -137,7 +137,7 @@ def test_register_should_merge_output_on_repeated_calls():
 # ============================================================================
 
 
-def test_get_should_return_record_when_step_is_registered():
+def test_get_should_find_record():
     # Arrange
     catalog = RuntimeCatalog()
     step = mock_step()

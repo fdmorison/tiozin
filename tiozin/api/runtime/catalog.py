@@ -32,6 +32,9 @@ class RuntimeCatalog:
     def __init__(self) -> None:
         self._steps: dict[str, StepRecord] = {}
 
+    def __repr__(self) -> str:
+        return f"RuntimeCatalog(steps={list(self._steps.keys())})"
+
     def register(
         self,
         step: Step,

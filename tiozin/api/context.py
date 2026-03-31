@@ -324,7 +324,7 @@ class Context:
 
     @property
     def is_root(self) -> bool:
-        return self.job is self
+        return self.job is self or self.job is None
 
     @property
     def qualified_slug(self) -> str:

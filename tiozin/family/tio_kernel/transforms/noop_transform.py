@@ -7,7 +7,7 @@ class NoOpTransform(Transform):
     """
     No-op Tiozin Transform.
 
-    Does nothing. Returns None for all operations.
+    Does nothing. Returns an empty dataset for all operations.
     Useful for testing or when metric tracking is disabled.
     """
 
@@ -29,7 +29,7 @@ class NoOpTransform(Transform):
         if self.force_error:
             raise RuntimeError("Forced error for testing purposes")
 
-        return None
+        return []
 
     def teardown(self, *data: Any) -> None:
         if self.verbose:
