@@ -19,7 +19,7 @@ runner:
 
 inputs:
   - kind: DuckdbFileInput
-    name: customers_source
+    name: load_customers
     description: Customer master data from source system.
     path: examples/data/ecommerce/customers.csv
     format: csv
@@ -27,7 +27,7 @@ inputs:
 
 transforms:
   - kind: DuckdbSqlTransform
-    name: metadata
+    name: add_metadata
     description: Adds ingestion metadata
     query: |-
       SELECT
@@ -40,7 +40,7 @@ transforms:
 
 outputs:
   - kind: DuckdbFileOutput
-    name: customers_raw
+    name: save_customers
     description: Raw customer data in parquet format.
     path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     format: parquet

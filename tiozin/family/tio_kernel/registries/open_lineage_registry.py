@@ -120,7 +120,7 @@ class OpenLineageRegistry(LineageRegistry):
             eventTime=event.timestamp.isoformat(timespec="milliseconds"),
             producer=event.producer,
             run=Run(
-                runId=event.run_id.split("_", 1)[-1],
+                runId=event.run_id,
                 facets={
                     "nominalTime": NominalTimeRunFacet(
                         nominalStartTime=event.nominal_time.isoformat(timespec="milliseconds")
@@ -131,7 +131,7 @@ class OpenLineageRegistry(LineageRegistry):
                     **(
                         {
                             "parent": ParentRunFacet(
-                                run=ParentRun(runId=event.parent.run_id.split("_", 1)[-1]),
+                                run=ParentRun(runId=event.parent.run_id),
                                 job=ParentJob(
                                     namespace=event.parent.namespace, name=event.parent.name
                                 ),

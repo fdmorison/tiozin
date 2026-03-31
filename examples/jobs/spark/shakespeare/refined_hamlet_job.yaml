@@ -27,7 +27,7 @@ inputs:
 
 transforms:
   - kind: SparkWordCountTransform
-    name: word_count
+    name: count_words
     content_field: value
     lowercase: true
 

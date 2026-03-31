@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
+from tiozin import config
 from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import human_join, utcnow
@@ -46,23 +47,26 @@ class JobProxy(wrapt.ObjectProxy):
                 context.executed_at = utcnow()
 
                 with job.runner():
-                    lineage_registry.start(inputs=[], outputs=[])
+                    if config.tiozin_lineage_job_enabled:
+                        lineage_registry.start(inputs=[], outputs=[])
                     result = job.submit()
 
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
-                lineage_registry.fail(
-                    inputs=catalog.get_inputs(job.inputs),
-                    outputs=catalog.get_outputs(job.outputs),
-                )
+                if config.tiozin_lineage_job_enabled:
+                    lineage_registry.fail(
+                        inputs=catalog.get_inputs(job.inputs),
+                        outputs=catalog.get_outputs(job.outputs),
+                    )
                 raise
 
             else:
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
-                lineage_registry.complete(
-                    inputs=catalog.get_inputs(job.inputs),
-                    outputs=catalog.get_outputs(job.outputs),
-                )
+                if config.tiozin_lineage_job_enabled:
+                    lineage_registry.complete(
+                        inputs=catalog.get_inputs(job.inputs),
+                        outputs=catalog.get_outputs(job.outputs),
+                    )
                 return result
 
             finally:

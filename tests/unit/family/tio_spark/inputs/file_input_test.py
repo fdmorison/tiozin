@@ -32,5 +32,5 @@ def test_file_input_should_return_one_dataset_per_path(path, expected):
     result = step.static_datasets()
 
     # Assert
-    actual = [(d.namespace, d.name) for d in result.inputs]
+    actual = [(d.tiozin_namespace, d.tiozin_name) for d in result.inputs]
     assert actual == expected

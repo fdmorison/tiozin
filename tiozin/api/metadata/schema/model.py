@@ -43,7 +43,7 @@ class Schema(SchemaObject, Metadata):
         return SchemaConverter.for_format(format).export(self)
 
     @classmethod
-    def import_(cls, format: str, data: Any) -> Schema:
+    def import_(cls, format: str, schema: Any) -> Schema:
         """
         Creates a Schema from another format.
 
@@ -55,4 +55,21 @@ class Schema(SchemaObject, Metadata):
 
         Raises an exception if the format is not supported.
         """
-        return SchemaConverter.for_format(format).import_(data)
+        return SchemaConverter.for_format(format).import_(schema)
+
+    @classmethod
+    def from_spark(cls, schema: Any) -> Schema:
+        return cls.import_("spark", schema)
+
+    @classmethod
+    def from_odcs(cls, schema: Any) -> Schema:
+        return cls.import_("odcs", schema)
+
+    def to_spark(self) -> Any:
+        return self.export("spark")
+
+    def to_odcs(self) -> Any:
+        return self.export("odcs")
+
+    def to_openlineage(self) -> Any:
+        return self.export("openlineage")

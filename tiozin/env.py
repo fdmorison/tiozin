@@ -118,3 +118,10 @@ TIO_SCHEMA_DEFAULT_VERSION = _env.str(
     "TIO_DEFAULT_SCHEMA_VERSION",
     "latest",
 )
+
+# TIO_LINEAGE_JOB_ENABLED - Emit lineage events for jobs.
+TIO_LINEAGE_JOB_ENABLED = _env.bool("TIO_LINEAGE_JOB_ENABLED", True)
+
+# TIO_LINEAGE_STEP_ENABLED - Emit lineage events for individual steps (Input, Transform, Output).
+# When false, only job-level lineage is emitted.
+TIO_LINEAGE_STEP_ENABLED = _env.bool("TIO_LINEAGE_STEP_ENABLED", False)

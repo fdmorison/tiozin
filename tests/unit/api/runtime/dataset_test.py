@@ -22,7 +22,7 @@ def test_dataset_should_accept_empty_list_as_data():
     result = Dataset(data=[])
 
     # Assert
-    actual = result.data
+    actual = result.tiozin_data
     expected = []
     assert actual == expected
 
@@ -32,7 +32,7 @@ def test_dataset_should_accept_zero_as_data():
     result = Dataset(data=0)
 
     # Assert
-    actual = result.data
+    actual = result.tiozin_data
     expected = 0
     assert actual == expected
 
@@ -42,7 +42,7 @@ def test_dataset_should_accept_empty_string_as_data():
     result = Dataset(data="")
 
     # Assert
-    actual = result.data
+    actual = result.tiozin_data
     expected = ""
     assert actual == expected
 
@@ -79,7 +79,7 @@ def test_wrap_should_create_dataset_when_given_plain_object():
     # Assert
     actual = (
         type(result).__name__,
-        result.data is df,
+        result.tiozin_data is df,
     )
     expected = (
         "Dataset",
@@ -202,7 +202,7 @@ def test_with_namespace_should_set_namespace_when_unset():
     result = dataset.with_namespace("s3://bucket")
 
     # Assert
-    actual = result.namespace
+    actual = result.tiozin_namespace
     expected = "s3://bucket"
     assert actual == expected
 
@@ -215,7 +215,7 @@ def test_with_namespace_should_not_overwrite_existing_namespace():
     result = dataset.with_namespace("s3://other")
 
     # Assert
-    actual = result.namespace
+    actual = result.tiozin_namespace
     expected = "s3://original"
     assert actual == expected
 
@@ -228,7 +228,7 @@ def test_with_name_should_set_name_when_unset():
     result = dataset.with_name("data/orders")
 
     # Assert
-    actual = result.name
+    actual = result.tiozin_name
     expected = "data/orders"
     assert actual == expected
 
@@ -241,7 +241,7 @@ def test_with_name_should_not_overwrite_existing_name():
     result = dataset.with_name("data/other")
 
     # Assert
-    actual = result.name
+    actual = result.tiozin_name
     expected = "data/original"
     assert actual == expected
 
@@ -254,7 +254,7 @@ def test_with_methods_should_be_chainable():
     result = dataset.with_namespace("s3://bucket").with_name("data/orders")
 
     # Assert
-    actual = (result.namespace, result.name)
+    actual = (result.tiozin_namespace, result.tiozin_name)
     expected = ("s3://bucket", "data/orders")
     assert actual == expected
 
@@ -274,7 +274,7 @@ def test_merge_should_enrich_with_other_dataset_values():
     result = target.merge(source)
 
     # Assert
-    actual = (result.namespace, result.name, result.schema)
+    actual = (result.tiozin_namespace, result.tiozin_name, result.tiozin_schema)
     expected = ("s3://bucket", "data/orders", schema)
     assert actual == expected
 
@@ -290,7 +290,7 @@ def test_merge_should_not_overwrite_existing_values():
     result = target.merge(source)
 
     # Assert
-    actual = (result.namespace, result.name, result.schema)
+    actual = (result.tiozin_namespace, result.tiozin_name, result.tiozin_schema)
     expected = ("s3://source", "data/source", source_schema)
     assert actual == expected
 
@@ -303,7 +303,7 @@ def test_merge_should_be_safe_when_other_is_none():
     result = target.merge(None)
 
     # Assert
-    actual = (result.namespace, result.name)
+    actual = (result.tiozin_namespace, result.tiozin_name)
     expected = ("s3://bucket", "data/orders")
     assert actual == expected
 
@@ -340,7 +340,7 @@ def test_from_uri_should_split_object_storage_into_bucket_and_path(
     result = Dataset.from_uri(uri)
 
     # Assert
-    actual = (result.namespace, result.name)
+    actual = (result.tiozin_namespace, result.tiozin_name)
     expected = (expected_namespace, expected_name)
     assert actual == expected
 
@@ -359,7 +359,7 @@ def test_from_uri_should_split_http_into_host_namespace_and_path_name(
     result = Dataset.from_uri(uri)
 
     # Assert
-    actual = (result.namespace, result.name)
+    actual = (result.tiozin_namespace, result.tiozin_name)
     expected = (
         expected_namespace,
         "data/file.csv",
@@ -372,7 +372,7 @@ def test_from_uri_should_split_file_into_file_namespace_and_path():
     result = Dataset.from_uri("file:///data/warehouse/file.parquet")
 
     # Assert
-    actual = (result.namespace, result.name)
+    actual = (result.tiozin_namespace, result.tiozin_name)
     expected = (
         "file",
         "data/warehouse/file.parquet",
@@ -385,7 +385,7 @@ def test_from_uri_should_keep_relative_path_as_is_when_no_scheme():
     result = Dataset.from_uri("data/lake/customers.parquet")
 
     # Assert
-    actual = (result.namespace, result.name)
+    actual = (result.tiozin_namespace, result.tiozin_name)
     expected = (
         "file",
         "data/lake/customers.parquet",
@@ -406,6 +406,6 @@ def test_from_uri_should_strip_trailing_slash_from_name(uri: str, expected_name:
     result = Dataset.from_uri(uri)
 
     # Assert
-    actual = result.name
+    actual = result.tiozin_name
     expected = expected_name
     assert actual == expected

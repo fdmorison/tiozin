@@ -68,3 +68,5 @@ TIO_SCHEMA_SUBJECT_TEMPLATE = (
     "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
 )
 TIO_SCHEMA_DEFAULT_VERSION = "latest"
+TIO_LINEAGE_JOB_ENABLED = True
+TIO_LINEAGE_STEP_ENABLED = False

@@ -19,6 +19,9 @@ class Registries:
     Passed to `Context.for_job()` and `Context.for_step()` to inject
     infrastructure dependencies without coupling the context to any
     specific registry implementation.
+
+    Any field left as `None` is automatically filled with its NoOp equivalent,
+    so every `Registries` instance is safe to use without configuration.
     """
 
     setting: SettingRegistry = None
@@ -29,23 +32,7 @@ class Registries:
     metric: MetricRegistry = None
     lineage: LineageRegistry = None
 
-    @staticmethod
-    def from_baseline() -> Registries:
-        """
-        Returns a `Registries` pre-configured for minimal execution without
-        external dependencies or an active TiozinApp.
-
-        Each registry is chosen to work out of the box — no setup, no network
-        connections, no external systems required:
-
-        - `EnvSecretRegistry` — secrets read from environment variables
-        - `FileJobRegistry` — job spec persisted to local files
-        - `NoOpSchemaRegistry` — no schema validation
-        - `NoOpTransactionRegistry` — no transaction management
-        - `NoOpMetricRegistry` — no metrics collection
-        - `NoOpLineageRegistry` — no lineage tracking
-        - `NoOpSettingRegistry` — no configuration source
-        """
+    def __post_init__(self) -> None:
         from tiozin.family.tio_kernel import (
             EnvSecretRegistry,
             FileJobRegistry,
@@ -56,12 +43,14 @@ class Registries:
             NoOpTransactionRegistry,
         )
 
-        return Registries(
-            setting=NoOpSettingRegistry(),
-            secret=EnvSecretRegistry(),
-            schema=NoOpSchemaRegistry(),
-            transaction=NoOpTransactionRegistry(),
-            metric=NoOpMetricRegistry(),
-            lineage=NoOpLineageRegistry(),
-            job=FileJobRegistry(),
-        )
+        for name, factory in (
+            ("setting", NoOpSettingRegistry),
+            ("secret", EnvSecretRegistry),
+            ("schema", NoOpSchemaRegistry),
+            ("transaction", NoOpTransactionRegistry),
+            ("job", FileJobRegistry),
+            ("metric", NoOpMetricRegistry),
+            ("lineage", NoOpLineageRegistry),
+        ):
+            if getattr(self, name) is None:
+                object.__setattr__(self, name, factory())

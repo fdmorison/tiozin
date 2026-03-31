@@ -53,6 +53,8 @@ registry_default_cache = False
 # ===============================================
 #           Tiozin Customizations
 # ===============================================
+tiozin_lineage_job_enabled = env.TIO_LINEAGE_JOB_ENABLED
+tiozin_lineage_step_enabled = env.TIO_LINEAGE_STEP_ENABLED
 tiozin_job_namespace_template = env.TIO_JOB_NAMESPACE_TEMPLATE
 tiozin_schema_subject_template = env.TIO_SCHEMA_SUBJECT_TEMPLATE
 tiozin_schema_default_version = env.TIO_SCHEMA_DEFAULT_VERSION
