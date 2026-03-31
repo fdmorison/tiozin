@@ -51,6 +51,18 @@ class StepProxy(wrapt.ObjectProxy):
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 static = step.static_datasets()
+
+                # NOTE Assumes the Input step reads from a single dataset. We fetch the schema once
+                # and apply it to the first input. If we support multiple source datasets in a
+                # single Input step, we'll need to fetch and apply a schema for each one.
+                if isinstance(step, Input):
+                    context.schema = context.registries.schema.try_get(
+                        step.schema_subject,
+                        step.schema_version,
+                    )
+                    if static.inputs:
+                        static.inputs[0].with_schema(context.schema)
+
                 catalog.register(step, inputs=[*static.inputs, *args])
 
                 context.setup_at = utcnow()
@@ -59,10 +71,6 @@ class StepProxy(wrapt.ObjectProxy):
 
                 match step:
                     case Input():
-                        context.schema = context.registries.schema.try_get(
-                            step.schema_subject,
-                            step.schema_version,
-                        )
                         result = step.read(*args, **kwargs)
                     case Transform():
                         result = step.transform(*args, **kwargs)
