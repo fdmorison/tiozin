@@ -115,7 +115,7 @@ def test_proxy_should_render_template_vars_in_static_datasets_when_step_inherits
     step.read()
 
     # Assert
-    inputs = job_context.catalog.get_input_datasets([step])
+    inputs = job_context.catalog.get_inputs([step])
     actual = (inputs[0].namespace, inputs[0].name)
     expected = ("file", "data/ecommerce/raw")
     assert actual == expected
@@ -134,7 +134,7 @@ def test_proxy_should_render_template_vars_in_static_datasets_using_step_own_var
     step.read()
 
     # Assert
-    inputs = job_context.catalog.get_input_datasets([step])
+    inputs = job_context.catalog.get_inputs([step])
     actual = (inputs[0].namespace, inputs[0].name)
     expected = ("file", "data/finance/trusted")
     assert actual == expected

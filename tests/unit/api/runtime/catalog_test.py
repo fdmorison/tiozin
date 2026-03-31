@@ -1,4 +1,4 @@
-from tiozin.api.runtime.catalog import RuntimeCatalog, StepRecord
+from tiozin.api.runtime.catalog import RunCatalog, RunRecord
 from tiozin.api.runtime.dataset import Dataset
 from tiozin.family.tio_kernel import NoOpInput
 
@@ -20,13 +20,13 @@ def mock_dataset(name: str) -> Dataset:
 
 
 # ============================================================================
-# RuntimeCatalog.register
+# RunCatalog.register
 # ============================================================================
 
 
-def test_register_should_return_step_record():
+def test_register_should_return_runtime_record():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
 
     # Act
@@ -34,13 +34,13 @@ def test_register_should_return_step_record():
 
     # Assert
     actual = type(result)
-    expected = StepRecord
+    expected = RunRecord
     assert actual == expected
 
 
 def test_register_should_store_inputs():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
     inputs = [mock_dataset("orders"), mock_dataset("customers")]
 
@@ -55,7 +55,7 @@ def test_register_should_store_inputs():
 
 def test_register_should_wrap_raw_inputs_as_datasets():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
     raw = "raw-data"
 
@@ -70,7 +70,7 @@ def test_register_should_wrap_raw_inputs_as_datasets():
 
 def test_register_should_store_output():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
     output = mock_dataset("summary")
 
@@ -85,7 +85,7 @@ def test_register_should_store_output():
 
 def test_register_should_wrap_raw_output_as_dataset():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
 
     # Act
@@ -99,7 +99,7 @@ def test_register_should_wrap_raw_output_as_dataset():
 
 def test_register_should_accumulate_inputs_across_calls():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
 
     # Act
@@ -114,7 +114,7 @@ def test_register_should_accumulate_inputs_across_calls():
 
 def test_register_should_merge_output_on_repeated_calls():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
     first = Dataset(data=[], namespace="s3://bucket", name="summary")
     second = Dataset(data=[], namespace="s3://other")
@@ -133,13 +133,13 @@ def test_register_should_merge_output_on_repeated_calls():
 
 
 # ============================================================================
-# RuntimeCatalog.get
+# RunCatalog.get
 # ============================================================================
 
 
 def test_get_should_find_record():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
     catalog.register(step)
 
@@ -148,13 +148,13 @@ def test_get_should_find_record():
 
     # Assert
     actual = type(result)
-    expected = StepRecord
+    expected = RunRecord
     assert actual == expected
 
 
 def test_get_should_return_none_when_step_is_not_registered():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step()
 
     # Act
@@ -168,7 +168,7 @@ def test_get_should_return_none_when_step_is_not_registered():
 
 def test_get_should_accept_slug_string():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step = mock_step(name="load orders")
     catalog.register(step)
 
@@ -177,25 +177,25 @@ def test_get_should_accept_slug_string():
 
     # Assert
     actual = type(result)
-    expected = StepRecord
+    expected = RunRecord
     assert actual == expected
 
 
 # ============================================================================
-# RuntimeCatalog.get_all
+# RunCatalog.get_records
 # ============================================================================
 
 
-def test_get_all_should_return_records_for_all_registered_steps():
+def test_get_records_should_return_records_for_all_registered_runtimes():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step1 = mock_step("load orders")
     step2 = mock_step("load customers")
     catalog.register(step1)
     catalog.register(step2)
 
     # Act
-    result = catalog.get_all([step1, step2])
+    result = catalog.get_records([step1, step2])
 
     # Assert
     actual = len(result)
@@ -203,15 +203,30 @@ def test_get_all_should_return_records_for_all_registered_steps():
     assert actual == expected
 
 
-def test_get_all_should_skip_unregistered_steps():
+def test_get_records_should_accept_single_runtime():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
+    step = mock_step()
+    catalog.register(step)
+
+    # Act
+    result = catalog.get_records(step)
+
+    # Assert
+    actual = len(result)
+    expected = 1
+    assert actual == expected
+
+
+def test_get_records_should_skip_unregistered_runtimes():
+    # Arrange
+    catalog = RunCatalog()
     step1 = mock_step("load orders")
     step2 = mock_step("load customers")
     catalog.register(step1)
 
     # Act
-    result = catalog.get_all([step1, step2])
+    result = catalog.get_records([step1, step2])
 
     # Assert
     actual = len(result)
@@ -220,20 +235,20 @@ def test_get_all_should_skip_unregistered_steps():
 
 
 # ============================================================================
-# RuntimeCatalog.get_input_datasets
+# RunCatalog.get_inputs
 # ============================================================================
 
 
-def test_get_input_datasets_should_return_all_inputs_across_steps():
+def test_get_inputs_should_return_all_inputs_across_runtimes():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step1 = mock_step("load orders")
     step2 = mock_step("load customers")
     catalog.register(step1, inputs=[mock_dataset("orders")])
     catalog.register(step2, inputs=[mock_dataset("customers")])
 
     # Act
-    result = catalog.get_input_datasets([step1, step2])
+    result = catalog.get_inputs([step1, step2])
 
     # Assert
     actual = [d.name for d in result]
@@ -241,14 +256,29 @@ def test_get_input_datasets_should_return_all_inputs_across_steps():
     assert actual == expected
 
 
-def test_get_input_datasets_should_return_empty_when_no_inputs_registered():
+def test_get_inputs_should_accept_single_runtime():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
+    step = mock_step()
+    catalog.register(step, inputs=[mock_dataset("orders")])
+
+    # Act
+    result = catalog.get_inputs(step)
+
+    # Assert
+    actual = [d.name for d in result]
+    expected = ["orders"]
+    assert actual == expected
+
+
+def test_get_inputs_should_return_empty_when_no_inputs_registered():
+    # Arrange
+    catalog = RunCatalog()
     step = mock_step()
     catalog.register(step)
 
     # Act
-    result = catalog.get_input_datasets([step])
+    result = catalog.get_inputs([step])
 
     # Assert
     actual = result
@@ -257,20 +287,20 @@ def test_get_input_datasets_should_return_empty_when_no_inputs_registered():
 
 
 # ============================================================================
-# RuntimeCatalog.get_output_datasets
+# RunCatalog.get_outputs
 # ============================================================================
 
 
-def test_get_output_datasets_should_return_outputs_from_steps():
+def test_get_outputs_should_return_outputs_from_runtimes():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
     step1 = mock_step("transform a")
     step2 = mock_step("transform b")
     catalog.register(step1, output=mock_dataset("result-a"))
     catalog.register(step2, output=mock_dataset("result-b"))
 
     # Act
-    result = catalog.get_output_datasets([step1, step2])
+    result = catalog.get_outputs([step1, step2])
 
     # Assert
     actual = [d.name for d in result]
@@ -278,16 +308,31 @@ def test_get_output_datasets_should_return_outputs_from_steps():
     assert actual == expected
 
 
-def test_get_output_datasets_should_skip_steps_without_output():
+def test_get_outputs_should_accept_single_runtime():
     # Arrange
-    catalog = RuntimeCatalog()
+    catalog = RunCatalog()
+    step = mock_step()
+    catalog.register(step, output=mock_dataset("summary"))
+
+    # Act
+    result = catalog.get_outputs(step)
+
+    # Assert
+    actual = [d.name for d in result]
+    expected = ["summary"]
+    assert actual == expected
+
+
+def test_get_outputs_should_skip_runtimes_without_output():
+    # Arrange
+    catalog = RunCatalog()
     step1 = mock_step("load orders")
     step2 = mock_step("transform")
     catalog.register(step1, inputs=[mock_dataset("orders")])
     catalog.register(step2, output=mock_dataset("summary"))
 
     # Act
-    result = catalog.get_output_datasets([step1, step2])
+    result = catalog.get_outputs([step1, step2])
 
     # Assert
     actual = [d.name for d in result]

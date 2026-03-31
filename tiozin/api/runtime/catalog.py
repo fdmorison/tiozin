@@ -8,40 +8,42 @@ from .dataset import Dataset
 
 if TYPE_CHECKING:
     from .input import Input
+    from .job import Job
     from .output import Output
     from .transform import Transform
 
-    Step = Transform | Input | Output
+    JobOrStep = Job | Transform | Input | Output
+    JobOrStepOrStr = JobOrStep | str
 
 
-class StepRecord:
-    def __init__(self, step: Step) -> None:
-        self.step: Step = step
+class RunRecord:
+    def __init__(self, slug: str) -> None:
+        self.slug: str = slug
         self.inputs: list[Dataset] = []
         self.output: Dataset | None = None
 
 
-class RuntimeCatalog:
+class RunCatalog:
     """
-    Tracks datasets produced and consumed by steps during a job execution.
+    Tracks datasets produced and consumed by runtimes during a job execution.
 
     Born with the job context and shared across all child step contexts, so every
     step's inputs and outputs are visible to the job when emitting lineage events.
     """
 
     def __init__(self) -> None:
-        self._steps: dict[str, StepRecord] = {}
+        self._records: dict[str, RunRecord] = {}
 
     def __repr__(self) -> str:
-        return f"RuntimeCatalog(steps={list(self._steps.keys())})"
+        return f"RunCatalog(records={list(self._records.keys())})"
 
     def register(
         self,
-        step: Step,
+        runtime: JobOrStep,
         inputs: list[Dataset] = None,
         output: Dataset = None,
-    ) -> StepRecord:
-        record = self._steps.setdefault(step.slug, StepRecord(step))
+    ) -> RunRecord:
+        record = self._records.setdefault(runtime.slug, RunRecord(runtime.slug))
         inputs = inputs or []
 
         if inputs:
@@ -53,22 +55,23 @@ class RuntimeCatalog:
 
         return record
 
-    def get(self, step: Step | str) -> StepRecord | None:
-        key = slugify(step) if isinstance(step, str) else step.slug
-        return self._steps.get(key)
+    def get(self, runtime: JobOrStepOrStr) -> RunRecord | None:
+        key = slugify(runtime) if isinstance(runtime, str) else runtime.slug
+        return self._records.get(key)
 
-    def get_all(self, steps: list[Step | str]) -> list[StepRecord]:
-        return [record for step in steps if (record := self.get(step))]
+    def get_records(self, runtimes: JobOrStepOrStr | list[JobOrStepOrStr]) -> list[RunRecord]:
+        runtimes = runtimes if isinstance(runtimes, list) else [runtimes]
+        return [record for runtime in runtimes if (record := self.get(runtime))]
 
-    def get_input_datasets(self, steps: list[Step | str]) -> list[Dataset]:
+    def get_inputs(self, runtimes: JobOrStepOrStr | list[JobOrStepOrStr]) -> list[Dataset]:
         result = []
-        for record in self.get_all(steps):
+        for record in self.get_records(runtimes):
             result.extend(record.inputs)
         return result
 
-    def get_output_datasets(self, steps: list[Step | str]) -> list[Dataset]:
+    def get_outputs(self, runtimes: JobOrStepOrStr | list[JobOrStepOrStr]) -> list[Dataset]:
         result = []
-        for record in self.get_all(steps):
+        for record in self.get_records(runtimes):
             if record.output is not None:
                 result.append(record.output)
         return result

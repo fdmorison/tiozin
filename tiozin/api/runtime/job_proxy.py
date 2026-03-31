@@ -52,16 +52,16 @@ class JobProxy(wrapt.ObjectProxy):
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
                 lineage_registry.fail(
-                    inputs=catalog.get_input_datasets(job.inputs),
-                    outputs=catalog.get_output_datasets(job.outputs),
+                    inputs=catalog.get_inputs(job.inputs),
+                    outputs=catalog.get_outputs(job.outputs),
                 )
                 raise
 
             else:
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
                 lineage_registry.complete(
-                    inputs=catalog.get_input_datasets(job.inputs),
-                    outputs=catalog.get_output_datasets(job.outputs),
+                    inputs=catalog.get_inputs(job.inputs),
+                    outputs=catalog.get_outputs(job.outputs),
                 )
                 return result
 

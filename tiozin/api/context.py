@@ -16,7 +16,7 @@ from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
-from .runtime.catalog import RuntimeCatalog
+from .runtime.catalog import RunCatalog
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner, Tiozin
@@ -137,9 +137,9 @@ class Context:
         metadata={"template": False},
     )
 
-    catalog: RuntimeCatalog = field(
+    catalog: RunCatalog = field(
         repr=False,
-        default_factory=RuntimeCatalog,
+        default_factory=RunCatalog,
         metadata={"template": False},
     )
 
