@@ -1,5 +1,5 @@
 kind: LinearJob
-name: ecommerce_orders_ingestion
+name: order_ingestion_job
 description: Ingests order data from source to raw layer.
 
 owner: data@tiozin.com
@@ -11,7 +11,7 @@ region: eu
 domain: ecommerce
 subdomain: sales
 layer: raw
-product: order
+product: storefront
 model: orders
 
 runner:
@@ -43,6 +43,6 @@ outputs:
   - kind: SparkFileOutput
     name: orders_raw
     description: Raw order data in parquet format.
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     format: parquet
     mode: overwrite

@@ -11,7 +11,7 @@ region: eu
 domain: ecommerce
 subdomain: sales
 layer: raw
-product: order
+product: storefront
 model: orders
 
 runner:
@@ -42,6 +42,6 @@ outputs:
   - kind: DuckdbFileOutput
     name: orders_raw
     description: Raw order data in parquet format.
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     format: parquet
     mode: overwrite

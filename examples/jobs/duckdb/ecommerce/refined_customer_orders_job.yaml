@@ -13,7 +13,7 @@ region: eu
 domain: ecommerce
 subdomain: sales
 layer: refined
-product: order
+product: storefront
 model: high_value_orders
 
 runner:
@@ -21,19 +21,19 @@ runner:
 
 inputs:
   - kind: DuckdbFileInput
-    name: customers
+    name: load customers
     description: Customer master data from raw layer.
     layer: raw
     model: customers
-    path: .output/lake-ecommerce-raw/customers
+    path: .output/lake-ecommerce-{{layer}}/{{product}}/{{model}}
     format: parquet
 
   - kind: DuckdbFileInput
-    name: orders
+    name: load orders
     description: Order transactions from raw layer.
     layer: raw
     model: orders
-    path: .output/lake-ecommerce-raw/orders
+    path: .output/lake-ecommerce-{{layer}}/{{product}}/{{model}}
     format: parquet
 
 transforms:
@@ -49,8 +49,8 @@ transforms:
           o.total,
           o.status,
           o.created_at
-      FROM customers c
-      JOIN orders o ON c.id = o.customer_id
+      FROM load_customers c
+      JOIN load_orders o ON c.id = o.customer_id
 
   - kind: DuckdbSqlTransform
     name: completed_orders
@@ -65,7 +65,7 @@ transforms:
       min_total: 500
 
   - kind: DuckdbSqlTransform
-    name: metadata
+    name: add metadata
     description: Adds processing timestamp and segment classification.
     query: |-
       SELECT
@@ -79,7 +79,7 @@ transforms:
 
 outputs:
   - kind: DuckdbFileOutput
-    name: high_value_orders_refined
+    name: write orders
     description: High-value completed orders enriched with customer data.
     format: parquet
     path: .output/lake-{{domain}}-{{layer}}/{{product}}
