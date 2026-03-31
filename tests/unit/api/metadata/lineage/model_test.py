@@ -2,99 +2,8 @@ import pendulum
 import pytest
 
 from tests import config
-from tiozin import LineageDataset, LineageRunEvent
+from tiozin import Dataset, LineageRunEvent
 from tiozin.api.context import Context
-
-# ============================================================================
-# LineageDataset.from_uri
-# ============================================================================
-
-
-@pytest.mark.parametrize(
-    "uri, expected_namespace, expected_name",
-    [
-        ("s3://my-bucket/data/file.parquet", "s3://my-bucket", "data/file.parquet"),
-        ("gs://my-bucket/data/file.parquet", "gs://my-bucket", "data/file.parquet"),
-        ("az://my-container/data/file.parquet", "az://my-container", "data/file.parquet"),
-    ],
-)
-def test_from_uri_should_split_object_storage_uri_into_bucket_and_path(
-    uri: str, expected_namespace: str, expected_name: str
-):
-    # Act
-    result = LineageDataset.from_uri(uri)
-
-    # Assert
-    actual = (result.namespace, result.name)
-    expected = (expected_namespace, expected_name)
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "uri, expected_namespace",
-    [
-        ("http://example.com/data/file.csv", "http://example.com"),
-        ("https://example.com/data/file.csv", "https://example.com"),
-    ],
-)
-def test_from_uri_should_split_http_uri_into_host_namespace_and_path_name(
-    uri: str, expected_namespace: str
-):
-    # Act
-    result = LineageDataset.from_uri(uri)
-
-    # Assert
-    actual = (result.namespace, result.name)
-    expected = (
-        expected_namespace,
-        "data/file.csv",
-    )
-    assert actual == expected
-
-
-def test_from_uri_should_split_file_uri_into_file_namespace_and_path():
-    # Act
-    result = LineageDataset.from_uri("file:///data/warehouse/file.parquet")
-
-    # Assert
-    actual = (result.namespace, result.name)
-    expected = (
-        "file",
-        "data/warehouse/file.parquet",
-    )
-    assert actual == expected
-
-
-def test_from_uri_should_keep_relative_path_as_is_when_no_scheme():
-    # Act
-    result = LineageDataset.from_uri("data/lake/customers.parquet")
-
-    # Assert
-    actual = (result.namespace, result.name)
-    expected = (
-        "file",
-        "data/lake/customers.parquet",
-    )
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "uri, expected_name",
-    [
-        ("s3://my-bucket/data/orders/", "data/orders"),
-        (".output/lake-ecommerce-raw/orders/", ".output/lake-ecommerce-raw/orders"),
-    ],
-    ids=["object-storage-trailing-slash", "relative-path-trailing-slash"],
-)
-def test_from_uri_should_strip_trailing_slash_from_name(uri: str, expected_name: str):
-    # Act
-    result = LineageDataset.from_uri(uri)
-
-    # Assert
-    actual = result.name
-    expected = expected_name
-    assert actual == expected
-
 
 # ============================================================================
 # LineageRunEvent.from_context — job identity and fields
@@ -249,8 +158,8 @@ def test_from_context_should_set_parent_when_step_context(
 def test_from_context_should_map_inputs(job_context: Context):
     # Arrange
     inputs = [
-        LineageDataset(namespace="s3://my-bucket", name="sales/orders"),
-        LineageDataset(namespace="s3://my-bucket", name="sales/customers"),
+        Dataset(data=[], namespace="s3://my-bucket", name="sales/orders"),
+        Dataset(data=[], namespace="s3://my-bucket", name="sales/customers"),
     ]
 
     # Act
@@ -268,7 +177,7 @@ def test_from_context_should_map_inputs(job_context: Context):
 def test_from_context_should_map_outputs(job_context: Context):
     # Arrange
     outputs = [
-        LineageDataset(namespace="s3://my-bucket", name="sales/summary"),
+        Dataset(data=[], namespace="s3://my-bucket", name="sales/summary"),
     ]
 
     # Act

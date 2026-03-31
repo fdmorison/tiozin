@@ -10,11 +10,11 @@ maintainer: tiozin
 cost_center: tio_scrooge
 
 org: tiozin
-region: europe
+region: eu
 domain: ecommerce
-subdomain: ecommerce
+subdomain: sales
 layer: raw
-product: customers
+product: storefront
 model: customers
 
 runner:

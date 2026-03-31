@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyRelation
 
-from tiozin import Lineage, LineageDataset
+from tiozin import Dataset, Datasets
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim_lower
 
@@ -98,10 +98,9 @@ class DuckdbFileInput(DuckdbInput):
         self.union_by_name = union_by_name
         self.explode_filepath = explode_filepath
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
-            inputs=[LineageDataset.from_uri(p) for p in self.path],
-            outputs=[],
+    def static_datasets(self) -> Datasets:
+        return Datasets(
+            inputs=[Dataset.from_uri(p) for p in self.path],
         )
 
     def read(self) -> DuckDBPyRelation:

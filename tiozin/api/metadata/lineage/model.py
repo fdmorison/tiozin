@@ -3,22 +3,58 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, ClassVar
 
+from openlineage.client.generated.base import InputDataset, OutputDataset
 from pydantic import Field
 
 from tiozin import config
 from tiozin.utils import utcnow
 
 from ..model import Metadata
-from .dataset import LineageDataset
+from ..schema.model import Schema
 from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
 
 if TYPE_CHECKING:
-    from tiozin.api import Context
+    from tiozin.api import Context, Dataset
 
 
-class Lineage(Metadata):
-    inputs: list[LineageDataset]
-    outputs: list[LineageDataset]
+class LineageDataset(Metadata):
+    """
+    Represents a dataset in a lineage event.
+
+    Carries the `(namespace, name)` identity and optional schema facet
+    following OpenLineage naming conventions.
+
+    https://openlineage.io/docs/spec/naming/
+    """
+
+    namespace: str | None = None
+    name: str | None = None
+    schema: Schema | None = None
+
+    @classmethod
+    def from_dataset(cls, dataset: Dataset) -> LineageDataset:
+        return cls(
+            namespace=dataset.namespace,
+            name=dataset.name,
+            schema=dataset.schema,
+        )
+
+    def as_input(self) -> InputDataset:
+        return InputDataset(
+            namespace=self.namespace,
+            name=self.name,
+            facets=self.facets(),
+        )
+
+    def as_output(self) -> OutputDataset:
+        return OutputDataset(
+            namespace=self.namespace,
+            name=self.name,
+            facets=self.facets(),
+        )
+
+    def facets(self) -> dict:
+        return {"schema": self.schema.export("openlineage")} if self.schema else {}
 
 
 class LineageJob(Metadata):
@@ -94,8 +130,8 @@ class LineageRunEvent(Metadata):
         cls,
         ctx: Context,
         type: LineageRunEventType,
-        inputs: list[LineageDataset] | None = None,
-        outputs: list[LineageDataset] | None = None,
+        inputs: list[Dataset] | None = None,
+        outputs: list[Dataset] | None = None,
     ) -> LineageRunEvent:
         return cls(
             type=LineageRunEventType(type),
@@ -118,6 +154,6 @@ class LineageRunEvent(Metadata):
                 "cost_center": ctx.cost_center,
                 **ctx.labels,
             },
-            inputs=inputs or [],
-            outputs=outputs or [],
+            inputs=[LineageDataset.from_dataset(d) for d in (inputs or [])],
+            outputs=[LineageDataset.from_dataset(d) for d in (outputs or [])],
         )

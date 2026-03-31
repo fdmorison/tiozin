@@ -16,6 +16,7 @@ from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
+from .runtime.catalog import RunCatalog
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner, Tiozin
@@ -133,6 +134,12 @@ class Context:
     shared: dict[str, Any] = field(
         repr=False,
         default_factory=dict,
+        metadata={"template": False},
+    )
+
+    catalog: RunCatalog = field(
+        repr=False,
+        default_factory=RunCatalog,
         metadata={"template": False},
     )
 
@@ -258,6 +265,7 @@ class Context:
             labels=self.labels,
             # Runtime — always inherited from parent
             shared=self.shared,
+            catalog=self.catalog,
             registries=self.registries,
         )
         ctx.job = self.job
@@ -316,7 +324,7 @@ class Context:
 
     @property
     def is_root(self) -> bool:
-        return self.job is self
+        return self.job is self or self.job is None
 
     @property
     def qualified_slug(self) -> str:

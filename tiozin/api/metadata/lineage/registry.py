@@ -1,9 +1,10 @@
 from abc import abstractmethod
 
+from tiozin.api.runtime.dataset import Dataset
 from tiozin.compose import tioproxy
 
 from ..registry import Registry
-from .model import LineageDataset, LineageRunEvent, LineageRunEventType
+from .model import LineageRunEvent, LineageRunEventType
 from .proxy import LineageRegistryProxy
 
 
@@ -34,9 +35,7 @@ class LineageRegistry(Registry[LineageRunEvent]):
     def register(self, identifier: str, value: LineageRunEvent) -> None:
         """Emit a run event."""
 
-    def start(
-        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
-    ) -> None:
+    def start(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.START,
@@ -45,9 +44,7 @@ class LineageRegistry(Registry[LineageRunEvent]):
         )
         self.register(event.run_id, event)
 
-    def complete(
-        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
-    ) -> None:
+    def complete(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.COMPLETE,
@@ -56,9 +53,7 @@ class LineageRegistry(Registry[LineageRunEvent]):
         )
         self.register(event.run_id, event)
 
-    def fail(
-        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
-    ) -> None:
+    def fail(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.FAIL,
@@ -67,9 +62,7 @@ class LineageRegistry(Registry[LineageRunEvent]):
         )
         self.register(event.run_id, event)
 
-    def abort(
-        self, inputs: list[LineageDataset] = None, outputs: list[LineageDataset] = None
-    ) -> None:
+    def abort(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
         event = LineageRunEvent.from_context(
             self.context,
             LineageRunEventType.ABORT,

@@ -1,7 +1,7 @@
 from tiozin.family.tio_duckdb import DuckdbPostgresOutput
 
 # ============================================================================
-# Testing DuckdbPostgresOutput.lineage_datasets — postgres namespace
+# Testing DuckdbPostgresOutput.static_datasets — postgres namespace
 # ============================================================================
 
 
@@ -17,7 +17,7 @@ def test_postgres_output_should_return_dataset_with_postgres_namespace():
     )
 
     # Act
-    result = step.lineage_datasets()
+    result = step.static_datasets()
 
     # Assert
     actual = (

@@ -1,7 +1,7 @@
 import pytest
 
 from tests.stubs import LineageRegistryStub
-from tiozin import Context, LineageDataset, LineageRunEvent
+from tiozin import Context, Dataset, LineageRunEvent
 
 # ============================================================================
 # LineageRegistry helpers — event type and identifier
@@ -49,8 +49,8 @@ def test_start_should_forward_inputs(
 ):
     # Arrange
     inputs = [
-        LineageDataset(namespace="s3://my-bucket", name="sales/orders"),
-        LineageDataset(namespace="s3://my-bucket", name="sales/customers"),
+        Dataset(data=[], namespace="s3://my-bucket", name="sales/orders"),
+        Dataset(data=[], namespace="s3://my-bucket", name="sales/customers"),
     ]
 
     # Act
@@ -71,7 +71,7 @@ def test_start_should_forward_outputs(
 ):
     # Arrange
     outputs = [
-        LineageDataset(namespace="s3://my-bucket", name="sales/summary"),
+        Dataset(data=[], namespace="s3://my-bucket", name="sales/summary"),
     ]
 
     # Act

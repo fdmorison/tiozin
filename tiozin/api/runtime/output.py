@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
+from tiozin.api.runtime.dataset import Datasets
 from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
-from ..metadata.lineage.model import Lineage, LineageDataset
 from ..tiozin import Tiozin
 from .step_proxy import StepProxy
 
@@ -74,13 +74,5 @@ class Output(Tiozin, Generic[TData]):
     def teardown(self, data: TData) -> None:
         pass
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
-            inputs=[],
-            outputs=[
-                LineageDataset(
-                    namespace=self.context.namespace,
-                    name=self.context.qualified_slug,
-                )
-            ],
-        )
+    def static_datasets(self) -> Datasets:
+        return Datasets()

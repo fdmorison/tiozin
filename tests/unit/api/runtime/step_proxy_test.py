@@ -12,19 +12,37 @@ from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpTransform
 
 def input():
     return NoOpInput(
-        name="test", org="acme", region="latam", domain="d", layer="l", product="p", model="m"
+        name="test",
+        org="acme",
+        region="latam",
+        domain="d",
+        layer="l",
+        product="p",
+        model="m",
     )
 
 
 def output():
     return NoOpOutput(
-        name="test", org="acme", region="latam", domain="d", layer="l", product="p", model="m"
+        name="test",
+        org="acme",
+        region="latam",
+        domain="d",
+        layer="l",
+        product="p",
+        model="m",
     )
 
 
 def transform():
     return NoOpTransform(
-        name="test", org="acme", region="latam", domain="d", layer="l", product="p", model="m"
+        name="test",
+        org="acme",
+        region="latam",
+        domain="d",
+        layer="l",
+        product="p",
+        model="m",
     )
 
 
@@ -80,63 +98,43 @@ def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: 
 
 
 # =============================================================================
-# Testing StepProxy.lineage_datasets — template rendering uses step context, not job's
+# Testing StepProxy — static_datasets template rendering
 # =============================================================================
 
 
-def test_proxy_should_render_lineage_templates_when_step_inherits_job_context(
+def test_proxy_should_render_template_vars_in_static_datasets_when_step_inherits_job_context(
     job_context: Context,
 ):
     """
-    Tests a scenario where a step does not define `domain` or `layer` and relies on
-    an active job context. The goal is to verify that the step inherits these values
-    from the job and uses them to correctly render lineage templates.
-
-    The `job_context` fixture activates a job with `domain="ecommerce"` and
-    `layer="raw"`, so the step's path template is resolved using those values.
+    Verifies that path templates in static_datasets() are rendered using the active
+    job context when the step does not define domain or layer itself.
     """
     step = InputStub(name="orders_input", domain=None, layer=None)
 
     # Act
-    result = step.lineage_datasets()
+    step.read()
 
     # Assert
-    actual = (
-        result.inputs[0].namespace,
-        result.inputs[0].name,
-    )
-    expected = (
-        "file",
-        "data/ecommerce/raw",
-    )
+    inputs = job_context.catalog.get_inputs([step])
+    actual = (inputs[0].namespace, inputs[0].name)
+    expected = ("file", "data/ecommerce/raw")
     assert actual == expected
 
 
-def test_proxy_should_render_lineage_templates_using_step_template_vars(
+def test_proxy_should_render_template_vars_in_static_datasets_using_step_own_vars(
     job_context: Context,
 ):
     """
-    Tests a scenario where a step explicitly defines `domain` and `layer` that
-    differ from the active job context. The goal is to verify that the step's
-    own values take precedence over the inherited job values when rendering
-    lineage templates.
-
-    The `job_context` fixture activates a job with `domain="ecommerce"` and
-    `layer="raw"`, but the step overrides both with `domain="finance"` and
-    `layer="trusted"`.
+    Verifies that when a step defines its own domain and layer, those values take
+    precedence over the job context when rendering path templates in static_datasets().
     """
-    step = StepProxy(InputStub(name="orders_input", domain="finance", layer="trusted"))
+    step = InputStub(name="orders_input", domain="finance", layer="trusted")
 
     # Act
-    result = step.lineage_datasets()
+    step.read()
 
     # Assert
-    actual = (
-        result.inputs[0].namespace,
-        result.inputs[0].name,
-    )
-    expected = (
-        "file",
-        "data/finance/trusted",
-    )
+    inputs = job_context.catalog.get_inputs([step])
+    actual = (inputs[0].namespace, inputs[0].name)
+    expected = ("file", "data/finance/trusted")
     assert actual == expected

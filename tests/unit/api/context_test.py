@@ -62,6 +62,7 @@ def test_for_job_should_create_job_context(
             # Schema
             "schema": None,
             # Infra
+            "catalog": ANY,
             "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
             "template_vars": ANY,
             "shared": {},
@@ -114,6 +115,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         # Schema
         "schema": None,
         # Infra
+        "catalog": ANY,
         "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
         "template_vars": ANY,
         "shared": {},
@@ -173,6 +175,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         # Schema
         "schema": None,
         # Infra
+        "catalog": job_context.catalog,
         "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),
         "template_vars": ANY,
         "shared": job_context.shared,

@@ -8,7 +8,6 @@ from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
 
-from ..metadata.lineage.model import Lineage
 from ..tiozin import Tiozin
 from .input import Input
 from .job_proxy import JobProxy
@@ -150,9 +149,3 @@ class Job(Tiozin, Generic[TData]):
 
     def teardown(self) -> None:
         pass
-
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
-            inputs=[d for i in self.inputs for d in i.lineage_datasets().inputs],
-            outputs=[d for o in self.outputs for d in o.lineage_datasets().outputs],
-        )

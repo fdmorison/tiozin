@@ -10,7 +10,7 @@ from pyspark.sql.functions import (
     when,
 )
 
-from tiozin import Lineage, LineageDataset
+from tiozin import Dataset, Datasets
 from tiozin.api import conventions
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, trim_lower
@@ -85,9 +85,9 @@ class SparkFileInput(SparkInput):
         self.format = trim_lower(format or "parquet")
         self.explode_filepath = explode_filepath
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
-            inputs=[LineageDataset.from_uri(p) for p in self.path],
+    def static_datasets(self) -> Datasets:
+        return Datasets(
+            inputs=[Dataset.from_uri(p) for p in self.path],
             outputs=[],
         )
 

@@ -11,31 +11,16 @@ from tiozin.utils import human_join, utcnow
 from ...compose import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
-    from tiozin import Job
+    from .job import Job
 
 
 class JobProxy(wrapt.ObjectProxy):
     """
-    Runtime proxy that enriches a Job with Tiozin's core capabilities.
+    Wraps a Job to add Tiozin's runtime behavior.
 
-    The JobProxy adds cross-cutting runtime features, such as templating, logging,
-    context creation, and lifecycle control, to Tio-defined Job implementations,
-    without modifying the original Tiozin plugin.
-
-    The wrapped Job remains unaware of the proxy and is expected to focus exclusively
-    on assembling and coordinating its steps, rather than managing runtime concerns.
-
-    Core responsibilities include:
-    - Managing the execution lifecycle (setup, execute, teardown)
-    - Constructing and providing a Context for the Job execution
-    - Initializing template variables and shared session state
-    - Enforcing runtime constraints and access policies
-    - Providing standardized logging, timing, and error handling
-
-    This proxy belongs to Tiozin's runtime layer and is not an orchestration mechanism.
-    It does not schedule jobs, manage dependencies between jobs, or perform distributed
-    orchestration. Its responsibility is to provide a consistent and safe execution
-    environment for Job Tiozin plugins.
+    The wrapped job focuses on assembling and coordinating steps. The proxy handles
+    everything else: context propagation, template rendering, lifecycle hooks, logging,
+    timing, and lineage emission.
     """
 
     def setup(self, *args, **kwargs) -> None:
@@ -48,29 +33,38 @@ class JobProxy(wrapt.ObjectProxy):
         job: Job = self.__wrapped__
         context = Context.current(required=False) or Context.for_job(job)
         lineage_registry = context.registries.lineage
+        catalog = context.catalog
 
         with context, TiozinTemplateOverlay(job, context.template_vars):
             try:
                 tios = [t.replace("_", " ").title() for t in job.tios]
                 job.info(f"🚀 {context.kind} is starting — {human_join(tios)} on duty")
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
+
                 context.setup_at = utcnow()
                 job.setup()
                 context.executed_at = utcnow()
+
                 with job.runner():
-                    lineage = job.lineage_datasets()
-                    lineage_registry.start(inputs=lineage.inputs, outputs=lineage.outputs)
+                    lineage_registry.start(inputs=[], outputs=[])
                     result = job.submit()
+
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
-                lineage = job.lineage_datasets()
-                lineage_registry.fail(inputs=lineage.inputs, outputs=lineage.outputs)
+                lineage_registry.fail(
+                    inputs=catalog.get_inputs(job.inputs),
+                    outputs=catalog.get_outputs(job.outputs),
+                )
                 raise
+
             else:
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
-                lineage = job.lineage_datasets()
-                lineage_registry.complete(inputs=lineage.inputs, outputs=lineage.outputs)
+                lineage_registry.complete(
+                    inputs=catalog.get_inputs(job.inputs),
+                    outputs=catalog.get_outputs(job.outputs),
+                )
                 return result
+
             finally:
                 context.teardown_at = utcnow()
                 try:

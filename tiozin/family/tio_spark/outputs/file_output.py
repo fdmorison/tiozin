@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pyspark.sql import DataFrame, DataFrameWriter
 
-from tiozin import Lineage, LineageDataset
+from tiozin import Dataset, Datasets
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import as_list, trim, trim_lower
 
@@ -79,10 +79,10 @@ class SparkFileOutput(SparkOutput):
         self.mode = trim_lower(mode or "append")
         self.partition_by = as_list(partition_by)
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
+    def static_datasets(self) -> Datasets:
+        return Datasets(
             inputs=[],
-            outputs=[LineageDataset.from_uri(self.path)],
+            outputs=[Dataset.from_uri(self.path)],
         )
 
     def write(self, data: DataFrame) -> DataFrameWriter:
