@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import wrapt
 from pyspark.sql import DataFrame
 
+from tiozin import Schema
 from tiozin.utils.runtime import tio_alias
 
 if TYPE_CHECKING:
@@ -66,6 +67,8 @@ class SparkStepProxy(wrapt.ObjectProxy):
             return df
 
         step: SparkEtlStep = self.__wrapped__
+        step.context.schema = Schema.from_spark(df.schema)
+
         view_name = step.slug
 
         df.createOrReplaceTempView(view_name)

@@ -2,7 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tests.stubs import InputStub, JobStub
+from tests.stubs import InputStub, JobStub, TransformStub
+from tiozin import Dataset
 from tiozin.api.context import Context
 from tiozin.api.metadata.bundle import Registries
 from tiozin.api.runtime.step_proxy import StepProxy
@@ -75,6 +76,38 @@ def test_proxy_should_forbid_teardown_access(tiozin: NoOpInput | NoOpTransform |
 
 
 # =============================================================================
+# Testing StepProxy — Dataset wrapping
+# =============================================================================
+
+
+def test_read_should_return_dataset(job_context: Context):
+    # Arrange
+    step = InputStub(name="orders_input")
+
+    # Act
+    result = step.read()
+
+    # Assert
+    actual = isinstance(result, Dataset)
+    expected = True
+    assert actual == expected
+
+
+def test_transform_should_return_dataset(job_context: Context):
+    # Arrange
+    step = TransformStub(name="orders_transform")
+    data = Dataset(data="stub")
+
+    # Act
+    result = step.transform(data)
+
+    # Assert
+    actual = isinstance(result, Dataset)
+    expected = True
+    assert actual == expected
+
+
+# =============================================================================
 # Testing StepProxy.read — schema
 # =============================================================================
 
@@ -116,7 +149,7 @@ def test_proxy_should_render_template_vars_in_static_datasets_when_step_inherits
 
     # Assert
     inputs = job_context.catalog.get_inputs([step])
-    actual = (inputs[0].namespace, inputs[0].name)
+    actual = (inputs[0].tiozin_namespace, inputs[0].tiozin_name)
     expected = ("file", "data/ecommerce/raw")
     assert actual == expected
 
@@ -135,6 +168,6 @@ def test_proxy_should_render_template_vars_in_static_datasets_using_step_own_var
 
     # Assert
     inputs = job_context.catalog.get_inputs([step])
-    actual = (inputs[0].namespace, inputs[0].name)
+    actual = (inputs[0].tiozin_namespace, inputs[0].tiozin_name)
     expected = ("file", "data/finance/trusted")
     assert actual == expected

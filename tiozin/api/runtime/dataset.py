@@ -51,10 +51,10 @@ class Dataset(wrapt.ObjectProxy, Generic[TData]):
     def __repr__(self) -> str:
         return (
             f"Dataset("
-            f"namespace={self.namespace}, "
-            f"name={self.name}, "
-            f"data={type(self.data) if self.data is not None else None}, "
-            f"schema={self.schema})"
+            f"namespace={self.tiozin_namespace}, "
+            f"name={self.tiozin_name}, "
+            f"data={type(self.tiozin_data) if self.tiozin_data is not None else None}, "
+            f"schema={self.tiozin_schema})"
         )
 
     # --- wrapping ---
@@ -70,19 +70,19 @@ class Dataset(wrapt.ObjectProxy, Generic[TData]):
     # --- accessors ---
 
     @property
-    def data(self) -> TData:
+    def tiozin_data(self) -> TData:
         return self.__wrapped__
 
     @property
-    def namespace(self) -> str:
+    def tiozin_namespace(self) -> str:
         return self._self_namespace
 
     @property
-    def name(self) -> str:
+    def tiozin_name(self) -> str:
         return self._self_name
 
     @property
-    def schema(self) -> Schema:
+    def tiozin_schema(self) -> Schema:
         return self._self_schema
 
     # --- enrichment (first-write-wins) ---
@@ -101,7 +101,9 @@ class Dataset(wrapt.ObjectProxy, Generic[TData]):
 
     def merge(self, other: Dataset) -> Self:
         if other is not None:
-            self.with_schema(other.schema).with_namespace(other.namespace).with_name(other.name)
+            self.with_schema(other.tiozin_schema).with_namespace(other.tiozin_namespace).with_name(
+                other.tiozin_name
+            )
         return self
 
     # --- open lineage factories ---

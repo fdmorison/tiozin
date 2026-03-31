@@ -34,9 +34,9 @@ class LineageDataset(Metadata):
     @classmethod
     def from_dataset(cls, dataset: Dataset) -> LineageDataset:
         return cls(
-            namespace=dataset.namespace,
-            name=dataset.name,
-            schema=dataset.schema,
+            namespace=dataset.tiozin_namespace,
+            name=dataset.tiozin_name,
+            schema=dataset.tiozin_schema,
         )
 
     def as_input(self) -> InputDataset:

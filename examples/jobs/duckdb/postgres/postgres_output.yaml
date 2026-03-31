@@ -22,7 +22,7 @@ runner:
 
 inputs:
   - kind: DuckdbFileInput
-    name: customers_source
+    name: load_customers
     description: Customer master dataset exported from the source system in CSV format.
     path: examples/data/ecommerce/customers.csv
     format: csv

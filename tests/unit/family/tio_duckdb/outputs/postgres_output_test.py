@@ -21,8 +21,8 @@ def test_postgres_output_should_return_dataset_with_postgres_namespace():
 
     # Assert
     actual = (
-        result.outputs[0].namespace,
-        result.outputs[0].name,
+        result.outputs[0].tiozin_namespace,
+        result.outputs[0].tiozin_name,
     )
     expected = (
         "postgres://pg.host:5432",

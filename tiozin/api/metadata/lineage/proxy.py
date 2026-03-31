@@ -1,7 +1,10 @@
 import types
 from typing import TYPE_CHECKING, Any
 
+import requests
 import wrapt
+
+from tiozin.utils import human_join
 
 if TYPE_CHECKING:
     from tiozin import Registry
@@ -25,7 +28,12 @@ class LineageRegistryProxy(wrapt.ObjectProxy):
         def safe_call(*args, **kwargs) -> Any | None:
             try:
                 return attr(*args, **kwargs)
-            except Exception:
-                registry.exception(f"Lineage event `{name}` failed.")
+            except requests.HTTPError as e:
+                content = e.response.json() or {}
+                message = content.get("message", "Failed to emit event")
+                details = content.get("errors", [])
+                registry.warning(f"{message}: {human_join(details)}")
+            except Exception as e:
+                registry.warning(f"Failed to emit event: {e}")
 
         return safe_call

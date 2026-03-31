@@ -102,32 +102,6 @@ def test_build_run_event_should_map_run_fields(registry: OpenLineageRegistry):
     assert actual == expected
 
 
-def test_build_run_event_should_strip_job_run_id_prefix(registry: OpenLineageRegistry):
-    # Arrange
-    event = job_start_event
-
-    # Act
-    result = registry._build_run_event(event)
-
-    # Assert
-    actual = result.run.runId
-    expected = "018f1a2b-3c4d-7e8f-9a0b-1c2d3e4f5a6b"
-    assert actual == expected
-
-
-def test_build_run_event_should_strip_step_run_id_prefix(registry: OpenLineageRegistry):
-    # Arrange
-    event = step_start_event
-
-    # Act
-    result = registry._build_run_event(event)
-
-    # Assert
-    actual = result.run.runId
-    expected = "aabbccdd-eeff-0011-2233-445566778899"
-    assert actual == expected
-
-
 # ============================================================================
 # _build_run_event — job facets
 # ============================================================================
@@ -211,19 +185,6 @@ def test_build_run_event_should_include_parent_facet_when_parent_set(registry: O
         "test_job",
         "acme.latam.ecommerce.checkout",
     )
-    assert actual == expected
-
-
-def test_build_run_event_should_strip_parent_run_id_prefix(registry: OpenLineageRegistry):
-    # Arrange
-    event = step_start_event
-
-    # Act
-    result = registry._build_run_event(event)
-
-    # Assert
-    actual = result.run.facets["parent"].run.runId
-    expected = "018f1a2b-3c4d-7e8f-9a0b-1c2d3e4f5a6b"
     assert actual == expected
 
 

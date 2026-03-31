@@ -186,11 +186,11 @@ class Context:
             # Arguments — always from job
             options=job.options,
             # Runtime — injected externally (eg: from TiozinApp, tests, etc)
-            registries=registries or Registries.from_baseline(),
+            registries=registries or Registries(),
         )
         ctx.job = ctx
         ctx.runner = job.runner
-        ctx.run_id = generate_id(prefix="job")
+        ctx.run_id = generate_id()
         ctx.nominal_time = utcnow()
         ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
         ctx._build_template_vars()
@@ -229,11 +229,11 @@ class Context:
             # Arguments — always from step
             options=step.options,
             # Runtime — injected externally  (eg: tests, etc)
-            registries=registries or Registries.from_baseline(),
+            registries=registries or Registries(),
         )
         ctx.job = None
         ctx.runner = None
-        ctx.run_id = cls._generate_step_run_id(step.slug)
+        ctx.run_id = generate_id()
         ctx.nominal_time = utcnow()
         ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
         ctx._build_template_vars()
@@ -270,7 +270,7 @@ class Context:
         )
         ctx.job = self.job
         ctx.runner = self.job.runner
-        ctx.run_id = self._generate_step_run_id(step.slug, self.job)
+        ctx.run_id = generate_id()
         ctx.nominal_time = self.job.nominal_time
         ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
         ctx._build_template_vars(base=self.template_vars)
@@ -363,13 +363,6 @@ class Context:
     # ==================================================
     # Private Utilities
     # ==================================================
-    @staticmethod
-    def _generate_step_run_id(slug: str, job: Context | None = None) -> str:
-        if job:
-            job_run_id = job.run_id.removeprefix("job_")
-            return f"step_{job_run_id}"
-        return generate_id(prefix="step")
-
     def _build_template_vars(self, base: Mapping[str, Any] | None = None) -> None:
         result = dict(self.template_vars)
 

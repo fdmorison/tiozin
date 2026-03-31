@@ -21,7 +21,7 @@ runner:
 
 inputs:
   - kind: SparkFileInput
-    name: load customers
+    name: load_customers
     description: Customer master data from raw layer.
     layer: raw
     model: customers
@@ -29,7 +29,7 @@ inputs:
     format: parquet
 
   - kind: SparkFileInput
-    name: load orders
+    name: load_orders
     description: Order transactions from raw layer.
     layer: raw
     model: orders
@@ -38,7 +38,7 @@ inputs:
 
 transforms:
   - kind: SparkSqlTransform
-    name: customer_orders
+    name: join_customer_orders
     description: Enriches orders with customer information.
     query: |-
       SELECT
@@ -53,19 +53,19 @@ transforms:
       JOIN load_orders o ON c.id = o.customer_id
 
   - kind: SparkSqlTransform
-    name: completed_orders
+    name: filter_completed
     description: Keeps only successfully completed orders.
     query: SELECT * FROM @data WHERE status = 'completed'
 
   - kind: SparkSqlTransform
-    name: high_value_orders
+    name: filter_high_value
     description: Filters orders above the high-value threshold.
     query: SELECT * FROM @data WHERE total > :min_total
     args:
       min_total: 500
 
   - kind: SparkSqlTransform
-    name: add metadata
+    name: add_metadata
     description: Adds processing timestamp and segment classification.
     query: |-
       SELECT
@@ -79,7 +79,7 @@ transforms:
 
 outputs:
   - kind: SparkFileOutput
-    name: write orders
+    name: write_orders
     description: High-value completed orders enriched with customer data.
     format: parquet
     mode: overwrite

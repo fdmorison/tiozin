@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
+from tiozin import config
 from tiozin.api import Context
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import AccessViolationError, TiozinInternalError
@@ -44,6 +45,7 @@ class StepProxy(wrapt.ObjectProxy):
         step: EtlStep = self.__wrapped__
         context = Context.for_step(step)
         catalog = context.catalog
+        lineage_registry = context.registries.lineage
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
@@ -64,29 +66,41 @@ class StepProxy(wrapt.ObjectProxy):
                         static.inputs[0].with_schema(context.schema)
 
                 catalog.register(step, inputs=[*static.inputs, *args])
+                if config.tiozin_lineage_step_enabled:
+                    lineage_registry.start(
+                        inputs=catalog.get_inputs(step),
+                        outputs=catalog.get_outputs(step),
+                    )
+
+                raw_args = [Dataset.unwrap(a) for a in args]
 
                 context.setup_at = utcnow()
-                step.setup(*args, **kwargs)
+                step.setup(*raw_args, **kwargs)
                 context.executed_at = utcnow()
 
                 match step:
                     case Input():
-                        result = step.read(*args, **kwargs)
+                        result = step.read(*raw_args, **kwargs)
                     case Transform():
-                        result = step.transform(*args, **kwargs)
+                        result = step.transform(*raw_args, **kwargs)
                     case Output():
-                        result = step.write(*args, **kwargs)
+                        result = step.write(*raw_args, **kwargs)
                     case _:
                         raise TiozinInternalError(f"Not a Tiozin: {step}")
 
             except Exception:
                 step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
+                if config.tiozin_lineage_step_enabled:
+                    lineage_registry.fail(
+                        inputs=catalog.get_inputs(step),
+                        outputs=catalog.get_outputs(step),
+                    )
                 raise
 
             else:
                 step.info(f"{context.kind} finished in {context.execution_delay:.2f}s")
 
-                # output dataset
+                # output dataset (for catalog and lineage only)
                 dataset = Dataset.wrap(result)
 
                 # infra datasets first
@@ -99,8 +113,13 @@ class StepProxy(wrapt.ObjectProxy):
                 ).with_schema(context.schema)
 
                 catalog.register(step, output=dataset)
+                if config.tiozin_lineage_step_enabled:
+                    lineage_registry.complete(
+                        inputs=catalog.get_inputs(step),
+                        outputs=catalog.get_outputs(step),
+                    )
 
-                return result
+                return result if isinstance(step, Output) else dataset
 
             finally:
                 context.teardown_at = utcnow()

@@ -19,7 +19,7 @@ runner:
 
 inputs:
   - kind: SparkFileInput
-    name: orders_source
+    name: load_orders
     description: Order transactions from source system.
     path: examples/data/ecommerce/orders.csv
     format: csv
@@ -28,7 +28,7 @@ inputs:
 
 transforms:
   - kind: SparkSqlTransform
-    name: metadata
+    name: add_metadata
     description: Adds ingestion metadata
     query: |-
       SELECT
@@ -41,7 +41,7 @@ transforms:
 
 outputs:
   - kind: SparkFileOutput
-    name: orders_raw
+    name: save_orders
     description: Raw order data in parquet format.
     path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     format: parquet

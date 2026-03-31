@@ -48,7 +48,7 @@ def test_register_should_store_inputs():
     catalog.register(step, inputs=inputs)
 
     # Assert
-    actual = [d.name for d in catalog.get(step).inputs]
+    actual = [d.tiozin_name for d in catalog.get(step).inputs]
     expected = ["orders", "customers"]
     assert actual == expected
 
@@ -78,7 +78,7 @@ def test_register_should_store_output():
     catalog.register(step, output=output)
 
     # Assert
-    actual = catalog.get(step).output.name
+    actual = catalog.get(step).output.tiozin_name
     expected = "summary"
     assert actual == expected
 
@@ -107,7 +107,7 @@ def test_register_should_accumulate_inputs_across_calls():
     catalog.register(step, inputs=[mock_dataset("customers")])
 
     # Assert
-    actual = [d.name for d in catalog.get(step).inputs]
+    actual = [d.tiozin_name for d in catalog.get(step).inputs]
     expected = ["orders", "customers"]
     assert actual == expected
 
@@ -125,8 +125,8 @@ def test_register_should_merge_output_on_repeated_calls():
 
     # Assert — first-write-wins: namespace and name from first call are kept
     actual = (
-        catalog.get(step).output.namespace,
-        catalog.get(step).output.name,
+        catalog.get(step).output.tiozin_namespace,
+        catalog.get(step).output.tiozin_name,
     )
     expected = ("s3://bucket", "summary")
     assert actual == expected
@@ -251,7 +251,7 @@ def test_get_inputs_should_return_all_inputs_across_runtimes():
     result = catalog.get_inputs([step1, step2])
 
     # Assert
-    actual = [d.name for d in result]
+    actual = [d.tiozin_name for d in result]
     expected = ["orders", "customers"]
     assert actual == expected
 
@@ -266,7 +266,7 @@ def test_get_inputs_should_accept_single_runtime():
     result = catalog.get_inputs(step)
 
     # Assert
-    actual = [d.name for d in result]
+    actual = [d.tiozin_name for d in result]
     expected = ["orders"]
     assert actual == expected
 
@@ -303,7 +303,7 @@ def test_get_outputs_should_return_outputs_from_runtimes():
     result = catalog.get_outputs([step1, step2])
 
     # Assert
-    actual = [d.name for d in result]
+    actual = [d.tiozin_name for d in result]
     expected = ["result-a", "result-b"]
     assert actual == expected
 
@@ -318,7 +318,7 @@ def test_get_outputs_should_accept_single_runtime():
     result = catalog.get_outputs(step)
 
     # Assert
-    actual = [d.name for d in result]
+    actual = [d.tiozin_name for d in result]
     expected = ["summary"]
     assert actual == expected
 
@@ -335,6 +335,6 @@ def test_get_outputs_should_skip_runtimes_without_output():
     result = catalog.get_outputs([step1, step2])
 
     # Assert
-    actual = [d.name for d in result]
+    actual = [d.tiozin_name for d in result]
     expected = ["summary"]
     assert actual == expected
