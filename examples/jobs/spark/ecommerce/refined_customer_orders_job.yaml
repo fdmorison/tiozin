@@ -83,6 +83,6 @@ outputs:
     description: High-value completed orders enriched with customer data.
     format: parquet
     mode: overwrite
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     partition_by:
       - country

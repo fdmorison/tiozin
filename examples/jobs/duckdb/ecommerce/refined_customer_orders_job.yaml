@@ -82,7 +82,7 @@ outputs:
     name: write orders
     description: High-value completed orders enriched with customer data.
     format: parquet
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     mode: overwrite
     partition_by:
       - country
