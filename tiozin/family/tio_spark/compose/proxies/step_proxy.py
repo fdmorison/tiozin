@@ -56,6 +56,7 @@ class SparkStepProxy(wrapt.ObjectProxy):
         unchanged, as they represent terminal actions.
         """
         step: SparkEtlStep = self.__wrapped__
+        step.context.schema = Schema.from_spark(data.schema)
         df_or_writer: SparkPlan = step.write(data)
         return self._register_view(df_or_writer)
 
