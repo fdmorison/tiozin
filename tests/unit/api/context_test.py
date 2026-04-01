@@ -412,3 +412,68 @@ def test_render_should_resolve_context_variable_when_variable_is_in_template(job
     # Assert
     expected = job_context.name
     assert actual == expected
+
+
+# =============================================================================
+# Testing Context.is_job / Context.is_step
+# =============================================================================
+
+
+def test_is_job_should_be_true_when_context_is_job(job_context: Context):
+    # Act
+    result = job_context.is_job
+
+    # Assert
+    actual = result
+    expected = True
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "context_name",
+    ["input_context", "transform_context", "output_context"],
+    ids=["Input", "Transform", "Output"],
+)
+def test_is_job_should_be_false_when_context_is_step(
+    context_name: str, request: pytest.FixtureRequest
+):
+    # Arrange
+    ctx: Context = request.getfixturevalue(context_name)
+
+    # Act
+    result = ctx.is_job
+
+    # Assert
+    actual = result
+    expected = False
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "context_name",
+    ["input_context", "transform_context", "output_context"],
+    ids=["Input", "Transform", "Output"],
+)
+def test_is_step_should_be_true_when_context_is_step(
+    context_name: str, request: pytest.FixtureRequest
+):
+    # Arrange
+    ctx: Context = request.getfixturevalue(context_name)
+
+    # Act
+    result = ctx.is_step
+
+    # Assert
+    actual = result
+    expected = True
+    assert actual == expected
+
+
+def test_is_step_should_be_false_when_context_is_job(job_context: Context):
+    # Act
+    result = job_context.is_step
+
+    # Assert
+    actual = result
+    expected = False
+    assert actual == expected

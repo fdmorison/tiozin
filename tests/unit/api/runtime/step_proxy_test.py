@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tests.stubs import InputStub, JobStub, TransformStub
+from tests.stubs import InputStub, JobStub, OutputStub, TransformStub
 from tiozin import Dataset
 from tiozin.api.context import Context
 from tiozin.api.metadata.bundle import Registries
@@ -107,6 +107,21 @@ def test_transform_should_return_dataset(job_context: Context):
     assert actual == expected
 
 
+def test_write_should_return_raw_result(job_context: Context):
+    # Arrange
+    step = OutputStub(name="orders_output")
+    raw_plan = "SELECT 1"
+    data = Dataset(raw_plan)
+
+    # Act
+    result = step.write(data)
+
+    # Assert
+    actual = isinstance(result, Dataset)
+    expected = False
+    assert actual == expected
+
+
 # =============================================================================
 # Testing StepProxy.read — schema
 # =============================================================================
@@ -115,6 +130,7 @@ def test_transform_should_return_dataset(job_context: Context):
 def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: dict):
     # Arrange
     schema_registry = MagicMock()
+    schema_registry.try_get.return_value = None
     step = InputStub(
         name="orders",
         schema_subject="acme.orders",

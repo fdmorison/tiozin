@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin import config
 from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import human_join, utcnow
@@ -33,7 +32,7 @@ class JobProxy(wrapt.ObjectProxy):
     def submit(self) -> Any:
         job: Job = self.__wrapped__
         context = Context.current(required=False) or Context.for_job(job)
-        lineage_registry = context.registries.lineage
+        lineage = context.registries.lineage
         catalog = context.catalog
 
         with context, TiozinTemplateOverlay(job, context.template_vars):
@@ -47,26 +46,23 @@ class JobProxy(wrapt.ObjectProxy):
                 context.executed_at = utcnow()
 
                 with job.runner():
-                    if config.tiozin_lineage_job_enabled:
-                        lineage_registry.start(inputs=[], outputs=[])
+                    lineage.start(inputs=[], outputs=[])
                     result = job.submit()
 
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
-                if config.tiozin_lineage_job_enabled:
-                    lineage_registry.fail(
-                        inputs=catalog.get_inputs(job.inputs),
-                        outputs=catalog.get_outputs(job.outputs),
-                    )
+                lineage.fail(
+                    inputs=catalog.get_inputs(job.inputs),
+                    outputs=catalog.get_outputs(job.outputs),
+                )
                 raise
 
             else:
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
-                if config.tiozin_lineage_job_enabled:
-                    lineage_registry.complete(
-                        inputs=catalog.get_inputs(job.inputs),
-                        outputs=catalog.get_outputs(job.outputs),
-                    )
+                lineage.complete(
+                    inputs=catalog.get_inputs(job.inputs),
+                    outputs=catalog.get_outputs(job.outputs),
+                )
                 return result
 
             finally:

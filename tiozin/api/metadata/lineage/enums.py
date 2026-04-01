@@ -22,3 +22,9 @@ class LineageJobType(UpperEnum):
     TASK = auto()
     JOB = auto()
     MODEL = auto()
+
+
+class EmitLevel(UpperEnum):
+    JOB = auto()
+    STEP = auto()
+    ALL = auto()

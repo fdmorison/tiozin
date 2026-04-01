@@ -97,6 +97,25 @@ def test_from_context_should_map_governance_tags(job_context: Context):
     assert actual == expected
 
 
+def test_from_context_should_exclude_governance_tags_when_none(job_context: Context):
+    # Arrange
+    job_context.owner = None
+    job_context.maintainer = None
+    job_context.cost_center = None
+
+    # Act
+    result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
+
+    # Assert
+    actual = (
+        "owner" in result.tags,
+        "maintainer" in result.tags,
+        "cost_center" in result.tags,
+    )
+    expected = (False, False, False)
+    assert actual == expected
+
+
 # ============================================================================
 # LineageRunEvent.from_context — parent run
 # ============================================================================

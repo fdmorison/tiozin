@@ -9,6 +9,7 @@ import wrapt
 from tiozin.exceptions import AccessViolationError
 
 from ...compose import TiozinTemplateOverlay
+from .dataset import Dataset
 
 if TYPE_CHECKING:
     from tiozin import Runner
@@ -63,9 +64,10 @@ class RunnerProxy(wrapt.ObjectProxy):
         """Wraps Runner.run() with logging and error handling."""
         runner: Runner = self.__wrapped__
         context = runner.context
+        raw_args = [Dataset.unwrap(arg) for arg in args]
         try:
             runner.info(f"▶️  Running '{context.name}'")
-            result = runner.run(*args, **kwargs)
+            result = runner.run(*raw_args, **kwargs)
         except Exception:
             runner.error(
                 f"🚨 Failed execution of '{context.name}' in {context.execution_delay:.2f}s"
@@ -75,4 +77,4 @@ class RunnerProxy(wrapt.ObjectProxy):
             runner.info(
                 f"✅ Completed execution of '{context.name}' in {context.execution_delay:.2f}s"
             )
-            return result
+            return Dataset.unwrap(result)
