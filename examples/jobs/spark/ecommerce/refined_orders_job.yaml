@@ -1,8 +1,8 @@
 kind: LinearJob
-name: high_value_orders_job
+name: refined_orders_job
 description: |
   Joins customers with orders and filters high-value completed orders.
-  Demonstrates DuckdbSqlTransform with @data token and parameterized queries.
+  Demonstrates SparkSqlTransform with @data token and parameterized queries.
 
 owner: data@tiozin.com
 maintainer: tiozin
@@ -17,10 +17,10 @@ product: storefront
 model: high_value_orders
 
 runner:
-  kind: DuckdbRunner
+  kind: SparkRunner
 
 inputs:
-  - kind: DuckdbFileInput
+  - kind: SparkFileInput
     name: load_customers
     description: Customer master data from raw layer.
     layer: raw
@@ -28,7 +28,7 @@ inputs:
     path: .output/lake-ecommerce-{{layer}}/{{product}}/{{model}}
     format: parquet
 
-  - kind: DuckdbFileInput
+  - kind: SparkFileInput
     name: load_orders
     description: Order transactions from raw layer.
     layer: raw
@@ -37,7 +37,7 @@ inputs:
     format: parquet
 
 transforms:
-  - kind: DuckdbSqlTransform
+  - kind: SparkSqlTransform
     name: join_customer_orders
     description: Enriches orders with customer information.
     query: |-
@@ -52,19 +52,19 @@ transforms:
       FROM load_customers c
       JOIN load_orders o ON c.id = o.customer_id
 
-  - kind: DuckdbSqlTransform
+  - kind: SparkSqlTransform
     name: filter_completed
     description: Keeps only successfully completed orders.
     query: SELECT * FROM @data WHERE status = 'completed'
 
-  - kind: DuckdbSqlTransform
+  - kind: SparkSqlTransform
     name: filter_high_value
     description: Filters orders above the high-value threshold.
-    query: SELECT * FROM @data WHERE total > $min_total
+    query: SELECT * FROM @data WHERE total > :min_total
     args:
       min_total: 500
 
-  - kind: DuckdbSqlTransform
+  - kind: SparkSqlTransform
     name: add_metadata
     description: Adds processing timestamp and segment classification.
     query: |-
@@ -73,16 +73,16 @@ transforms:
           'high_value'           AS segment,
           '{{job.run_id}}'       AS _{{layer}}_run_id,
           '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
-          current_timestamp      AS _{{layer}}_created_at,
+          current_timestamp()    AS _{{layer}}_created_at,
           created_at             AS _source_created_at
       FROM @data
 
 outputs:
-  - kind: DuckdbFileOutput
+  - kind: SparkFileOutput
     name: write_orders
     description: High-value completed orders enriched with customer data.
     format: parquet
-    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     mode: overwrite
+    path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}
     partition_by:
       - country

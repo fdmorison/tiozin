@@ -1,5 +1,5 @@
 kind: LinearJob
-name: shakespeare_ingestion_job
+name: ingestion_shakespeare_job
 description: |
   Ingests Shakespeare source texts to our data lake.
 

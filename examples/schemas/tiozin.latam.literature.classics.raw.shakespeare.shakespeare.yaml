@@ -1,0 +1,12 @@
+name: shakespeare
+physicalName: shakespeare
+physicalType: table
+description: Raw shakespeare data ingested from source system.
+
+properties:
+
+  - name: value
+    logicalType: string
+    physicalType: string
+    required: true
+    description: Regular text value from the original Shakespeare dataset
