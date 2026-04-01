@@ -323,6 +323,14 @@ class Context:
         return JINJA.from_string(value).render(self.template_vars)
 
     @property
+    def is_job(self) -> bool:
+        return self.tiozin_role == "Job"
+
+    @property
+    def is_step(self) -> bool:
+        return self.tiozin_role in ("Input", "Transform", "Output")
+
+    @property
     def is_root(self) -> bool:
         return self.job is self or self.job is None
 
