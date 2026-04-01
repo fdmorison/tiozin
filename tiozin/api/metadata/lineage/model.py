@@ -78,7 +78,7 @@ class LineageJob(Metadata):
             name=ctx.qualified_slug,
             type=LineageJobType.JOB,
             processing_type=LineageProcessingType.STREAMING
-            if ctx.runner.streaming
+            if ctx.runner and ctx.runner.streaming
             else LineageProcessingType.BATCH,
             integration=config.app_name.upper(),
         )

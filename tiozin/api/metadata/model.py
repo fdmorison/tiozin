@@ -171,7 +171,12 @@ class UpperEnum(StrEnum):
 
     @classmethod
     def _missing_(cls, value: str) -> Self:
-        return cls(str(value).strip().upper()) if not isinstance(value, cls) else value
+        if isinstance(value, str):
+            normalized = value.strip().upper()
+            member = cls._value2member_map_.get(normalized)
+            if member is not None:
+                return member
+        raise ValueError(f"{value!r} is not a valid {cls.__name__}")
 
 
 class LowerEnum(StrEnum):
@@ -187,4 +192,9 @@ class LowerEnum(StrEnum):
 
     @classmethod
     def _missing_(cls, value: str) -> Self:
-        return cls(str(value).strip().lower()) if not isinstance(value, cls) else value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            member = cls._value2member_map_.get(normalized)
+            if member is not None:
+                return member
+        raise ValueError(f"{value!r} is not a valid {cls.__name__}")

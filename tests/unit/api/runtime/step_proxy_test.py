@@ -130,6 +130,7 @@ def test_write_should_return_raw_result(job_context: Context):
 def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: dict):
     # Arrange
     schema_registry = MagicMock()
+    schema_registry.try_get.return_value = None
     step = InputStub(
         name="orders",
         schema_subject="acme.orders",
