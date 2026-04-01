@@ -24,7 +24,6 @@ inputs:
     path: examples/data/ecommerce/customers.csv
     format: csv
     header: true
-    inferSchema: true
 
 transforms:
   - kind: SparkSqlTransform
