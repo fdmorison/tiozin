@@ -142,17 +142,21 @@ class LineageRunEvent(Metadata):
             job=LineageJob.from_context(ctx),
             parent=LineageParentRun.from_context(ctx),
             tags={
-                "org": ctx.org,
-                "region": ctx.region,
-                "domain": ctx.domain,
-                "subdomain": ctx.subdomain,
-                "layer": ctx.layer,
-                "product": ctx.product,
-                "model": ctx.model,
-                "owner": ctx.owner,
-                "maintainer": ctx.maintainer,
-                "cost_center": ctx.cost_center,
-                **ctx.labels,
+                tag: value
+                for tag, value in {
+                    "org": ctx.org,
+                    "region": ctx.region,
+                    "domain": ctx.domain,
+                    "subdomain": ctx.subdomain,
+                    "layer": ctx.layer,
+                    "product": ctx.product,
+                    "model": ctx.model,
+                    "owner": ctx.owner,
+                    "maintainer": ctx.maintainer,
+                    "cost_center": ctx.cost_center,
+                    **ctx.labels,
+                }.items()
+                if value is not None
             },
             inputs=[LineageDataset.from_dataset(d) for d in (inputs or [])],
             outputs=[LineageDataset.from_dataset(d) for d in (outputs or [])],
