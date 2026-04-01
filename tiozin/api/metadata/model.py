@@ -169,6 +169,10 @@ class UpperEnum(StrEnum):
     def __repr__(self) -> str:
         return self.value
 
+    @classmethod
+    def _missing_(cls, value: str) -> Self:
+        return cls(str(value).strip().upper()) if not isinstance(value, cls) else value
+
 
 class LowerEnum(StrEnum):
     @staticmethod
@@ -180,3 +184,7 @@ class LowerEnum(StrEnum):
 
     def __repr__(self) -> str:
         return self.value
+
+    @classmethod
+    def _missing_(cls, value: str) -> Self:
+        return cls(str(value).strip().lower()) if not isinstance(value, cls) else value

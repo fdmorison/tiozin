@@ -4,7 +4,8 @@ from tiozin.api.runtime.dataset import Dataset
 from tiozin.compose import tioproxy
 
 from ..registry import Registry
-from .model import LineageRunEvent, LineageRunEventType
+from .enums import EmitLevel, LineageRunEventType
+from .model import LineageRunEvent
 from .proxy import LineageRegistryProxy
 
 
@@ -13,19 +14,17 @@ class LineageRegistry(Registry[LineageRunEvent]):
     """
     Emits lineage run events during pipeline execution.
 
-    `register()` is the generic emit — subclasses implement it to send events
-    to a lineage backend (e.g. Marquez, OpenMetadata).
+    `register()` is implemented by subclasses to send events to a lineage backend.
+    Convenience methods (e.g. `start()`, `complete()`, `fail()`) delegate to it
+    using the active execution context.
 
-    Convenience methods per run state delegate to `register()`, reading job
-    identity and run ID from the active execution context:
-
-        registry.start()
-        registry.complete(outputs=["finance.orders"])
-        registry.fail()
-
-    See Also:
-        `OpenLineage Naming Spec <https://openlineage.io/docs/spec/naming/>`_
+    Attributes:
+        emit_level: Controls which events are emitted (`JOB`, `STEP`, `ALL`).
     """
+
+    def __init__(self, emit_level: EmitLevel = None, **options) -> None:
+        super().__init__(**options)
+        self.emit_level = EmitLevel(emit_level) if emit_level else EmitLevel.JOB
 
     @abstractmethod
     def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:
