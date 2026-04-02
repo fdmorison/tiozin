@@ -1,5 +1,7 @@
+from tiozin import config
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.template_string import TemplateString
+from tiozin.utils import default
 
 from ..registry import Registry
 from .model import Schema
@@ -52,12 +54,14 @@ class SchemaRegistry(Registry[Schema]):
 
     def __init__(
         self,
-        show_schema: bool = False,
+        show_schema: bool = None,
         subject_template: str = None,
         default_version: str = None,
         **options,
     ) -> None:
         super().__init__(**options)
-        self.show_schema = show_schema
-        self.subject_template = TemplateString(subject_template) if subject_template else None
-        self.default_version = default_version
+        self.show_schema = default(show_schema, config.default_schema_show_schema)
+        self.subject_template = TemplateString(
+            subject_template or config.default_schema_subject_template
+        )
+        self.default_version = default(default_version, config.default_schema_default_version)

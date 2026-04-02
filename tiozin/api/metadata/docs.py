@@ -13,11 +13,16 @@ REGISTRY_TIMEOUT = "Request timeout in seconds"
 REGISTRY_READONLY = "Whether the registry rejects write operations (optional, defaults to False)"
 REGISTRY_CACHE = "Whether to cache retrieved metadata in memory (optional, defaults to False)"
 REGISTRY_READY = "Whether the registry has been initialized and is ready to serve requests"
-REGISTRY_LOCATION = (
-    "Location of the settings backend. Accepts local file paths or cloud storage URIs "
-    "(e.g., s3://, gs://, az://)"
-)
 REGISTRY_DESCRIPTION = "Short description of the registry (optional)"
+
+LINEAGE_REGISTRY_EMIT_LEVEL = "Lineage emission level. VAlues: job, step or all"
+SCHEMA_REGISTRY_SHOW_SCHEMA = "Print the schema to the console after retrieval. Default: false"
+SCHEMA_REGISTRY_SUBJECT_TEMPLATE = (
+    "Jinja template used to resolve the schema subject when none is provided. "
+    "Available variables: org, region, domain, subdomain, layer, product, model"
+)
+SCHEMA_REGISTRY_DEFAULT_VERSION = "Default schema version when none is specified. Default: latest."
+
 
 # RunnerManifest
 RUNNER_NAME = "Unique identifier for this runner (optional)"

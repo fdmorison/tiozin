@@ -50,6 +50,30 @@ registry_default_readonly = False
 registry_default_cache = False
 
 # ===============================================
+#           Registry Defaults
+# ===============================================
+registry_default_timeout = 3
+registry_default_readonly = False
+registry_default_cache = False
+
+default_job_registry = "tio_kernel:FileJobRegistry"
+default_setting_registry = "tio_kernel:FileSettingRegistry"
+default_secret_registry = "tio_kernel:EnvSecretRegistry"
+
+default_schema_registry = "tio_kernel:NoOpSchemaRegistry"
+default_schema_show_schema = False
+default_schema_default_version = "latest"
+default_schema_subject_template = (
+    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
+)
+
+default_lineage_registry = "tio_kernel:NoOpLineageRegistry"
+default_lineage_emit_level = "JOB"
+
+default_transaction_registry = "tio_kernel:NoOpTransactionRegistry"
+default_metric_registry = "tio_kernel:NoOpMetricRegistry"
+
+# ===============================================
 #           Tiozin Configs
 # ===============================================
 tiozin_job_namespace_template = env.TIO_JOB_NAMESPACE_TEMPLATE

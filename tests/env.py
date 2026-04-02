@@ -16,58 +16,6 @@ TIO_LOG_SHOW_LOCALS = False
 TIO_LOG_REDACT_MIN_LENGTH = 3
 
 # ===============================================
-#           Registry configurations
-# ===============================================
-TIO_SETTING_REGISTRY_KIND = "tio_kernel:FileSettingRegistry"
-TIO_SETTING_REGISTRY_LOCATION = "tests/mocks/settings/default.yaml"
-TIO_SETTING_REGISTRY_TIMEOUT = None
-TIO_SETTING_REGISTRY_READONLY = None
-TIO_SETTING_REGISTRY_CACHE = None
-
-TIO_JOB_REGISTRY_KIND = "tio_kernel:FileJobRegistry"
-TIO_JOB_REGISTRY_LOCATION = None
-TIO_JOB_REGISTRY_TIMEOUT = None
-TIO_JOB_REGISTRY_READONLY = None
-TIO_JOB_REGISTRY_CACHE = None
-
-TIO_SECRET_REGISTRY_KIND = "tio_kernel:EnvSecretRegistry"
-TIO_SECRET_REGISTRY_LOCATION = None
-TIO_SECRET_REGISTRY_TIMEOUT = None
-TIO_SECRET_REGISTRY_READONLY = None
-TIO_SECRET_REGISTRY_CACHE = None
-
-TIO_LINEAGE_REGISTRY_KIND = "tio_kernel:NoOpLineageRegistry"
-TIO_LINEAGE_REGISTRY_LOCATION = None
-TIO_LINEAGE_REGISTRY_TIMEOUT = None
-TIO_LINEAGE_REGISTRY_READONLY = None
-TIO_LINEAGE_REGISTRY_CACHE = None
-TIO_LINEAGE_REGISTRY_EMIT_LEVEL = "JOB"
-
-TIO_SCHEMA_REGISTRY_KIND = "tio_kernel:NoOpSchemaRegistry"
-TIO_SCHEMA_REGISTRY_LOCATION = None
-TIO_SCHEMA_REGISTRY_TIMEOUT = None
-TIO_SCHEMA_REGISTRY_READONLY = None
-TIO_SCHEMA_REGISTRY_CACHE = None
-TIO_SCHEMA_REGISTRY_SHOW_SCHEMA = False
-TIO_SCHEMA_REGISTRY_DEFAULT_VERSION = "latest"
-TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE = (
-    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
-)
-
-
-TIO_TRANSACTION_REGISTRY_KIND = "tio_kernel:NoOpTransactionRegistry"
-TIO_TRANSACTION_REGISTRY_LOCATION = None
-TIO_TRANSACTION_REGISTRY_TIMEOUT = None
-TIO_TRANSACTION_REGISTRY_READONLY = None
-TIO_TRANSACTION_REGISTRY_CACHE = None
-
-TIO_METRIC_REGISTRY_KIND = "tio_kernel:NoOpMetricRegistry"
-TIO_METRIC_REGISTRY_LOCATION = None
-TIO_METRIC_REGISTRY_TIMEOUT = None
-TIO_METRIC_REGISTRY_READONLY = None
-TIO_METRIC_REGISTRY_CACHE = None
-
-# ===============================================
 #           Tiozin Customizations
 # ===============================================
 TIO_JOB_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
