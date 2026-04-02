@@ -13,7 +13,12 @@ NULLABLE = None
 
 
 class SettingRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_SETTING_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_SETTING_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_setting_registry, description=docs.KIND)
@@ -27,7 +32,12 @@ class SettingRegistryManifest(BaseSettings):
 
 
 class JobRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_JOB_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_JOB_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_job_registry, description=docs.KIND)
@@ -41,7 +51,12 @@ class JobRegistryManifest(BaseSettings):
 
 
 class SchemaRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_SCHEMA_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_SCHEMA_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_schema_registry, description=docs.KIND)
@@ -61,7 +76,12 @@ class SchemaRegistryManifest(BaseSettings):
 
 
 class SecretRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_SECRET_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_SECRET_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_secret_registry, description=docs.KIND)
@@ -75,7 +95,12 @@ class SecretRegistryManifest(BaseSettings):
 
 
 class TransactionRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_TRANSACTION_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_TRANSACTION_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_transaction_registry, description=docs.KIND)
@@ -89,7 +114,12 @@ class TransactionRegistryManifest(BaseSettings):
 
 
 class LineageRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_LINEAGE_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_LINEAGE_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_lineage_registry, description=docs.KIND)
@@ -105,7 +135,12 @@ class LineageRegistryManifest(BaseSettings):
 
 
 class MetricRegistryManifest(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="TIO_METRIC_REGISTRY_")
+    model_config = SettingsConfigDict(
+        env_prefix="TIO_METRIC_REGISTRY_",
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
 
     # Identity
     kind: str = Field(config.default_metric_registry, description=docs.KIND)
