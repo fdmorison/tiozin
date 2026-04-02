@@ -96,13 +96,18 @@ class Metadata(BaseModel):
             return None
 
     def to_yaml(self) -> str:
-        return dump_yaml(self.model_dump(mode="json", exclude_unset=True))
+        return dump_yaml(
+            self.model_dump(
+                mode="json",
+                exclude_none=True,
+            )
+        )
 
     def to_json(self) -> str:
         return (
             self.model_dump_json(
                 indent=2,
-                exclude_unset=True,
+                exclude_none=True,
                 ensure_ascii=False,
             )
             + "\n"

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import wrapt
 
@@ -52,6 +52,14 @@ class RegistryProxy(wrapt.ObjectProxy):
         if self._overlay:
             self._overlay.__exit__(None, None, None)
             self._overlay = None
+
+    def try_get(self, identifier: str, version: str | None = None) -> Any | None:
+        registry: Registry = self.__wrapped__
+        try:
+            return registry.get(identifier, version)
+        except Exception as e:
+            self.warning(str(e))
+            return None
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)

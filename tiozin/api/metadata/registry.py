@@ -4,7 +4,6 @@ from typing import Generic, TypeVar
 from tiozin import config
 from tiozin.api import Tiozin
 from tiozin.compose import tioproxy
-from tiozin.exceptions import TiozinNotFoundError
 from tiozin.utils import default
 
 from .proxy import RegistryProxy
@@ -67,6 +66,6 @@ class Registry(Tiozin, Generic[TMetadata]):
         """Retrieve metadata or return None if not found."""
         try:
             return self.get(identifier, version)
-        except TiozinNotFoundError as e:
-            self.warning(e.message)
+        except Exception as e:
+            self.warning(str(e))
             return None

@@ -22,6 +22,8 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    subject_template: "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
+    default_version: latest
 
   lineage:
     kind: NoOpLineageRegistry

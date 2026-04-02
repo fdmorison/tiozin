@@ -46,6 +46,9 @@ class SchemaRegistryManifest(Manifest):
     timeout: INT = Field(env.TIO_SCHEMA_REGISTRY_TIMEOUT, description=docs.REGISTRY_TIMEOUT)
     readonly: BOOL = Field(env.TIO_SCHEMA_REGISTRY_READONLY, description=docs.REGISTRY_READONLY)
     cache: BOOL = Field(env.TIO_SCHEMA_REGISTRY_CACHE, description=docs.REGISTRY_CACHE)
+    show_schema: BOOL = Field(env.TIO_SCHEMA_REGISTRY_SHOW_SCHEMA)
+    subject_template: STR = Field(env.TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE)
+    default_version: STR = Field(env.TIO_SCHEMA_REGISTRY_DEFAULT_VERSION)
 
 
 class SecretRegistryManifest(Manifest):
@@ -84,6 +87,7 @@ class LineageRegistryManifest(Manifest):
     timeout: INT = Field(env.TIO_LINEAGE_REGISTRY_TIMEOUT, description=docs.REGISTRY_TIMEOUT)
     readonly: BOOL = Field(env.TIO_LINEAGE_REGISTRY_READONLY, description=docs.REGISTRY_READONLY)
     cache: BOOL = Field(env.TIO_LINEAGE_REGISTRY_CACHE, description=docs.REGISTRY_CACHE)
+    emit_level: STR = Field(env.TIO_LINEAGE_REGISTRY_EMIT_LEVEL)
 
 
 class MetricRegistryManifest(Manifest):

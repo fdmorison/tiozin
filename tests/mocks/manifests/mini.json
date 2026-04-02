@@ -1,6 +1,7 @@
 {
   "kind": "Job",
   "name": "test_job",
+  "labels": {},
   "org": "tiozin",
   "region": "latam",
   "domain": "quality",
@@ -9,7 +10,8 @@
   "product": "test_cases",
   "model": "some_case",
   "runner": {
-    "kind": "TestRunner"
+    "kind": "TestRunner",
+    "streaming": false
   },
   "inputs": [
     {

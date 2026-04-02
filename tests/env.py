@@ -48,6 +48,12 @@ TIO_SCHEMA_REGISTRY_LOCATION = None
 TIO_SCHEMA_REGISTRY_TIMEOUT = None
 TIO_SCHEMA_REGISTRY_READONLY = None
 TIO_SCHEMA_REGISTRY_CACHE = None
+TIO_SCHEMA_REGISTRY_SHOW_SCHEMA = False
+TIO_SCHEMA_REGISTRY_DEFAULT_VERSION = "latest"
+TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE = (
+    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
+)
+
 
 TIO_TRANSACTION_REGISTRY_KIND = "tio_kernel:NoOpTransactionRegistry"
 TIO_TRANSACTION_REGISTRY_LOCATION = None
@@ -65,7 +71,3 @@ TIO_METRIC_REGISTRY_CACHE = None
 #           Tiozin Customizations
 # ===============================================
 TIO_JOB_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
-TIO_SCHEMA_SUBJECT_TEMPLATE = (
-    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
-)
-TIO_SCHEMA_DEFAULT_VERSION = "latest"

@@ -69,6 +69,12 @@ TIO_SCHEMA_REGISTRY_LOCATION = _env.str("TIO_SCHEMA_REGISTRY_LOCATION", None)
 TIO_SCHEMA_REGISTRY_TIMEOUT = _env.int("TIO_SCHEMA_REGISTRY_TIMEOUT", None)
 TIO_SCHEMA_REGISTRY_READONLY = _env.bool("TIO_SCHEMA_REGISTRY_READONLY", None)
 TIO_SCHEMA_REGISTRY_CACHE = _env.bool("TIO_SCHEMA_REGISTRY_CACHE", None)
+TIO_SCHEMA_REGISTRY_SHOW_SCHEMA = _env.bool("TIO_SCHEMA_REGISTRY_SHOW_SCHEMA", False)
+TIO_SCHEMA_REGISTRY_DEFAULT_VERSION = _env.str("TIO_SCHEMA_REGISTRY_DEFAULT_VERSION", "latest")
+TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE = _env.str(
+    "TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE",
+    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}",
+)
 
 TIO_SECRET_REGISTRY_KIND = _env.str("TIO_SECRET_REGISTRY_KIND", "tio_kernel:EnvSecretRegistry")
 TIO_SECRET_REGISTRY_LOCATION = _env.str("TIO_SECRET_REGISTRY_LOCATION", None)
@@ -105,17 +111,4 @@ TIO_METRIC_REGISTRY_CACHE = _env.bool("TIO_METRIC_REGISTRY_CACHE", None)
 TIO_JOB_NAMESPACE_TEMPLATE = _env.str(
     "TIO_JOB_NAMESPACE_TEMPLATE",
     "{{org}}.{{region}}.{{domain}}.{{subdomain}}",
-)
-
-# TIO_SCHEMA_SUBJECT_TEMPLATE - Jinja template for the default schema subject.
-# Available variables: org, region, domain, subdomain, layer, product, model.
-TIO_SCHEMA_SUBJECT_TEMPLATE = _env.str(
-    "TIO_SCHEMA_SUBJECT_TEMPLATE",
-    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}",
-)
-
-# TIO_DEFAULT_SCHEMA_VERSION - Default schema version used when not specified on the Input.
-TIO_SCHEMA_DEFAULT_VERSION = _env.str(
-    "TIO_DEFAULT_SCHEMA_VERSION",
-    "latest",
 )

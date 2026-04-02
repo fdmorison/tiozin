@@ -13,7 +13,7 @@ BASE_PATH = "./tests/mocks/data"
 # ============================================================================
 # Testing SparkFileInput - Core Behavior
 # ============================================================================
-def test_input_should_read_text_files(spark_session: SparkSession):
+def test_input_should_read_text_files(spark: SparkSession):
     """Reads plain text files into a DataFrame."""
     # Arrange
     path = f"{BASE_PATH}/text/sample.txt"
@@ -27,7 +27,7 @@ def test_input_should_read_text_files(spark_session: SparkSession):
 
     # Assert
     actual = result
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             ("hello world",),
             ("hello spark",),
@@ -37,7 +37,7 @@ def test_input_should_read_text_files(spark_session: SparkSession):
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
 
 
-def test_input_should_read_json_files(spark_session: SparkSession):
+def test_input_should_read_json_files(spark: SparkSession):
     """Reads JSON files into a DataFrame using Spark semantics."""
     # Arrange
     path = f"{BASE_PATH}/json/sample.json"
@@ -51,7 +51,7 @@ def test_input_should_read_json_files(spark_session: SparkSession):
 
     # Assert
     actual = result
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             ("hello world",),
             ("hello spark",),
@@ -98,7 +98,7 @@ def test_input_should_explode_filepath(
     filename: str,
     filestem: str,
     filetype: str,
-    spark_session: SparkSession,
+    spark: SparkSession,
 ):
     """Expands filepath into semantic columns when enabled."""
     # Arrange
@@ -116,7 +116,7 @@ def test_input_should_explode_filepath(
 
     # Assert
     actual = result
-    expected = spark_session.createDataFrame(
+    expected = spark.createDataFrame(
         [
             (
                 "hello world",
