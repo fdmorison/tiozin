@@ -53,12 +53,3 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
             registry.info(f"Schema `{subject}`:\n{schema.to_yaml()}")
 
         return schema
-
-    def try_get(self, identifier: str = None, version: str = None) -> Schema | None:
-        try:
-            return self.get(identifier, version)
-        except SchemaNotFoundError as e:
-            self.warning(e.message)
-            return None
-        # except RequiredArgumentError:
-        #     return None
