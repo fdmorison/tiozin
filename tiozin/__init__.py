@@ -41,7 +41,7 @@ from tiozin.api import Runner, Transform, CoTransform, Input, Output, Job, EtlSt
 # Auxiliary
 from tiozin.api import Context
 from tiozin.app import TiozinApp
-from tiozin.compose import tioproxy
+from tiozin.compose import tioproxy, TemplateString
 
 
 __all__ = [
@@ -81,4 +81,5 @@ __all__ = [
     "TiozinApp",
     "EtlStep",
     "tioproxy",
+    "TemplateString",
 ]

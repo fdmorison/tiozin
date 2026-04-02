@@ -2,4 +2,4 @@ registries:
 
   job:
     kind: FileJobRegistry
-    location: "{{ ENV.TIO_TEST_JOB_LOCATION }}"
+    location: "{{ ENV.TEST_VALUE }}"

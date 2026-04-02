@@ -8,6 +8,7 @@ from .tioproxy import tioproxy, TioProxyMeta
 from .templating.env import TemplateEnv as TemplateEnv
 from .templating.date import TemplateDate as TemplateDate
 from .templating.sensitive import TemplateSecret as TemplateSecret
+from .templating.template_string import TemplateString as TemplateString
 
 from .classproperty import classproperty
 
@@ -47,6 +48,7 @@ __all__ = [
     "TemplateDate",
     "TemplateEnv",
     "TemplateSecret",
+    "TemplateString",
     # Other
     "classproperty",
 ]

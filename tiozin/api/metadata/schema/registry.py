@@ -1,4 +1,5 @@
 from tiozin.compose import tioproxy
+from tiozin.compose.templating.template_string import TemplateString
 
 from ..registry import Registry
 from .model import Schema
@@ -58,5 +59,5 @@ class SchemaRegistry(Registry[Schema]):
     ) -> None:
         super().__init__(**options)
         self.show_schema = show_schema
-        self.subject_template = subject_template
+        self.subject_template = TemplateString(subject_template) if subject_template else None
         self.default_version = default_version

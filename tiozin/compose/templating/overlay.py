@@ -9,6 +9,7 @@ from tiozin.exceptions import TiozinInputError
 
 from .. import reflection
 from . import filters
+from .template_string import TemplateString
 
 JINJA_ENV = filters.JINJA
 
@@ -48,6 +49,8 @@ class TiozinTemplateOverlay:
 
     def _scan_templates(self, obj: Any, *parents) -> None:
         match obj:
+            case TemplateString():
+                pass
             case str() if TEMPLATE_PATTERN.search(obj):
                 self._templates.append((*parents, obj))
             case list():

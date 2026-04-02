@@ -10,6 +10,8 @@ at the CLI level (--settings-path flag) or programmatically.
 
 from unittest.mock import patch
 
+from pytest import MonkeyPatch
+
 from tiozin import TiozinApp
 
 MOCK_SETTINGS = "tests/mocks/settings/default.yaml"
@@ -47,24 +49,36 @@ def test_app_should_load_settings_from_custom_file(_atexit, _signal):
 # ============================================================================
 @patch("tiozin.app.signal")
 @patch("tiozin.app.atexit")
-def test_app_should_render_env_templates_in_registry_location(_atexit, _signal):
+def test_app_should_render_env_templates_in_registry_location(
+    _atexit, _signal, monkeypatch: MonkeyPatch
+):
     """
-    Registry ``location`` fields support ``{{ ENV.VAR }}`` templates.
+    Registry `location` fields support `{{ ENV.VAR }}` templates.
 
-    The RegistryProxy applies a TiozinTemplateOverlay during setup() so that
-    environment variables are resolved before the registry initializes.
-    The template string is restored after setup, so this test verifies
-    that setup succeeds (rendering occurred) and the original template is preserved.
+    The RegistryProxy renders env templates during setup() and restores the
+    original string on teardown(). This test verifies both: that `location`
+    holds the rendered value while the registry is active, and that the
+    original template is restored after teardown.
     """
     # Arrange
+    monkeypatch.setenv("TEST_VALUE", "tests/mocks/jobs")
     env_template_settings = "tests/mocks/settings/env_template.yaml"
     app = TiozinApp(settings_path=env_template_settings)
 
-    # Act: no exception means template rendering succeeded with the env var set
-    with patch.dict("os.environ", {"TIO_TEST_JOB_LOCATION": "tests/mocks/jobs"}):
-        app.run(MOCK_JOB)
-        app.teardown()
+    # Act
+    app.setup()
+    app.run(MOCK_JOB)
+    rendered = app._containers.registries.job.location
+    app.teardown()
+    restored = app._containers.registries.job.location
 
-    # Assert: setup completed and the job ran; original template is preserved post-setup
-    assert app._status.is_shutdown()
-    assert app._containers.registries.job.location == "{{ ENV.TIO_TEST_JOB_LOCATION }}"
+    # Assert
+    actual = (
+        rendered,
+        restored,
+    )
+    expected = (
+        "tests/mocks/jobs",
+        "{{ ENV.TEST_VALUE }}",
+    )
+    assert actual == expected
