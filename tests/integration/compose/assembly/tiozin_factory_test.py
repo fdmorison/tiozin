@@ -4,7 +4,6 @@ from unittest.mock import ANY
 import pytest
 from freezegun import freeze_time
 
-from tests import config
 from tiozin.api import Input, Runner
 from tiozin.api.metadata.job.model import (
     InputManifest,
@@ -13,6 +12,7 @@ from tiozin.api.metadata.job.model import (
     TransformManifest,
 )
 from tiozin.api.metadata.model import Manifest
+from tiozin.api.metadata.setting.model import SchemaRegistryManifest
 from tiozin.compose import TiozinFactory
 from tiozin.exceptions import (
     PluginConflictError,
@@ -23,6 +23,7 @@ from tiozin.family.tio_kernel import (
     NoOpInput,
     NoOpOutput,
     NoOpRunner,
+    NoOpSchemaRegistry,
     NoOpTransform,
 )
 
@@ -123,8 +124,8 @@ def test_load_should_load_input_plugin(factory: TiozinFactory, kind: str):
         product="revenue",
         model="daily",
         schema=None,
-        schema_subject=config.tiozin_schema_subject_template,
-        schema_version=config.tiozin_schema_default_version,
+        schema_subject=None,
+        schema_version=None,
         options={},
         verbose=True,
         force_error=False,
@@ -402,6 +403,31 @@ def test_load_manifest_should_load_plugin_from_manifest(
 
     # Assert
     assert isinstance(tiozin, plugin_class)
+
+
+def test_load_manifest_should_preserve_default_fields_when_unset_in_manifest(
+    factory: TiozinFactory,
+):
+    # Arrange
+    manifest = SchemaRegistryManifest(kind="NoOpSchemaRegistry")
+
+    # Act
+    registry = factory.load_manifest(manifest)
+
+    # Assert
+    actual = (
+        isinstance(registry, NoOpSchemaRegistry),
+        registry.subject_template,
+        registry.default_version,
+        registry.show_schema,
+    )
+    expected = (
+        True,
+        "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}",
+        "latest",
+        False,
+    )
+    assert actual == expected
 
 
 def test_load_manifest_should_fail_when_manifest_has_no_tiozin_role(factory: TiozinFactory):

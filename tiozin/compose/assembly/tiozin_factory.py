@@ -218,7 +218,7 @@ class TiozinFactory(Loggable):
         tiozin_instance = self.safe_load(
             kind=manifest.kind,
             tiozin_role=role,
-            **manifest.model_dump(exclude={"kind"}, exclude_unset=True),
+            **manifest.model_dump(exclude={"kind"}),
         )
 
         return tiozin_instance
