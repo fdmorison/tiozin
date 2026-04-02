@@ -81,7 +81,7 @@ def test_job_should_render_namespace_from_custom_config_template(
     input_stub: InputStub,
 ):
     # Arrange
-    monkeypatch.setattr(config, "tiozin_job_namespace_template", "{{org}}.{{domain}}")
+    monkeypatch.setattr(config, "tiozin_namespace_template", "{{org}}.{{domain}}")
 
     # Act
     job = JobStub(

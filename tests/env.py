@@ -18,4 +18,4 @@ TIO_LOG_REDACT_MIN_LENGTH = 3
 # ===============================================
 #           Tiozin Customizations
 # ===============================================
-TIO_JOB_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
+TIO_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"

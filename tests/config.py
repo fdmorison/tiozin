@@ -76,5 +76,5 @@ default_metric_registry = "tio_kernel:NoOpMetricRegistry"
 # ===============================================
 #           Tiozin Configs
 # ===============================================
-tiozin_job_namespace_template = env.TIO_JOB_NAMESPACE_TEMPLATE
+tiozin_namespace_template = env.TIO_NAMESPACE_TEMPLATE
 tiozin_settings_search_paths = ()
