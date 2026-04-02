@@ -327,6 +327,7 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
     expected = dedent("""
         kind: Job
         name: test_job
+        labels: {}
         org: tiozin
         region: latam
         domain: quality
@@ -336,6 +337,7 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
         model: some_case
         runner:
           kind: TestRunner
+          streaming: false
         inputs:
         - kind: TestInput
           name: reader
@@ -349,7 +351,7 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
     assert actual == expected
 
 
-def test_to_yaml_should_not_render_unset_values():
+def test_to_yaml_should_render_default_unset_values():
     # Arrange
     manifest = JobManifest(
         kind="Job",
@@ -370,11 +372,11 @@ def test_to_yaml_should_not_render_unset_values():
 
     # Assert
     actual = (
-        "description:" in yaml_string,
-        "transforms:" in yaml_string,
-        "outputs:" in yaml_string,
+        "description:" in yaml_string,  # does not have default
+        "transforms:" in yaml_string,  # defauts to empty list
+        "outputs:" in yaml_string,  # defauts to empty list
     )
-    expected = (False, False, False)
+    expected = (False, True, True)
     assert actual == expected
 
 
@@ -410,6 +412,7 @@ def test_to_json_should_serialize_manifest_to_json_string():
     {
       "kind": "Job",
       "name": "test_job",
+      "labels": {},
       "org": "tiozin",
       "region": "latam",
       "domain": "quality",
@@ -418,7 +421,8 @@ def test_to_json_should_serialize_manifest_to_json_string():
       "product": "test_cases",
       "model": "some_case",
       "runner": {
-        "kind": "TestRunner"
+        "kind": "TestRunner",
+        "streaming": false
       },
       "inputs": [
         {

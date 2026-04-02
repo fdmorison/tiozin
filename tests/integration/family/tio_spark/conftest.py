@@ -24,18 +24,18 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, A
 
 
 @pytest.fixture(autouse=True)
-def spark_runner_stub(runner_stub: RunnerStub, spark: SparkSession) -> RunnerStub:
+def spark_runner(runner_stub: RunnerStub, spark: SparkSession) -> RunnerStub:
     runner_stub._session = spark
     return runner_stub
 
 
 @pytest.fixture(autouse=True)
-def spark_job_stub(job_stub: JobStub, spark_runner_stub: RunnerStub) -> JobStub:
-    job_stub.runner = spark_runner_stub
+def spark_job(job_stub: JobStub, spark_runner: RunnerStub) -> JobStub:
+    job_stub.runner = spark_runner
     return job_stub
 
 
 @pytest.fixture(autouse=True)
-def spark_session(spark_job_stub: JobStub) -> Generator[Any, Any, None]:
-    with Context.for_job(spark_job_stub) as context:
-        yield context.runner.session
+def spark_job_context(job_context: Context, spark_runner: RunnerStub) -> None:
+    job_context.runner = spark_runner
+    return job_context

@@ -566,7 +566,9 @@ def test_overlay_should_render_runner_templates_across_all_phases(job_context: C
     assert actual == expected
 
 
-def test_overlay_should_render_input_templates_across_all_phases(fake_domain: dict):
+def test_overlay_should_render_input_templates_across_all_phases(
+    job_context: Context, fake_domain: dict
+):
     # Arrange
     step = InputStub(name="test", **fake_domain)
 
