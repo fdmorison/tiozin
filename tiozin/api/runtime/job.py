@@ -113,9 +113,7 @@ class Job(Tiozin, Generic[TData]):
         self.layer = layer
         self.product = product
         self.model = model
-        self.namespace = JINJA.from_string(
-            namespace or config.tiozin_job_namespace_template
-        ).render(
+        self.namespace = JINJA.from_string(namespace or config.tiozin_namespace_template).render(
             org=org,
             region=region,
             domain=domain,

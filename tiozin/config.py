@@ -44,16 +44,33 @@ tiozin_family_prefixes = ["tio_", "tia_"]
 tiozin_family_unknown = "tio_unknown"
 
 # ===============================================
-#           Tiozin Registries
+#           Registry Defaults
 # ===============================================
 registry_default_timeout = 3
 registry_default_readonly = False
 registry_default_cache = False
 
+default_job_registry = "tio_kernel:FileJobRegistry"
+default_setting_registry = "tio_kernel:FileSettingRegistry"
+default_secret_registry = "tio_kernel:EnvSecretRegistry"
+
+default_schema_registry = "tio_kernel:FileSchemaRegistry"
+default_schema_show_schema = False
+default_schema_default_version = "latest"
+default_schema_subject_template = (
+    "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
+)
+
+default_lineage_registry = "tio_kernel:NoOpLineageRegistry"
+default_lineage_emit_level = "JOB"
+
+default_transaction_registry = "tio_kernel:NoOpTransactionRegistry"
+default_metric_registry = "tio_kernel:NoOpMetricRegistry"
+
 # ===============================================
 #           Tiozin Customizations
 # ===============================================
-tiozin_job_namespace_template = env.TIO_JOB_NAMESPACE_TEMPLATE
+tiozin_namespace_template = env.TIO_NAMESPACE_TEMPLATE
 tiozin_settings_search_paths = (
     # Project-level
     "tiozin.yaml",

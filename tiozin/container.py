@@ -1,7 +1,7 @@
-from tiozin import env
 from tiozin.api import Registry, SettingRegistry
 from tiozin.api.loggable import Loggable
 from tiozin.api.metadata.bundle import Registries
+from tiozin.api.metadata.setting.model import SettingRegistryManifest
 from tiozin.compose.assembly.tiozin_factory import tiozin_factory
 
 
@@ -25,13 +25,12 @@ class AppContainer(Loggable):
         self._boot_order: list[Registry] = []
 
     def setup(self) -> None:
+        defaults = SettingRegistryManifest()
+        defaults.location = defaults.location or self.settings_path
+
         setting_registry = tiozin_factory.safe_load(
             tiozin_role=SettingRegistry,
-            kind=env.TIO_SETTING_REGISTRY_KIND,
-            location=self.settings_path or env.TIO_SETTING_REGISTRY_LOCATION,
-            timeout=env.TIO_SETTING_REGISTRY_TIMEOUT,
-            readonly=env.TIO_SETTING_REGISTRY_READONLY,
-            cache=env.TIO_SETTING_REGISTRY_CACHE,
+            **defaults.model_dump(),
         )
         self._setup_registry(setting_registry)
 

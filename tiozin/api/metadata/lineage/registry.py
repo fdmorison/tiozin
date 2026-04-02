@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+from tiozin import config
 from tiozin.api.runtime.dataset import Dataset
 from tiozin.compose import tioproxy
 
@@ -24,7 +25,7 @@ class LineageRegistry(Registry[LineageRunEvent]):
 
     def __init__(self, emit_level: EmitLevel = None, **options) -> None:
         super().__init__(**options)
-        self.emit_level = EmitLevel(emit_level) if emit_level else EmitLevel.JOB
+        self.emit_level = EmitLevel(emit_level or config.default_lineage_emit_level)
 
     @abstractmethod
     def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:

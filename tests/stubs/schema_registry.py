@@ -1,14 +1,9 @@
-from tests import env
 from tiozin.api.metadata.schema.registry import SchemaRegistry
 
 
 class SchemaRegistryStub(SchemaRegistry):
     def __init__(self):
-        super().__init__(
-            location="stub://schema",
-            subject_template=env.TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE,
-            default_version=env.TIO_SCHEMA_REGISTRY_DEFAULT_VERSION,
-        )
+        super().__init__(location="stub://schema")
 
     def get(self, identifier: str = None, version: str = None) -> None:
         return None
