@@ -203,7 +203,7 @@ class DuckdbPostgresOutput(DuckdbOutput):
             ],
         )
 
-    def setup(self, data: DuckDBPyRelation) -> None:
+    def setup(self) -> None:
         self.duckdb.execute(
             f"""
             INSTALL {EXTENSION};LOAD {EXTENSION};

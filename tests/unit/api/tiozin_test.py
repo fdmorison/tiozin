@@ -1,7 +1,9 @@
 import pytest
 
-from tiozin.api.runtime.step_proxy import StepProxy
-from tiozin.family.tio_kernel import NoOpInput, NoOpRunner
+from tiozin.api.runtime.input_proxy import InputProxy
+from tiozin.api.runtime.output_proxy import OutputProxy
+from tiozin.api.runtime.transform_proxy import TransformProxy
+from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
 
 # ============================================================================
 # Testing Tiozin.slug
@@ -47,10 +49,18 @@ def test_tioproxy_should_return_registered_proxies():
     """tioproxy returns the proxy list registered via @tioproxy."""
 
     # Act
-    actual = NoOpInput.tioproxy
+    actual = (
+        NoOpInput.tioproxy,
+        NoOpTransform.tioproxy,
+        NoOpOutput.tioproxy,
+    )
 
     # Assert
-    expected = [StepProxy]
+    expected = (
+        [InputProxy],
+        [TransformProxy],
+        [OutputProxy],
+    )
     assert actual == expected
 
 
@@ -97,7 +107,10 @@ def test_to_dict_should_exclude_fields_when_requested():
     result = tiozin.to_dict(exclude={"name", "org"})
 
     # Assert
-    actual = ("name" not in result, "org" not in result)
+    actual = (
+        "name" not in result,
+        "org" not in result,
+    )
     expected = (True, True)
     assert actual == expected
 
@@ -169,7 +182,11 @@ def test_to_dict_should_apply_both_filters_when_requested():
     )
 
     # Assert
-    actual = ("org" not in result, "region" not in result, "description" not in result)
+    actual = (
+        "org" not in result,
+        "region" not in result,
+        "description" not in result,
+    )
     expected = (True, True, True)
     assert actual == expected
 

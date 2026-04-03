@@ -6,12 +6,12 @@ from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
 from ..tiozin import Tiozin
-from .step_proxy import StepProxy
+from .output_proxy import OutputProxy
 
 TData = TypeVar("TData")
 
 
-@tioproxy(StepProxy)
+@tioproxy(OutputProxy)
 class Output(Tiozin, Generic[TData]):
     """
     Defines a data destination that persists processed data.
@@ -40,6 +40,8 @@ class Output(Tiozin, Generic[TData]):
         self,
         name: str = None,
         description: str = None,
+        schema_subject: str = None,
+        schema_version: str = None,
         org: str = None,
         region: str = None,
         domain: str = None,
@@ -54,6 +56,10 @@ class Output(Tiozin, Generic[TData]):
         RequiredArgumentError.raise_if_missing(
             name=name,
         )
+
+        self.schema_subject = schema_subject
+        self.schema_version = schema_version
+
         self.org = org
         self.region = region
         self.domain = domain
@@ -62,7 +68,7 @@ class Output(Tiozin, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, data: TData) -> None:
+    def setup(self) -> None:
         pass
 
     @abstractmethod
@@ -71,7 +77,7 @@ class Output(Tiozin, Generic[TData]):
         Write data to destination. Providers must implement.
         """
 
-    def teardown(self, data: TData) -> None:
+    def teardown(self) -> None:
         pass
 
     def static_datasets(self) -> Datasets:
