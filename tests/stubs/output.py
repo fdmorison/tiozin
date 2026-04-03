@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin import Output
+from tiozin import Dataset, Datasets, Output
 
 
 class OutputStub(Output):
@@ -11,12 +11,17 @@ class OutputStub(Output):
         self.captured_write = None
         self.captured_teardown = None
 
-    def setup(self, data: Any) -> None:
+    def setup(self) -> None:
         self.captured_setup = self.path
 
     def write(self, data: Any) -> None:
         self.captured_write = self.path
         return data
 
-    def teardown(self, data: Any) -> None:
+    def teardown(self) -> None:
         self.captured_teardown = self.path
+
+    def static_datasets(self) -> Datasets:
+        return Datasets(
+            outputs=[Dataset.from_uri(self.path)],
+        )

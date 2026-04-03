@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin import Transform
+from tiozin import Dataset, Datasets, Transform
 
 
 class TransformStub(Transform):
@@ -11,12 +11,18 @@ class TransformStub(Transform):
         self.captured_transform = None
         self.captured_teardown = None
 
-    def setup(self, data: Any) -> None:
+    def setup(self) -> None:
         self.captured_setup = self.path
 
     def transform(self, data) -> Any:
         self.captured_transform = self.path
         return data
 
-    def teardown(self, data: Any) -> None:
+    def teardown(self) -> None:
         self.captured_teardown = self.path
+
+    def static_datasets(self) -> Datasets:
+        return Datasets(
+            inputs=[Dataset.from_uri(self.path)],
+            outputs=[Dataset.from_uri(self.path)],
+        )

@@ -57,10 +57,9 @@ def test_for_job_should_create_job_context(
             "executed_at": None,
             "teardown_at": None,
             "finished_at": None,
-            # Registries
+            # Metadata
             "registries": ANY,
-            # Schema
-            "schema": None,
+            "output_schema": None,
             # Infra
             "catalog": ANY,
             "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
@@ -110,10 +109,9 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "executed_at": None,
         "teardown_at": None,
         "finished_at": None,
-        # Registries
+        # Metadata
         "registries": ANY,
-        # Schema
-        "schema": None,
+        "output_schema": None,
         # Infra
         "catalog": ANY,
         "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
@@ -170,10 +168,9 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "executed_at": None,
         "teardown_at": None,
         "finished_at": None,
-        # Registries (inherited from job context)
+        # Metadata
         "registries": job_context.registries,
-        # Schema
-        "schema": None,
+        "output_schema": None,
         # Infra
         "catalog": job_context.catalog,
         "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),

@@ -6,12 +6,12 @@ from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
 from ..tiozin import Tiozin
-from .step_proxy import StepProxy
+from .input_proxy import InputProxy
 
 TData = TypeVar("TData")
 
 
-@tioproxy(StepProxy)
+@tioproxy(InputProxy)
 class Input(Tiozin, Generic[TData]):
     """
     Defines a data source that ingests data into the pipeline.
@@ -60,6 +60,7 @@ class Input(Tiozin, Generic[TData]):
         RequiredArgumentError.raise_if_missing(
             name=name,
         )
+
         self.schema = schema
         self.schema_subject = schema_subject
         self.schema_version = schema_version

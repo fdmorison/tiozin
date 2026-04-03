@@ -6,12 +6,12 @@ from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
 from ..tiozin import Tiozin
-from .step_proxy import StepProxy
+from .transform_proxy import TransformProxy
 
 TData = TypeVar("TData")
 
 
-@tioproxy(StepProxy)
+@tioproxy(TransformProxy)
 class Transform(Tiozin, Generic[TData]):
     """
     Defines a data transformation that modifies or enriches data.
@@ -39,6 +39,8 @@ class Transform(Tiozin, Generic[TData]):
         self,
         name: str = None,
         description: str = None,
+        schema_subject: str = None,
+        schema_version: str = None,
         org: str = None,
         region: str = None,
         domain: str = None,
@@ -53,6 +55,10 @@ class Transform(Tiozin, Generic[TData]):
         RequiredArgumentError.raise_if_missing(
             name=name,
         )
+
+        self.schema_subject = schema_subject
+        self.schema_version = schema_version
+
         self.org = org
         self.region = region
         self.domain = domain
@@ -61,14 +67,14 @@ class Transform(Tiozin, Generic[TData]):
         self.product = product
         self.model = model
 
-    def setup(self, data: TData) -> None:
+    def setup(self) -> None:
         pass
 
     @abstractmethod
     def transform(self, data: TData) -> TData:
         """Apply transformation logic. Providers must implement."""
 
-    def teardown(self, data: TData) -> None:
+    def teardown(self) -> None:
         pass
 
     def static_datasets(self) -> Datasets:
@@ -101,12 +107,6 @@ class CoTransform(Transform[TData]):
         Requires at least 2 inputs. For single-dataset transforms, use Transform.
     """
 
-    def setup(self, data: TData, *others: TData) -> None:
-        pass
-
     @abstractmethod
     def transform(self, data: TData, *others: TData) -> TData:
         """Apply cooperative transformation logic. Providers must implement."""
-
-    def teardown(self, data: TData, *others: TData) -> None:
-        pass

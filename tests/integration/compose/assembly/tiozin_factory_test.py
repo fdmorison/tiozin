@@ -171,6 +171,8 @@ def test_load_should_load_output_plugin(factory: TiozinFactory, kind: str):
         product="revenue",
         model="daily",
         options={},
+        schema_subject=None,
+        schema_version=None,
         verbose=True,
         force_error=False,
     )
@@ -215,6 +217,8 @@ def test_load_should_load_transform_plugin(factory: TiozinFactory, kind: str):
         product="revenue",
         model="daily",
         options={},
+        schema_subject=None,
+        schema_version=None,
         verbose=True,
         force_error=False,
     )

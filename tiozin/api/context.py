@@ -119,7 +119,7 @@ class Context:
         default_factory=Registries, repr=False, metadata={"template": False}
     )
 
-    schema: Schema | None = field(
+    output_schema: Schema | None = field(
         init=False,
         repr=False,
         default=None,
