@@ -85,7 +85,7 @@ class DuckdbFileOutput(DuckdbOutput):
         self.partition_by = as_list(partition_by, [])
         self.compression = trim_lower(compression or "snappy")
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets(
             outputs=[Dataset.from_uri(self.path)],
         )
@@ -108,7 +108,7 @@ class DuckdbFileOutput(DuckdbOutput):
 
         Finally, returns a SQL string to be executed lazily by the runner.
         """
-        self.info(f"Writing {self.format} to {self.path}")
+        self.info(f"Writing {self.format} to `{self.path}`")
 
         if self.mode == "OVERWRITE":
             clear_dir(self.path)

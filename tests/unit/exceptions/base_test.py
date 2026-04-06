@@ -48,7 +48,7 @@ def test_tiozin_error_to_dict_should_return_code_and_message():
     assert actual == expected
 
 
-def test_tiozin_error_str_should_format_code_and_message():
+def test_tiozin_error_str_should_format_message_only():
     # Arrange
     error = TiozinUsageError(message="Test message", code="TEST_CODE")
 
@@ -57,7 +57,7 @@ def test_tiozin_error_str_should_format_code_and_message():
 
     # Assert
     actual = result
-    expected = "TEST_CODE: Test message"
+    expected = "Test message"
     assert actual == expected
 
 

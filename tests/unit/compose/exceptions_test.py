@@ -22,8 +22,8 @@ def test_ambiguous_plugin_error_should_format_plugin_name_and_candidates_in_mess
     # Assert
     actual = error.message
     expected = (
-        "The Tiozin name 'my_plugin' matches multiple registered Tiozin plugins. "
-        "Available provider-qualified options are: provider1.my_plugin and provider2.my_plugin. "
+        "The Tiozin name 'my_plugin' matches multiple registered Tiozin plugins. Available "
+        "provider-qualified options are: `provider1.my_plugin` and `provider2.my_plugin`. "
         "You can disambiguate by specifying the provider-qualified name "
         "or the fully qualified Python class path."
     )

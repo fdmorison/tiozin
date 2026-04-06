@@ -7,7 +7,7 @@ from tiozin import Schema
 from tiozin.utils.runtime import tio_alias
 
 if TYPE_CHECKING:
-    from ...typehints import SparkEtlStep, SparkPlan
+    from ..typehints import SparkEtlStep, SparkPlan
 
 
 class SparkStepProxy(wrapt.ObjectProxy):

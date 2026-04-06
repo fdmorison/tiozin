@@ -54,11 +54,11 @@ def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: 
     schema_registry.try_get.assert_called_with("acme.orders", "v1")
 
 
-def test_proxy_should_render_templates_at_static_datasets_with_job_attributes(
+def test_proxy_should_render_templates_at_external_datasets_with_job_attributes(
     job_context: Context,
 ):
     """
-    Verifies that path templates in static_datasets() are rendered using the active
+    Verifies that path templates in external_datasets() are rendered using the active
     job context when the step does not define domain or layer itself.
     """
     step = InputStub(name="orders", domain=None, layer=None)
@@ -79,12 +79,12 @@ def test_proxy_should_render_templates_at_static_datasets_with_job_attributes(
     assert actual == expected
 
 
-def test_proxy_should_render_templates_at_static_datasets_with_step_attributes(
+def test_proxy_should_render_templates_at_external_datasets_with_step_attributes(
     job_context: Context,
 ):
     """
     Verifies that when a step defines its own domain and layer, those values take
-    precedence over the job context when rendering path templates in static_datasets().
+    precedence over the job context when rendering path templates in external_datasets().
     """
     step = InputStub(name="orders", domain="finance", layer="trusted")
 

@@ -21,7 +21,7 @@ class OutputStub(Output):
     def teardown(self) -> None:
         self.captured_teardown = self.path
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets(
             outputs=[Dataset.from_uri(self.path)],
         )

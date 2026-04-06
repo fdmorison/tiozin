@@ -4,7 +4,7 @@ from duckdb import DuckDBPyRelation
 
 from tiozin import Dataset, Datasets
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils import as_list, trim_lower
+from tiozin.utils import as_list, human_join, trim_lower
 
 from .. import DuckdbInput
 from ..compose.assembly.read_builder import ReadBuilder
@@ -98,13 +98,13 @@ class DuckdbFileInput(DuckdbInput):
         self.union_by_name = union_by_name
         self.explode_filepath = explode_filepath
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets(
             inputs=[Dataset.from_uri(p) for p in self.path],
         )
 
     def read(self) -> DuckDBPyRelation:
-        self.info(f"Reading {self.format} from {self.path}")
+        self.info(f"Reading {self.format} from {human_join(self.path)}")
 
         relation = (
             ReadBuilder(self.duckdb)

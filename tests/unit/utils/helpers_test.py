@@ -372,48 +372,47 @@ def test_utcnow_should_return_current_time():
 # ============================================================================
 # Testing human_join()
 # ============================================================================
-def test_human_join_should_return_single_item_as_is():
+@pytest.mark.parametrize("items", [[], None])
+def test_human_join_should_return_empty_string_when_items_is_empty_or_none(items: list):
     # Act
-    actual = human_join(["Alice"])
+    actual = human_join(items)
 
     # Assert
-    expected = "Alice"
+    expected = ""
     assert actual == expected
 
 
-def test_human_join_should_join_two_items_with_and():
+@pytest.mark.parametrize(
+    "items,expected",
+    [
+        (["Alice"], "Alice"),
+        (["Alice", "Bob"], "Alice and Bob"),
+        (["Alice", "Bob", "Charlie"], "Alice, Bob and Charlie"),
+        (["a", "b", "c", "d", "e"], "a, b, c, d and e"),
+        (("x", "y", "z"), "x, y and z"),
+    ],
+)
+def test_human_join_should_join_items_in_human_readable_form(items: list[str], expected: str):
     # Act
-    actual = human_join(["Alice", "Bob"])
+    actual = human_join(items, quote=False)
 
     # Assert
-    expected = "Alice and Bob"
     assert actual == expected
 
 
-def test_human_join_should_join_three_items_with_commas_and_and():
+@pytest.mark.parametrize(
+    "items,expected",
+    [
+        (["Alice"], "`Alice`"),
+        (["Alice", "Bob"], "`Alice` and `Bob`"),
+        (["Alice", "Bob", "Charlie"], "`Alice`, `Bob` and `Charlie`"),
+    ],
+)
+def test_human_join_should_quote_items_when_quote_is_true(items: list[str], expected: str):
     # Act
-    actual = human_join(["Alice", "Bob", "Charlie"])
+    actual = human_join(items, quote=True)
 
     # Assert
-    expected = "Alice, Bob and Charlie"
-    assert actual == expected
-
-
-def test_human_join_should_join_many_items_with_commas_and_and():
-    # Act
-    actual = human_join(["a", "b", "c", "d", "e"])
-
-    # Assert
-    expected = "a, b, c, d and e"
-    assert actual == expected
-
-
-def test_human_join_should_accept_any_iterable():
-    # Act
-    actual = human_join(("x", "y", "z"))
-
-    # Assert
-    expected = "x, y and z"
     assert actual == expected
 
 

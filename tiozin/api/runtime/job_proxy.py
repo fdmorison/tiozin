@@ -37,8 +37,8 @@ class JobProxy(wrapt.ObjectProxy):
 
         with context, TiozinTemplateOverlay(job, context.template_vars):
             try:
-                tios = [t.replace("_", " ").title() for t in job.tios]
-                job.info(f"🚀 {context.kind} is starting — {human_join(tios)} on duty")
+                families = [t.replace("_", " ").title() for t in job.families]
+                job.info(f"🚀 Job `{context.name}` is starting — {human_join(families)} on duty")
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 context.setup_at = utcnow()

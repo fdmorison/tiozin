@@ -13,7 +13,7 @@ from pyspark.sql.functions import (
 from tiozin import Dataset, Datasets
 from tiozin.api import conventions
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
-from tiozin.utils import as_list, trim_lower
+from tiozin.utils import as_list, human_join, trim_lower
 
 from .. import SparkInput
 from ..typehints import SparkFileFormat
@@ -85,14 +85,14 @@ class SparkFileInput(SparkInput):
         self.format = trim_lower(format or "parquet")
         self.explode_filepath = explode_filepath
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets(
             inputs=[Dataset.from_uri(p) for p in self.path],
             outputs=[],
         )
 
     def read(self) -> DataFrame:
-        self.info(f"Reading {self.format} from {self.path}")
+        self.info(f"Reading {self.format} from {human_join(self.path)}")
 
         reader = self.spark.read
         paths = self.path
@@ -102,7 +102,7 @@ class SparkFileInput(SparkInput):
             TiozinInputError.raise_if(
                 len(self.path) != 1,
                 "Spark streaming file sources require exactly one directory path "
-                f"when streaming is enabled. Received: {self.path}",
+                f"when streaming is enabled. Received: {human_join(self.path)}",
             )
             paths = paths[0]
             reader = self.spark.readStream

@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 from tiozin import CoTransform, Input, Output, Transform, tioproxy
 
-from .compose.proxies.step_proxy import SparkStepProxy
+from .compose.step_proxy import SparkStepProxy
 
 
 class SparkStepMixin:

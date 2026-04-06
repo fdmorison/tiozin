@@ -196,7 +196,7 @@ class DuckdbPostgresOutput(DuckdbOutput):
     def _probe(self) -> str:
         return f"{self._database}.{self._pg_probe}"
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets(
             outputs=[
                 Dataset.postgres(self.host, self.port, self.database, self.schema, self.table)

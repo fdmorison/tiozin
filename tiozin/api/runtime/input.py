@@ -83,5 +83,5 @@ class Input(Tiozin, Generic[TData]):
     def teardown(self) -> None:
         pass
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets()
