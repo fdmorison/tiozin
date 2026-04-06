@@ -25,12 +25,12 @@ class FileSchemaRegistry(SchemaRegistry):
     def get(self, identifier: str, version: str = None) -> Schema:
         try:
             path = join_path(self.location, f"{identifier}.yaml")
-            self.info(f"Reading schema from {path}")
+            self.info(f"Reading schema from `{path}`")
             return Schema.from_file(path, **self.options)
         except FileNotFoundError:
             raise SchemaNotFoundError(identifier) from None
 
     def register(self, identifier: str, value: Schema) -> None:
         path = join_path(self.location, f"{identifier}.yaml")
-        self.info(f"Writing schema to {path}")
+        self.info(f"Writing schema to `{path}`")
         write_text(path, value.to_yaml(), **self.options)

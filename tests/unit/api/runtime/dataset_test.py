@@ -394,18 +394,23 @@ def test_from_uri_should_keep_relative_path_as_is_when_no_scheme():
 
 
 @pytest.mark.parametrize(
-    "uri, expected_name",
+    "uri, expected_namespace, expected_name",
     [
-        ("s3://my-bucket/data/orders/", "data/orders"),
-        (".output/lake-ecommerce-raw/orders/", ".output/lake-ecommerce-raw/orders"),
+        ("s3://my-bucket/data/orders/", "s3://my-bucket", "data/orders"),
+        (".output/lake-ecommerce-raw/orders/", "file", ".output/lake-ecommerce-raw/orders"),
     ],
     ids=["object-storage-trailing-slash", "relative-path-trailing-slash"],
 )
-def test_from_uri_should_strip_trailing_slash_from_name(uri: str, expected_name: str):
+def test_from_uri_should_strip_trailing_slash_from_name(
+    uri: str, expected_namespace: str, expected_name: str
+):
     # Act
     result = Dataset.from_uri(uri)
 
     # Assert
-    actual = result.tiozin_name
-    expected = expected_name
+    actual = (result.tiozin_namespace, result.tiozin_name)
+    expected = (
+        expected_namespace,
+        expected_name,
+    )
     assert actual == expected

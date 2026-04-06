@@ -17,10 +17,10 @@ if TYPE_CHECKING:
 
 class TransformProxy(wrapt.ObjectProxy):
     """
-    Wraps an Input, Transform, or Output to add Tiozin's runtime behavior.
+    Wraps a Transform step to handle runtime concerns during data processing.
 
-    The wrapped step focuses on ETL logic. The proxy handles everything else:
-    context propagation, template rendering, lifecycle hooks, logging, and timing.
+    Manages context propagation, template rendering, lifecycle hooks,
+    logging, timing, and optional schema propagation or validation.
     """
 
     def __repr__(self) -> str:
@@ -43,7 +43,7 @@ class TransformProxy(wrapt.ObjectProxy):
                 step.info("▶️  Starting to tranform data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
-                static = step.static_datasets()
+                external = step.external_datasets()
                 unwrapped_data = [Dataset.unwrap(a) for a in data]
 
                 if step.schema_subject:
@@ -52,7 +52,7 @@ class TransformProxy(wrapt.ObjectProxy):
                         step.schema_version,
                     )
 
-                catalog.register(step, inputs=[*static.inputs, *data])
+                catalog.register(step, inputs=[*external.inputs, *data])
                 lineage.start(inputs=catalog.get_inputs(step))
 
                 context.setup_at = utcnow()

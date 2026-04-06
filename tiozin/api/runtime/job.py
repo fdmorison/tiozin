@@ -128,9 +128,9 @@ class Job(Tiozin, Generic[TData]):
         self.transforms = transforms or []
         self.outputs = outputs or []
         self.steps = self.inputs + self.transforms + self.outputs
-
-        tiozins: list[Tiozin] = [self, self.runner, *self.steps]
-        self.tios: frozenset[str] = frozenset(t.tiozin_family for t in tiozins)
+        self.families: frozenset[str] = frozenset(
+            t.tiozin_family for t in [self, self.runner, *self.steps]
+        )
 
     @staticmethod
     def builder() -> JobBuilder:

@@ -79,23 +79,24 @@ class SparkFileOutput(SparkOutput):
         self.mode = trim_lower(mode or "append")
         self.partition_by = as_list(partition_by)
 
-    def static_datasets(self) -> Datasets:
+    def external_datasets(self) -> Datasets:
         return Datasets(
             inputs=[],
             outputs=[Dataset.from_uri(self.path)],
         )
 
     def write(self, data: DataFrame) -> DataFrameWriter:
-        self.info(f"Writing {self.format} to {self.path}")
+        self.info(f"Writing {self.format} to `{self.path}`")
 
-        writer = data.write.format(self.format).mode(self.mode)
+        writer = data.write
 
         if self.partition_by:
             writer = writer.partitionBy(*self.partition_by)
 
-        for key, value in self.options.items():
-            writer = writer.option(key, value)
-
-        writer = writer.option("path", self.path)
-
+        writer = (
+            writer.format(self.format)
+            .mode(self.mode)
+            .options(**self.options)
+            .option("path", self.path)
+        )
         return writer

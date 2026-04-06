@@ -60,7 +60,7 @@ class TiozinError(Exception):
         }
 
     def __str__(self) -> str:
-        return f"{self.code}: {self.message}"
+        return self.message
 
 
 class TiozinUsageError(TiozinError):

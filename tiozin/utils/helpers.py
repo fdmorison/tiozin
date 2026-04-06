@@ -193,15 +193,17 @@ def as_flat_list(*values: T) -> list[T]:
     return result
 
 
-def human_join(items: list[str]) -> str:
+def human_join(items: list[str], quote: bool = True) -> str:
     """
     Join a list of strings into a human-readable sentence.
 
     Uses commas between items and "and" before the last item,
-    following natural English formatting.
+    following natural English formatting. Returns an empty string
+    for an empty list.
 
     Args:
-        items: Strings to join. Must contain at least one item.
+        items: Strings to join.
+        quote: When `True`, quotes each item before joining.
 
     Returns:
         A single string with items joined in human-readable form.
@@ -213,18 +215,21 @@ def human_join(items: list[str]) -> str:
         "Alice and Bob"
         >>> human_join(["Alice", "Bob", "Charlie"])
         "Alice, Bob and Charlie"
+        >>> human_join(["Alice", "Bob"], quote=True)
+        "`Alice` and `Bob`"
     """
     if not items:
         return ""
 
-    items = list(items)
-    return (
-        items[0]
-        if len(items) == 1
-        else " and ".join(items)
-        if len(items) == 2
-        else f"{', '.join(items[:-1])} and {items[-1]}"
-    )
+    quoted = [f"`{i}`" if quote else i for i in items]
+
+    if len(quoted) == 1:
+        return quoted[0]
+
+    if len(quoted) == 2:
+        return f"{quoted[0]} and {quoted[1]}"
+
+    return f"{', '.join(quoted[:-1])} and {quoted[-1]}"
 
 
 def randstr(n: int = 6) -> str:

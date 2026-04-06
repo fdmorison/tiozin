@@ -17,10 +17,10 @@ if TYPE_CHECKING:
 
 class InputProxy(wrapt.ObjectProxy):
     """
-    Wraps an Input, Transform, or Output to add Tiozin's runtime behavior.
+    Wraps an Input step to handle runtime concerns during data ingestion.
 
-    The wrapped step focuses on ETL logic. The proxy handles everything else:
-    context propagation, template rendering, lifecycle hooks, logging, and timing.
+    Manages context propagation, template rendering, lifecycle hooks,
+    logging, timing, and schema enforcement for input data.
     """
 
     def setup(self) -> None:
@@ -40,13 +40,13 @@ class InputProxy(wrapt.ObjectProxy):
                 step.info("▶️  Starting to read data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
-                static = step.static_datasets()
+                external = step.external_datasets()
                 context.output_schema = context.registries.schema.try_get(
                     step.schema_subject,
                     step.schema_version,
                 )
 
-                catalog.register(step, inputs=static.inputs)
+                catalog.register(step, inputs=external.inputs)
                 lineage.start(inputs=catalog.get_inputs(step))
                 context.setup_at = utcnow()
                 step.setup()
@@ -63,7 +63,7 @@ class InputProxy(wrapt.ObjectProxy):
                 step.info(f"{context.kind} finished in {context.execution_delay:.2f}s")
                 output_dataset = (
                     Dataset.wrap(result)
-                    .merge(static.outputs[0] if static.outputs else None)
+                    .merge(external.outputs[0] if external.outputs else None)
                     .with_namespace(context.namespace)
                     .with_name(context.qualified_slug)
                     .with_schema(context.output_schema)

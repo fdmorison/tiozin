@@ -3,10 +3,9 @@ import signal
 
 import wrapt
 
-from tiozin.api.loggable import Loggable
-
 from . import logs
 from .api import Context, Job, JobManifest
+from .api.loggable import Loggable
 from .api.metadata.bundle import Registries
 from .container import AppContainer
 from .exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
