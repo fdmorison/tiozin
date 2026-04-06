@@ -48,26 +48,33 @@ class LineageRegistryProxy(wrapt.ObjectProxy):
     def abort(self, inputs=None, outputs=None) -> None:
         self._safe_emit(self._registry.abort, inputs, outputs)
 
-    def _should_emit(self) -> bool:
+    def _safe_emit(self, emit, *args, **kwargs) -> None:
+        """
+        Proxy entrypoint for lineage emission.
+
+        Enforces conditional emission and ensures all errors are swallowed,
+        making lineage strictly best-effort.
+        """
         from tiozin.api import Context
 
         context = Context.current(required=False)
+        emit_level = self._registry.emit_level
+
         if context is None:
             self._registry.warning("Skipping lineage emission: no active execution context")
             return False
 
-        return (
-            self._registry.emit_level == EmitLevel.ALL
-            or (self._registry.emit_level == EmitLevel.JOB and context.is_job)
-            or (self._registry.emit_level == EmitLevel.STEP and context.is_step)
+        should_emit = (
+            emit_level == EmitLevel.ALL
+            or (emit_level == EmitLevel.JOB and context.is_job)
+            or (emit_level == EmitLevel.STEP and context.is_step)
         )
 
-    def _safe_emit(self, fn, *args, **kwargs) -> None:
-        if not self._should_emit():
-            return
+        if not should_emit:
+            return None
 
         try:
-            fn(*args, **kwargs)
+            emit(*args, **kwargs)
         except requests.HTTPError as e:
             content = e.response.json() or {}
             message = content.get("message", "Lineage emission failed")
