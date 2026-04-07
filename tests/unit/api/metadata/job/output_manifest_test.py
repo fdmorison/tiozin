@@ -27,6 +27,8 @@ def test_manifest_should_have_defaults():
         layer=None,
         product=None,
         model=None,
+        schema_subject=None,
+        schema_version=None,
     )
     assert actual == expected
 
@@ -42,6 +44,8 @@ def test_manifest_should_have_defaults():
         ("layer", "test_layer"),
         ("product", "test_product"),
         ("model", "test_model"),
+        ("schema_subject", "test_subject"),
+        ("schema_version", "1.0.0"),
     ],
 )
 def test_manifest_should_accept_output_with_optional_fields(field_name, field_value):

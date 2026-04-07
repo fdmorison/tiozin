@@ -123,7 +123,6 @@ def test_load_should_load_input_plugin(factory: TiozinFactory, kind: str):
         layer="raw",
         product="revenue",
         model="daily",
-        schema=None,
         schema_subject=None,
         schema_version=None,
         options={},

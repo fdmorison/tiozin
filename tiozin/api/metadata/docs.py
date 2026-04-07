@@ -53,6 +53,8 @@ TRANSFORM_SUBDOMAIN = "Subdomain within the domain team owning the transformatio
 TRANSFORM_PRODUCT = "Data product being transformed (optional)"
 TRANSFORM_MODEL = "Data model being transformed (optional)"
 TRANSFORM_LAYER = "Data layer of the transformation output (optional)"
+TRANSFORM_SCHEMA_SUBJECT = "Schema registry subject name (optional)"
+TRANSFORM_SCHEMA_VERSION = "Specific schema version (optional)"
 
 # OutputManifest
 OUTPUT_NAME = "Unique identifier for this output within the job"
@@ -64,6 +66,8 @@ OUTPUT_SUBDOMAIN = "Subdomain within the domain team owning the destination (opt
 OUTPUT_PRODUCT = "Data product being produced (optional)"
 OUTPUT_MODEL = "Data model being written (e.g., table, topic, collection) (optional)"
 OUTPUT_LAYER = "Data layer of the destination (e.g., raw, trusted, refined) (optional)"
+OUTPUT_SCHEMA_SUBJECT = "Schema registry subject name (optional)"
+OUTPUT_SCHEMA_VERSION = "Specific schema version (optional)"
 
 # JobManifest - Identity & Ownership
 JOB_NAME = "Unique name for the job (it is not the execution ID)"
