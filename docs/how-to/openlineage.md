@@ -7,6 +7,7 @@ Send job lineage events to any [OpenLineage](https://openlineage.io/)-compatible
 Add `OpenLineageRegistry` to your `tiozin.yaml`:
 
 ```yaml
+# tiozin.yaml
 registries:
   lineage:
     kind: tio_kernel:OpenLineageRegistry
@@ -71,6 +72,7 @@ By default, Tiozin emits one pair of events per job run (job-level lineage). You
 Set it in `tiozin.yaml`:
 
 ```yaml
+# tiozin.yaml
 registries:
   lineage:
     kind: tio_kernel:OpenLineageRegistry
@@ -95,17 +97,24 @@ Lineage errors never interrupt job execution. If the backend is unreachable or r
 Point `location` at the Marquez API and open the UI at port `3000`:
 
 ```yaml
+# tiozin.yaml
 registries:
   lineage:
     kind: tio_kernel:OpenLineageRegistry
     location: "http://{{ ENV.MARQUEZ_HOST | default('localhost') }}:5000"
 ```
 
+After running a job, the lineage graph is available in the Marquez UI. Each node represents a dataset and each edge represents a job that reads or writes it.
+
+<!-- INSERT SCREENSHOT: Marquez lineage graph showing a Tiozin job connecting input and output datasets -->
+![Marquez lineage graph](ol-graph.png)
+
 ## Authentication
 
 Set `api_key` to send a `Bearer` token with every request:
 
 ```yaml
+# tiozin.yaml
 registries:
   lineage:
     kind: tio_kernel:OpenLineageRegistry
@@ -120,6 +129,7 @@ Any extra field in the registry block is forwarded as a keyword argument to `Ope
 Kafka example:
 
 ```yaml
+# tiozin.yaml
 registries:
   lineage:
     kind: tio_kernel:OpenLineageRegistry
