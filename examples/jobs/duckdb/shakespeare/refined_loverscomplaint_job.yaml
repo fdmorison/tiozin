@@ -24,6 +24,7 @@ inputs:
     name: load_poems
     layer: raw
     path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{product}}/date={{today}}/filestem={{model}}
+    schema_subject: auto
 
 transforms:
   - kind: DuckdbWordCountTransform

@@ -30,6 +30,7 @@ inputs:
     name: load_it
     layer: raw
     path: .output/lake-{{domain}}-{{layer}}/{{product}}/{{model}}/date={{ DAY[-1] }}
+    schema_subject: auto
 
 transforms:
   - kind: NoOpTransform

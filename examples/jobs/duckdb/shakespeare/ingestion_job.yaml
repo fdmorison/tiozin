@@ -24,6 +24,7 @@ inputs:
     path: examples/data/{{product}}/*.txt
     format: text
     explode_filepath: true
+    schema_subject: auto
 
 outputs:
   - kind: DuckdbFileOutput

@@ -120,6 +120,11 @@ Tiozin is human-readable and machine-generatable:
 - [Tio Spark - Spark Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
 - [Tio Duckdb - DuckDB Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
 
+### How-to Guides
+- [How to Configure OpenLineage](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/openlineage.md)
+- [How to Use Schemas in Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/schemas.md)
+- [How to Use Secrets in Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/secrets.md)
+
 ### Reference
 - [Settings Reference: tiozin.yaml](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
 - [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)

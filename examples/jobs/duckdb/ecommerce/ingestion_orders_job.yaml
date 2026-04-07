@@ -24,6 +24,7 @@ inputs:
     path: examples/data/ecommerce/orders.csv
     format: csv
     header: true
+    schema_subject: auto
 
 transforms:
   - kind: DuckdbSqlTransform

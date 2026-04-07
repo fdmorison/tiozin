@@ -27,6 +27,7 @@ inputs:
     path: examples/data/ecommerce/customers.csv
     format: csv
     header: true
+    schema_subject: auto
 
 outputs:
   - kind: DuckdbPostgresOutput

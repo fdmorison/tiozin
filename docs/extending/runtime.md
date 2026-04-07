@@ -262,7 +262,7 @@ Install your package (e.g. `uv sync`, `poetry install`) and the classes become a
 
 Tiozin automatically reports lineage at each job execution, making your plugins visible in a lineage graph.
 
-To enable this, see [Lineage](lineage.md) for details on configuring the job namespace and overriding `lineage_datasets()` in your plugins.
+To enable this, see [Lineage](lineage.md) for details on configuring the job namespace and overriding `external_datasets()` in your plugins.
 
 ### Stateless steps, stateful runner
 

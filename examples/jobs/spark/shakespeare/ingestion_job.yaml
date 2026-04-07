@@ -27,6 +27,7 @@ inputs:
     path: examples/data/{{product}}
     format: text
     explode_filepath: true
+    schema_subject: auto
 
 outputs:
   - kind: SparkFileOutput
