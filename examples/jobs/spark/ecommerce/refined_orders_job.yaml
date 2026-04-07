@@ -27,6 +27,7 @@ inputs:
     model: customers
     path: .output/lake-ecommerce-{{layer}}/{{product}}/{{model}}
     format: parquet
+    schema_subject: auto
 
   - kind: SparkFileInput
     name: load_orders
@@ -35,6 +36,7 @@ inputs:
     model: orders
     path: .output/lake-ecommerce-{{layer}}/{{product}}/{{model}}
     format: parquet
+    schema_subject: auto
 
 transforms:
   - kind: SparkSqlTransform

@@ -64,3 +64,5 @@ spark-warehouse
 .scratch
 tiozin.yaml
 !secret.py
+!secret.md
+!secrets.md

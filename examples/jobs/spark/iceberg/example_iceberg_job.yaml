@@ -27,6 +27,7 @@ inputs:
     table: "{{layer}}.{{product}}.{{model}}"
     snapshot: "{{ DAY[-1] }}"
     verbose: true
+    schema_subject: auto
 
 transforms:
   - kind: NoOpTransform

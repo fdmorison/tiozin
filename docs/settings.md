@@ -131,7 +131,7 @@ registries:
 |---|---|
 | `setting` | `tio_kernel:FileSettingRegistry` |
 | `job` | `tio_kernel:FileJobRegistry` |
-| `schema` | `tio_kernel:NoOpSchemaRegistry` |
+| `schema` | `tio_kernel:FileSchemaRegistry` |
 | `secret` | `tio_kernel:EnvSecretRegistry` |
 | `transaction` | `tio_kernel:NoOpTransactionRegistry` |
 | `lineage` | `tio_kernel:NoOpLineageRegistry` |
@@ -248,11 +248,14 @@ Every registry field has a matching environment variable. These act as defaults:
 
 | Variable | Default |
 |---|---|
-| `TIO_SCHEMA_REGISTRY_KIND` | `tio_kernel:NoOpSchemaRegistry` |
+| `TIO_SCHEMA_REGISTRY_KIND` | `tio_kernel:FileSchemaRegistry` |
 | `TIO_SCHEMA_REGISTRY_LOCATION` | `null` |
 | `TIO_SCHEMA_REGISTRY_TIMEOUT` | `null` |
 | `TIO_SCHEMA_REGISTRY_READONLY` | `null` |
 | `TIO_SCHEMA_REGISTRY_CACHE` | `null` |
+| `TIO_SCHEMA_REGISTRY_SHOW_SCHEMA` | `false` |
+| `TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE` | `{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}` |
+| `TIO_SCHEMA_REGISTRY_DEFAULT_VERSION` | `latest` |
 
 ### Secret registry
 
@@ -283,6 +286,7 @@ Every registry field has a matching environment variable. These act as defaults:
 | `TIO_LINEAGE_REGISTRY_TIMEOUT` | `null` |
 | `TIO_LINEAGE_REGISTRY_READONLY` | `null` |
 | `TIO_LINEAGE_REGISTRY_CACHE` | `null` |
+| `TIO_LINEAGE_REGISTRY_EMIT_LEVEL` | `JOB` |
 
 ### Metric registry
 

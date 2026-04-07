@@ -75,7 +75,7 @@ Each event follows the OpenLineage `RunEvent` spec:
 
 The job `namespace` comes from the job's `namespace` field. When not set explicitly, it is derived from `TIO_JOB_NAMESPACE_TEMPLATE` (default: `org.region.domain.subdomain`). The `name` is the job slug.
 
-Inputs and outputs in the event are the physical datasets reported by each step. File plugins report the actual paths. Postgres plugins report the target table. Steps that do not override `lineage_datasets()` fall back to a logical dataset derived from the step's taxonomy fields.
+Inputs and outputs in the event are the physical datasets reported by each step. File plugins report the actual paths. Postgres plugins report the target table. Steps that do not override `external_datasets()` fall back to a logical dataset derived from the step's taxonomy fields.
 
 When a dataset carries a `schema`, it is emitted as a `SchemaDatasetFacet`. Nested structs are flattened with dot notation (`customer.id`). Array elements use bracket notation (`items[].sku`). Arrays of scalar values use the `array<type>` format (`array<string>`). Datasets without a schema emit an empty `facets` object.
 

@@ -25,6 +25,7 @@ inputs:
     format: csv
     header: true
     inferSchema: true
+    schema_subject: auto
 
 transforms:
   - kind: SparkSqlTransform

@@ -20,7 +20,7 @@ The job namespace is always logical. It represents where the job fits in your or
 
 ## Dataset lineage
 
-Override `lineage_datasets()` on your Input or Output to report the physical dataset it touches:
+Override `external_datasets()` on your Input or Output to report the physical dataset it touches:
 
 ```python
 from tiozin import Lineage, LineageDataset
