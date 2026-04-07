@@ -42,7 +42,6 @@ class InputManifest(Manifest):
     model: str | None = Field(None, description=docs.INPUT_MODEL)
 
     # Specific
-    schema: str | None = Field(None, description=docs.INPUT_SCHEMA)
     schema_subject: str | None = Field(None, description=docs.INPUT_SCHEMA_SUBJECT)
     schema_version: str | None = Field(None, description=docs.INPUT_SCHEMA_VERSION)
 
@@ -67,6 +66,10 @@ class TransformManifest(Manifest):
     product: str | None = Field(None, description=docs.TRANSFORM_PRODUCT)
     model: str | None = Field(None, description=docs.TRANSFORM_MODEL)
 
+    # Specific
+    schema_subject: str | None = Field(None, description=docs.TRANSFORM_SCHEMA_SUBJECT)
+    schema_version: str | None = Field(None, description=docs.TRANSFORM_SCHEMA_VERSION)
+
 
 class OutputManifest(Manifest):
     """
@@ -87,6 +90,10 @@ class OutputManifest(Manifest):
     layer: str | None = Field(None, description=docs.OUTPUT_LAYER)
     product: str | None = Field(None, description=docs.OUTPUT_PRODUCT)
     model: str | None = Field(None, description=docs.OUTPUT_MODEL)
+
+    # Specific
+    schema_subject: str | None = Field(None, description=docs.OUTPUT_SCHEMA_SUBJECT)
+    schema_version: str | None = Field(None, description=docs.OUTPUT_SCHEMA_VERSION)
 
 
 class JobManifest(Manifest):

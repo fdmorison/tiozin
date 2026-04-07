@@ -34,7 +34,6 @@ class Input(Tiozin, Generic[TData]):
         layer: Data layer of the source (e.g., raw, trusted, refined).
         product: Data product being consumed.
         model: Data model being read (e.g., table, topic, collection).
-        schema: The schema definition of input data.
         schema_subject: Schema registry subject name.
         schema_version: Specific schema version.
     """
@@ -43,7 +42,6 @@ class Input(Tiozin, Generic[TData]):
         self,
         name: str = None,
         description: str = None,
-        schema: str = None,
         schema_subject: str = None,
         schema_version: str = None,
         org: str = None,
@@ -61,7 +59,6 @@ class Input(Tiozin, Generic[TData]):
             name=name,
         )
 
-        self.schema = schema
         self.schema_subject = schema_subject
         self.schema_version = schema_version
 
