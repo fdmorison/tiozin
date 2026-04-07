@@ -8,54 +8,6 @@ from tiozin.api.metadata.schema.proxy import SchemaRegistryProxy
 from tiozin.exceptions import RequiredArgumentError, TiozinInternalError
 
 # ============================================================================
-# SchemaRegistryProxy - delegation
-# ============================================================================
-
-
-def test_proxy_should_delegate_get():
-    # Arrange
-    schema = MagicMock(spec=Schema)
-    subject = "acme.eu.sales.orders.raw.crm.order"
-    version = "v2"
-    wrapped_registry = MagicMock()
-    wrapped_registry.context.render.return_value = subject
-    wrapped_registry.get.return_value = schema
-
-    # Act
-    SchemaRegistryProxy(wrapped_registry).get(subject, version)
-
-    # Assert
-    wrapped_registry.get.assert_called_with(subject, version)
-
-
-def test_proxy_should_delegate_register():
-    # Arrange
-    schema = MagicMock(spec=Schema)
-    subject = "acme.eu.sales.orders.raw.crm.order"
-    wrapped_registry = MagicMock()
-
-    # Act
-    SchemaRegistryProxy(wrapped_registry).register(subject, schema)
-
-    # Assert
-    wrapped_registry.register.assert_called_with(subject, schema)
-
-
-def test_proxy_should_delegate_attribute_access():
-    # Arrange
-    location = "schema://test-registry"
-    wrapped_registry = MagicMock(location=location)
-
-    # Act
-    result = SchemaRegistryProxy(wrapped_registry).location
-
-    # Assert
-    actual = result
-    expected = location
-    assert actual == expected
-
-
-# ============================================================================
 # SchemaRegistryProxy - get()
 # ============================================================================
 
@@ -97,24 +49,22 @@ def test_get_should_retrieve_schema_by_version():
     assert actual == expected
 
 
-def test_get_should_retrieve_schema_by_default_registry_args():
+def test_get_should_retrieve_schema_by_auto_subject():
     # Arrange
-    template = "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
-    subject = "acme.eu.sales.orders.raw.crm.order"
-    version = "v2"
-
+    template = "{{org}}.{{region}}.{{domain}}"
+    subject = "acme.eu.sales"
     schema = MagicMock(spec=Schema)
+
     wrapped_registry = MagicMock()
     wrapped_registry.subject_template = template
-    wrapped_registry.default_version = version
     wrapped_registry.context.render.return_value = subject
     wrapped_registry.get.return_value = schema
 
     # Act
-    SchemaRegistryProxy(wrapped_registry).get()
+    SchemaRegistryProxy(wrapped_registry).get("auto")
 
     # Assert
-    wrapped_registry.get.assert_called_with(subject, version)
+    wrapped_registry.context.render.assert_called_with(template)
 
 
 def test_get_should_raise_when_schema_not_found():
@@ -156,14 +106,22 @@ def test_get_should_raise_when_registry_returns_wrong_type():
         SchemaRegistryProxy(wrapped_registry).get(subject)
 
 
-def test_get_should_raise_when_no_identifier_and_no_subject_template():
+def test_get_should_raise_when_identifier_is_empty():
     # Arrange
     wrapped_registry = MagicMock()
-    wrapped_registry.subject_template = None
 
     # Act
     with pytest.raises(RequiredArgumentError):
-        SchemaRegistryProxy(wrapped_registry).get()
+        SchemaRegistryProxy(wrapped_registry).get("")
+
+
+def test_get_should_raise_when_identifier_is_none():
+    # Arrange
+    wrapped_registry = MagicMock()
+
+    # Act
+    with pytest.raises(RequiredArgumentError):
+        SchemaRegistryProxy(wrapped_registry).get(None)
 
 
 def test_get_should_log_schema_when_show_schema_is_true():
@@ -184,3 +142,60 @@ def test_get_should_log_schema_when_show_schema_is_true():
     actual = schema.to_yaml.called
     expected = True
     assert actual == expected
+
+
+# ============================================================================
+# SchemaRegistryProxy - register()
+# ============================================================================
+
+
+def test_register_should_send_schema_to_registry():
+    # Arrange
+    schema = MagicMock(spec=Schema)
+    subject = "acme.eu.sales.orders.raw.crm.order"
+
+    wrapped_registry = MagicMock()
+    wrapped_registry.context.render.return_value = subject
+
+    # Act
+    SchemaRegistryProxy(wrapped_registry).register(subject, schema)
+
+    # Assert
+    wrapped_registry.register.assert_called_with(subject, schema)
+
+
+def test_register_should_resolve_subject_when_auto():
+    # Arrange
+    template = "{{org}}.{{region}}.{{domain}}"
+    subject = "acme.eu.sales"
+    schema = MagicMock(spec=Schema)
+
+    wrapped_registry = MagicMock()
+    wrapped_registry.subject_template = template
+    wrapped_registry.context.render.return_value = subject
+
+    # Act
+    SchemaRegistryProxy(wrapped_registry).register("auto", schema)
+
+    # Assert
+    wrapped_registry.context.render.assert_called_with(template)
+
+
+def test_register_should_raise_when_identifier_is_empty():
+    # Arrange
+    schema = MagicMock(spec=Schema)
+    wrapped_registry = MagicMock()
+
+    # Act
+    with pytest.raises(RequiredArgumentError):
+        SchemaRegistryProxy(wrapped_registry).register("", schema)
+
+
+def test_register_should_raise_when_identifier_is_none():
+    # Arrange
+    schema = MagicMock(spec=Schema)
+    wrapped_registry = MagicMock()
+
+    # Act
+    with pytest.raises(RequiredArgumentError):
+        SchemaRegistryProxy(wrapped_registry).register(None, schema)
