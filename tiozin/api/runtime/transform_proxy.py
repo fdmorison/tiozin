@@ -17,14 +17,11 @@ if TYPE_CHECKING:
 
 class TransformProxy(wrapt.ObjectProxy):
     """
-    Wraps a Transform step to handle runtime concerns during data processing.
+    Wraps a Transform to add Tiozin's runtime behavior.
 
-    Manages context propagation, template rendering, lifecycle hooks,
-    logging, timing, and optional schema propagation or validation.
+    The wrapped step focuses on ETL logic. The proxy handles everything else:
+    context propagation, template rendering, lifecycle hooks, logging, and timing.
     """
-
-    def __repr__(self) -> str:
-        return repr(self.__wrapped__)
 
     def setup(self) -> None:
         raise AccessViolationError(self)
@@ -40,7 +37,7 @@ class TransformProxy(wrapt.ObjectProxy):
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
-                step.info("▶️  Starting to tranform data")
+                step.info("▶️  Starting to transform data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 external = step.external_datasets()
@@ -85,3 +82,6 @@ class TransformProxy(wrapt.ObjectProxy):
                 except Exception as e:
                     step.error(f"🚨 {context.kind} teardown failed because {e}")
                 context.finished_at = utcnow()
+
+    def __repr__(self) -> str:
+        return repr(self.__wrapped__)

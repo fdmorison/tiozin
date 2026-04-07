@@ -17,14 +17,11 @@ if TYPE_CHECKING:
 
 class OutputProxy(wrapt.ObjectProxy):
     """
-    Wraps an Output step to handle runtime concerns during data emission.
+    Wraps an Output to add Tiozin's runtime behavior.
 
-    Manages context propagation, template rendering, lifecycle hooks,
-    logging, timing, and schema validation or enrichment for output data.
+    The wrapped step focuses on ETL logic. The proxy handles everything else:
+    context propagation, template rendering, lifecycle hooks, logging, and timing.
     """
-
-    def __repr__(self) -> str:
-        return repr(self.__wrapped__)
 
     def setup(self) -> None:
         raise AccessViolationError(self)
@@ -86,3 +83,6 @@ class OutputProxy(wrapt.ObjectProxy):
                 except Exception as e:
                     step.error(f"🚨 {context.kind} teardown failed because {e}")
                 context.finished_at = utcnow()
+
+    def __repr__(self) -> str:
+        return repr(self.__wrapped__)
