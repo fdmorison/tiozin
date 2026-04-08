@@ -8,7 +8,7 @@ import wrapt
 from tiozin.utils import human_join
 
 from .enums import EmitLevel
-from .model import LineageRunEvent
+from .model import LineageEvent
 
 if TYPE_CHECKING:
     from .registry import LineageRegistry
@@ -30,10 +30,10 @@ class LineageRegistryProxy(wrapt.ObjectProxy):
     def _registry(self) -> LineageRegistry:
         return self.__wrapped__
 
-    def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:
+    def get(self, identifier: str = None, version: str = None) -> LineageEvent:
         return self._registry.get(identifier, version)
 
-    def register(self, identifier: str, value: LineageRunEvent) -> None:
+    def register(self, identifier: str, value: LineageEvent) -> None:
         self._safe_emit(self._registry.register, identifier, value)
 
     def start(self, inputs=None, outputs=None) -> None:

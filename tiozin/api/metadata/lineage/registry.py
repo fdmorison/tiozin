@@ -6,12 +6,12 @@ from tiozin.compose import tioproxy
 
 from ..registry import Registry
 from .enums import EmitLevel, LineageRunEventType
-from .model import LineageRunEvent
+from .model import LineageEvent, LineageRunEvent
 from .proxy import LineageRegistryProxy
 
 
 @tioproxy(LineageRegistryProxy)
-class LineageRegistry(Registry[LineageRunEvent]):
+class LineageRegistry(Registry[LineageEvent]):
     """
     Emits lineage run events during pipeline execution.
 
@@ -28,11 +28,11 @@ class LineageRegistry(Registry[LineageRunEvent]):
         self.emit_level = EmitLevel(emit_level or config.default_lineage_emit_level)
 
     @abstractmethod
-    def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:
+    def get(self, identifier: str = None, version: str = None) -> LineageEvent:
         """Retrieve a lineage event by run ID or job name."""
 
     @abstractmethod
-    def register(self, identifier: str, value: LineageRunEvent) -> None:
+    def register(self, identifier: str, value: LineageEvent) -> None:
         """Emit a run event."""
 
     def start(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
