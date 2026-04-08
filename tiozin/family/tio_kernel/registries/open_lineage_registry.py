@@ -105,8 +105,7 @@ class OpenLineageRegistry(LineageRegistry):
         self.ready = False
 
     def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:
-        # TODO
-        return None
+        raise NotImplementedError("OpenLineageRegistry does not support get")
 
     def register(self, identifier: str, value: LineageRunEvent) -> None:
         """Convert a Tiozin lineage event to OpenLineage format and emit it."""

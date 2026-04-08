@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 from tiozin import TiozinApp
 
 MOCK_SETTINGS = "tests/mocks/settings/default.yaml"
-MOCK_JOB = "tests/mocks/jobs/default.yaml"
+MOCK_JOB = "tests/mocks/jobs/default_job.yaml"
 
 
 # ============================================================================

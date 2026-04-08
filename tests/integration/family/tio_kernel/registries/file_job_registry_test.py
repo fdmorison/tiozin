@@ -33,7 +33,7 @@ def test_get_should_read_from_public_s3_bucket():
 @pytest.mark.parametrize("ext", ["json", "yaml"])
 def test_get_should_load_manifest_from_local_file(ext: str):
     # Arrange
-    path = f"tests/mocks/manifests/mini.{ext}"
+    path = f"tests/mocks/jobs/default_job.{ext}"
 
     # Act
     manifest = FileJobRegistry().get(path)
@@ -41,19 +41,19 @@ def test_get_should_load_manifest_from_local_file(ext: str):
     # Assert
     actual = manifest
     expected = JobManifest(
-        kind="Job",
-        name="test_job",
+        kind="LinearJob",
+        name="default_job",
         org="tiozin",
         region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        product="test_cases",
-        model="some_case",
-        layer="test",
-        runner=RunnerManifest(kind="TestRunner"),
-        inputs=[InputManifest(kind="TestInput", name="reader")],
-        transforms=[TransformManifest(kind="TestTransform", name="transformer")],
-        outputs=[OutputManifest(kind="TestOutput", name="writer")],
+        domain="data",
+        subdomain="platform",
+        product="noop",
+        model="noop",
+        layer="refined",
+        runner=RunnerManifest(kind="NoOpRunner"),
+        inputs=[InputManifest(kind="NoOpInput", name="noop_input")],
+        transforms=[TransformManifest(kind="NoOpTransform", name="noop_transform")],
+        outputs=[OutputManifest(kind="NoOpOutput", name="noop_output")],
     )
     assert actual == expected
 
@@ -66,29 +66,29 @@ def test_get_should_load_manifest_from_local_file(ext: str):
 @pytest.mark.parametrize("ext", ["json", "yaml"])
 def test_get_should_load_manifest_when_identifier_is_relative_to_location(ext: str):
     # Arrange
-    registry = FileJobRegistry(location="tests/mocks/manifests")
+    registry = FileJobRegistry(location="tests/mocks/jobs")
 
     # Act
-    manifest = registry.get(f"mini.{ext}")
+    manifest = registry.get(f"default_job.{ext}")
 
     # Assert
     actual = manifest.name
-    expected = "test_job"
+    expected = "default_job"
     assert actual == expected
 
 
 @pytest.mark.parametrize("ext", ["json", "yaml"])
 def test_get_should_load_manifest_when_identifier_is_absolute_and_location_is_set(ext: str):
     # Arrange
-    abs_path = str(Path(f"tests/mocks/manifests/mini.{ext}").resolve())
-    registry = FileJobRegistry(location="tests/mocks/manifests")
+    abs_path = str(Path(f"tests/mocks/jobs/default_job.{ext}").resolve())
+    registry = FileJobRegistry(location="tests/mocks/jobs")
 
     # Act
     manifest = registry.get(abs_path)
 
     # Assert
     actual = manifest.name
-    expected = "test_job"
+    expected = "default_job"
     assert actual == expected
 
 
@@ -96,19 +96,19 @@ def test_get_should_load_manifest_when_identifier_is_absolute_and_location_is_se
 def test_register_should_write_to_location_when_identifier_is_relative(ext: str, tmp_path: Path):
     # Arrange
     manifest = JobManifest(
-        kind="Job",
-        name="test_job",
+        kind="LinearJob",
+        name="default_job",
         org="tiozin",
         region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        product="test_cases",
-        model="some_case",
-        layer="test",
-        runner=RunnerManifest(kind="TestRunner"),
-        inputs=[InputManifest(kind="TestInput", name="reader")],
-        transforms=[TransformManifest(kind="TestTransform", name="transformer")],
-        outputs=[OutputManifest(kind="TestOutput", name="writer")],
+        domain="data",
+        subdomain="platform",
+        product="noop",
+        model="noop",
+        layer="refined",
+        runner=RunnerManifest(kind="NoOpRunner"),
+        inputs=[InputManifest(kind="NoOpInput", name="noop_input")],
+        transforms=[TransformManifest(kind="NoOpTransform", name="noop_transform")],
+        outputs=[OutputManifest(kind="NoOpOutput", name="noop_output")],
     )
     registry = FileJobRegistry(location=str(tmp_path))
 
@@ -117,7 +117,7 @@ def test_register_should_write_to_location_when_identifier_is_relative(ext: str,
 
     # Assert
     actual = (tmp_path / f"job.{ext}").read_text(encoding="utf8")
-    expected = Path(f"tests/mocks/manifests/mini.{ext}").read_text(encoding="utf8")
+    expected = Path(f"tests/mocks/jobs/default_job.{ext}").read_text(encoding="utf8")
     assert actual == expected
 
 
@@ -131,19 +131,19 @@ def test_register_should_write_manifest_to_local_file(ext: str, tmp_path: Path):
     # Arrange
     output_path = tmp_path / f"job.{ext}"
     manifest = JobManifest(
-        kind="Job",
-        name="test_job",
+        kind="LinearJob",
+        name="default_job",
         org="tiozin",
         region="latam",
-        domain="quality",
-        subdomain="pipeline",
-        product="test_cases",
-        model="some_case",
-        layer="test",
-        runner=RunnerManifest(kind="TestRunner"),
-        inputs=[InputManifest(kind="TestInput", name="reader")],
-        transforms=[TransformManifest(kind="TestTransform", name="transformer")],
-        outputs=[OutputManifest(kind="TestOutput", name="writer")],
+        domain="data",
+        subdomain="platform",
+        product="noop",
+        model="noop",
+        layer="refined",
+        runner=RunnerManifest(kind="NoOpRunner"),
+        inputs=[InputManifest(kind="NoOpInput", name="noop_input")],
+        transforms=[TransformManifest(kind="NoOpTransform", name="noop_transform")],
+        outputs=[OutputManifest(kind="NoOpOutput", name="noop_output")],
     )
 
     # Act
@@ -151,5 +151,5 @@ def test_register_should_write_manifest_to_local_file(ext: str, tmp_path: Path):
 
     # Assert
     actual = output_path.read_text(encoding="utf8")
-    expected = Path(f"tests/mocks/manifests/mini.{ext}").read_text(encoding="utf8")
+    expected = Path(f"tests/mocks/jobs/default_job.{ext}").read_text(encoding="utf8")
     assert actual == expected

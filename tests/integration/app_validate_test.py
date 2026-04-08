@@ -44,7 +44,7 @@ def test_validate_should_succeed_when_job_file_is_valid(_atexit, _signal, app: T
     A job manifest loaded from a well-formed YAML file must pass validation.
     """
     # Arrange
-    path = str(JOBS_DIR / "default.yaml")
+    path = str(JOBS_DIR / "default_job.yaml")
 
     # Act
     result = app.validate(path)
@@ -66,7 +66,7 @@ def test_validate_should_succeed_for_multiple_job_files(_atexit, _signal, app: T
     All must be valid for the call to succeed.
     """
     # Arrange
-    path = str(JOBS_DIR / "default.yaml")
+    path = str(JOBS_DIR / "default_job.yaml")
 
     # Act
     result = app.validate(path, path)

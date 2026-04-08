@@ -99,7 +99,7 @@ class Metadata(BaseModel):
         return dump_yaml(
             self.model_dump(
                 mode="json",
-                exclude_none=True,
+                exclude_unset=True,
             )
         )
 
@@ -107,7 +107,7 @@ class Metadata(BaseModel):
         return (
             self.model_dump_json(
                 indent=2,
-                exclude_none=True,
+                exclude_unset=True,
                 ensure_ascii=False,
             )
             + "\n"
