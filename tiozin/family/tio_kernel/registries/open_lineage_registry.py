@@ -11,7 +11,8 @@ from openlineage.client.generated.parent_run import ParentRunFacet
 from openlineage.client.generated.parent_run import Run as ParentRun
 from openlineage.client.generated.tags_run import TagsRunFacet, TagsRunFacetFields
 
-from tiozin import LineageRegistry, LineageRunEvent
+from tiozin import LineageEvent, LineageRegistry, LineageRunEvent
+from tiozin.exceptions import TiozinNotImplementedError
 
 
 class OpenLineageRegistry(LineageRegistry):
@@ -104,11 +105,15 @@ class OpenLineageRegistry(LineageRegistry):
         self._client = None
         self.ready = False
 
-    def get(self, identifier: str = None, version: str = None) -> LineageRunEvent:
-        raise NotImplementedError("OpenLineageRegistry does not support get")
+    def get(self, identifier: str = None, version: str = None) -> LineageEvent:
+        raise TiozinNotImplementedError("OpenLineageRegistry does not support get")
 
-    def register(self, identifier: str, value: LineageRunEvent) -> None:
-        """Convert a Tiozin lineage event to OpenLineage format and emit it."""
+    def register(self, identifier: str, value: LineageEvent) -> None:
+        TiozinNotImplementedError.raise_if(
+            not isinstance(value, LineageRunEvent),
+            "OpenLineageRegistry only accepts LineageRunEvent, got `{type}`",
+            type=type(value).__name__,
+        )
         self._client.emit(
             event=self._build_run_event(value),
         )

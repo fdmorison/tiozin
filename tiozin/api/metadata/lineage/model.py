@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 from openlineage.client.generated.base import InputDataset, OutputDataset
 from pydantic import Field
@@ -161,3 +161,6 @@ class LineageRunEvent(Metadata):
             inputs=[LineageDataset.from_dataset(d) for d in (inputs or [])],
             outputs=[LineageDataset.from_dataset(d) for d in (outputs or [])],
         )
+
+
+LineageEvent: TypeAlias = LineageRunEvent

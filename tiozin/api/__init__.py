@@ -23,7 +23,7 @@ from .metadata.job.model import (
     RunnerManifest,
     TransformManifest,
 )
-from .metadata.lineage.model import LineageDataset, LineageRunEvent
+from .metadata.lineage.model import LineageDataset, LineageEvent, LineageRunEvent
 from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
 from .metadata.schema.model import Schema
@@ -62,6 +62,7 @@ __all__ = [
     "Dataset",
     "Datasets",
     "LineageDataset",
+    "LineageEvent",
     "LineageRunEvent",
     "Secret",
     "SettingsManifest",
