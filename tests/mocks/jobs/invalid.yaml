@@ -1,3 +1,0 @@
-kind: LinearJob
-name: invalid_job
-# Missing required fields: org, region, domain, subdomain, product, model, layer, runner, inputs
