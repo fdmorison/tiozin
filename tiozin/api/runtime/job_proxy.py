@@ -46,12 +46,12 @@ class JobProxy(wrapt.ObjectProxy):
                 context.executed_at = utcnow()
 
                 with job.runner():
-                    lineage.start(inputs=[], outputs=[])
+                    lineage.run_started(inputs=[], outputs=[])
                     result = job.submit()
 
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
-                lineage.fail(
+                lineage.run_failed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),
                 )
@@ -59,7 +59,7 @@ class JobProxy(wrapt.ObjectProxy):
 
             else:
                 job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
-                lineage.complete(
+                lineage.run_completed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),
                 )

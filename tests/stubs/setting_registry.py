@@ -6,8 +6,5 @@ class SettingRegistryStub(SettingRegistry):
     def __init__(self):
         super().__init__(location="stub://setting")
 
-    def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
+    def get(self) -> SettingsManifest:
         return SettingsManifest()
-
-    def register(self, identifier: str, value: SettingsManifest) -> None:
-        pass

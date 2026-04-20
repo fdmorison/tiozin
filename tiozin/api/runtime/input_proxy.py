@@ -43,13 +43,13 @@ class InputProxy(wrapt.ObjectProxy):
                 external = step.external_datasets()
 
                 if step.schema_subject:
-                    context.output_schema = context.registries.schema.try_get(
+                    context.output_schema = context.registries.schema.get(
                         step.schema_subject,
                         step.schema_version,
                     )
 
                 catalog.register(step, inputs=external.inputs)
-                lineage.start(inputs=catalog.get_inputs(step))
+                lineage.run_started(inputs=catalog.get_inputs(step))
 
                 context.setup_at = utcnow()
                 step.setup()
@@ -59,7 +59,7 @@ class InputProxy(wrapt.ObjectProxy):
 
             except Exception:
                 step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
-                lineage.fail(outputs=catalog.get_outputs(step))
+                lineage.run_failed(outputs=catalog.get_outputs(step))
                 raise
 
             else:
@@ -72,7 +72,7 @@ class InputProxy(wrapt.ObjectProxy):
                     .with_schema(context.output_schema)
                 )
                 catalog.register(step, output=output_dataset)
-                lineage.complete(outputs=catalog.get_outputs(step))
+                lineage.run_completed(outputs=catalog.get_outputs(step))
                 return output_dataset
 
             finally:

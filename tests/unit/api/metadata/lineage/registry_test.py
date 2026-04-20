@@ -11,10 +11,10 @@ from tiozin import Context, Dataset, LineageRunEvent
 @pytest.mark.parametrize(
     "method,expected_type",
     [
-        ("start", LineageRunEvent.START),
-        ("complete", LineageRunEvent.COMPLETE),
-        ("fail", LineageRunEvent.FAIL),
-        ("abort", LineageRunEvent.ABORT),
+        ("run_started", LineageRunEvent.START),
+        ("run_completed", LineageRunEvent.COMPLETE),
+        ("run_failed", LineageRunEvent.FAIL),
+        ("run_aborted", LineageRunEvent.ABORT),
     ],
 )
 def test_helper_should_emit_event_with_correct_type(
@@ -27,14 +27,8 @@ def test_helper_should_emit_event_with_correct_type(
     getattr(lineage_registry_stub, method)()
 
     # Assert
-    actual = (
-        lineage_registry_stub.captured_event.type,
-        lineage_registry_stub.captured_identifier,
-    )
-    expected = (
-        expected_type,
-        job_context.run_id,
-    )
+    actual = lineage_registry_stub.captured_event.type
+    expected = expected_type
     assert actual == expected
 
 
@@ -54,7 +48,7 @@ def test_start_should_forward_inputs(
     ]
 
     # Act
-    lineage_registry_stub.start(inputs=inputs)
+    lineage_registry_stub.run_started(inputs=inputs)
 
     # Assert
     actual = [(d.namespace, d.name) for d in lineage_registry_stub.captured_event.inputs]
@@ -75,7 +69,7 @@ def test_start_should_forward_outputs(
     ]
 
     # Act
-    lineage_registry_stub.start(outputs=outputs)
+    lineage_registry_stub.run_started(outputs=outputs)
 
     # Assert
     actual = [(d.namespace, d.name) for d in lineage_registry_stub.captured_event.outputs]

@@ -29,6 +29,7 @@ class SettingRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
 class JobRegistryManifest(BaseSettings):
@@ -48,6 +49,7 @@ class JobRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
 class SchemaRegistryManifest(BaseSettings):
@@ -67,6 +69,7 @@ class SchemaRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
     # Schema Registry Properties
     show_schema: bool | None = Field(NULLABLE, description=docs.SCHEMA_REGISTRY_SHOW_SCHEMA)
     subject_template: str | None = Field(
@@ -92,6 +95,7 @@ class SecretRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
 class TransactionRegistryManifest(BaseSettings):
@@ -111,6 +115,7 @@ class TransactionRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
 class LineageRegistryManifest(BaseSettings):
@@ -130,6 +135,7 @@ class LineageRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
     # Lineage Properties
     emit_level: EmitLevel | None = Field(NULLABLE, description=docs.LINEAGE_REGISTRY_EMIT_LEVEL)
 
@@ -151,6 +157,7 @@ class MetricRegistryManifest(BaseSettings):
     timeout: int | None = Field(NULLABLE, description=docs.REGISTRY_TIMEOUT)
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
+    failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
 class Registries(BaseSettings):

@@ -1,6 +1,4 @@
-from typing import Any
-
-from tiozin.api import SchemaRegistry
+from tiozin.api import Schema, SchemaRegistry
 
 
 class NoOpSchemaRegistry(SchemaRegistry):
@@ -14,8 +12,8 @@ class NoOpSchemaRegistry(SchemaRegistry):
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location or self.tiozin_uri, **options)
 
-    def get(self, identifier: str = None, version: str | None = None) -> Any:
+    def get(self, subject: str, version: str = None) -> Schema:
         return None
 
-    def register(self, identifier: str = None, value: Any = None) -> None:
+    def register(self, subject: str, value: Schema) -> None:
         return None

@@ -105,20 +105,17 @@ class OpenLineageRegistry(LineageRegistry):
         self._client = None
         self.ready = False
 
-    def get(self, identifier: str = None, version: str = None) -> LineageEvent:
-        raise TiozinNotImplementedError("OpenLineageRegistry does not support get")
-
-    def register(self, identifier: str, value: LineageEvent) -> None:
+    def emit(self, event: LineageEvent) -> None:
         TiozinNotImplementedError.raise_if(
-            not isinstance(value, LineageRunEvent),
+            not isinstance(event, LineageRunEvent),
             "OpenLineageRegistry only accepts LineageRunEvent, got `{type}`",
-            type=type(value).__name__,
+            type=type(event).__name__,
         )
         self._client.emit(
-            event=self._build_run_event(value),
+            event=self._build_run_event(event),
         )
 
-    def _build_run_event(self, event: LineageRunEvent) -> RunEvent:
+    def _build_run_event(self, event: LineageRunEvent) -> LineageRunEvent:
         return RunEvent(
             eventType=event.type,
             eventTime=event.timestamp.isoformat(timespec="milliseconds"),

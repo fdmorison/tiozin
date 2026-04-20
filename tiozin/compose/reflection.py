@@ -233,6 +233,7 @@ def is_tiozin(clazz: Any) -> bool:
         and issubclass(clazz, Tiozin)
         and not inspect.isabstract(clazz)
         and clazz is not Tiozin
+        and clazz is not clazz.tiozin_role_class
     )
 
 

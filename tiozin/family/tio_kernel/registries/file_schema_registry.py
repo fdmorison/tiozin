@@ -22,15 +22,15 @@ class FileSchemaRegistry(SchemaRegistry):
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location, **options)
 
-    def get(self, identifier: str, version: str = None) -> Schema:
+    def get(self, subject: str, version: str = None) -> Schema:
         try:
-            path = join_path(self.location, f"{identifier}.yaml")
+            path = join_path(self.location, f"{subject}.yaml")
             self.info(f"Reading schema from `{path}`")
             return Schema.from_file(path, **self.options)
         except FileNotFoundError:
-            raise SchemaNotFoundError(identifier) from None
+            raise SchemaNotFoundError(subject) from None
 
-    def register(self, identifier: str, value: Schema) -> None:
-        path = join_path(self.location, f"{identifier}.yaml")
+    def register(self, subject: str, value: Schema) -> None:
+        path = join_path(self.location, f"{subject}.yaml")
         self.info(f"Writing schema to `{path}`")
         write_text(path, value.to_yaml(), **self.options)

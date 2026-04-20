@@ -11,7 +11,7 @@ from tiozin.utils import utcnow
 
 from ..model import Metadata
 from ..schema.model import Schema
-from .enums import LineageJobType, LineageProcessingType, LineageRunEventType
+from .enums import JobType, ProcessingType, RunEventType
 
 if TYPE_CHECKING:
     from tiozin.api import Context, Dataset
@@ -58,17 +58,17 @@ class LineageDataset(Metadata):
 
 
 class LineageJob(Metadata):
-    QUERY: ClassVar = LineageJobType.QUERY
-    COMMAND: ClassVar = LineageJobType.COMMAND
-    DAG: ClassVar = LineageJobType.DAG
-    TASK: ClassVar = LineageJobType.TASK
-    JOB: ClassVar = LineageJobType.JOB
-    MODEL: ClassVar = LineageJobType.MODEL
+    QUERY: ClassVar = JobType.QUERY
+    COMMAND: ClassVar = JobType.COMMAND
+    DAG: ClassVar = JobType.DAG
+    TASK: ClassVar = JobType.TASK
+    JOB: ClassVar = JobType.JOB
+    MODEL: ClassVar = JobType.MODEL
 
     namespace: str
     name: str
-    type: LineageJobType
-    processing_type: LineageProcessingType
+    type: JobType
+    processing_type: ProcessingType
     integration: str
 
     @classmethod
@@ -76,10 +76,10 @@ class LineageJob(Metadata):
         return cls(
             namespace=ctx.namespace,
             name=ctx.qualified_slug,
-            type=LineageJobType.JOB,
-            processing_type=LineageProcessingType.STREAMING
+            type=JobType.JOB,
+            processing_type=ProcessingType.STREAMING
             if ctx.runner and ctx.runner.streaming
-            else LineageProcessingType.BATCH,
+            else ProcessingType.BATCH,
             integration=config.app_name.upper(),
         )
 
@@ -109,12 +109,12 @@ class LineageRunEvent(Metadata):
     Backends (e.g. `OpenLineageRegistry`) convert this into their own protocol format.
     """
 
-    START: ClassVar = LineageRunEventType.START
-    COMPLETE: ClassVar = LineageRunEventType.COMPLETE
-    FAIL: ClassVar = LineageRunEventType.FAIL
-    ABORT: ClassVar = LineageRunEventType.ABORT
+    START: ClassVar = RunEventType.START
+    COMPLETE: ClassVar = RunEventType.COMPLETE
+    FAIL: ClassVar = RunEventType.FAIL
+    ABORT: ClassVar = RunEventType.ABORT
 
-    type: LineageRunEventType
+    type: RunEventType
     producer: str
     timestamp: datetime
     nominal_time: datetime
@@ -129,12 +129,12 @@ class LineageRunEvent(Metadata):
     def from_context(
         cls,
         ctx: Context,
-        type: LineageRunEventType,
+        type: RunEventType,
         inputs: list[Dataset] | None = None,
         outputs: list[Dataset] | None = None,
     ) -> LineageRunEvent:
         return cls(
-            type=LineageRunEventType(type),
+            type=RunEventType(type),
             producer=config.app_identifier,
             timestamp=ctx.executed_at or utcnow(),
             nominal_time=ctx.nominal_time,

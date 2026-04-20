@@ -3,19 +3,19 @@ from enum import auto
 from ..model import UpperEnum
 
 
-class LineageRunEventType(UpperEnum):
+class RunEventType(UpperEnum):
     START = auto()
     COMPLETE = auto()
     FAIL = auto()
     ABORT = auto()
 
 
-class LineageProcessingType(UpperEnum):
+class ProcessingType(UpperEnum):
     BATCH = auto()
     STREAMING = auto()
 
 
-class LineageJobType(UpperEnum):
+class JobType(UpperEnum):
     QUERY = auto()
     COMMAND = auto()
     DAG = auto()

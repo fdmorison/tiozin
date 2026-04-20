@@ -24,7 +24,7 @@ def test_proxy_should_forbid_setup_and_teardown_access():
         proxy.teardown()
 
 
-def test_write_should_return_dataset(job_context: Context):
+def test_transform_should_return_dataset(job_context: Context):
     # Arrange
     step = TransformStub(name="orders").__wrapped__
     proxy = TransformProxy(step)
@@ -37,10 +37,10 @@ def test_write_should_return_dataset(job_context: Context):
     assert isinstance(result, Dataset)
 
 
-def test_write_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: dict):
+def test_transform_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: dict):
     # Arrange
     schema_registry = MagicMock()
-    schema_registry.try_get.return_value = None
+    schema_registry.get.return_value = None
     step = TransformStub(
         name="orders",
         schema_subject="acme.orders",
@@ -54,7 +54,7 @@ def test_write_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain:
         step.transform(data)
 
     # Assert
-    schema_registry.try_get.assert_called_with("acme.orders", "v1")
+    schema_registry.get.assert_called_with("acme.orders", "v1")
 
 
 def test_proxy_should_render_templates_at_external_datasets_with_job_attributes(

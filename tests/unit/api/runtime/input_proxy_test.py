@@ -38,7 +38,7 @@ def test_read_should_return_dataset(job_context: Context):
 def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: dict):
     # Arrange
     schema_registry = MagicMock()
-    schema_registry.try_get.return_value = None
+    schema_registry.get.return_value = None
     step = InputStub(
         name="orders",
         schema_subject="acme.orders",
@@ -51,7 +51,7 @@ def test_read_should_fetch_schema_from_registry(job_stub: JobStub, fake_domain: 
         step.read()
 
     # Assert
-    schema_registry.try_get.assert_called_with("acme.orders", "v1")
+    schema_registry.get.assert_called_with("acme.orders", "v1")
 
 
 def test_proxy_should_render_templates_at_external_datasets_with_job_attributes(

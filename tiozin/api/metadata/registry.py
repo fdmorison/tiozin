@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from typing import Generic, TypeVar
 
 from tiozin import config
@@ -16,16 +15,16 @@ class Registry(Tiozin, Generic[TMetadata]):
     """
     Base class for metadata registries.
 
-    Stores and retrieves metadata for resources, configurations, or entities.
-    Subclasses define storage and retrieval implementation.
+    Handles storage and retrieval of metadata.
+    Subclasses define how data is persisted and accessed.
 
     Attributes:
-        location: Location of the registry backend. Accepts HTTP/HTTPS URLs, FTP URLs,
-                  local file paths, or cloud storage URIs (e.g., s3://, gs://, az://).
-        readonly: Whether the registry rejects write operations (defaults to False).
-        cache: Whether to cache retrieved metadata in memory (defaults to False).
-        timeout: Request timeout in seconds.
-        ready: Whether the registry has been initialized and is ready to serve requests.
+        location: Registry backend location (e.g., HTTP/HTTPS, FTP, local path, s3://, gs://, az://)
+        readonly: If True, disables write operations
+        cache: If True, enables in-memory caching
+        timeout: Request timeout in seconds
+        failfast: If True, raises an error when metadata is not found; if False, returns None
+        ready: Indicates if the registry is initialized and ready
     """
 
     def __init__(
@@ -34,6 +33,7 @@ class Registry(Tiozin, Generic[TMetadata]):
         readonly: bool = None,
         cache: bool = None,
         timeout: int = None,
+        failfast: bool = None,
         **options,
     ) -> None:
         super().__init__(**options)
@@ -41,6 +41,7 @@ class Registry(Tiozin, Generic[TMetadata]):
         self.readonly = default(readonly, config.registry_default_readonly)
         self.cache = default(cache, config.registry_default_cache)
         self.timeout = default(timeout, config.registry_default_timeout)
+        self.failfast = default(failfast, config.registry_default_failfast)
         self.ready = False
 
     def setup(self, *args, **kwargs) -> None:
@@ -48,24 +49,3 @@ class Registry(Tiozin, Generic[TMetadata]):
 
     def teardown(self, *args, **kwargs) -> None:
         self.ready = False
-
-    @abstractmethod
-    def get(self, identifier: str = None, version: str = None) -> TMetadata:
-        """
-        Retrieve metadata by identifier.
-
-        Raises:
-            NotFoundException: When metadata was not found.
-        """
-
-    @abstractmethod
-    def register(self, identifier: str, value: TMetadata) -> None:
-        """Register metadata in the registry."""
-
-    def try_get(self, identifier: str, version: str | None = None) -> TMetadata | None:
-        """Retrieve metadata or return None if not found."""
-        try:
-            return self.get(identifier, version)
-        except Exception as e:
-            self.warning(str(e))
-            return None
