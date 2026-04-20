@@ -47,6 +47,7 @@ def default_settings_manifest() -> SettingsManifest:
             secret=SecretRegistryManifest(
                 kind=config.default_secret_registry,
                 name="my-secret-registry-1",
+                failfast=True,
             ),
             transaction=TransactionRegistryManifest(
                 kind=config.default_transaction_registry,

@@ -43,18 +43,12 @@ tiozin_family_prefixes = ["tio_", "tia_"]
 tiozin_family_unknown = "tio_unknown"
 
 # ===============================================
-#           Tiozin Registries
-# ===============================================
-registry_default_timeout = 3
-registry_default_readonly = False
-registry_default_cache = False
-
-# ===============================================
 #           Registry Defaults
 # ===============================================
 registry_default_timeout = 3
 registry_default_readonly = False
 registry_default_cache = False
+registry_default_failfast = False
 
 default_job_registry = "tio_kernel:FileJobRegistry"
 default_setting_registry = "tio_kernel:FileSettingRegistry"

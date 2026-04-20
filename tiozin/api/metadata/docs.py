@@ -10,8 +10,9 @@ REGISTRY_LOCATION = (
     "or cloud storage URIs (e.g., s3://, gs://, az://)"
 )
 REGISTRY_TIMEOUT = "Request timeout in seconds"
-REGISTRY_READONLY = "Whether the registry rejects write operations (optional, defaults to False)"
-REGISTRY_CACHE = "Whether to cache retrieved metadata in memory (optional, defaults to False)"
+REGISTRY_READONLY = "Whether the registry rejects write operations (defaults  to False)"
+REGISTRY_CACHE = "Whether to cache retrieved metadata in memory (defaults  to False)"
+REGISTRY_FAILFAST = "Whether to raise an error when metadata is not found (defaults  to False)"
 REGISTRY_READY = "Whether the registry has been initialized and is ready to serve requests"
 REGISTRY_DESCRIPTION = "Short description of the registry (optional)"
 
@@ -27,7 +28,7 @@ SCHEMA_REGISTRY_DEFAULT_VERSION = "Default schema version when none is specified
 # RunnerManifest
 RUNNER_NAME = "Unique identifier for this runner (optional)"
 RUNNER_DESCRIPTION = "Short description of the runner's execution backend (optional)"
-RUNNER_STREAMING = "Whether this runner executes streaming workloads (optional, defaults to False)"
+RUNNER_STREAMING = "Whether this runner executes streaming workloads (defaults  to False)"
 
 # InputManifest
 INPUT_NAME = "Unique identifier for this input within the job"
@@ -75,7 +76,7 @@ JOB_DESCRIPTION = "Short description of the pipeline (optional)"
 JOB_OWNER = "Team that required for the job (optional)"
 JOB_MAINTAINER = "Team that maintains this job (optional)"
 JOB_COST_CENTER = "Team that pays for this job (optional)"
-JOB_LABELS = "Additional metadata as key-value pairs (optional, defaults to empty dict)"
+JOB_LABELS = "Additional metadata as key-value pairs (defaults  to empty dict)"
 JOB_ORG = "Organization producing the data product"
 JOB_REGION = "Business region of the domain team"
 JOB_DOMAIN = "Domain team following the Data Mesh concept"
@@ -85,5 +86,5 @@ JOB_MODEL = "Data model being produced (e.g., table, topic, collection)"
 JOB_LAYER = "Data layer this job represents (e.g., raw, trusted, refined)"
 JOB_RUNNER = "Runtime environment where the job runs"
 JOB_INPUTS = "Sources that provide data to the job"
-JOB_TRANSFORMS = "Steps that modify the data (optional, defaults to empty list)"
-JOB_OUTPUTS = "Destinations where data is written (optional, defaults to empty list)"
+JOB_TRANSFORMS = "Steps that modify the data (defaults  to empty list)"
+JOB_OUTPUTS = "Destinations where data is written (defaults  to empty list)"

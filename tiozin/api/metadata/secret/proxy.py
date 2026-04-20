@@ -22,15 +22,17 @@ class SecretRegistryProxy(wrapt.ObjectProxy):
     and should not interact with this proxy directly.
     """
 
-    def get(self, identifier: str = None, version: str | None = None) -> Secret:
+    def get(self, identifier: str) -> Secret:
         registry: SecretRegistry = self.__wrapped__
 
-        secret = registry.get(identifier, version)
+        secret = registry.get(identifier)
 
-        SecretNotFoundError.raise_if(
-            secret is None,
-            identifier,
-        )
+        if not secret:
+            SecretNotFoundError.raise_if(
+                registry.failfast,
+                identifier,
+            )
+            return None
 
         register_sensitive(secret)
         return secret

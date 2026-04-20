@@ -1,10 +1,3 @@
-"""
-LineageRegistryProxy — fire-and-forget and emit-level contract.
-
-All LineageRegistry instances are automatically wrapped via @tioproxy.
-Calling register() on a stub already goes through the proxy.
-"""
-
 from tests.mocks.lineage.run_event import job_start_event as event
 from tests.stubs import FailingLineageRegistryStub, LineageRegistryStub
 from tiozin.api.context import Context
@@ -18,7 +11,7 @@ from tiozin.api.metadata.lineage.enums import EmitLevel
 def test_proxy_should_silence_exception():
     # Act / Assert — must not raise
     registry = FailingLineageRegistryStub()
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
 
 def test_proxy_should_return_none():
@@ -26,7 +19,7 @@ def test_proxy_should_return_none():
     registry = FailingLineageRegistryStub()
 
     # Act
-    result = registry.register(event.run_id, event)
+    result = registry.emit(event)
 
     # Assert
     actual = result
@@ -34,15 +27,15 @@ def test_proxy_should_return_none():
     assert actual == expected
 
 
-def test_proxy_should_invoke_register(job_context: Context):
+def test_proxy_should_invoke_emit(job_context: Context):
     # Arrange
     registry = FailingLineageRegistryStub()
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
-    actual = registry.__wrapped__.register_called
+    actual = registry.__wrapped__.emit_called
     expected = True
     assert actual == expected
 
@@ -70,7 +63,7 @@ def test_register_should_emit_when_level_is_job_and_context_is_job(job_context: 
     registry = LineageRegistryStub(emit_level=EmitLevel.JOB)
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
     actual = registry.__wrapped__.captured_event
@@ -83,7 +76,7 @@ def test_register_should_skip_when_level_is_job_and_context_is_step(input_contex
     registry = LineageRegistryStub(emit_level=EmitLevel.JOB)
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
     actual = registry.__wrapped__.captured_event
@@ -96,7 +89,7 @@ def test_register_should_emit_when_level_is_step_and_context_is_step(input_conte
     registry = LineageRegistryStub(emit_level=EmitLevel.STEP)
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
     actual = registry.__wrapped__.captured_event
@@ -109,7 +102,7 @@ def test_register_should_skip_when_level_is_step_and_context_is_job(job_context:
     registry = LineageRegistryStub(emit_level=EmitLevel.STEP)
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
     actual = registry.__wrapped__.captured_event
@@ -122,7 +115,7 @@ def test_register_should_emit_when_level_is_all_and_context_is_job(job_context: 
     registry = LineageRegistryStub(emit_level=EmitLevel.ALL)
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
     actual = registry.__wrapped__.captured_event
@@ -135,7 +128,7 @@ def test_register_should_emit_when_level_is_all_and_context_is_step(input_contex
     registry = LineageRegistryStub(emit_level=EmitLevel.ALL)
 
     # Act
-    registry.register(event.run_id, event)
+    registry.emit(event)
 
     # Assert
     actual = registry.__wrapped__.captured_event

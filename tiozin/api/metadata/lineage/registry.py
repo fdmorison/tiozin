@@ -1,11 +1,11 @@
 from abc import abstractmethod
 
 from tiozin import config
-from tiozin.api.runtime.dataset import Dataset
 from tiozin.compose import tioproxy
 
+from ...runtime.dataset import Dataset
 from ..registry import Registry
-from .enums import EmitLevel, LineageRunEventType
+from .enums import EmitLevel, RunEventType
 from .model import LineageEvent, LineageRunEvent
 from .proxy import LineageRegistryProxy
 
@@ -13,11 +13,12 @@ from .proxy import LineageRegistryProxy
 @tioproxy(LineageRegistryProxy)
 class LineageRegistry(Registry[LineageEvent]):
     """
-    Emits lineage run events during pipeline execution.
+    Lineage registry interface.
 
-    `register()` is implemented by subclasses to send events to a lineage backend.
-    Convenience methods (e.g. `start()`, `complete()`, `fail()`) delegate to it
-    using the active execution context.
+    Defines a contract for emitting lineage events during pipeline execution.
+    Subclasses implement `emit()` to send events to a backend.
+
+    Convenience methods build events from the active context and delegate to `emit()`.
 
     Attributes:
         emit_level: Controls which events are emitted (`JOB`, `STEP`, `ALL`).
@@ -28,45 +29,21 @@ class LineageRegistry(Registry[LineageEvent]):
         self.emit_level = EmitLevel(emit_level or config.default_lineage_emit_level)
 
     @abstractmethod
-    def get(self, identifier: str = None, version: str = None) -> LineageEvent:
-        """Retrieve a lineage event by run ID or job name."""
+    def emit(self, event: LineageEvent) -> None:
+        """Send a lineage event to the backend."""
 
-    @abstractmethod
-    def register(self, identifier: str, value: LineageEvent) -> None:
-        """Emit a run event."""
+    def run_started(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
+        event = LineageRunEvent.from_context(self.context, RunEventType.START, inputs, outputs)
+        self.emit(event)
 
-    def start(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
-        event = LineageRunEvent.from_context(
-            self.context,
-            LineageRunEventType.START,
-            inputs,
-            outputs,
-        )
-        self.register(event.run_id, event)
+    def run_completed(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
+        event = LineageRunEvent.from_context(self.context, RunEventType.COMPLETE, inputs, outputs)
+        self.emit(event)
 
-    def complete(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
-        event = LineageRunEvent.from_context(
-            self.context,
-            LineageRunEventType.COMPLETE,
-            inputs,
-            outputs,
-        )
-        self.register(event.run_id, event)
+    def run_failed(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
+        event = LineageRunEvent.from_context(self.context, RunEventType.FAIL, inputs, outputs)
+        self.emit(event)
 
-    def fail(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
-        event = LineageRunEvent.from_context(
-            self.context,
-            LineageRunEventType.FAIL,
-            inputs,
-            outputs,
-        )
-        self.register(event.run_id, event)
-
-    def abort(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
-        event = LineageRunEvent.from_context(
-            self.context,
-            LineageRunEventType.ABORT,
-            inputs,
-            outputs,
-        )
-        self.register(event.run_id, event)
+    def run_aborted(self, inputs: list[Dataset] = None, outputs: list[Dataset] = None) -> None:
+        event = LineageRunEvent.from_context(self.context, RunEventType.ABORT, inputs, outputs)
+        self.emit(event)

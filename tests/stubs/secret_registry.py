@@ -18,7 +18,7 @@ class MissingSecretRegistryStub(SecretRegistry):
     def __init__(self):
         super().__init__(location="stub://secret")
 
-    def get(self, identifier: str = None, version: str = None) -> Secret:
+    def get(self, identifier: str) -> Secret:
         raise SecretNotFoundError(identifier)
 
     def register(self, identifier: str, value: Secret) -> None:
@@ -29,7 +29,7 @@ class FailingSecretRegistryStub(SecretRegistry):
     def __init__(self):
         super().__init__(location="stub://secret")
 
-    def get(self, identifier: str = None, version: str = None) -> Secret:
+    def get(self, identifier: str) -> Secret:
         raise RuntimeError("secret registry unavailable")
 
     def register(self, identifier: str, value: Secret) -> None:

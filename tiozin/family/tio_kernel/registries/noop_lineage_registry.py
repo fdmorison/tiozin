@@ -15,5 +15,5 @@ class NoOpLineageRegistry(LineageRegistry):
     def get(self, identifier: str = None, version: str = "latest") -> LineageEvent:
         return None
 
-    def register(self, _identifier: str, _value: LineageEvent) -> None:
+    def emit(self, _identifier: str, _value: LineageEvent) -> None:
         return None

@@ -8,53 +8,49 @@ import wrapt
 from tiozin.utils import human_join
 
 from .enums import EmitLevel
-from .model import LineageEvent
 
 if TYPE_CHECKING:
     from .registry import LineageRegistry
 
+EVENT_METHODS = frozenset(
+    {
+        "emit",
+        "run_started",
+        "run_completed",
+        "run_failed",
+        "run_aborted",
+        "dataset_updated",
+        "job_updated",
+    }
+)
+
 
 class LineageRegistryProxy(wrapt.ObjectProxy):
     """
-    Proxy that provides fire-and-forget lineage emission with emit-level control.
+    Proxy that wraps lineage emission methods with fire-and-forget safeness
+    and emit-level control.
 
-    All lineage operations are executed in a best-effort manner: errors raised during
-    event construction or emission are caught and logged as warnings, never propagated,
-    ensuring lineage does not interrupt job execution.
-
-    Emission is conditional and only occurs when the configured emit level matches
-    the current execution context (job or step).
+    Only methods defined in `_EMISSION_METHODS` are intercepted.
+    All other attributes are passed through unmodified.
     """
 
     @property
     def _registry(self) -> LineageRegistry:
         return self.__wrapped__
 
-    def get(self, identifier: str = None, version: str = None) -> LineageEvent:
-        return self._registry.get(identifier, version)
+    def __getattr__(self, name: str):
+        attr = getattr(self.__wrapped__, name)
 
-    def register(self, identifier: str, value: LineageEvent) -> None:
-        self._safe_emit(self._registry.register, identifier, value)
+        if name in EVENT_METHODS:
 
-    def start(self, inputs=None, outputs=None) -> None:
-        self._safe_emit(self._registry.start, inputs, outputs)
+            def _safe(*args, **kwargs) -> None:
+                self._safe_emit(attr, *args, **kwargs)
 
-    def complete(self, inputs=None, outputs=None) -> None:
-        self._safe_emit(self._registry.complete, inputs, outputs)
+            return _safe
 
-    def fail(self, inputs=None, outputs=None) -> None:
-        self._safe_emit(self._registry.fail, inputs, outputs)
-
-    def abort(self, inputs=None, outputs=None) -> None:
-        self._safe_emit(self._registry.abort, inputs, outputs)
+        return attr
 
     def _safe_emit(self, emit, *args, **kwargs) -> None:
-        """
-        Proxy entrypoint for lineage emission.
-
-        Enforces conditional emission and ensures all errors are swallowed,
-        making lineage strictly best-effort.
-        """
         from tiozin.api import Context
 
         context = Context.current(required=False)
@@ -62,7 +58,7 @@ class LineageRegistryProxy(wrapt.ObjectProxy):
 
         if context is None:
             self._registry.warning("Skipping lineage emission: no active execution context")
-            return False
+            return
 
         should_emit = (
             emit_level == EmitLevel.ALL
@@ -71,7 +67,7 @@ class LineageRegistryProxy(wrapt.ObjectProxy):
         )
 
         if not should_emit:
-            return None
+            return
 
         try:
             emit(*args, **kwargs)

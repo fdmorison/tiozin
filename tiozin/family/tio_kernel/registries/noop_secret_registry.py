@@ -12,8 +12,8 @@ class NoOpSecretRegistry(SecretRegistry):
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location or self.tiozin_uri, **options)
 
-    def get(self, identifier: str = None, version: str = None) -> Secret:
+    def get(self, identifier: str) -> Secret:
         return "secret123"
 
-    def register(self, identifier: str = None, value: Secret = None) -> None:
+    def register(self, identifier: str, value: Secret) -> None:
         return None

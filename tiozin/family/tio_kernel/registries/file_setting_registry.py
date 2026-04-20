@@ -4,6 +4,8 @@ from tiozin import SettingRegistry, SettingsManifest, config
 from tiozin.exceptions import SettingsNotFoundError
 from tiozin.utils import io
 
+DEFAULTS = SettingsManifest()
+
 
 class FileSettingRegistry(SettingRegistry):
     """
@@ -54,12 +56,7 @@ class FileSettingRegistry(SettingRegistry):
 
         self.ready = True
 
-    def get(self, identifier: str = None, version: str = None) -> SettingsManifest:
+    def get(self) -> SettingsManifest:
         if not self.location:
-            return SettingsManifest()
-
+            return DEFAULTS
         return SettingsManifest.from_file(self.location, **self.options)
-
-    def register(self, identifier: str, value: SettingsManifest) -> None:
-        self.info(f"Writing settings manifest to {identifier}")
-        value.to_file(identifier, **self.options)

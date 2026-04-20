@@ -16,11 +16,11 @@ class EnvSecretRegistry(SecretRegistry):
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location or self.tiozin_uri, **options)
 
-    def get(self, identifier: str = None, version: str | None = None) -> Secret | None:
+    def get(self, identifier: str) -> Secret:
         value = os.environ.get(identifier)
         if value is None:
             return None
         return Secret(value)
 
-    def register(self, identifier: str = None, value: Secret | None = None) -> None:
+    def register(self, identifier: str, value: Secret) -> None:
         os.environ[identifier] = str(value)

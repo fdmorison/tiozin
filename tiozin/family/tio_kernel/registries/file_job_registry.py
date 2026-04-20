@@ -22,7 +22,7 @@ class FileJobRegistry(JobRegistry):
     def __init__(self, location: str = None, **options):
         super().__init__(location=location, **options)
 
-    def get(self, identifier: str, version: str = None) -> JobManifest:
+    def get(self, identifier: str) -> JobManifest:
         try:
             path = join_path(self.location, identifier)
             self.info(f"Reading job from {path}")

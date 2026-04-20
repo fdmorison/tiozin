@@ -281,6 +281,7 @@ def test_load_should_load_registry_plugin(factory: TiozinFactory, kind: str):
         cache=False,
         readonly=False,
         timeout=3,
+        failfast=False,
     )
     assert actual == expected
 

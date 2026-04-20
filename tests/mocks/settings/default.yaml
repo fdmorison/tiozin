@@ -11,6 +11,7 @@ registries:
   secret:
     kind: tio_kernel:EnvSecretRegistry
     name: my-secret-registry-1
+    failfast: true
 
   transaction:
     kind: tio_kernel:NoOpTransactionRegistry

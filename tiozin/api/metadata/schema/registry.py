@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from tiozin import config
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.template_string import TemplateString
@@ -11,45 +13,33 @@ from .proxy import SchemaRegistryProxy
 @tioproxy(SchemaRegistryProxy)
 class SchemaRegistry(Registry[Schema]):
     """
-    Retrieves and stores schemas.
+    Schema registry interface.
 
-    Storage-agnostic contract for schema backends (e.g., Confluent Schema Registry).
-    Available in Context for schema handling in Transforms, Inputs, and Outputs.
+    Provides a storage-agnostic contract for retrieving and storing schemas
+    (e.g., Confluent Schema Registry).
 
-    This service can be configured via:
-
+    Configuration (priority order):
     1. tiozin.yaml (recommended)
-    2. Environment variables prefixed with `TIO_SCHEMA_REGISTRY_*`
-    3. Direct instantiation via constructor (not recommended)
+    2. Environment variables: TIO_SCHEMA_REGISTRY_*
+    3. Direct instantiation (not recommended)
 
-    Configuration is resolved from tiozin.yaml when available, falling back to
-    environment variables. Check tiozin/api/metadata/setting/model.py for details.
+    Environment variables are resolved into default configuration values
+    (e.g., subject_template, default_version) via `config`.
 
     Attributes:
-        show_schema:
-            When `True`, logs the retrieved schema after each successful `get()`.
-            Can be configured via `TIO_SCHEMA_REGISTRY_SHOW_SCHEMA`.
+        show_schema: If True, logs schemas after `get()`.
+        subject_template: Template to resolve subject when not provided.
+        default_version: Default schema version (e.g., "latest").
 
-        subject_template:
-            Jinja template used to resolve the schema subject when none is provided.
-            Can be configured via `TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE`.
-
-        default_version:
-            Schema version used when none is specified (e.g., "latest").
-            Can be configured via `TIO_SCHEMA_REGISTRY_DEFAULT_VERSION`.
-
-    Example in tiozin.yaml:
-
+    Example (tiozin.yaml):
         schema:
             kind: FileSchemaRegistry
-            description: File-based schema registry for local development
             location: examples/schemas
             timeout: 5
             readonly: false
             cache: false
             subject_template: "{{domain}}.{{layer}}.{{product}}.{{model}}"
             default_version: latest
-            custom_property: 12345
     """
 
     def __init__(
@@ -65,3 +55,16 @@ class SchemaRegistry(Registry[Schema]):
             subject_template or config.default_schema_subject_template
         )
         self.default_version = default(default_version, config.default_schema_default_version)
+
+    @abstractmethod
+    def get(self, subject: str, version: str = None) -> Schema:
+        """
+        Retrieve a schema by identifier.
+
+        Raises:
+            NotFoundException: When not found and `failfast=True`.
+        """
+
+    @abstractmethod
+    def register(self, subject: str, value: Schema) -> None:
+        """Register a schema in the registry."""
