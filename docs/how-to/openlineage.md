@@ -213,5 +213,6 @@ Steps that do not override `external_datasets()` fall back to a logical dataset 
 | `api_key` | | Bearer token for API key authentication |
 | `readonly` | `false` | Reject write operations |
 | `cache` | `false` | Cache retrieved metadata in memory |
+| `failfast` | `false` | Raise an error when metadata is not found; returns `null` when `false` |
 | `name` | | Display name for this registry instance |
 | `description` | | Human-readable description |

@@ -241,5 +241,6 @@ Supported protocols: `s3://`, `gs://`, `az://`, `http://`, `https://`, `ftp://`,
 | `timeout` | `3` | Request timeout in seconds (for remote locations) |
 | `readonly` | `false` | Reject write operations |
 | `cache` | `false` | Cache retrieved schemas in memory |
+| `failfast` | `false` | Raise an error when the schema is not found; returns `null` when `false` |
 | `name` | | Display name for this registry instance |
 | `description` | | Human-readable description |

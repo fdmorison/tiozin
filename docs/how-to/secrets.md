@@ -115,5 +115,6 @@ To use it, the registry must belong to a registered Tiozin Family. See [Creating
 | `kind` | `tio_kernel:EnvSecretRegistry` | Plugin class name |
 | `readonly` | `false` | Reject write operations |
 | `cache` | `false` | Cache retrieved secrets in memory |
+| `failfast` | `false` | Raise an error when the secret is not found; returns `null` when `false` |
 | `name` | | Display name for this registry instance |
 | `description` | | Human-readable description |

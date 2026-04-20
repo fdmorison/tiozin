@@ -111,6 +111,7 @@ registries:
     timeout: 30
     readonly: false
     cache: false
+    failfast: false
 ```
 
 ### Registry fields
@@ -124,6 +125,7 @@ registries:
 | `timeout` | `null` | Request timeout in seconds |
 | `readonly` | `null` | When `true`, the registry rejects write operations |
 | `cache` | `null` | When `true`, retrieved metadata is cached in memory |
+| `failfast` | `false` | When `true`, raises an error when metadata is not found; when `false`, returns `null` |
 
 ### Default kinds
 

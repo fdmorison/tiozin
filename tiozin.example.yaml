@@ -7,6 +7,7 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    failfast: false
 
   secret:
     kind: EnvSecretRegistry
@@ -14,6 +15,7 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    failfast: false
 
   schema:
     kind: FileSchemaRegistry
@@ -22,6 +24,7 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    failfast: false
     subject_template: "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
     default_version: latest
 
@@ -33,6 +36,7 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    failfast: false
     emit_level: job
 
   transaction:
@@ -42,6 +46,7 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    failfast: false
 
   metric:
     kind: NoOpMetricRegistry
@@ -50,3 +55,4 @@ registries:
     timeout: 5
     readonly: false
     cache: false
+    failfast: false

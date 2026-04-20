@@ -19,6 +19,7 @@ registries:
 | `api_key` | Bearer token for API key authentication | none |
 | `readonly` | Reject write operations | `false` |
 | `cache` | Cache retrieved metadata in memory | `false` |
+| `failfast` | Raise an error when metadata is not found; returns `null` when `false` | `false` |
 | `name` | Display name for this registry instance | class name |
 | `description` | Human-readable description | none |
 
