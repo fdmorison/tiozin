@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import wrapt
 
-from tiozin.exceptions import RequiredArgumentError, TiozinInternalError
+from tiozin.exceptions import RequiredArgumentError
 
 from .exceptions import SchemaNotFoundError
 from .model import Schema
@@ -23,53 +23,50 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
     Adds:
     - `auto` subject (renders registry.subject_template)
     - Default version when not provided
-    - Raises SchemaNotFoundError if result is None
-    - Raises TiozinInternalError if result is not a valid schema
+    - Raises SchemaNotFoundError when `failfast=True`, otherwise returns None.
 
     Uses configuration defined in SchemaRegistry.
 
     This is an internal detail. Use SchemaRegistry instead.
     """
 
-    @property
-    def _registry(self) -> SchemaRegistry:
-        return self.__wrapped__
-
     def get(self, subject: str, version: str = None) -> Schema:
-        registry = self._registry
+        registry: SchemaRegistry = self.__wrapped__
         subject = self._resolve_subject(subject)
-        version = version or self._registry.default_version
+        version = version or registry.default_version
 
-        registry.info(f"🔍 `{registry.context.name}` requested schema subject `{subject}`")
-        schema = registry.get(subject, version)
+        registry.info(f"🔍 `{registry.context.name}` requested schema `{subject}`")
 
-        if not schema:
-            SchemaNotFoundError.raise_if(registry.failfast, subject)
+        try:
+            schema = registry.get(subject)
+            if not schema:
+                raise SchemaNotFoundError(subject)
+        except SchemaNotFoundError:
+            if registry.failfast:
+                raise
+            registry.warning(f"Schema `{subject}` could not be found")
             return None
 
-        TiozinInternalError.raise_if(
-            registry.failfast and not isinstance(schema, Schema),
-            f"Schema registry returned unexpected object for `{subject}`: {type(schema)}.",
-        )
-
         if registry.show_schema:
-            registry.info(f"Schema `{subject}`:\n{schema.to_yaml()}")
+            registry.info(f"Showing schema `{subject}`:\n{schema.to_yaml()}")
 
         return schema
 
     def register(self, subject: str, schema: Schema) -> None:
-        registry = self._registry
+        registry: SchemaRegistry = self.__wrapped__
         subject = self._resolve_subject(subject)
-        registry.info(f"📝 `{registry.context.name}` registering schema subject `{subject}`")
+        registry.info(f"📝 `{registry.context.name}` registering schema `{subject}`")
         registry.register(subject, schema)
 
     def _resolve_subject(self, subject: str) -> str:
+        registry: SchemaRegistry = self.__wrapped__
+
         RequiredArgumentError.raise_if(
             not subject,
             "No schema subject identifier provided.",
         )
 
         if subject == "auto":
-            subject = self._registry.subject_template
+            subject = registry.subject_template
 
-        return self._registry.context.render(subject)
+        return registry.context.render(subject)

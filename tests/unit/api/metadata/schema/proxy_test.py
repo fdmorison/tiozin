@@ -5,7 +5,7 @@ import pytest
 from tiozin.api.metadata.schema.exceptions import SchemaNotFoundError
 from tiozin.api.metadata.schema.model import Schema
 from tiozin.api.metadata.schema.proxy import SchemaRegistryProxy
-from tiozin.exceptions import RequiredArgumentError, TiozinInternalError
+from tiozin.exceptions import RequiredArgumentError
 
 # ============================================================================
 # SchemaRegistryProxy - get()
@@ -90,19 +90,6 @@ def test_get_should_raise_when_registry_returns_none():
 
     # Act
     with pytest.raises(SchemaNotFoundError):
-        SchemaRegistryProxy(wrapped_registry).get(subject)
-
-
-def test_get_should_raise_when_registry_returns_wrong_type():
-    # Arrange
-    subject = "acme.eu.sales.orders.raw.crm.order"
-
-    wrapped_registry = MagicMock()
-    wrapped_registry.context.render.return_value = subject
-    wrapped_registry.get.return_value = "id INT, name STRING"
-
-    # Act
-    with pytest.raises(TiozinInternalError):
         SchemaRegistryProxy(wrapped_registry).get(subject)
 
 

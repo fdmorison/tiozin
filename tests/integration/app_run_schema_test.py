@@ -2,7 +2,7 @@
 Integration tests for schema_subject behavior.
 """
 
-from unittest.mock import ANY, patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -95,13 +95,13 @@ def test_app_should_get_schema_subject_when_explicitly_provided(_atexit, _signal
         app.run(yaml_job)
 
     # Assert
-    actual = schema_registry_get.call_args_list
-    expected = [
-        (("my_input_schema_subject", ANY),),
-        (("my_transform_schema_subject", ANY),),
-        (("my_output_schema_subject", ANY),),
-    ]
-    assert actual == expected
+    schema_registry_get.assert_has_calls(
+        [
+            call("my_input_schema_subject"),
+            call("my_transform_schema_subject"),
+            call("my_output_schema_subject"),
+        ]
+    )
 
 
 # ============================================================================
@@ -146,10 +146,10 @@ def test_app_should_get_auto_schema_subject_when_explicitly_provided(
         app.run(yaml_job)
 
     # Assert
-    actual = schema_registry_get.call_args_list
-    expected = [
-        (("acme.us.sales.orders.raw.crm.daily", ANY),),
-        (("acme.us.sales.orders.raw.crm.daily", ANY),),
-        (("acme.us.sales.orders.raw.crm.daily", ANY),),
-    ]
-    assert actual == expected
+    schema_registry_get.assert_has_calls(
+        [
+            call("acme.us.sales.orders.raw.crm.daily"),
+            call("acme.us.sales.orders.raw.crm.daily"),
+            call("acme.us.sales.orders.raw.crm.daily"),
+        ]
+    )

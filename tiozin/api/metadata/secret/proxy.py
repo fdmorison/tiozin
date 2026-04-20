@@ -25,13 +25,14 @@ class SecretRegistryProxy(wrapt.ObjectProxy):
     def get(self, identifier: str) -> Secret:
         registry: SecretRegistry = self.__wrapped__
 
-        secret = registry.get(identifier)
-
-        if not secret:
-            SecretNotFoundError.raise_if(
-                registry.failfast,
-                identifier,
-            )
+        try:
+            secret = registry.get(identifier)
+            if not secret:
+                raise SecretNotFoundError(identifier)
+        except SecretNotFoundError:
+            if registry.failfast:
+                raise
+            registry.warning(f"Secret `{identifier}` could not be found")
             return None
 
         register_sensitive(secret)
