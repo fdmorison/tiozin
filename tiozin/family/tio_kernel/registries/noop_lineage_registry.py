@@ -12,8 +12,5 @@ class NoOpLineageRegistry(LineageRegistry):
     def __init__(self, location: str = None, **options) -> None:
         super().__init__(location=location or self.tiozin_uri, **options)
 
-    def get(self, identifier: str = None, version: str = "latest") -> LineageEvent:
-        return None
-
-    def emit(self, _identifier: str, _value: LineageEvent) -> None:
+    def emit(self, event: LineageEvent) -> None:
         return None

@@ -20,7 +20,6 @@ NOOP_REGISTRY_CLASSES = [
 ]
 
 NOOP_REGISTRY_CLASSES_RETURNING_NONE = [
-    NoOpLineageRegistry,
     NoOpMetricRegistry,
     NoOpTransactionRegistry,
 ]
