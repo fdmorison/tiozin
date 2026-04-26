@@ -18,57 +18,37 @@ from tiozin.utils import (
 )
 
 
+class _Status(Enum):
+    INACTIVE = 0
+    ACTIVE = 1
+
+
 # ============================================================================
 # Testing default()
 # ============================================================================
-def test_default_should_return_default_value_when_input_is_none():
-    # Arrange
-    value = None
-    default_value = "default"
-
-    # Act
-    result = default(value, default_value)
-
-    # Assert
-    actual = result
-    expected = "default"
-    assert actual == expected
-
-
-def test_default_should_return_original_value_when_input_is_set():
-    # Arrange
-    value = "actual"
-    default_value = "default"
-
-    # Act
-    result = default(value, default_value)
-
-    # Assert
-    actual = result
-    expected = "actual"
-    assert actual == expected
-
-
 @pytest.mark.parametrize(
     "value",
     [
+        "actual",
+        ["actual"],
+        {"key": "actual"},
+        {"actual"},
+        frozenset({"actual"}),
+        ("actual",),
+        deque(["actual"]),
         True,
-        False,
-        0,
         -1,
         42,
-        0.0,
         -1.5,
         42.7,
-        Decimal("0.0"),
         Decimal("999.9"),
-        Fraction(0, 1),
         Fraction(1, 2),
+        _Status.INACTIVE,
     ],
 )
-def test_default_should_return_scalar_value_regardless_of_truthiness(value: Any):
+def test_default_should_preserve_value(value: Any):
     # Act
-    result = default(value, "default")
+    result = default(value, "fallback")
 
     # Assert
     actual = result
@@ -76,35 +56,13 @@ def test_default_should_return_scalar_value_regardless_of_truthiness(value: Any)
     assert actual == expected
 
 
-def test_default_should_return_enum_value_regardless_of_truthiness():
-    # Arrange
-    class Status(Enum):
-        INACTIVE = 0
-        ACTIVE = 1
-
-    value = Status.INACTIVE
-    default_value = Status.ACTIVE
-
-    # Act
-    result = default(value, default_value)
-
-    # Assert
-    actual = result
-    expected = Status.INACTIVE
-    assert actual == expected
-
-
 @pytest.mark.parametrize(
-    "value,default_value",
-    [
-        ("", "default"),
-        ([], ["default"]),
-        ({}, {"key": "default"}),
-    ],
+    "default_value",
+    ["fallback", 0, [], False],
 )
-def test_default_should_return_default_when_collection_is_empty(value: Any, default_value: Any):
+def test_default_should_fallback_when_null(default_value: Any):
     # Act
-    result = default(value, default_value)
+    result = default(None, default_value)
 
     # Assert
     actual = result
@@ -113,22 +71,90 @@ def test_default_should_return_default_when_collection_is_empty(value: Any, defa
 
 
 @pytest.mark.parametrize(
-    "value,default_value",
-    [
-        ("actual", "default"),
-        (["actual"], ["default"]),
-        ({"key": "actual"}, {"key": "default"}),
-    ],
+    "value",
+    [False, 0, 0.0, Decimal("0.0"), Fraction(0, 1)],
 )
-def test_default_should_return_original_value_when_collection_is_not_empty(
-    value: Any, default_value: Any
-):
+def test_default_should_preserve_falsy_scalar(value: Any):
     # Act
-    result = default(value, default_value)
+    result = default(value, "fallback")
 
     # Assert
     actual = result
     expected = value
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["   ", "\t", "\n"],
+)
+def test_default_should_preserve_blank_string(value: str):
+    # Act
+    result = default(value, "fallback")
+
+    # Assert
+    actual = result
+    expected = value
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["", [], {}, set(), frozenset(), (), deque()],
+)
+def test_default_should_preserve_empty_collection(value: Any):
+    # Act
+    result = default(value, "fallback")
+
+    # Assert
+    actual = result
+    expected = value
+    assert actual == expected
+
+
+def test_default_should_recursively_replace_null_fields():
+    # Act
+    result = default({"a": None}, {"a": 1, "b": 2})
+
+    # Assert
+    actual = result
+    expected = {"a": 1, "b": 2}
+    assert actual == expected
+
+
+def test_default_should_recursively_add_missing_keys():
+    # Act
+    result = default({"a": 1}, {"b": 2})
+
+    # Assert
+    actual = result
+    expected = {"a": 1, "b": 2}
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value,default_,expected",
+    [
+        pytest.param(
+            {"a": {"b": None}},
+            {"a": {"b": 1}},
+            {"a": {"b": 1}},
+            id="two-levels",
+        ),
+        pytest.param(
+            {"a": {"b": {"c": None}}},
+            {"a": {"b": {"c": 1}}},
+            {"a": {"b": {"c": 1}}},
+            id="three-levels",
+        ),
+    ],
+)
+def test_default_should_apply_recursively_at_any_depth(value: Any, default_: Any, expected: Any):
+    # Act
+    result = default(value, default_)
+
+    # Assert
+    actual = result
     assert actual == expected
 
 

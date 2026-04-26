@@ -1,8 +1,5 @@
 from collections import deque
-from collections.abc import Iterable
-from decimal import Decimal
-from enum import Enum
-from fractions import Fraction
+from collections.abc import Iterable, Mapping
 from typing import TypeVar
 from uuid import uuid4
 
@@ -74,37 +71,40 @@ def generate_id(prefix: str = None, suffix: str = None) -> str:
     return identifier
 
 
-def default(value: T, default_: T) -> T:
+def default(value: T | None, default_: T = None) -> T:
     """
-    Returns a default value only when the input is considered unset.
+    Returns ``value`` unless it is ``None``, otherwise returns ``default_``.
 
-    Empty strings and empty collections are treated as unset values.
-    Scalar values are considered unset only when they are null.
+    Mappings are resolved recursively, filling missing or ``None`` keys from ``default_``.
 
     Args:
-        value: The value to check.
-        default_: The default value to return if value is unset.
-
-    Returns:
-        The original value if set, otherwise the default value.
+        value: Input value.
+        default_: Fallback value.
 
     Examples:
         >>> default(None, "fallback")
         "fallback"
-        >>> default("", "fallback")
-        "fallback"
-        >>> default([], [1, 2, 3])
-        [1, 2, 3]
         >>> default(0, 10)
         0
         >>> default(False, True)
         False
+        >>> default({"a": None}, {"a": 1, "b": 2})
+        {"a": 1, "b": 2}
+        >>> default({"a": 1}, {"b": 2})
+        {"a": 1, "b": 2}
+        >>> default({"a": {"b": None}}, {"a": {"b": 1}})
+        {"a": {"b": 1}}
     """
     if value is None:
         return default_
-    if isinstance(value, (bool, int, float, Decimal, Fraction, Enum)):
-        return value
-    return value or default_
+
+    if isinstance(value, Mapping) and isinstance(default_, Mapping) and default_:
+        return {
+            key: default(value.get(key), default_.get(key))
+            for key in value.keys() | default_.keys()
+        }
+
+    return value
 
 
 def as_list(
