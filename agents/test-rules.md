@@ -9,11 +9,14 @@ Pattern:
 Must describe observable behavior.
 Must not reference implementation details.
 
+Condition suffix must be `_when_`, never `_for_`.
+
 ✔ Correct:
     test_add_should_return_sum_when_numbers_are_valid()
 
 ❌ Incorrect:
     test_add_internal_logic()
+    test_add_should_return_sum_for_valid_numbers()
 
 
 2. AAA STRUCTURE (MANDATORY)
@@ -24,6 +27,8 @@ All tests MUST contain:
     # Arrange
     # Act
     # Assert
+
+Never write `# Arrange / Act` combined. Use only `# Arrange` or `# Act` separately.
 
 ✔ Correct:
     # Arrange
@@ -184,14 +189,20 @@ still required.
 6. ASSERT COUNT
 ---------------
 
-Prefer a single assert per test.
+One assert per test. Never add a second assert.
 
 If multiple observable values define one contract,
-group them into a tuple.
+group them into a tuple. Tuples must always be multiline.
 
 ✔ Correct:
-    actual = (a, b)
-    expected = (1, 2)
+    actual = (
+        a,
+        b,
+    )
+    expected = (
+        1,
+        2,
+    )
     assert actual == expected
 
 ❌ Incorrect:
@@ -291,6 +302,7 @@ Tests must be:
 Avoid:
 - Testing implementation details
 - Asserting private state
+- Calling private methods directly in tests — test only the public interface
 - Testing multiple contracts in one test
 - Over-mocking
 - Asserting object identity (`result is sut`) when observable state is available
