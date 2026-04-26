@@ -1,47 +1,35 @@
 ## 📌 Description
 <!--
-Must open with one line stating the PR goal.
-A follow-up paragraph of up to three lines may expand on the description.
-
-Do NOT:
-- Justify the change
-- Criticize previous code
-- Use bullet points
-- Add implementation details
-- Repeat content from "What"
-
-Keep it concise and high-level.
+Summarize the behavior from the user's perspective.
+- 1 sentence (required)
+- + optional short follow-up (max 2–3 lines)
+- No implementation details
 -->
 
 ## 📌 What
 <!--
-List logical changes only.
-Summarize the logic, not the diff.
-
-Each bullet must:
-- Represent one meaningful structural or behavioral change
-- Use direct verbs (Added, Removed, Renamed, Extracted, Refactored, Introduced, Replaced)
-
-Do NOT:
-- List line-level edits
-- Describe minor internal adjustments
-- Explain how the code works
+Detail the behavior changes introduced.
+- One bullet per meaningful change
+- Add precision (scope, conditions, constraints)
+- Do not repeat the Description
+- Include only changes (no unaffected behavior)
+- No implementation details
 -->
 
 ## 📎 Notes
 <!--
-State explicitly:
-- Runtime behavior change: Yes or No
-- Breaking change: Yes or No
+Required:
+- Runtime behavior change: Yes/No
+- Breaking change: Yes/No
 
-Be factual. No commentary.
+Optional:
+- scope limitations (where the change applies)
+- unaffected behavior (what remains unchanged)
+- clarifications that are not changes
 -->
 
 ## 🔗 References
-<!--
-Include only real references.
-If none exist, write: None.
--->
+<!-- Links or: None -->
 
 ## ✅ Checklist
 - [ ] Code follows project standards
