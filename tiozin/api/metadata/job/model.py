@@ -13,6 +13,12 @@ class RunnerManifest(Manifest):
     Specifies the execution backend and runtime behavior for the job.
     """
 
+    @classmethod
+    def __produces__(cls):
+        from tiozin import Runner
+
+        return Runner
+
     # Identity
     name: str | None = Field(None, description=docs.RUNNER_NAME)
     description: str | None = Field(None, description=docs.RUNNER_DESCRIPTION)
@@ -27,6 +33,12 @@ class InputManifest(Manifest):
 
     Specifies how and where data is read into the pipeline.
     """
+
+    @classmethod
+    def __produces__(cls):
+        from tiozin import Input
+
+        return Input
 
     # Identity
     name: str = Field(description=docs.INPUT_NAME)
@@ -53,6 +65,12 @@ class TransformManifest(Manifest):
     Specifies operations that modify or enrich data.
     """
 
+    @classmethod
+    def __produces__(cls):
+        from tiozin import Transform
+
+        return Transform
+
     # Identity
     name: str = Field(description=docs.TRANSFORM_NAME)
     description: str | None = Field(None, description=docs.TRANSFORM_DESCRIPTION)
@@ -77,6 +95,12 @@ class OutputManifest(Manifest):
 
     Specifies where and how processed data is written.
     """
+
+    @classmethod
+    def __produces__(cls):
+        from tiozin import Output
+
+        return Output
 
     # Identity
     name: str = Field(description=docs.OUTPUT_NAME)
@@ -103,6 +127,12 @@ class JobManifest(Manifest):
     Describes a job as structured data including metadata, taxonomy, and pipeline components.
     Can be stored, versioned, and transferred as code.
     """
+
+    @classmethod
+    def __produces__(cls):
+        from tiozin import Job
+
+        return Job
 
     # Identity
     name: str = Field(description=docs.JOB_NAME)

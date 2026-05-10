@@ -1,8 +1,6 @@
-from datetime import datetime
 from unittest.mock import ANY
 
 import pytest
-from freezegun import freeze_time
 
 from tiozin.api import Input, Runner
 from tiozin.api.metadata.job.model import (
@@ -13,7 +11,7 @@ from tiozin.api.metadata.job.model import (
 )
 from tiozin.api.metadata.model import Manifest
 from tiozin.api.metadata.setting.model import SchemaRegistryManifest
-from tiozin.compose import TiozinFactory
+from tiozin.compose import TiozinRegistry
 from tiozin.exceptions import (
     PluginConflictError,
     PluginNotFoundError,
@@ -23,28 +21,22 @@ from tiozin.family.tio_kernel import (
     NoOpInput,
     NoOpOutput,
     NoOpRunner,
-    NoOpSchemaRegistry,
     NoOpTransform,
 )
 
-ISO_2025_01_02T12_00_00Z = "2025-01-02T12:00:00Z"
-OBJ_2025_01_02T12_00_00Z = datetime.fromisoformat(ISO_2025_01_02T12_00_00Z)
-
 
 @pytest.fixture
-def factory() -> TiozinFactory:
-    registry = TiozinFactory()
-    registry.setup()
-    return registry
+def factory() -> TiozinRegistry:
+    return TiozinRegistry()
 
 
-def test_register_should_fail_when_registering_non_plugin(factory: TiozinFactory):
-    # Act/Assert
-    with pytest.raises(TiozinInputError, match="is not a Tiozin"):
-        factory.register(tiozin=12345)
+# ============================================================================
+# register()
+# ============================================================================
+def test_register_should_index_plugin_by_multiple_keys(factory: TiozinRegistry):
+    # Act
+    factory.register(NoOpInput)
 
-
-def test_register_should_index_plugin_by_multiple_keys(factory: TiozinFactory):
     # Assert
     actual = (
         factory._index.get("NoOpInput"),
@@ -61,15 +53,13 @@ def test_register_should_index_plugin_by_multiple_keys(factory: TiozinFactory):
     assert actual == expected
 
 
-def test_register_should_group_plugins_with_same_name(factory: TiozinFactory):
+def test_register_should_group_plugins_with_same_name(factory: TiozinRegistry):
     # Arrange
-    class CustomTransform(NoOpTransform):
-        pass
+    class CustomTransform(NoOpTransform): ...
 
     class1 = CustomTransform
 
-    class CustomTransform(NoOpTransform):
-        pass
+    class CustomTransform(NoOpTransform): ...
 
     class2 = CustomTransform
 
@@ -83,8 +73,17 @@ def test_register_should_group_plugins_with_same_name(factory: TiozinFactory):
     assert actual == expected
 
 
+def test_register_should_fail_when_registering_non_plugin(factory: TiozinRegistry):
+    # Arrange
+    tiozin = {"kind": "NonPlugin"}  # Not a Tiozin class
+
+    # Act/Assert
+    with pytest.raises(TiozinInputError, match="is not a Tiozin"):
+        factory.register(tiozin)
+
+
 # ============================================================================
-# load()
+# resolve()
 # ============================================================================
 @pytest.mark.parametrize(
     "kind",
@@ -94,149 +93,86 @@ def test_register_should_group_plugins_with_same_name(factory: TiozinFactory):
         "tiozin.family.tio_kernel.inputs.noop_input.NoOpInput",
     ],
 )
-@freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_input_plugin(factory: TiozinFactory, kind: str):
+def test_resolve_should_find_plugin_by_kind_format(factory: TiozinRegistry, kind: str):
     # Act
-    tiozin = factory.load(
-        kind,
-        name="test_input",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
-    )
+    tiozin_class = factory.resolve(kind)
 
     # Assert
-    actual = vars(tiozin)
-    expected = dict(
-        kind="NoOpInput",
-        name="test_input",
-        slug="test_input",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        subdomain=None,
-        layer="raw",
-        product="revenue",
-        model="daily",
-        schema_subject=None,
-        schema_version=None,
-        options={},
-        verbose=True,
-        force_error=False,
-    )
+    actual = tiozin_class
+    expected = NoOpInput
     assert actual == expected
 
 
+def test_resolve_should_fail_when_plugin_not_found(factory: TiozinRegistry):
+    # Act
+    with pytest.raises(PluginNotFoundError):
+        factory.resolve("NonExistentPlugin")
+
+
+def test_resolve_should_fail_when_multiple_plugins_with_same_name(factory: TiozinRegistry):
+    # Arrange
+    class CustomTransform(NoOpTransform): ...
+
+    class1 = CustomTransform
+
+    class CustomTransform(NoOpTransform): ...
+
+    class2 = CustomTransform
+
+    # Act
+    factory.register(class1)
+    factory.register(class2)
+
+    # Act
+    with pytest.raises(PluginConflictError):
+        factory.resolve("CustomTransform")
+
+
+# ============================================================================
+# load()
+# ============================================================================
 @pytest.mark.parametrize(
     "kind",
     [
+        "NoOpInput",
         "NoOpOutput",
-        "tio_kernel:NoOpOutput",
-        "tiozin.family.tio_kernel.outputs.noop_output.NoOpOutput",
-    ],
-)
-@freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_output_plugin(factory: TiozinFactory, kind: str):
-    # Act
-    tiozin = factory.load(
-        kind,
-        name="test_output",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
-    )
-
-    # Assert
-    actual = vars(tiozin)
-    expected = dict(
-        kind="NoOpOutput",
-        name="test_output",
-        slug="test_output",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        subdomain=None,
-        layer="raw",
-        product="revenue",
-        model="daily",
-        options={},
-        schema_subject=None,
-        schema_version=None,
-        verbose=True,
-        force_error=False,
-    )
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "kind",
-    [
         "NoOpTransform",
-        "tio_kernel:NoOpTransform",
-        "tiozin.family.tio_kernel.transforms.noop_transform.NoOpTransform",
     ],
 )
-@freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_transform_plugin(factory: TiozinFactory, kind: str):
+def test_load_should_load_step_plugin(factory: TiozinRegistry, kind: str):
     # Act
     tiozin = factory.load(
         kind,
-        name="test_transform",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
+        name="test",
     )
 
     # Assert
     actual = vars(tiozin)
     expected = dict(
-        kind="NoOpTransform",
-        name="test_transform",
-        slug="test_transform",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
+        kind=kind,
+        name="test",
+        slug="test",
+        description=None,
+        org=None,
+        region=None,
+        domain=None,
         subdomain=None,
-        layer="raw",
-        product="revenue",
-        model="daily",
-        options={},
+        layer=None,
+        product=None,
+        model=None,
         schema_subject=None,
         schema_version=None,
+        options={},
         verbose=True,
         force_error=False,
     )
     assert actual == expected
 
 
-@pytest.mark.parametrize(
-    "kind",
-    [
-        "NoOpRunner",
-        "tio_kernel:NoOpRunner",
-        "tiozin.family.tio_kernel.runners.noop_runner.NoOpRunner",
-    ],
-)
-@freeze_time(ISO_2025_01_02T12_00_00Z)
-def test_load_should_load_runner_plugin(factory: TiozinFactory, kind: str):
+def test_load_should_load_runner_plugin(factory: TiozinRegistry):
     # Act
     tiozin = factory.load(
-        kind,
+        "NoOpRunner",
         name="test_runner",
         description="test",
     )
@@ -256,17 +192,9 @@ def test_load_should_load_runner_plugin(factory: TiozinFactory, kind: str):
     assert actual == expected
 
 
-@pytest.mark.parametrize(
-    "kind",
-    [
-        "FileJobRegistry",
-        "tio_kernel:FileJobRegistry",
-        "tiozin.family.tio_kernel.registries.file_job_registry.FileJobRegistry",
-    ],
-)
-def test_load_should_load_registry_plugin(factory: TiozinFactory, kind: str):
+def test_load_should_load_registry_plugin(factory: TiozinRegistry):
     # Act
-    tiozin = factory.load(kind)
+    tiozin = factory.load("FileJobRegistry")
 
     # Assert
     actual = vars(tiozin)
@@ -286,37 +214,11 @@ def test_load_should_load_registry_plugin(factory: TiozinFactory, kind: str):
     assert actual == expected
 
 
-def test_load_should_fail_when_plugin_not_found(factory: TiozinFactory):
-    # Act/Assert
-    with pytest.raises(PluginNotFoundError):
-        factory.load("NonExistentPlugin")
-
-
-def test_load_should_fail_when_multiple_plugins_with_same_name(factory: TiozinFactory):
-    # Arrange
-    class AmbiguousInput(NoOpInput):
-        pass
-
-    factory.register(AmbiguousInput)
-
-    class AmbiguousInput(NoOpInput):
-        pass
-
-    factory.register(AmbiguousInput)
-
-    # Act/Assert
-    with pytest.raises(PluginConflictError):
-        factory.load("AmbiguousInput")
-
-
-# ============================================================================
-# safe_load()
-# ============================================================================
-def test_safe_load_should_return_typed_plugin(factory: TiozinFactory):
+def test_load_should_validate_plugin_role(factory: TiozinRegistry):
     # Act
-    tiozin = factory.safe_load(
+    tiozin = factory.load(
         kind="NoOpInput",
-        tiozin_role=Input,
+        role=Input,
         name="test",
         org="acme",
         region="us",
@@ -327,23 +229,17 @@ def test_safe_load_should_return_typed_plugin(factory: TiozinFactory):
     )
 
     # Assert
-    actual = (
-        isinstance(tiozin, Input),
-        isinstance(tiozin, NoOpInput),
-    )
-    expected = (
-        True,
-        True,
-    )
+    actual = tiozin.kind
+    expected = "NoOpInput"
     assert actual == expected
 
 
-def test_safe_load_should_fail_when_tiozin_role_does_not_match(factory: TiozinFactory):
-    # Act/Assert
+def test_load_should_fail_when_plugin_does_not_match_role(factory: TiozinRegistry):
+    # Act
     with pytest.raises(TiozinInputError):
-        factory.safe_load(
+        factory.load(
             kind="NoOpInput",
-            tiozin_role=Runner,
+            role=Runner,
             name="test",
             org="acme",
             region="us",
@@ -357,18 +253,9 @@ def test_safe_load_should_fail_when_tiozin_role_does_not_match(factory: TiozinFa
 # ============================================================================
 # load_manifest()
 # ============================================================================
-def test_load_manifest_should_return_plugin_as_is(factory: TiozinFactory):
+def test_load_manifest_should_return_same_instance_when_given_tiozin(factory: TiozinRegistry):
     # Arrange
-    tiozin = NoOpInput(
-        name="test",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
-    )
+    tiozin = NoOpInput(name="test")
 
     # Act
     result = factory.load_manifest(tiozin)
@@ -387,19 +274,12 @@ def test_load_manifest_should_return_plugin_as_is(factory: TiozinFactory):
     ],
 )
 def test_load_manifest_should_load_plugin_from_manifest(
-    factory: TiozinFactory, plugin_class: type, manifest_class: type
+    factory: TiozinRegistry, plugin_class: type, manifest_class: type
 ):
     # Arrange
     manifest = manifest_class(
         kind=plugin_class.__name__,
         name="test",
-        description="test",
-        org="acme",
-        region="us",
-        domain="sales",
-        layer="raw",
-        product="revenue",
-        model="daily",
     )
 
     # Act
@@ -409,8 +289,8 @@ def test_load_manifest_should_load_plugin_from_manifest(
     assert isinstance(tiozin, plugin_class)
 
 
-def test_load_manifest_should_preserve_default_fields_when_unset_in_manifest(
-    factory: TiozinFactory,
+def test_load_manifest_should_preserve_defaults(
+    factory: TiozinRegistry,
 ):
     # Arrange
     manifest = SchemaRegistryManifest(kind="NoOpSchemaRegistry")
@@ -420,13 +300,13 @@ def test_load_manifest_should_preserve_default_fields_when_unset_in_manifest(
 
     # Assert
     actual = (
-        isinstance(registry, NoOpSchemaRegistry),
+        registry.kind,
         registry.subject_template,
         registry.default_version,
         registry.show_schema,
     )
     expected = (
-        True,
+        "NoOpSchemaRegistry",
         "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}",
         "latest",
         False,
@@ -434,7 +314,7 @@ def test_load_manifest_should_preserve_default_fields_when_unset_in_manifest(
     assert actual == expected
 
 
-def test_load_manifest_should_fail_when_manifest_has_no_tiozin_role(factory: TiozinFactory):
+def test_load_manifest_should_fail_when_manifest_has_no_tiozin_role(factory: TiozinRegistry):
     # Arrange
     class UnsupportedManifest(Manifest):
         pass

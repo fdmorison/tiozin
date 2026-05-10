@@ -2,7 +2,7 @@ from tiozin.api import Registry, SettingRegistry
 from tiozin.api.loggable import Loggable
 from tiozin.api.metadata.bundle import Registries
 from tiozin.api.metadata.setting.model import SettingRegistryManifest
-from tiozin.compose.assembly.tiozin_factory import tiozin_factory
+from tiozin.compose.assembly.tiozin_registry import tiozin_registry
 
 
 class AppContainer(Loggable):
@@ -28,7 +28,7 @@ class AppContainer(Loggable):
         defaults = SettingRegistryManifest()
         defaults.location = defaults.location or self.settings_path
 
-        setting_registry = tiozin_factory.safe_load(
+        setting_registry = tiozin_registry.load(
             tiozin_role=SettingRegistry,
             **defaults.model_dump(),
         )
@@ -37,12 +37,12 @@ class AppContainer(Loggable):
         manifest = setting_registry.get()
         self.registries = Registries(
             setting=setting_registry,
-            secret=tiozin_factory.load_manifest(manifest.registries.secret),
-            schema=tiozin_factory.load_manifest(manifest.registries.schema),
-            transaction=tiozin_factory.load_manifest(manifest.registries.transaction),
-            job=tiozin_factory.load_manifest(manifest.registries.job),
-            metric=tiozin_factory.load_manifest(manifest.registries.metric),
-            lineage=tiozin_factory.load_manifest(manifest.registries.lineage),
+            secret=tiozin_registry.load_manifest(manifest.registries.secret),
+            schema=tiozin_registry.load_manifest(manifest.registries.schema),
+            transaction=tiozin_registry.load_manifest(manifest.registries.transaction),
+            job=tiozin_registry.load_manifest(manifest.registries.job),
+            metric=tiozin_registry.load_manifest(manifest.registries.metric),
+            lineage=tiozin_registry.load_manifest(manifest.registries.lineage),
         )
 
         self._boot_order = [

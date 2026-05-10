@@ -20,6 +20,12 @@ class SettingRegistryManifest(BaseSettings):
         env_ignore_empty=True,
     )
 
+    @classmethod
+    def __produces__(cls):
+        from .registry import SettingRegistry
+
+        return SettingRegistry
+
     # Identity
     kind: str = Field(config.default_setting_registry, description=docs.KIND)
     name: str | None = Field(NULLABLE, description=docs.REGISTRY_NAME)
@@ -40,6 +46,12 @@ class JobRegistryManifest(BaseSettings):
         env_ignore_empty=True,
     )
 
+    @classmethod
+    def __produces__(cls):
+        from ..job.registry import JobRegistry
+
+        return JobRegistry
+
     # Identity
     kind: str = Field(config.default_job_registry, description=docs.KIND)
     name: str | None = Field(NULLABLE, description=docs.REGISTRY_NAME)
@@ -59,6 +71,12 @@ class SchemaRegistryManifest(BaseSettings):
         str_strip_whitespace=True,
         env_ignore_empty=True,
     )
+
+    @classmethod
+    def __produces__(cls):
+        from ..schema.registry import SchemaRegistry
+
+        return SchemaRegistry
 
     # Identity
     kind: str = Field(config.default_schema_registry, description=docs.KIND)
@@ -86,6 +104,12 @@ class SecretRegistryManifest(BaseSettings):
         env_ignore_empty=True,
     )
 
+    @classmethod
+    def __produces__(cls):
+        from ..secret.registry import SecretRegistry
+
+        return SecretRegistry
+
     # Identity
     kind: str = Field(config.default_secret_registry, description=docs.KIND)
     name: str | None = Field(NULLABLE, description=docs.REGISTRY_NAME)
@@ -106,6 +130,12 @@ class TransactionRegistryManifest(BaseSettings):
         env_ignore_empty=True,
     )
 
+    @classmethod
+    def __produces__(cls):
+        from ..transaction.registry import TransactionRegistry
+
+        return TransactionRegistry
+
     # Identity
     kind: str = Field(config.default_transaction_registry, description=docs.KIND)
     name: str | None = Field(NULLABLE, description=docs.REGISTRY_NAME)
@@ -125,6 +155,12 @@ class LineageRegistryManifest(BaseSettings):
         str_strip_whitespace=True,
         env_ignore_empty=True,
     )
+
+    @classmethod
+    def __produces__(cls):
+        from ..lineage.registry import LineageRegistry
+
+        return LineageRegistry
 
     # Identity
     kind: str = Field(config.default_lineage_registry, description=docs.KIND)
@@ -147,6 +183,12 @@ class MetricRegistryManifest(BaseSettings):
         str_strip_whitespace=True,
         env_ignore_empty=True,
     )
+
+    @classmethod
+    def __produces__(cls):
+        from ..metric.registry import MetricRegistry
+
+        return MetricRegistry
 
     # Identity
     kind: str = Field(config.default_metric_registry, description=docs.KIND)
