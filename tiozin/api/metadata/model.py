@@ -160,6 +160,10 @@ class Manifest(Metadata):
         validate_default=True,
     )
 
+    @classmethod
+    def __produces__(cls) -> None:
+        return None
+
     kind: str = Field(description=docs.KIND)
 
 

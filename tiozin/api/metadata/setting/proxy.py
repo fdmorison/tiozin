@@ -23,7 +23,7 @@ class SettingRegistryProxy(wrapt.ObjectProxy):
     """
 
     def setup(self, *args, **kwargs) -> None:
-        from tiozin.compose.assembly.tiozin_factory import tiozin_factory
+        from tiozin.compose.assembly.tiozin_registry import tiozin_registry
 
         registry: SettingRegistry = self.__wrapped__
         visited = []
@@ -44,7 +44,7 @@ class SettingRegistryProxy(wrapt.ObjectProxy):
             if target_registry is None:
                 break
 
-            next_registry: SettingRegistry = tiozin_factory.load_manifest(target_registry)
+            next_registry: SettingRegistry = tiozin_registry.load_manifest(target_registry)
             TiozinInternalError.raise_if(
                 not next_registry.location,
                 f"Declared settings registry '{next_registry.kind}' has no location.",

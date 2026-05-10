@@ -1,18 +1,25 @@
 from typing import Any, Self, TypeAlias
 
-from tiozin import logs
-from tiozin.api import EtlStep, Input, Job, JobManifest, Output, Runner, Tiozin, Transform
-from tiozin.api.metadata.job.model import (
+from tiozin import (
+    EtlStep,
+    Input,
     InputManifest,
+    Job,
+    JobManifest,
+    Output,
     OutputManifest,
+    Runner,
     RunnerManifest,
+    Tiozin,
+    Transform,
     TransformManifest,
+    logs,
 )
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
-from tiozin.utils.helpers import trim
+from tiozin.utils import trim
 
 from ..reflection import try_get_public_setter
-from .tiozin_factory import tiozin_factory
+from .tiozin_registry import tiozin_registry
 
 InputDefinition: TypeAlias = dict[str, Any] | InputManifest | Input
 OutputDefinition: TypeAlias = dict[str, Any] | OutputManifest | Output
@@ -194,7 +201,7 @@ class JobBuilder:
         return self
 
     def _build_step(
-        self, manifest: TransformManifest | OutputManifest | InputManifest | Tiozin
+        self, manifest: InputManifest | TransformManifest | OutputManifest | Tiozin
     ) -> EtlStep:
         manifest.org = manifest.org or self._org
         manifest.region = manifest.region or self._region
@@ -203,15 +210,15 @@ class JobBuilder:
         manifest.layer = manifest.layer or self._layer
         manifest.product = manifest.product or self._product
         manifest.model = manifest.model or self._model
-        return tiozin_factory.load_manifest(manifest)
+        return tiozin_registry.load_manifest(manifest)
 
     def build(self) -> Job:
         if self._built:
             raise TiozinInternalError("The builder can only be used once")
 
-        job = tiozin_factory.safe_load(
-            tiozin_role=Job,
-            # identity
+        job = tiozin_registry.load(
+            role=Job,
+            # Identity
             kind=self._kind,
             name=self._name,
             description=self._description,
@@ -229,7 +236,7 @@ class JobBuilder:
             product=self._product,
             model=self._model,
             # Pipeline
-            runner=tiozin_factory.load_manifest(self._runner),
+            runner=tiozin_registry.load_manifest(self._runner),
             inputs=[self._build_step(m) for m in self._inputs],
             transforms=[self._build_step(m) for m in self._transforms],
             outputs=[self._build_step(m) for m in self._outputs],

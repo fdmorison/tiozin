@@ -3,70 +3,25 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TypeVar
 
-from tiozin.api import (
-    Input,
-    Job,
-    JobRegistry,
-    LineageRegistry,
-    MetricRegistry,
-    Output,
-    Runner,
-    SchemaRegistry,
-    SecretRegistry,
-    SettingRegistry,
-    Tiozin,
-    TransactionRegistry,
-    Transform,
-)
+from tiozin.api import Tiozin
 from tiozin.api.loggable import Loggable
-from tiozin.api.metadata.job.model import (
-    InputManifest,
-    JobManifest,
-    Manifest,
-    OutputManifest,
-    RunnerManifest,
-    TransformManifest,
-)
-from tiozin.api.metadata.setting.model import (
-    JobRegistryManifest,
-    LineageRegistryManifest,
-    MetricRegistryManifest,
-    SchemaRegistryManifest,
-    SecretRegistryManifest,
-    SettingRegistryManifest,
-    TransactionRegistryManifest,
-)
+from tiozin.api.metadata.model import Manifest
 from tiozin.exceptions import (
     PluginConflictError,
     PluginNotFoundError,
     RequiredArgumentError,
     TiozinInputError,
 )
+from tiozin.utils.decorators import ensure_setup
 
 from .. import reflection
 from .tiozin_scanner import TiozinScanner
 
 T = TypeVar("T", bound=Tiozin)
 
-_MANIFEST_ROLE_MAP = {
-    # ETL
-    JobManifest: Job,
-    RunnerManifest: Runner,
-    InputManifest: Input,
-    OutputManifest: Output,
-    TransformManifest: Transform,
-    # Registries
-    SettingRegistryManifest: SettingRegistry,
-    JobRegistryManifest: JobRegistry,
-    SchemaRegistryManifest: SchemaRegistry,
-    SecretRegistryManifest: SecretRegistry,
-    TransactionRegistryManifest: TransactionRegistry,
-    LineageRegistryManifest: LineageRegistry,
-    MetricRegistryManifest: MetricRegistry,
-}
 
-
-class TiozinFactory(Loggable):
+@ensure_setup
+class TiozinRegistry(Loggable):
     """
     Discovers, registers, and resolves Tiozin plugins at runtime.
 
@@ -141,27 +96,20 @@ class TiozinFactory(Loggable):
         self._index[tiozin.tiozin_python_path].add(tiozin)
         self._tiozins.add(tiozin)
 
-    def load(self, kind: str, **args) -> Tiozin:
+    def resolve(self, kind: str) -> type[Tiozin]:
         """
-        Resolves and loads a Tiozin by kind.
-
-        The kind parameter accepts multiple formats: simple class names like
-        ``"SparkFileInput"``, provider-qualified names like ``"tio_spark:SparkFileInput"``,
-        or full Python paths like ``"my.module.SparkFileInput"``. Use qualified names
-        to disambiguate when multiple providers expose Tiozin plugins with the same class name.
+        Resolves a Tiozin class by kind without instantiating it.
 
         Args:
             kind: The Tiozin identifier.
-            **args: Arguments forwarded to the Tiozin constructor.
 
         Raises:
             PluginNotFoundError: If no Tiozin matches the given kind.
-            AmbiguousPluginError: If multiple Tiozin plugins match without a unique identifier.
+            PluginConflictError: If multiple Tiozin plugins match without a unique identifier.
 
         Returns:
-            A new instance of the resolved Tiozin.
+            The resolved Tiozin class.
         """
-        self.setup()
         candidates = self._index.get(kind)
 
         PluginNotFoundError.raise_if(
@@ -175,26 +123,44 @@ class TiozinFactory(Loggable):
             candidates=[p.tiozin_family_path for p in candidates],
         )
 
-        tiozin: type[Tiozin] = next(iter(candidates))
-        params = args.copy()
-        params.pop("description", None)
-        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined", **params)
-        return tiozin(**args)
+        return next(iter(candidates))
 
-    def safe_load(self, kind: str, tiozin_role: type[T], **args) -> T:
+    def load(self, kind: str, role: type[T] = None, **arguments) -> Tiozin:
         """
-        Loads a Tiozin by kind and validates that it matches the expected type.
+        Resolve and instantiate a Tiozin by kind. The `kind` may be:
+
+        - Class name, e.g. "SparkFileInput"
+        - Provider-qualified name, e.g. "tio_spark:SparkFileInput"
+        - Python path, e.g. "my.module.SparkFileInput"
+
+        If `role` is provided, the loaded class must be a subclass of it.
+
+        Args:
+            kind: Tiozin plugin class identifier.
+            role: Tiozin plugin role class; the loaded plugin must satisfy it.
+            **arguments: The Tiozin arguments
+
+        Raises:
+            PluginNotFoundError: If no Tiozin matches the given kind.
+            PluginConflictError: If multiple Tiozin plugins match without a unique identifier.
+            TiozinInputError: If the loaded plugin does not satisfy the given role.
+
+        Returns:
+            The new Tiozin instance.
         """
-        tiozin_instance: T = self.load(kind, **args)
+        tiozin = self.resolve(kind)
 
         TiozinInputError.raise_if(
-            not isinstance(tiozin_instance, tiozin_role),
+            role and not issubclass(tiozin, role),
             "Tiozin '{name}' is not a '{role}'",
-            name=tiozin_instance.tiozin_name,
-            role=tiozin_role,
+            name=tiozin.tiozin_name,
+            role=role,
         )
 
-        return tiozin_instance
+        params = arguments.copy()
+        params.pop("description", None)
+        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined", **params)
+        return tiozin(**arguments)
 
     def load_manifest(self, manifest: Manifest | Tiozin) -> Tiozin:
         """
@@ -203,25 +169,20 @@ class TiozinFactory(Loggable):
         if isinstance(manifest, Tiozin):
             return manifest
 
-        role = _MANIFEST_ROLE_MAP.get(type(manifest))
+        produces = getattr(type(manifest), "__produces__", None)
+        role = produces() if produces is not None else None
 
         RequiredArgumentError.raise_if_missing(
             manifest=manifest,
             manifest_kind=manifest.kind,
+            manifest_builds=role,
         )
 
-        TiozinInputError.raise_if(
-            not role,
-            f"Manifest does not describe a pluggable Tiozin: {type(manifest)}.",
-        )
-
-        tiozin_instance = self.safe_load(
+        return self.load(
             kind=manifest.kind,
-            tiozin_role=role,
-            **manifest.model_dump(exclude={"kind"}, exclude_unset=True),
+            role=role,
+            **manifest.model_dump(exclude={"kind"}),
         )
 
-        return tiozin_instance
 
-
-tiozin_factory = TiozinFactory()
+tiozin_registry = TiozinRegistry()
