@@ -27,7 +27,7 @@ codebase.
 - Each test must have exactly one `assert`.
 - When asserting multiple attributes of the same entity, group them into a tuple rather than writing separate tests.
 - Organize each test into `# Arrange`, `# Act`, and `# Assert` blocks. Never combine Arrange and Act.
-- Also respect `.claude/rules/testing.md`.
+- Follow additional rules from `.claude/rules/testing.md`.
 
 ## Workflow
 

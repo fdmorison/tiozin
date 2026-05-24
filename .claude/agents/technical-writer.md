@@ -25,7 +25,7 @@ Write clear documentation for developers adopting the framework, regardless of b
 - When a class name appears in prose, link it to its reference page if one exists. Do not link class names inside code blocks.
 - When writing about an external engine, framework, standard, or technology (e.g., Spark, Iceberg, OpenLineage, Parquet), include a link to its official documentation. Never remove existing links to official external documentation.
 - User guides must open with an example the reader can copy and run, never with theory.
-- Also respect `.claude/rules/documentation.md`.
+- Follow additional rules from `.claude/rules/documentation.md`.
 
 ## Workflow
 
