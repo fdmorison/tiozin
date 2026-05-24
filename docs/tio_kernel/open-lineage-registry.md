@@ -13,15 +13,15 @@ registries:
 
 | Property | Description | Default |
 |---|---|---|
-| `location` | Base URL of the OpenLineage backend | none |
+| `location` | Base URL of the OpenLineage backend | |
 | `timeout` | HTTP request timeout in seconds | `3` |
 | `verify` | Verify TLS certificates | `true` |
-| `api_key` | Bearer token for API key authentication | none |
+| `api_key` | Bearer token for API key authentication | |
 | `readonly` | Reject write operations | `false` |
 | `cache` | Cache retrieved metadata in memory | `false` |
-| `failfast` | Raise an error when metadata is not found; returns `null` when `false` | `false` |
-| `name` | Display name for this registry instance | class name |
-| `description` | Human-readable description | none |
+| `failfast` | When `true`, raises when metadata is not found; when `false`, returns `null` | `false` |
+| `name` | Display name for this registry instance | |
+| `description` | Human-readable description | |
 
 ## How it works
 

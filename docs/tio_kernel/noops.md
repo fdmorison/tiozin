@@ -20,7 +20,7 @@ runner:
 
 ## NoOpInput
 
-An input that does nothing and returns `None`.
+An input that does nothing and returns an empty list.
 
 ```yaml
 inputs:
@@ -37,7 +37,7 @@ inputs:
 
 ## NoOpTransform
 
-A transform that does nothing and returns `None`.
+A transform that does nothing and returns an empty list.
 
 ```yaml
 transforms:
@@ -54,7 +54,7 @@ transforms:
 
 ## NoOpOutput
 
-An output that does nothing and returns `None`.
+An output that does nothing and returns an empty list.
 
 ```yaml
 outputs:

@@ -30,7 +30,7 @@ The `tio_kernel` family ships several production-ready implementations:
 | `FileSchemaRegistry` | `SchemaRegistry` | Loads schema files from any fsspec-supported location |
 | `OpenLineageRegistry` | `LineageRegistry` | Sends run events to any OpenLineage-compatible backend via HTTP |
 
-NoOp versions are provided for registries that are not configured: `NoOpSchemaRegistry`, `NoOpMetricRegistry`, and `NoOpTransactionRegistry`. They return `None` or discard events. Use them in local development and testing when you do not need that registry.
+NoOp versions are available for every registry type: `NoOpLineageRegistry`, `NoOpSchemaRegistry`, `NoOpMetricRegistry`, `NoOpSecretRegistry`, `NoOpSettingRegistry`, and `NoOpTransactionRegistry`. They do nothing or return safe fallback values. Use them in local development and testing when you do not need a real backend.
 
 `FileJobRegistry` is the registry used when you run `tiozin run path/to/job.yaml`. Set `location` to a folder, S3 prefix, or HTTP base URL and jobs are loaded by name relative to it:
 
@@ -49,13 +49,19 @@ Absolute paths and URIs passed directly to `tiozin run` are used as-is, regardle
 
 ## Registry API
 
-All registries share the same three methods:
+Each registry type defines its own read and write methods. The signatures differ because each registry serves a different purpose:
 
-| Method | Description |
-|---|---|
-| `get(identifier, version=None)` | Retrieve metadata by ID. Raises `TiozinNotFoundError` if not found |
-| `register(identifier, value)` | Store metadata under an identifier |
-| `try_get(identifier, version=None)` | Retrieve metadata or return `None` if not found |
+| Registry | Read method | Write method |
+|---|---|---|
+| `JobRegistry` | `get(identifier)` | `register(identifier, value)` |
+| `SettingRegistry` | `get()` | (none) |
+| `SecretRegistry` | `get(identifier)` | `register(identifier, value)` |
+| `SchemaRegistry` | `get(subject, version=None)` | `register(subject, value)` |
+| `LineageRegistry` | (none) | `emit(event)` |
+| `MetricRegistry` | inherited from base | inherited from base |
+| `TransactionRegistry` | inherited from base | inherited from base |
+
+All registries that have a `get()` method raise when the item is not found and `failfast=True`. When `failfast=False` (the default), `get()` returns `None` instead.
 
 ## Implementing a custom registry
 
@@ -65,13 +71,11 @@ Extend the appropriate abstract class and implement `get()` and `register()`:
 from tiozin import SecretRegistry
 
 class VaultSecretRegistry(SecretRegistry):
-    def get(self, identifier: str, version: str | None = None):
+    def get(self, identifier: str):
         return vault_client.read_secret(identifier)
 
     def register(self, identifier: str, value) -> None:
         vault_client.write_secret(identifier, value)
 ```
-
-`try_get()` is provided by the base class. It returns `None` instead of raising when the item is not found.
 
 Once implemented, register your registry as a Tiozin via Python `entry_points`. See [Working with Registries](../extending/registry.md).

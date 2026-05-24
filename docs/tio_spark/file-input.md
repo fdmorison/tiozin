@@ -1,6 +1,6 @@
 # SparkFileInput
 
-Reads files into a Spark DataFrame. Supports all formats Spark supports natively and any format added by a loaded Spark package.
+Reads files into a Spark `DataFrame`. Supports all formats Spark supports natively and any format added by a loaded Spark package.
 
 ```yaml
 inputs:
@@ -10,7 +10,7 @@ inputs:
     format: parquet
 ```
 
-## Parameters
+## All available options
 
 | Property | Description | Default |
 |---|---|---|
@@ -21,7 +21,7 @@ inputs:
 
 ## Supported formats
 
-The `format` field is passed directly to Spark's `DataFrameReader.format()`. The full list of Spark data sources is in the [Spark SQL data sources reference](https://spark.apache.org/docs/latest/sql-data-sources-load-save-functions.html).
+The `format` field is passed directly to Spark's `DataFrameReader.format()`.
 
 | Format | Notes |
 |---|---|
@@ -35,13 +35,13 @@ The `format` field is passed directly to Spark's `DataFrameReader.format()`. The
 | `xml` | Requires the `spark-xml` package |
 | `sequenceFile` | Hadoop SequenceFile format |
 
-## Enriching rows with file path columns
+## Adding file path columns
 
 When reading from multiple files, you often need to know which file each row came from. Set `explode_filepath: true` to add file-level columns to every row:
 
 | Column | Value |
 |---|---|
-| `filesize` | File size in bytes (from Spark file metadata) |
+| `filesize` | File size in bytes |
 | `dirpath` | Full path to the directory containing the file |
 | `dirname` | Name of the directory (last path component before the filename) |
 | `filepath` | Full path to the file |
@@ -56,6 +56,21 @@ inputs:
     path: /data/logs/
     format: text
     explode_filepath: true
+```
+
+## Passing extra reader options
+
+Any property not listed in the options table is forwarded directly to Spark's `DataFrameReader.options()`.
+
+```yaml
+inputs:
+  - kind: SparkFileInput
+    name: raw
+    path: data/raw.csv
+    format: csv
+    header: true
+    inferSchema: true
+    delimiter: ";"
 ```
 
 ## Lineage
@@ -77,19 +92,4 @@ inputs:
     name: events
     path: /data/incoming/events/   # single directory required in streaming mode
     format: json
-```
-
-## Extra reader options
-
-Any property not listed in the parameters table above is forwarded directly to Spark's `DataFrameReader.options()`. The full list of options per format is in the [Spark SQL data sources reference](https://spark.apache.org/docs/latest/sql-data-sources-load-save-functions.html).
-
-```yaml
-inputs:
-  - kind: SparkFileInput
-    name: raw
-    path: data/raw.csv
-    format: csv
-    header: true
-    inferSchema: true
-    delimiter: ";"
 ```

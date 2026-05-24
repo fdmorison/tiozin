@@ -127,15 +127,14 @@ class MyRegistry(Registry):
 
 | Method | Description |
 |---|---|
-| `get(identifier, version=None)` | Retrieve metadata. Raises `TiozinNotFoundError` if not found |
+| `get(identifier, version=None)` | Retrieve metadata. Raises if not found and `failfast=True`; returns `None` otherwise |
 | `register(identifier, value)` | Store metadata |
-| `try_get(identifier, version=None)` | Retrieve metadata or return `None` |
 
 ## Context
 
 Holds the execution scope for the current job or step. Populated automatically by the framework. Every step and runner that runs inside a job has access to the same context for that execution.
 
-### Safety guarantees
+### Thread and async safety
 
 `Context` is implemented with Python's `contextvars.ContextVar`. This means:
 

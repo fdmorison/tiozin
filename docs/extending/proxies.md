@@ -2,8 +2,6 @@
 
 When you build a family (a set of Inputs, Transforms, and Outputs for a specific engine), you often want the same behavior everywhere: logging, debug options, shortcuts to the session. Repeating that code in every step is error-prone. `@tioproxy` is how a provider family adds its own features and behaviors to every Tiozin it ships.
 
-It implements the [Proxy pattern](https://refactoring.guru/design-patterns/proxy): a proxy wraps the real Tiozin and adds behavior around its methods. The framework and the Tiozin do not know the proxy is there. This is different from [middleware or chain-of-responsibility](https://refactoring.guru/design-patterns/chain-of-responsibility), where multiple handlers decide whether to pass a request forward. A proxy wraps a single target. You are extending an object, not building a request pipeline.
-
 ## Adding Behavior
 
 The simplest proxy runs code before and after a step method. Here, `SparkLogProxy` logs the start and end of every transform in `SparkFilterTransform`:
@@ -36,6 +34,8 @@ transforms:
 ```
 
 `self.info()` is a structured logging method inherited from the `Loggable` mixin that all Tiozin components extend. `wrapt.ObjectProxy` forwards attribute access to the wrapped object, so calling `self.info()` inside a proxy works the same as calling it on the Tiozin directly.
+
+A proxy wraps the real Tiozin and adds behavior around its methods. The framework and the Tiozin do not know the proxy is there. This is different from middleware or chain-of-responsibility, where multiple handlers decide whether to pass a request forward. A proxy wraps a single target. You are extending an object, not building a request pipeline.
 
 The proxy is invisible to the step author. It adds behavior automatically.
 
@@ -213,5 +213,5 @@ Here is what the proxy gives you as a family developer:
 - Attach a proxy with `@tioproxy(ProxyClass)`. Combine multiple proxies in one call: `@tioproxy(ProxyA, ProxyB)`. The first proxy listed is the outermost wrapper and runs first.
 - Apply `@tioproxy` to base classes (`SparkInput`, `SparkTransform`, `SparkOutput`) to share behavior across the whole family without repeating the decorator on every step.
 - Every step collects undeclared YAML properties into `self.options`. Use `self.options.get("key")` to read them in a proxy without changing the step class. Use a mixin constructor to declare the field explicitly and keep it out of `options`.
-- Use `self.__wrapped__` inside a proxy to call the original implementation without triggering other proxies.
+- Use `self.__wrapped__` inside a proxy to call the next layer in the chain. In a single-proxy setup, that is the original instance. In a stacked setup, it is the next proxy.
 - Proxies compose across the hierarchy. If `Transform` has a proxy and `SparkTransform` adds another, both apply to any step that extends `SparkTransform`.

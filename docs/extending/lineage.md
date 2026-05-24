@@ -1,5 +1,7 @@
 # Lineage
 
+Lineage tracks where data came from, where it went, and what job produced it.
+
 ## Job lineage
 
 Every job has a namespace that identifies it in the lineage graph. By default it is derived from the job's taxonomy using the template `{{org}}.{{region}}.{{domain}}.{{subdomain}}`. Set it explicitly in the YAML to override:
@@ -23,7 +25,7 @@ The job namespace is always logical. It represents where the job fits in your or
 Override `external_datasets()` on your Input or Output to report the physical dataset it touches:
 
 ```python
-from tiozin import Lineage, LineageDataset
+from tiozin import Dataset, Datasets
 
 
 class SQLiteOutput(Output[str]):
@@ -35,10 +37,10 @@ class SQLiteOutput(Output[str]):
         sql = f"CREATE TABLE IF NOT EXISTS {self.table} AS {data}"
         return SQLiteWriteSpec(sql=sql)
 
-    def lineage_datasets(self) -> Lineage:
-        return Lineage(
+    def external_datasets(self) -> Datasets:
+        return Datasets(
             inputs=[],
-            outputs=[LineageDataset(namespace="sqlite", name=self.table)],
+            outputs=[Dataset(data=[], namespace="sqlite", name=self.table)],
         )
 ```
 

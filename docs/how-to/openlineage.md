@@ -83,7 +83,7 @@ registries:
 Or via environment variable:
 
 ```bash
-TIO_LINEAGE_REGISTRY_EMIT_LEVEL=ALL
+export TIO_LINEAGE_REGISTRY_EMIT_LEVEL=ALL
 ```
 
 Step-level events carry a `parent` facet pointing to the job run, so your lineage backend can group them correctly.
@@ -203,16 +203,16 @@ Steps that do not override `external_datasets()` fall back to a logical dataset 
 
 ## All parameters
 
-| Property | Default | Description |
+| Property | Description | Example output |
 |---|---|---|
-| `kind` | | `tio_kernel:OpenLineageRegistry` |
-| `location` | | Base URL of the OpenLineage backend |
-| `emit_level` | `JOB` | Emission level: `JOB`, `STEP`, or `ALL` |
-| `timeout` | `3` | HTTP request timeout in seconds |
-| `verify` | `true` | Verify TLS certificates |
-| `api_key` | | Bearer token for API key authentication |
-| `readonly` | `false` | Reject write operations |
-| `cache` | `false` | Cache retrieved metadata in memory |
-| `failfast` | `false` | Raise an error when metadata is not found; returns `null` when `false` |
-| `name` | | Display name for this registry instance |
-| `description` | | Human-readable description |
+| `kind` | Plugin class name | `tio_kernel:OpenLineageRegistry` |
+| `location` | Base URL of the OpenLineage backend | |
+| `emit_level` | Emission level: `JOB`, `STEP`, or `ALL` | `JOB` |
+| `timeout` | HTTP request timeout in seconds | `3` |
+| `verify` | Verify TLS certificates | `true` |
+| `api_key` | Bearer token for API key authentication | |
+| `readonly` | Reject write operations | `false` |
+| `cache` | Cache retrieved metadata in memory | `false` |
+| `failfast` | When `true`, raises when metadata is not found; when `false`, returns `None` | `false` |
+| `name` | Display name for this registry instance | |
+| `description` | Human-readable description | |

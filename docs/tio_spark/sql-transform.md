@@ -9,7 +9,7 @@ transforms:
     query: SELECT * FROM customers WHERE status = 'active'
 ```
 
-## Parameters
+## All available options
 
 | Property | Description | Default |
 |---|---|---|

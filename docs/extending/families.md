@@ -16,7 +16,7 @@ The prefix is how the framework identifies and groups your Tiozins. Pick whichev
 
 ## Project structure
 
-```
+```text
 tio_dilbert/
 ├── pyproject.toml
 ├── tio_dilbert/
@@ -140,12 +140,12 @@ Its purpose is to guarantee that the system is always complete and executable, e
 
 | Plugin | Description |
 |---|---|
-| `NoOpRunner` | Accepts any plan and returns `None`. No execution |
-| `NoOpInput` | Returns `None`. No reads |
-| `NoOpTransform` | Passes data through unchanged |
-| `NoOpOutput` | Accepts data and discards it |
-| `NoOpSecretRegistry` | Always returns `None`. No secret lookups |
-| `NoOpSettingRegistry` | Always returns `None`. No settings |
+| `NoOpRunner` | Accepts any plan and returns an empty list. No execution |
+| `NoOpInput` | Returns an empty list. No reads |
+| `NoOpTransform` | Returns an empty list. No transformation |
+| `NoOpOutput` | Returns an empty list. No writes |
+| `NoOpSecretRegistry` | Returns a placeholder secret. No real lookups |
+| `NoOpSettingRegistry` | Returns an empty settings manifest. No real settings |
 | `NoOpSchemaRegistry` | Always returns `None`. No schema resolution |
 | `NoOpLineageRegistry` | Discards all lineage events |
 | `NoOpMetricRegistry` | Discards all metrics |
@@ -163,6 +163,6 @@ Other `tio_kernel` plugins are production-ready. `FileJobRegistry`, for example,
 
 Any plugin added to `tio_kernel` must justify why a default is necessary for system completeness. If a plugin can live in a specialized provider without affecting bootstrapping, validation, or demonstrability, it does not belong in `tio_kernel`.
 
-## What's next?
+## Next steps
 
 See [Creating Pluggable Tiozins](tiozins.md) for how to implement each role: Runner, Input, Transform, Output, and Registry.

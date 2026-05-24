@@ -1,37 +1,43 @@
 # Glossary
 
+## kind
+The class name of a Tiozin plugin. Set in YAML to tell Tiozin which plugin class to load and instantiate for a given step.
+
 ## Family
-A named collection of Tiozin plugins targeting a provider or execution technology.
+A plugin provider. Groups Tiozins that share the same runtime and conventions.
+
+## Tio
+A provider package. The concrete installable unit that delivers a Family (e.g. `tio_spark`, `tio_duckdb`).
 
 ## Tiozin
-A plugin class inheriting from `Tiozin`. Each Tiozin belongs to one Family and one Role.
+A plugin offered by a Tio. The smallest pluggable unit in the framework. Every Job, Runner, Input, Transform, Output, and Registry is a Tiozin.
 
 ## Role
 The functional category of a Tiozin: Job, Runner, Input, Transform, Output, or Registry.
 
 ## Job
-A data job definition composed of a Runner, Inputs, Transforms, and Outputs.
+A Tiozin that implements a pipeline DAG, composing a Runner, Inputs, Transforms, and Outputs.
 
 ## Runner
-The execution engine for a Job.
+A Tiozin that implements an execution engine for a Job.
 
 ## Input
-A stateless data source plugin.
+A Tiozin that implements a data source.
 
 ## Transform
-A stateless data transformation plugin.
+A Tiozin that implements data modification logic.
 
 ## CoTransform
-A Transform variant accepting multiple named inputs.
+A Transform variant that receives all current datasets as positional arguments. Requires at least two datasets.
 
 ## Output
-A stateless data sink plugin.
+A Tiozin that implements a data destination.
 
 ## Registry
-A metadata service available through the execution context.
+A Tiozin that implements a metadata service available through the execution context.
 
 ## Context
-A singleton runtime context scoped to a single job execution.
+The execution scope of a running unit (app, job, or step). Carries everything that unit needs to execute: metadata, registries, runtime state, and utilities. Designed as an API so developers can explore what is available through code completion, without importing individual modules.
 
 ## tiozin.yaml
 The main application configuration file defining registries, defaults, and plugin settings.

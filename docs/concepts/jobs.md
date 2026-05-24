@@ -55,7 +55,7 @@ These fields declare the organizational context and lineage of the data this job
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
 | `runner` | yes | `Runner` | | Execution engine for this pipeline |
-| `inputs` | yes | `list[Input]` | min 1 | Sources that provide data |
+| `inputs` | yes | `list[Input]` | | Sources that provide data. Must contain at least one element |
 | `transforms` | no | `list[Transform]` | `[]` | Steps that modify the data |
 | `outputs` | no | `list[Output]` | `[]` | Destinations where data is written |
 
@@ -134,7 +134,7 @@ runner:
 inputs:
   - kind: NoOpInput
     name: read_raw_orders
-    path: "data/{{ layer }}/{{ product }}/date={{ D[-1] }}"
+    path: "data/{{ layer }}/{{ product }}/date={{ DAY[-1] }}"
     # → data/refined/orders/date=2026-02-23
 
 transforms:
@@ -144,7 +144,7 @@ transforms:
 outputs:
   - kind: NoOpOutput
     name: write_summary
-    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}"
+    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ DAY[0] }}"
     # → data/ecommerce-refined/orders/daily_summary/date=2026-02-24
 ```
 
@@ -179,7 +179,7 @@ job = LinearJob(
     inputs=[
         NoOpInput(
             name="read_raw_orders",
-            path="data/{{ layer }}/{{ product }}/date={{ D[-1] }}",
+            path="data/{{ layer }}/{{ product }}/date={{ DAY[-1] }}",
         )
     ],
     transforms=[
@@ -188,7 +188,7 @@ job = LinearJob(
     outputs=[
         NoOpOutput(
             name="write_summary",
-            path="data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}",
+            path="data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ DAY[0] }}",
         )
     ],
 )

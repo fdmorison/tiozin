@@ -1,8 +1,6 @@
 # DuckdbPostgresOutput
 
-Writes a DuckDB relation into a PostgreSQL table. Uses the DuckDB Postgres extension to handle the transfer directly. Supports four write modes, automatic schema evolution, and SQL hooks that run before and after each write.
-
-A complete working example is in [`examples/jobs/duckdb/postgres/postgres_output.yaml`](../../examples/jobs/duckdb/postgres/postgres_output.yaml).
+Writes a DuckDB relation into a PostgreSQL table using the DuckDB Postgres extension.
 
 ```yaml
 outputs:
@@ -13,32 +11,20 @@ outputs:
 
 Connection defaults are read from standard PostgreSQL environment variables (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSCHEMA`). Properties set in the job always take priority.
 
-```yaml
-outputs:
-  - kind: DuckdbPostgresOutput
-    name: save_customers
-    table: customers
-    host: my-postgres-host
-    port: 5432
-    database: analytics
-    user: etl_user
-    password: "{{ ENV.PGPASSWORD }}"
-```
-
-## Parameters
+## All available options
 
 | Property | Description | Default |
 |---|---|---|
-| `table` | Target table name in PostgreSQL | |
+| `table` | Target table name in PostgreSQL | required |
 | `host` | PostgreSQL server hostname | `$PGHOST` (`localhost`) |
 | `port` | PostgreSQL server port | `$PGPORT` (`5432`) |
 | `database` | PostgreSQL database name | `$PGDATABASE` (`postgres`) |
 | `user` | PostgreSQL username | `$PGUSER` (`postgres`) |
-| `password` | PostgreSQL password | `$PGPASSWORD` |
+| `password` | PostgreSQL password | `$PGPASSWORD` (`postgres`) |
 | `schema` | Target schema | `$PGSCHEMA` (`public`) |
 | `mode` | Write mode: `append`, `truncate`, `overwrite`, or `merge` | `append` |
 | `primary_key` | Column name or list for the primary key, required for `merge` mode | |
-| `merge_key` | Conflict key for `merge`, defaults to `primary_key` when not set | `primary_key` |
+| `merge_key` | Conflict key for `merge`. Defaults to `primary_key` when not set | |
 | `pre_pgsql` | SQL statement or list to run on PostgreSQL before the write | |
 | `post_pgsql` | SQL statement or list to run on PostgreSQL after the write | |
 | `**options` | Additional keyword arguments passed to the DuckDB Postgres extension | |
@@ -71,7 +57,7 @@ outputs:
 
 ### Overwrite
 
-Recreates the table on every run. The new table structure matches the current batch exactly. Check constraints, column defaults, and outbound foreign keys are preserved. The primary key is re-added automatically if `primary_key` is set. Other indexes are not preserved: recreate them via `post_pgsql`.
+Recreates the table on every run. The new table structure matches the current batch exactly. Check constraints, column defaults, and foreign key constraints defined on the table are preserved. The primary key is re-added automatically if `primary_key` is set. Other indexes are not preserved: recreate them via `post_pgsql`.
 
 ```yaml
 outputs:
@@ -106,10 +92,6 @@ outputs:
     merge_key: external_id
 ```
 
-## Lineage
-
-The target table is reported as the output dataset following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).
-
 ## Schema evolution
 
 All modes detect new columns automatically. When the incoming batch has a column the target table does not, that column is added to the table before the write runs. Existing rows get `NULL` for the new column.
@@ -133,3 +115,7 @@ outputs:
       - GRANT SELECT ON public.events TO reporter
       - CREATE VIEW public.vw_events_summary AS SELECT date, count(*) FROM public.events GROUP BY date
 ```
+
+## Lineage
+
+The target table is reported as the output dataset following the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/).

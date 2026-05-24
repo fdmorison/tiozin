@@ -14,7 +14,7 @@ inputs:
 
 | Property | Description | Default |
 |---|---|---|
-| `path` | Path or list of paths to read from | |
+| `path` | Path or list of paths to read from | required |
 | `format` | File format | `parquet` |
 | `hive_partitioning` | Interpret `col=value/` partition directories | `true` |
 | `union_by_name` | Merge schemas by column name when reading multiple files | `true` |
@@ -30,17 +30,16 @@ The `format` field maps directly to a DuckDB `read_<format>()` table function. A
 |---|---|---|
 | `parquet` | `read_parquet()` | Default |
 | `csv` | `read_csv()` | |
-| `csv_auto` | `read_csv_auto()` | Schema inferred from content |
 | `json` | `read_json()` | |
-| `json_auto` | `read_json_auto()` | Schema inferred from content |
 | `ndjson` | `read_ndjson()` | Newline-delimited JSON |
-| `text` | `read_text()` | Reads raw text; adds a `content` column |
-| `blob` | `read_blob()` | Reads raw bytes; adds a `content` column |
+| `text` | `read_text()` | Reads raw text; adds a `value` column |
+| `blob` | `read_blob()` | Reads raw bytes; adds a `value` column |
+| `xlsx` | `read_xlsx()` | Requires the `spatial` extension |
 | `tsv` | `read_csv(delim='\t')` | Tiozin alias |
 | `jsonl` | `read_ndjson()` | Tiozin alias |
 | `txt` | `read_text()` | Tiozin alias |
-| `auto_csv` | `read_csv_auto()` | Tiozin alias |
-| `auto_json` | `read_json_auto()` | Tiozin alias |
+| `auto_csv` | `read_csv_auto()` | Tiozin alias; schema inferred from content |
+| `auto_json` | `read_json_auto()` | Tiozin alias; schema inferred from content |
 
 ## Read mode
 
@@ -49,10 +48,10 @@ The `mode` property controls how the data is materialized at read time.
 | Mode | Description |
 |---|---|
 | `relation` | DuckDB evaluates the file lazily when the relation is accessed downstream. The file is re-read each time the relation is queried |
-| `table` | Reads the file immediately and stores the result as a persistent DuckDB table. Acts as a cache: subsequent queries hit the table instead of the file |
-| `overwrite_table` | Same as `table`, but drops and recreates the table if it already exists. Useful for idempotent runs |
-| `temp_table` | Reads the file immediately and stores the result as a DuckDB temporary table. Acts as a cache for the current session only |
-| `view` | Creates a persistent DuckDB view. The query is stored; DuckDB re-reads the file each time the view is queried |
+| `table` | Reads the file immediately and stores the result as a persistent DuckDB table. Fails if the table already exists |
+| `overwrite_table` | Same as `table`, but creates or replaces the table. Use this for idempotent runs |
+| `temp_table` | Reads the file immediately and stores the result as a DuckDB temporary table. The table is dropped at the end of the session |
+| `view` | Creates a persistent DuckDB view, replacing it if it already exists. DuckDB re-reads the file each time the view is queried |
 | `temp_view` | Same as `view`, but the view exists only for the current session |
 
 ```yaml
@@ -61,7 +60,7 @@ inputs:
     name: events
     path: /data/events/
     format: parquet
-    mode: table   # reads once and caches as a table; downstream queries hit the table
+    mode: overwrite_table
 ```
 
 ## Enriching rows with file path columns

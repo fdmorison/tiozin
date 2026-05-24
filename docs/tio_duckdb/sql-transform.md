@@ -58,15 +58,13 @@ transforms:
     # @data resolves to enriched, the previous step
 ```
 
-When a transform receives multiple upstream relations, the aliases map positionally to the inputs received by the `transform` method:
+When a transform receives multiple upstream relations, aliases are assigned positionally:
 
-```python
-def transform(self, data: DuckDBPyRelation, *others: DuckDBPyRelation) -> DuckDBPyRelation:
-    # @data / @data0  →  data       (first upstream step)
-    # @data1          →  others[0]  (second upstream step)
-    # @data2          →  others[1]  (third upstream step)
-    ...
-```
+| Token | Resolves to |
+|---|---|
+| `@data` or `@data0` | first upstream relation |
+| `@data1` | second upstream relation |
+| `@data2` | third upstream relation |
 
 ```yaml
 inputs:
@@ -81,8 +79,6 @@ inputs:
 transforms:
   - kind: DuckdbSqlTransform
     name: joined
-    # @data   →  customers (first input)
-    # @data1  →  orders    (second input)
     query: |-
       SELECT c.name, o.total
       FROM @data c

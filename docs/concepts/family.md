@@ -13,8 +13,6 @@ captures it well:
 - The larger characters are the **Tios and Tias**
 - The smaller ones are the **Tiozins**
 
-This metaphor defines how the system is structured, how it evolves, and how it can be extended.
-
 ## What is a Family?
 
 A **Tio** or **Tia** is a provider Family. It represents a technological
@@ -37,17 +35,11 @@ and release lifecycle. The only exception is the **Tio Kernel**, which
 remains in the core as the default provider responsible for the minimal
 runtime required to bootstrap the framework.
 
-Families evolve independently from the core, preserving modularity,
-replaceability, and testability without introducing a monolithic
-abstraction layer.
+Families evolve independently from the core. This keeps each provider replaceable and testable in isolation.
 
 Multiple Families together form the ecosystem, which expands as new ones
 are introduced. You are free to define your own, public or private,
 with whatever name you choose.
-
-Contributions to the core are welcome where appropriate, and new provider
-Families can be developed and maintained independently. If Tiozin supports
-your work, you are encouraged to reference it.
 
 ## What is a Tiozin?
 
@@ -91,9 +83,6 @@ Each Tiozin role represents a single, well-defined responsibility within
 the execution pipeline. Tiozins are designed to be small, specialized,
 composable, and testable. Complex data processes are constructed by
 composing these focused units into declarative Jobs.
-
-This Object Model establishes the structural foundation that makes
-Tiozin declarative, pluggable, metadata-native, observable, and testable.
 
 ## Roles at a glance
 

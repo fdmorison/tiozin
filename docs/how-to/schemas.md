@@ -19,7 +19,7 @@ registries:
 
 Each file in that folder is a schema. The filename (without `.yaml`) is its subject:
 
-```
+```text
 examples/schemas/
   acme.latam.ecommerce.sales.raw.storefront.orders.yaml
   acme.latam.ecommerce.sales.raw.storefront.customers.yaml
@@ -63,19 +63,19 @@ inputs:
 
 When the step runs, the framework fetches the schema from the registry and makes it available as `context.output_schema`. It is also included in the lineage event, so the dataset fields appear in any OpenLineage-compatible backend such as Marquez. See [How to Configure OpenLineage](openlineage.md).
 
-If the subject is not found, execution continues without a schema. The step does not fail.
+If the subject is not found and `failfast` is `false` (the default), execution continues without a schema. With `failfast: true`, the registry raises `SchemaNotFoundError` and the step fails.
 
 ## Use "auto" to keep subjects consistent across your platform
 
 The `"auto"` subject resolves to the default subject template:
 
-```
+```text
 {{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}
 ```
 
 For a job with `org=acme`, `region=latam`, `domain=ecommerce`, `subdomain=sales`, `layer=raw`, `product=storefront`, `model=customers`, `"auto"` resolves to:
 
-```
+```text
 acme.latam.ecommerce.sales.raw.storefront.customers
 ```
 
@@ -103,7 +103,7 @@ outputs:
     schema_subject: auto
 ```
 
-This is the recommended approach when your schema subjects follow the same taxonomy as the job.
+Use `auto` when your schema subjects follow the same taxonomy as the job.
 
 ## Pin a specific version
 
@@ -187,7 +187,7 @@ registries:
 ```
 
 ```bash
-2026-04-07T03:17:01.850593Z [info] [FileSchemaRegistry] Schema `tiozin.eu.ecommerce.sales.raw.storefront.customers`:
+2026-04-07T03:17:01.850593Z [info] [FileSchemaRegistry] Showing schema `tiozin.eu.ecommerce.sales.raw.storefront.customers`:
 name: customers
 physicalType: table
 description: Raw customer master data ingested from source system.
@@ -231,16 +231,16 @@ Supported protocols: `s3://`, `gs://`, `az://`, `http://`, `https://`, `ftp://`,
 
 ## All parameters
 
-| Property | Default | Description |
+| Property | Description | Example output |
 |---|---|---|
-| `kind` | | `tio_kernel:FileSchemaRegistry` |
-| `location` | | Root path or URI where schema files are stored |
-| `subject_template` | `{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}` | Jinja template used to resolve the subject when `"auto"` is used |
-| `default_version` | `latest` | Schema version used when `schema_version` is not set on the step |
-| `show_schema` | `false` | Log the resolved schema after each successful lookup |
-| `timeout` | `3` | Request timeout in seconds (for remote locations) |
-| `readonly` | `false` | Reject write operations |
-| `cache` | `false` | Cache retrieved schemas in memory |
-| `failfast` | `false` | Raise an error when the schema is not found; returns `null` when `false` |
-| `name` | | Display name for this registry instance |
-| `description` | | Human-readable description |
+| `kind` | Plugin class name | `tio_kernel:FileSchemaRegistry` |
+| `location` | Root path or URI where schema files are stored | |
+| `subject_template` | Jinja template used to resolve the subject when `"auto"` is used | `{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}` |
+| `default_version` | Schema version used when `schema_version` is not set on the step | `latest` |
+| `show_schema` | Log the resolved schema after each successful lookup | `false` |
+| `timeout` | Request timeout in seconds (for remote locations) | `3` |
+| `readonly` | Reject write operations | `false` |
+| `cache` | Cache retrieved schemas in memory | `false` |
+| `failfast` | When `true`, raises when the schema is not found; when `false`, returns `None` | `false` |
+| `name` | Display name for this registry instance | |
+| `description` | Human-readable description | |

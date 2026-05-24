@@ -16,15 +16,16 @@ and changelog readers can understand it without reading the code.
 
 ## Rules
 
-- Follow `.github/pull_request_template.md` for PR descriptions.
-- Never include links that do not exist.
-- Never invent behavior not present in the diff.
 - Titles must work as standalone changelog entries.
-- Titles must follow the format `<type>(<scope>): <Description>`:
-  - Type: a conventional commit type (e.g. `feat`, `fix`, `docs`)
-  - Scope: `core` or a family name (e.g. `tio_spark`, `tio_duckdb`)
-  - Description: uppercase first letter, concise
-- Respect `.claude/rules/pull-request.md`.
+- Titles must describe the actual behavioral, documentation, or user-facing change in a few words.
+- Titles format is `<type>(<scope>): <Description>`:
+  - `type` is a conventional commit type (e.g. `feat`, `fix`, `docs`)
+  - `scope` is `core` or a family/subsystem name (e.g. `tio_spark`, `tio_duckdb`)
+  - `Description` starts with an uppercase letter and summarizes the change in a few words
+- Titles must avoid vague wording. For example, "Improve error handling" is vague because it does not describe the actual change. "Add retry logic to FileSchemaRegistry" is specific and descriptive.
+- Never include references, links, or behaviors not present in the diff.
+- Use the template `.github/pull_request_template.md` to create Pull Requests.
+- Follow additional rules from `.claude/rules/pull-request.md`.
 
 ## Workflow
 

@@ -80,8 +80,6 @@ class SQLiteInput(Input[str]):
         return self.query
 ```
 
-The session comes from `self.context.runner.session`. Never open a connection in `__init__` or `read()`. The runner owns the connection lifecycle.
-
 In YAML:
 
 ```yaml
@@ -256,7 +254,7 @@ tio_sqlite = "tio_sqlite"
 
 Install your package (e.g. `uv sync`, `poetry install`) and the classes become available to the framework. See [Creating a Provider Family](families.md) for the full walkthrough, including how to structure the package and what the family module must export.
 
-## Appendix
+## Additional patterns
 
 ### Lineage
 
