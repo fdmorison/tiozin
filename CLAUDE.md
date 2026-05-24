@@ -1,87 +1,57 @@
-# Claude Instructions — Tiozin
+# Tiozin
 
-## What is Tiozin
+## What This Repo Is
 
-Tiozin is a Python runtime framework for defining and executing declarative data jobs (batch, streaming, ML). It loads YAML job definitions, discovers plugins via `entry_points`, and coordinates execution.
+Tiozin is a runtime framework for defining and executing modular data jobs. It supports plugin-based
+development, plugin sharing, and declarative or programmatic job definitions.
 
-**YOU MUST NOT treat Tiozin as:** an orchestrator, scheduler, DAG manager, or compute engine. It can run standalone or inside orchestration systems, but it is not one.
+Tiozin is not a job orchestrator, scheduler, DAG manager, or compute engine. It is designed to run
+standalone or within orchestration systems such as Airflow.
 
----
+## Rules
+
+- Never overwrite user edits.
+- Do exactly what was requested.
+- Keep config mirrors in sync:
+  - `tiozin/env.py` ↔ `tests/env.py`
+  - `tiozin/config.py` ↔ `tests/config.py`
+- Breaking changes are limited to public exports in:
+  - `tiozin/__init__.py`
+  - `tiozin/api/__init__.py`
+  - `tiozin/utils/__init__.py`
+  - `tiozin/family/tio_duckdb/__init__.py`
+  - `tiozin/family/tio_kernel/__init__.py`
+  - `tiozin/family/tio_spark/__init__.py`
+- `Input`, `Transform`, and `Output` Tiozins must remain stateless.
 
 ## Commands
 
-Use Makefile commands for all standard operations.
+```bash
+make install      # Install dependencies
+make install-dev  # Install everything needed to develop locally
+make format       # Format and fix code
+make check        # Verify code style — fails if violations are found
+make test         # Run full test suite
+make build        # Build a deployment-ready package
+make clean        # Remove unnecessary files such as builds and caches
+```
 
-| Purpose          | Command            |
-|------------------|--------------------|
-| Run tests        | `make test`        |
-| Format code      | `make format`      |
-| Lint check       | `make check`       |
-| Install deps     | `make install`     |
-| Install dev deps | `make install-dev` |
-| Build package    | `make build`       |
-| Deploy           | `make deploy`      |
+## Directory Structure
 
-During development, prefer running only the relevant test file: `uv run pytest -vvv tests/path/to/file_test.py`
+```
+tiozin/          # Main package
+tiozin/api/      # Core abstractions
+tiozin/family/   # Provider implementations
+tiozin/compose/  # Code to build jobs
+docs/            # User guides and concepts
+examples/        # Sample jobs and schemas
+tests/           # Unit and integration tests
+```
 
-Run `make test` (full suite) only when: completing a task, validating a refactor that touches multiple modules, or confirming no regressions before a PR.
+## References
 
----
-
-## Code Rules (IMPORTANT)
-
-- Never define functions outside of classes — use `@staticmethod` on the relevant class instead
-- Never use `# noqa` to suppress linter errors — fix the code
-- Never use `| None` in parameter or return type annotations
-- Use single backticks in docstrings, never RST double backticks
-
----
-
-## Behavior Rules (IMPORTANT)
-
-- Never overwrite a file the user has manually edited — user edits are authoritative
-- Do exactly what was asked — no extra fixtures, helpers, or abstractions
-
----
-
-## Public API
-
-**Breaking changes** are defined only as changes to these files:
-
-- `tiozin/__init__.py`
-- `tiozin/utils/__init__.py`
-- `tiozin/family/tio_duckdb/__init__.py`
-- `tiozin/family/tio_kernel/__init__.py`
-- `tiozin/family/tio_spark/__init__.py`
-
----
-
-## Stateless Enforcement
-
-`Input`, `Transform`, and `Output` Tiozins must be stateless. They must not open connections, store runtime objects, create loggers, or maintain mutable state. They receive runtime dependencies from the Runner via `self.context`.
-
----
-
-## Package Structure
-
-| Path                   | Purpose                                             |
-|------------------------|-----------------------------------------------------|
-| `tiozin/api/`          | Public domain model (metadata, registries, runtime) |
-| `tiozin/compose/`      | Assembly, proxies, templating internals             |
-| `tiozin/family/`       | Built-in provider families (kernel, spark, duckdb)  |
-| `tiozin/utils/`        | General-purpose utilities, no domain dependency     |
-| `tiozin/config.py`     | Config keys — must stay in sync with `tests/config.py` |
-
----
-
-## Config Sync
-
-`tiozin/config.py` and `tests/config.py` must stay in sync. When adding or renaming a key in either file, apply the same change to the other.
-
----
-
-## Agent Specs
-
-When writing tests, follow @agents/test-agent.md and @agents/test-rules.md.
-When writing documentation, follow @agents/docs-agent.md.
-When writing pull requests, follow @agents/pr-agent.md.
+- When writing tests, follow @.claude/agents/tester.md.
+- When writing documentation, follow @.claude/agents/technical-writer.md.
+- When writing pull requests, follow @.claude/agents/pr-writer.md.
+- Tech stack: `@.claude/knowledge/tech-stack.md`
+- Concepts: `@.claude/knowledge/glossary.md`
