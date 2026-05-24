@@ -1,10 +1,10 @@
 # Quick Start
 
-This tutorial walks through building a real job field by field. By the end, you will have a complete job manifest and understand what each part does.
+Build a working job manifest one section at a time. Each section introduces one group of fields, explains what they do, and shows the final result.
 
 ## Run your first job
 
-Before anything else, create this file and run it:
+Create this file and run it:
 
 ```yaml
 kind: LinearJob
@@ -30,15 +30,15 @@ inputs:
 tiozin run my_first_job.yaml
 ```
 
-`NoOpRunner` and `NoOpInput` are built-in dry-run implementations. They validate the job structure without touching any real data source. Use them while building.
+[`NoOpRunner`](tio_kernel/noops.md) and [`NoOpInput`](tio_kernel/noops.md) are built-in stubs. They do nothing and return empty results. Use them to run the full job lifecycle without connecting to any data source.
 
 ## Identity and description
 
-`kind` selects the job implementation. `LinearJob` runs steps in fixed sequential order and is the standard choice.
+`kind` selects the job implementation. [`LinearJob`](tio_kernel/linear-job.md) runs steps in fixed sequential order.
 
-`name` is the unique identifier for this job in your system. It is not the execution ID. A new execution ID is generated every time the job runs.
+`name` identifies this job. It is not the execution ID. Tiozin generates a new execution ID each time the job runs.
 
-`description` is optional. Write it for whoever will be debugging this job at 3am.
+`description` is optional. Write it so the person debugging this job months from now understands what it does.
 
 ```yaml
 kind: LinearJob
@@ -51,7 +51,7 @@ description: |
 
 ## Declare ownership
 
-Who requested this job, who maintains it, and who pays for it. All fields are optional.
+These fields record who requested this job, who maintains it, and who pays for it. All are optional.
 
 ```yaml
 owner: data-platform
@@ -61,11 +61,11 @@ labels:
   criticality: high
 ```
 
-`labels` is free-form key-value metadata for your tooling.
+`labels` stores free-form key-value metadata. Tiozin does not interpret it.
 
 ## Declare domain
 
-These seven fields define where this job lives in your data organization. They are all required. They also become available as template variables anywhere in the job: in paths, connection strings, table names, and so on.
+These seven fields declare the organizational context of the data product this job produces. All seven are required. They are also available as template variables anywhere in the job: paths, connection strings, table names.
 
 ```yaml
 org: acme
@@ -81,7 +81,7 @@ model: daily_summary
 
 ## Choose a runner
 
-The runner manages the session and executes the plan. Provider-specific options go directly under `runner`.
+The runner is the execution engine for the job. It sets up connections, runs the pipeline steps, and tears everything down. Provider-specific options go directly under `runner`.
 
 ```yaml
 runner:
@@ -93,7 +93,7 @@ runner:
 
 ## Declare inputs
 
-Inputs read data from sources. At least one is required. Each input has a `kind`, a unique `name`, and any provider-specific fields.
+Inputs read data from a source and pass it into the pipeline. At least one is required. Each input has a `kind`, a unique `name`, and any provider-specific fields.
 
 ```yaml
 inputs:
@@ -101,14 +101,14 @@ inputs:
     name: read_raw_orders
     description: Raw orders from the previous day.
     layer: raw
-    path: "data/{{ layer }}/{{ product }}/date={{ D[-1] }}"
+    path: "data/{{ layer }}/{{ product }}/date={{ DAY[-1] }}"
 ```
 
-`layer: raw` on the input overrides the job-level `layer` for template rendering within this step. `D[-1]` resolves to yesterday's date.
+`layer: raw` on the input overrides the job-level `layer` for template rendering within this step. `DAY[-1]` resolves to yesterday's date.
 
 ## Add transforms
 
-Transforms receive data from the previous step, apply logic, and pass the result forward. They are optional.
+Transforms process the data between inputs and outputs. They are optional.
 
 ```yaml
 transforms:
@@ -121,21 +121,21 @@ transforms:
       - region
 ```
 
-Provider-specific fields like `strategy` and `group_by` pass through to the plugin without validation at the job level.
+Tiozin passes `strategy`, `group_by`, and any other provider-specific fields directly to the plugin. The job does not validate them.
 
 ## Write outputs
 
-Outputs write the final dataset to a destination. They are optional, and you can write to multiple destinations independently.
+Outputs write data to a destination. They are optional. You can have more than one output.
 
 ```yaml
 outputs:
   - kind: NoOpOutput
     name: write_summary
     description: Regional order summary in the refined layer.
-    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}"
+    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ DAY[0] }}"
 ```
 
-`D[0]` resolves to today's date.
+`DAY[0]` resolves to today's date.
 
 ## The complete job
 
@@ -169,7 +169,7 @@ inputs:
     name: read_raw_orders
     description: Raw orders from the previous day.
     layer: raw
-    path: "data/{{ layer }}/{{ product }}/date={{ D[-1] }}"
+    path: "data/{{ layer }}/{{ product }}/date={{ DAY[-1] }}"
 
 transforms:
   - kind: NoOpTransform
@@ -184,7 +184,7 @@ outputs:
   - kind: NoOpOutput
     name: write_summary
     description: Regional order summary in the refined layer.
-    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ D[0] }}"
+    path: "data/{{ domain }}-{{ layer }}/{{ product }}/{{ model }}/date={{ DAY[0] }}"
 ```
 
 Run it:
@@ -195,7 +195,7 @@ tiozin run jobs/orders_daily_summary.yaml
 
 ## Next steps
 
-Replace the `NoOp*` kinds with real provider implementations from a [Tiozin Family](concepts/family.md): Spark, DuckDB, or any other installed family.
+Swap the `NoOp*` kinds for a provider from a [Tiozin Family](concepts/family.md). Spark and DuckDB families are included. Other families can be installed as packages.
 
 - [Working with Jobs](working-with-jobs.md): all ways to define a job, pipeline shapes, and templating
 - [Jobs](concepts/jobs.md): full field reference and execution model

@@ -12,7 +12,7 @@ pip install tiozin[tio_duckdb]
 
 ## How data flows through steps
 
-Every step in `tio_duckdb` produces a `DuckDBPyRelation`. After each step runs, the framework automatically registers that relation as a named temporary view using the step's slug as the view name. The slug is the slugified version of the step's `name` field: lowercase, with spaces and special characters replaced by underscores.
+Every step in `tio_duckdb` produces a `DuckDBPyRelation`. After each step runs, the framework automatically registers that relation as a named temporary view using the step's slug as the view name. The slug is the slugified version of the step's `name` field: lowercase, with spaces and special characters replaced by underscores, and consecutive separators collapsed.
 
 ```yaml
 inputs:
@@ -36,12 +36,13 @@ This view registration happens at the framework level for all inputs and transfo
 - [DuckdbSqlTransform](sql-transform.md)
 - [DuckdbFileOutput](file-output.md)
 - [DuckdbPostgresOutput](postgres-output.md)
+- [DuckdbWordCountTransform](../extending/families.md)
 
 To implement a custom Input, Transform, or Output from scratch, see [Creating Pluggable Tiozins](../extending/tiozins.md).
 
 ## Accessing the connection
 
-When writing a custom step in `tio_duckdb`, use `self.duckdb` to access the active DuckDB connection. `self` here refers to the step instance: any class that extends `DuckdbTransform`, `DuckdbInput`, or `DuckdbOutput`.
+When writing a custom step in `tio_duckdb`, use `self.duckdb` to access the active DuckDB connection. `self` here refers to the step instance: any class that extends `DuckdbTransform`, `DuckdbCoTransform`, `DuckdbInput`, or `DuckdbOutput`.
 
 ```python
 def transform(self, data: DuckDBPyRelation) -> DuckDBPyRelation:
@@ -51,7 +52,7 @@ def transform(self, data: DuckDBPyRelation) -> DuckDBPyRelation:
 
 This connection is the one opened and managed by the runner. It is shared across all steps in the pipeline, so every step reads from and writes to the same DuckDB session. Do not open a new connection with `duckdb.connect()` inside a step: that would create an isolated session with no access to the data registered by other steps.
 
-`self.duckdb` is shorthand for:
+`self.duckdb` resolves to:
 
 ```python
 conn = self.context.runner.session  # DuckDBPyConnection

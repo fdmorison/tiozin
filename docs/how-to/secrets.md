@@ -4,7 +4,7 @@ Keep credentials out of your job files by reading them from a secret registry at
 
 ## The basics
 
-`EnvSecretRegistry` is the default secret registry. It reads secrets from environment variables and works out of the box — you do not need to declare it in `tiozin.yaml`. If you want to be explicit:
+`EnvSecretRegistry` is the default secret registry. It reads secrets from environment variables and works out of the box. You do not need to declare it in `tiozin.yaml`. If you want to be explicit:
 
 ```yaml
 # tiozin.yaml
@@ -30,8 +30,8 @@ runner:
 
 Two syntaxes are supported:
 
-- `{{ SECRET.NAME }}` — for simple identifiers like environment variable names
-- `{{ SECRET["path/name"] }}` — for identifiers that contain slashes, such as Vault paths
+- `{{ SECRET.NAME }}`: for simple identifiers like environment variable names
+- `{{ SECRET["path/name"] }}`: for identifiers that contain slashes, such as Vault paths
 
 Both look up the identifier in the registry at job startup, wrap the value in a `Secret`, and substitute it into the string. The surrounding string also becomes a `Secret`, so the full connection URL is masked in logs.
 
@@ -50,10 +50,10 @@ class PostgresInput(Input[list]):
         return conn.execute(self.query).fetchall()
 ```
 
-`get()` raises `SecretNotFoundError` if the variable is not set. Use `try_get()` when the secret is optional:
+By default (`failfast: false`), `get()` returns `None` when the secret is not found. With `failfast: true`, it raises `SecretNotFoundError`. When the secret is optional, check the return value:
 
 ```python
-api_token = self.context.registries.secret.try_get("API_TOKEN")
+api_token = self.context.registries.secret.get("API_TOKEN")
 if api_token:
     headers["Authorization"] = f"Bearer {api_token}"
 ```
@@ -94,13 +94,13 @@ from tiozin import SecretRegistry, Secret
 
 
 class VaultSecretRegistry(SecretRegistry):
-    def get(self, identifier: str, version: str | None = None) -> Secret | None:
+    def get(self, identifier: str) -> Secret | None:
         value = vault_client.read_secret(identifier)
         if value is None:
             return None
         return Secret(value)
 
-    def register(self, identifier: str, value: Secret | None = None) -> None:
+    def register(self, identifier: str, value: Secret) -> None:
         vault_client.write_secret(identifier, str(value))
 ```
 
@@ -110,11 +110,11 @@ To use it, the registry must belong to a registered Tiozin Family. See [Creating
 
 `EnvSecretRegistry` has no required parameters beyond the common registry fields:
 
-| Property | Default | Description |
+| Property | Description | Example output |
 |---|---|---|
-| `kind` | `tio_kernel:EnvSecretRegistry` | Plugin class name |
-| `readonly` | `false` | Reject write operations |
-| `cache` | `false` | Cache retrieved secrets in memory |
-| `failfast` | `false` | Raise an error when the secret is not found; returns `null` when `false` |
-| `name` | | Display name for this registry instance |
-| `description` | | Human-readable description |
+| `kind` | Plugin class name | `tio_kernel:EnvSecretRegistry` |
+| `readonly` | Reject write operations | `false` |
+| `cache` | Cache retrieved secrets in memory | `false` |
+| `failfast` | When `true`, raises when the secret is not found; when `false`, returns `None` | `false` |
+| `name` | Display name for this registry instance | |
+| `description` | Human-readable description | |

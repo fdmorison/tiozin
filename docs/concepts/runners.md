@@ -6,14 +6,14 @@ A Runner is Tiozin's execution engine. It creates the runtime session, receives 
 
 `Runner` is an abstract base class. Any class that extends it and registers as a Tiozin plugin becomes a valid runner type.
 
-Four lifecycle methods define the contract:
+Three lifecycle methods and one abstract property define the contract:
 
-| Method | Required | Description |
-|---|---|---|
-| `setup()` | yes | Called before execution. Create sessions, connections, or shared resources here |
-| `run(plan)` | yes | Execute the plan. Receives the list of values returned by all outputs |
-| `teardown()` | yes | Called after execution, even on failure. Release sessions, connections, and resources here |
-| `session` | yes | Abstract property. Returns the active engine session |
+| Name | Kind | Required | Description |
+|---|---|---|---|
+| `setup()` | method | yes | Called before execution. Create sessions, connections, or shared resources here |
+| `run(plan)` | method | yes | Execute the plan. Receives the list of values returned by all outputs |
+| `teardown()` | method | yes | Called after execution, even on failure. Release sessions, connections, and resources here |
+| `session` | property | yes | Returns the active engine session |
 
 The session is the live connection to the underlying engine, such as a `SparkSession` or a `DuckDBPyConnection`. It is created during `setup()` and made available to all steps via `self.context.runner.session`.
 
@@ -92,6 +92,6 @@ The choice is determined by what `write()` returns and what `run()` knows how to
 
 Runners are provided by provider families:
 
-- **`NoOpRunner`** from `tio_kernel`: accepts any plan and returns `None` without executing anything. Use for testing, dry-runs, and local development.
-- **`SparkRunner`** and **`SparkIcebergRunner`** from `tio_spark`. See [tio_spark](../tio_spark.md).
-- **`DuckdbRunner`** from `tio_duckdb`. See [tio_duckdb](../tio_duckdb.md).
+- **`NoOpRunner`** from `tio_kernel`: accepts any plan and returns an empty list without executing anything. Use for testing, dry-runs, and local development.
+- **`SparkRunner`** and **`SparkIcebergRunner`** from `tio_spark`. See [tio_spark](../tio_spark/index.md).
+- **`DuckdbRunner`** from `tio_duckdb`. See [tio_duckdb](../tio_duckdb/index.md).

@@ -2,10 +2,10 @@
 
 Tiozin configuration has two independent layers:
 
-- **`tiozin.yaml`**: declares which registries to use and where to find them
-- **Environment variables**: control logging, hostname, and registry defaults that have no `tiozin.yaml` equivalent
+- `tiozin.yaml`: declares which registries to use and where to find them
+- Environment variables: control logging, hostname, and registry defaults
 
-Both layers work independently. You can use only environment variables, only a YAML file, or combine them. Values in `tiozin.yaml` override the environment variable defaults for the same field.
+Both layers work independently. Values in `tiozin.yaml` override the matching environment variable for the same field.
 
 ## The basics
 
@@ -24,7 +24,7 @@ That is enough to get started. Run any job in that directory:
 tiozin run examples/jobs/dummy.yaml
 ```
 
-Every other registry defaults to a no-op implementation.
+Registries you do not declare fall back to their defaults (see [Default kinds](#default-kinds)).
 
 ## How Tiozin finds tiozin.yaml
 
@@ -38,7 +38,7 @@ If you do not specify a location explicitly, Tiozin searches for `tiozin.yaml` i
 6. `/config/tiozin.yaml`
 7. `/tiozin.yaml`
 
-The first file found wins. If none is found, Tiozin starts with built-in defaults (all registries are no-ops).
+The first file found wins. If none is found, Tiozin starts with built-in defaults.
 
 ## Specifying the location explicitly
 
@@ -93,7 +93,7 @@ Exit codes:
 | `1` | Unexpected error (bug or provider error) |
 | `2` | Validation error (invalid manifest, missing fields, unknown job identifier) |
 
-Use `tiozin validate` in CI/CD pipelines to catch manifest errors before a job reaches production. It runs the full settings and registry stack but stops before building or submitting the job.
+`tiozin validate` runs the full settings and registry stack but stops before building or submitting the job. Use it in CI/CD pipelines to catch manifest errors early.
 
 ## Registry configuration
 
@@ -116,16 +116,16 @@ registries:
 
 ### Registry fields
 
-| Field | Default | Description |
+| Field | Description | Default |
 |---|---|---|
-| `kind` | see defaults table below | Plugin class name |
-| `name` | `null` | Optional label for this registry instance |
-| `description` | `null` | Optional description |
-| `location` | `null` | Path or URL to the registry backend |
-| `timeout` | `null` | Request timeout in seconds |
-| `readonly` | `null` | When `true`, the registry rejects write operations |
-| `cache` | `null` | When `true`, retrieved metadata is cached in memory |
-| `failfast` | `false` | When `true`, raises an error when metadata is not found; when `false`, returns `null` |
+| `kind` | Plugin class name | see [Default kinds](#default-kinds) |
+| `name` | Optional label for this registry instance | `null` |
+| `description` | Optional description | `null` |
+| `location` | Path or URL to the registry backend | `null` |
+| `timeout` | Request timeout in seconds | `3` |
+| `readonly` | When `true`, the registry rejects write operations | `false` |
+| `cache` | When `true`, retrieved metadata is cached in memory | `false` |
+| `failfast` | When `true`, raises an error when metadata is not found; when `false`, returns `null` | `false` |
 
 ### Default kinds
 
@@ -143,7 +143,7 @@ Tiozin resolves plugin kinds by class name, looking up the class across all inst
 
 ## Templates in registry configuration
 
-Any string field in a registry block accepts Jinja templates. Tiozin resolves them at startup, before the registry initializes.
+Any string field in a registry block accepts Jinja templates. Tiozin resolves them at setup time, before the registry starts accepting requests.
 
 ```yaml
 registries:
@@ -157,22 +157,24 @@ registries:
     # → http://marquez:5000
 ```
 
-Registry templates run at startup, before any job executes. Job variables (`name`, `org`, `domain`, `nominal_time`, and all other context fields) are not available here. Only two variables are injected:
+Only two variables are available during registry setup:
 
 | Variable | Description |
 |---|---|
 | `ENV.<NAME>` | Value of environment variable `NAME` |
-| `DAY` | Current date and time at startup, as a `TemplateDate` |
+| `DAY` | Current date and time at setup, as a [TemplateDate](templates.md) |
 
-`TemplateDate` exposes the same shorthands as in job templates (`ds`, `ts`, `flat_date`, `flat_year`, `deep_date`, etc.). See [templates.md](templates.md) for the full reference.
+All [TemplateDate](templates.md) shorthands (`ds`, `ts`, `flat_date`, `flat_year`, `deep_date`, etc.) are also injected directly, so `{{ ds }}` works the same as `{{ DAY.ds }}`.
 
-Use `| default(...)` for optional environment variables to avoid startup errors when the variable is not set.
+Use `| default(...)` for optional environment variables to avoid errors when the variable is not set.
 
-Rendered values persist for the registry's entire lifetime. Tiozin restores the original template strings on shutdown.
+Rendered values remain in effect for the registry's entire lifetime. Tiozin restores the original template strings on teardown.
+
+Job variables (`name`, `org`, `domain`, `nominal_time`, and other context fields) are not available here. `SECRET` is also not available: registries are set up before the secret registry is initialized, so secrets cannot be used to configure other registries.
 
 ## Settings delegation
 
-A `tiozin.yaml` can hand off its configuration to another settings file by declaring a `SettingRegistry` under `registries.setting`. Tiozin boots that registry and reads its configuration instead. If that file also declares a `registries.setting`, the process repeats. The chain stops at the first file that has no `setting` key.
+A `tiozin.yaml` can hand off its configuration to another settings file by declaring a `setting` registry under `registries`. Tiozin boots that registry and reads its configuration instead. If that file also declares a `registries.setting`, the process repeats. The chain stops at the first file that has no `setting` key.
 
 ```yaml
 # tiozin.yaml
@@ -187,14 +189,14 @@ registries:
 ```
 
 ```yaml
-# shared/tiozin.yaml — no setting key, delegation stops here
+# shared/tiozin.yaml: no setting key, delegation stops here
 registries:
   schema:
     kind: NoOpSchemaRegistry
     location: http://schema-registry:8081
 ```
 
-The registries from the final file in the chain take effect. A declared `setting` entry must have a `location`. Declaring one without a location raises an error at startup. Tiozin also detects cycles: if the same location appears twice in the chain, it raises an error.
+The registries from the final file in the chain take effect. Tiozin detects cycles: if the same location appears twice in the chain, it raises an error.
 
 ## Environment-only settings
 
@@ -202,25 +204,30 @@ These settings have no `tiozin.yaml` equivalent. They can only be set via enviro
 
 ### General
 
-| Variable | Default | Description |
+| Variable | Description | Default |
 |---|---|---|
-| `HOSTNAME` | system hostname | Application hostname, used as pod name in Kubernetes |
+| `HOSTNAME` | Application hostname, used as pod name in Kubernetes | system hostname |
 
 ### Logging
 
-| Variable | Default | Description |
+| Variable | Description | Default |
 |---|---|---|
-| `LOG_LEVEL` | `INFO` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` |
-| `TIO_LOG_DATE_FORMAT` | `iso` | Timestamp format in log output |
-| `TIO_LOG_JSON` | `false` | Emit logs as JSON for log aggregation systems |
-| `TIO_LOG_JSON_ENSURE_ASCII` | `false` | Force ASCII encoding in JSON logs |
-| `TIO_LOG_SHOW_LOCALS` | `false` | Include local variables in exception tracebacks |
+| `LOG_LEVEL` | Log level | `INFO` |
+| `TIO_LOG_DATE_FORMAT` | Timestamp format in log output | `iso` |
+| `TIO_LOG_JSON` | Emit logs as JSON for log aggregation systems | `false` |
+| `TIO_LOG_JSON_ENSURE_ASCII` | Force ASCII encoding in JSON logs | `false` |
+| `TIO_LOG_SHOW_LOCALS` | Include local variables in exception tracebacks | `false` |
+| `TIO_LOG_REDACT_MIN_LENGTH` | Minimum secret length to qualify for redaction in logs | `3` |
+
+Accepted values for `LOG_LEVEL`: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
 
 ### Job
 
-| Variable | Default | Description |
+| Variable | Description | Default |
 |---|---|---|
-| `TIO_JOB_NAMESPACE_TEMPLATE` | `{{org}}.{{region}}.{{domain}}.{{subdomain}}` | Jinja template used to derive `namespace` when not set on the job. Available variables: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model` |
+| `TIO_JOB_NAMESPACE_TEMPLATE` | Jinja template used to derive `namespace` when not set on the job | `{{org}}.{{region}}.{{domain}}.{{subdomain}}` |
+
+Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`.
 
 ## Registry environment variables
 
@@ -228,77 +235,86 @@ Every registry field has a matching environment variable. These act as defaults:
 
 ### Settings registry
 
-| Variable | Default |
-|---|---|
-| `TIO_SETTING_REGISTRY_KIND` | `tio_kernel:FileSettingRegistry` |
-| `TIO_SETTING_REGISTRY_LOCATION` | `null` |
-| `TIO_SETTING_REGISTRY_TIMEOUT` | `null` |
-| `TIO_SETTING_REGISTRY_READONLY` | `null` |
-| `TIO_SETTING_REGISTRY_CACHE` | `null` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_SETTING_REGISTRY_KIND` | Plugin class name | `tio_kernel:FileSettingRegistry` |
+| `TIO_SETTING_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_SETTING_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_SETTING_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_SETTING_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_SETTING_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
 
 ### Job registry
 
-| Variable | Default |
-|---|---|
-| `TIO_JOB_REGISTRY_KIND` | `tio_kernel:FileJobRegistry` |
-| `TIO_JOB_REGISTRY_LOCATION` | `null` |
-| `TIO_JOB_REGISTRY_TIMEOUT` | `null` |
-| `TIO_JOB_REGISTRY_READONLY` | `null` |
-| `TIO_JOB_REGISTRY_CACHE` | `null` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_JOB_REGISTRY_KIND` | Plugin class name | `tio_kernel:FileJobRegistry` |
+| `TIO_JOB_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_JOB_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_JOB_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_JOB_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_JOB_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
 
 ### Schema registry
 
-| Variable | Default |
-|---|---|
-| `TIO_SCHEMA_REGISTRY_KIND` | `tio_kernel:FileSchemaRegistry` |
-| `TIO_SCHEMA_REGISTRY_LOCATION` | `null` |
-| `TIO_SCHEMA_REGISTRY_TIMEOUT` | `null` |
-| `TIO_SCHEMA_REGISTRY_READONLY` | `null` |
-| `TIO_SCHEMA_REGISTRY_CACHE` | `null` |
-| `TIO_SCHEMA_REGISTRY_SHOW_SCHEMA` | `false` |
-| `TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE` | `{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}` |
-| `TIO_SCHEMA_REGISTRY_DEFAULT_VERSION` | `latest` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_SCHEMA_REGISTRY_KIND` | Plugin class name | `tio_kernel:FileSchemaRegistry` |
+| `TIO_SCHEMA_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_SCHEMA_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_SCHEMA_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_SCHEMA_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_SCHEMA_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
+| `TIO_SCHEMA_REGISTRY_SHOW_SCHEMA` | Log schemas after retrieval | `false` |
+| `TIO_SCHEMA_REGISTRY_SUBJECT_TEMPLATE` | Jinja template used to derive the schema subject | `{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}` |
+| `TIO_SCHEMA_REGISTRY_DEFAULT_VERSION` | Schema version used when not specified | `latest` |
 
 ### Secret registry
 
-| Variable | Default |
-|---|---|
-| `TIO_SECRET_REGISTRY_KIND` | `tio_kernel:EnvSecretRegistry` |
-| `TIO_SECRET_REGISTRY_LOCATION` | `null` |
-| `TIO_SECRET_REGISTRY_TIMEOUT` | `null` |
-| `TIO_SECRET_REGISTRY_READONLY` | `null` |
-| `TIO_SECRET_REGISTRY_CACHE` | `null` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_SECRET_REGISTRY_KIND` | Plugin class name | `tio_kernel:EnvSecretRegistry` |
+| `TIO_SECRET_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_SECRET_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_SECRET_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_SECRET_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_SECRET_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
 
 ### Transaction registry
 
-| Variable | Default |
-|---|---|
-| `TIO_TRANSACTION_REGISTRY_KIND` | `tio_kernel:NoOpTransactionRegistry` |
-| `TIO_TRANSACTION_REGISTRY_LOCATION` | `null` |
-| `TIO_TRANSACTION_REGISTRY_TIMEOUT` | `null` |
-| `TIO_TRANSACTION_REGISTRY_READONLY` | `null` |
-| `TIO_TRANSACTION_REGISTRY_CACHE` | `null` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_TRANSACTION_REGISTRY_KIND` | Plugin class name | `tio_kernel:NoOpTransactionRegistry` |
+| `TIO_TRANSACTION_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_TRANSACTION_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_TRANSACTION_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_TRANSACTION_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_TRANSACTION_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
 
 ### Lineage registry
 
-| Variable | Default |
-|---|---|
-| `TIO_LINEAGE_REGISTRY_KIND` | `tio_kernel:NoOpLineageRegistry` |
-| `TIO_LINEAGE_REGISTRY_LOCATION` | `null` |
-| `TIO_LINEAGE_REGISTRY_TIMEOUT` | `null` |
-| `TIO_LINEAGE_REGISTRY_READONLY` | `null` |
-| `TIO_LINEAGE_REGISTRY_CACHE` | `null` |
-| `TIO_LINEAGE_REGISTRY_EMIT_LEVEL` | `JOB` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_LINEAGE_REGISTRY_KIND` | Plugin class name | `tio_kernel:NoOpLineageRegistry` |
+| `TIO_LINEAGE_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_LINEAGE_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_LINEAGE_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_LINEAGE_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_LINEAGE_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
+| `TIO_LINEAGE_REGISTRY_EMIT_LEVEL` | Granularity of lineage events emitted | `JOB` |
+
+Accepted values for `TIO_LINEAGE_REGISTRY_EMIT_LEVEL`: `JOB`, `STEP`, `ALL`.
 
 ### Metric registry
 
-| Variable | Default |
-|---|---|
-| `TIO_METRIC_REGISTRY_KIND` | `tio_kernel:NoOpMetricRegistry` |
-| `TIO_METRIC_REGISTRY_LOCATION` | `null` |
-| `TIO_METRIC_REGISTRY_TIMEOUT` | `null` |
-| `TIO_METRIC_REGISTRY_READONLY` | `null` |
-| `TIO_METRIC_REGISTRY_CACHE` | `null` |
+| Variable | Description | Default |
+|---|---|---|
+| `TIO_METRIC_REGISTRY_KIND` | Plugin class name | `tio_kernel:NoOpMetricRegistry` |
+| `TIO_METRIC_REGISTRY_LOCATION` | Path or URL to the registry backend | `null` |
+| `TIO_METRIC_REGISTRY_TIMEOUT` | Request timeout in seconds | `null` |
+| `TIO_METRIC_REGISTRY_READONLY` | Reject write operations when set | `null` |
+| `TIO_METRIC_REGISTRY_CACHE` | Cache retrieved metadata in memory when set | `null` |
+| `TIO_METRIC_REGISTRY_FAILFAST` | Raise on missing metadata when set | `null` |
 
 ## .env files
 

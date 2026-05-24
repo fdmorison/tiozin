@@ -35,7 +35,7 @@ When multiple inputs are present, each regular transform processes each dataset 
 └─────────┘    └──────────────────┘
 ```
 
-SQL-based transforms in families like `tio_spark` and `tio_duckdb` are `CoTransform` implementations — they can reference all upstream inputs by name in the query.
+SQL-based transforms in families like `tio_spark` and `tio_duckdb` are `CoTransform` implementations. They can reference all upstream inputs by name in the query.
 
 ### Multiple outputs
 

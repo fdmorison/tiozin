@@ -15,7 +15,7 @@ runner:
   database: ":memory:my_analytics_job"
 ```
 
-To use a file-based database that persists across runs:
+To use a file-backed database that persists across runs:
 
 ```yaml
 runner:
@@ -23,7 +23,7 @@ runner:
   database: path/to/main.duckdb
 ```
 
-## Parameters
+## All available options
 
 | Property | Description | Default |
 |---|---|---|
@@ -65,6 +65,8 @@ transforms:
     name: from_staging
     query: SELECT * FROM staging.my_table
 ```
+
+When `read_only` is `true`, all attached databases are also opened in read-only mode.
 
 ## DuckDB config options
 

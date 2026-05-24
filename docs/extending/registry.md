@@ -8,7 +8,7 @@ Extend the appropriate registry class and implement `get()` and `register()`.
 
 ```python
 import boto3
-from tiozin import SecretRegistry
+from tiozin import Secret, SecretRegistry
 
 
 class AWSSecretRegistry(SecretRegistry):
@@ -16,9 +16,9 @@ class AWSSecretRegistry(SecretRegistry):
         super().__init__(location=location, **options)
         self._client = boto3.client("secretsmanager", region_name=region, endpoint_url=location)
 
-    def get(self, identifier: str, version: str = None) -> str:
+    def get(self, identifier: str) -> Secret:
         try:
-            return self._client.get_secret_value(SecretId=identifier)["SecretString"]
+            return Secret(self._client.get_secret_value(SecretId=identifier)["SecretString"])
         except self._client.exceptions.ResourceNotFoundException:
             return None
 
@@ -26,7 +26,7 @@ class AWSSecretRegistry(SecretRegistry):
         self._client.put_secret_value(SecretId=identifier, SecretString=value)
 ```
 
-Tiozin raises `SecretNotFoundError` automatically if `get()` returns `None`.
+Tiozin raises `SecretNotFoundError` if `get()` returns `None` and the registry has `failfast=True` (the default). With `failfast=False`, it logs a warning and returns `None`.
 
 Once implemented, register your registry as a Tiozin via Python `entry_points`. See [Creating a Provider Family](families.md).
 

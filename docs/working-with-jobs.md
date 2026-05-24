@@ -2,9 +2,9 @@
 
 Run a job from a file, a string, a manifest, or a Python object.
 
-## YAML file
+## From a file
 
-The standard form for production. Pass a path to a `.yaml` file:
+The most common form. Pass a path to a `.yaml` or `.json` file:
 
 ```python
 from tiozin import TiozinApp
@@ -13,21 +13,26 @@ app = TiozinApp()
 app.run("jobs/orders_daily_summary.yaml")
 ```
 
-JSON files work the same way. Tiozin detects the format automatically.
+Tiozin detects the format automatically. The path is resolved through the `JobRegistry`. The
+default registry is [`FileJobRegistry`](tio_kernel/file-job-registry.md) from `tio_kernel`,
+which reads from any path supported by fsspec: local paths, `s3://`, `gs://`, `az://`, and others.
 
 ## How `app.run()` resolves a job
 
-When you pass a file path, `TiozinApp.run()` hands the identifier to the `JobRegistry` backend, which resolves it to a manifest and runs it.
+When you pass a string, `TiozinApp.run()` first tries to parse it as YAML or JSON. If that
+succeeds, the manifest is built directly without a registry lookup. If parsing fails, the string is
+treated as an identifier and handed to the `JobRegistry`, which resolves it to a manifest.
 
-The default backend is `FileJobRegistry` (from `tio_kernel`). It reads YAML or JSON from any path supported by fsspec: local paths, `s3://`, `gs://`, `az://`, and others.
+A custom [`JobRegistry`](api.md) could resolve identifiers from a REST API, a database table, or
+any other source. The identifier is just a string. The registry decides what to do with it.
 
-A custom `JobRegistry` could resolve identifiers from a REST API, a database table, or any other source. The identifier is just a string. The registry decides what to do with it.
+In production, the recommended pattern is to store manifests in a registry-compatible backend and
+trigger execution by identifier. This decouples job authoring from job execution and keeps the
+execution layer stateless.
 
-In production, the recommended pattern is to store manifests in a registry-compatible backend and trigger execution by identifier. This decouples job authoring from job execution, enables versioning, and keeps the execution layer stateless.
+## From an inline string
 
-## Inline string
-
-Pass a raw YAML or JSON string. Useful when job definitions are assembled dynamically or come from an API:
+Pass a raw YAML or JSON string. Tiozin parses it directly, bypassing the registry:
 
 ```python
 app.run("""
@@ -59,11 +64,12 @@ outputs:
 """)
 ```
 
-When you pass a raw string or a `JobManifest` object, Tiozin bypasses the registry and runs the job without a lookup.
+Useful when job definitions are assembled dynamically or come from an API.
 
-## JobManifest
+## From a JobManifest
 
-A typed Pydantic object. Use it when jobs come from a database, API, or registry and you want validation at construction time:
+[`JobManifest`](api.md) is a typed Pydantic object. Use it when jobs come from a database, API, or
+registry and you want validation at construction time:
 
 ```python
 from tiozin import (
@@ -95,11 +101,13 @@ app = TiozinApp()
 app.run(manifest)
 ```
 
-Plugin configuration also accepts plain dicts. `RunnerManifest(kind="NoOpRunner")` and `{"kind": "NoOpRunner"}` are equivalent.
+Plugin configuration also accepts plain dicts. `RunnerManifest(kind="NoOpRunner")` and
+`{"kind": "NoOpRunner"}` are equivalent when passed to `JobManifest`.
 
-## Job.builder()
+## With Job.builder()
 
-A fluent API for assembling jobs programmatically. Accepts dicts, manifest objects, or concrete plugin instances interchangeably:
+A fluent API for assembling jobs programmatically. Accepts dicts, manifest objects, or concrete
+plugin instances interchangeably:
 
 ```python
 from tiozin import Job, TiozinApp
@@ -128,7 +136,8 @@ app.run(job)
 
 ## Direct instantiation
 
-Instantiate a concrete job class with plugin objects directly. The most explicit form, with full IDE support and no indirection:
+Instantiate a concrete job class with plugin objects directly. The most explicit form, with full
+IDE support and no indirection:
 
 ```python
 from tiozin import TiozinApp
@@ -165,7 +174,7 @@ app.run(job)
 
 ### Input only
 
-No transforms, no outputs. The runner receives an empty plan. Use for validation jobs, source probes, or dry-run scenarios:
+No transforms, no outputs. Use for validation jobs, source probes, or dry-run scenarios:
 
 ```yaml
 inputs:
@@ -173,9 +182,10 @@ inputs:
     name: validate_source
 ```
 
-### Extract-Load (No Transform)
+### Extract-Load
 
-Outputs receive the input data directly. No transformation step. Use for copy or replication pipelines that move data as-is:
+Outputs receive the input data directly, with no transformation step. Use for copy or replication
+pipelines that move data as-is:
 
 ```yaml
 inputs:
@@ -189,7 +199,8 @@ outputs:
 
 ### No outputs
 
-Transforms still run. The runner receives an empty plan. Use when transforms perform writes or side effects directly (external API calls, eager writes through the runner session):
+Transforms still run. Use when transforms perform writes or side effects directly (external API
+calls, eager writes through the runner session):
 
 ```yaml
 inputs:
@@ -203,7 +214,8 @@ transforms:
 
 ### Fan-in
 
-Multiple inputs load in parallel, then converge at the first transform. Use a `CoTransform` (such as `SparkSqlTransform` or `DuckdbSqlTransform`) when that step needs to combine them:
+Multiple inputs load in sequence, then converge at the first transform. Use a `CoTransform` (such
+as `SparkSqlTransform` or `DuckdbSqlTransform`) when that step needs to combine them:
 
 ```yaml
 inputs:
@@ -235,7 +247,8 @@ transforms:
 
 ### Multiple outputs
 
-All outputs write the same final dataset, independently. Use for fan-out scenarios such as writing to a data warehouse, cache, and archive simultaneously:
+All outputs write the same final dataset, independently. Use for fan-out scenarios such as writing
+to a data warehouse, cache, and archive simultaneously:
 
 ```yaml
 outputs:
@@ -274,7 +287,8 @@ model: daily_summary
 
 Available variables: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`.
 
-When `namespace` is not set, the value comes from `TIO_JOB_NAMESPACE_TEMPLATE`, which is itself a Jinja template with the same available variables:
+When `namespace` is not set, the value comes from `TIO_JOB_NAMESPACE_TEMPLATE`, which is itself a
+Jinja template with the same available variables:
 
 ```bash
 # default
@@ -288,13 +302,16 @@ TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{domain}}"
 
 ## Templating
 
-All string properties in job YAML are Jinja2 templates rendered at execution time. Referencing an undefined variable raises an error.
+All string properties in job YAML are Jinja2 templates rendered at execution time. Referencing an
+undefined variable raises an error.
 
 The two most common variable sources are domain fields and date offsets.
 
 ### Domain variables
 
-The domain fields declared at the job level (`org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`) are available as template variables in any string property across the runner, inputs, transforms, and outputs:
+The domain fields declared at the job level (`org`, `region`, `domain`, `subdomain`, `layer`,
+`product`, `model`) are available as template variables in any string property across the runner,
+inputs, transforms, and outputs:
 
 ```yaml
 domain: ecommerce
@@ -314,24 +331,27 @@ outputs:
     # → data/ecommerce-refined/orders
 ```
 
-A step can override any domain field locally. `layer: raw` on an input uses `raw` for template rendering within that step only, leaving the job-level `layer` unchanged.
+A step can override any domain field locally. `layer: raw` on an input uses `raw` for template
+rendering within that step only, leaving the job-level `layer` unchanged.
 
 ### Date variables
 
-`D` is a date object anchored to the job's execution time. Use index syntax for relative offsets: `D[0]` is today, `D[-1]` is yesterday, `D[7]` is seven days ahead.
+`DAY` is a date object anchored to the job's execution time. Use index syntax for relative offsets:
+`DAY[0]` is today, `DAY[-1]` is yesterday, `DAY[7]` is seven days ahead.
 
 ```yaml
 inputs:
   - kind: NoOpInput
     name: read_yesterday
-    path: "data/raw/date={{ D[-1] }}"
+    path: "data/raw/date={{ DAY[-1] }}"
     # → data/raw/date=2026-02-23
 
 outputs:
   - kind: NoOpOutput
     name: write_today
-    path: "data/refined/date={{ D[0] }}"
+    path: "data/refined/date={{ DAY[0] }}"
     # → data/refined/date=2026-02-24
 ```
 
-See [Templates](templates.md) for all available variables, date formats, environment variable access, and temporary workspace paths.
+See [Templates](templates.md) for all available variables, date formats, environment variable
+access, and temporary workspace paths.

@@ -135,7 +135,7 @@ Chaining is order-independent: format and navigation can come in any order:
 
 ### Convenience shortcuts
 
-These are also available directly (without `D`), as shortcuts for `D[0].<property>`:
+These are also available directly (without `DAY`), as shortcuts for `DAY[0].<property>`:
 
 ```yaml
 {{ today }}       → 2026-01-17
@@ -151,10 +151,10 @@ These are also available directly (without `D`), as shortcuts for `D[0].<propert
 Use `.at<HH>` to jump to a specific hour of the day:
 
 ```yaml
-{{ D[0].at09 }}            → 2026-01-17T09:00:00+00:00
-{{ D[-1].at00.flat_hour }} → 2026-01-16T00
-{{ D[0].midnight }}        → 2026-01-17T00:00:00+00:00
-{{ D[0].noon }}            → 2026-01-17T12:00:00+00:00
+{{ DAY[0].at09 }}            → 2026-01-17T09:00:00+00:00
+{{ DAY[-1].at00.flat_hour }} → 2026-01-16T00
+{{ DAY[0].midnight }}        → 2026-01-17T00:00:00+00:00
+{{ DAY[0].noon }}            → 2026-01-17T12:00:00+00:00
 ```
 
 ## Common patterns
@@ -213,13 +213,13 @@ name: {{ product | replace("_", "-") }}   → orders-v2
 
 ## Full date property reference
 
-All properties are chainable. When used as standalone variables, they resolve for `D[0]` (today's nominal time).
+All properties are chainable. When used as standalone variables, they resolve for `DAY[0]` (today's nominal time).
 
 ### Navigation
 
 | Property / Syntax | Description | Example output |
 |---|---|---|
-| `D[n]` | Navigate `n` days (negative = past) | `D[-1]` → `2026-01-16` |
+| `DAY[n]` | Navigate `n` days (negative = past) | `DAY[-1]` → `2026-01-16` |
 | `.today` | Same day (no-op) | `2026-01-17` |
 | `.yesterday` | Previous day | `2026-01-16` |
 | `.tomorrow` | Next day | `2026-01-18` |
@@ -227,11 +227,11 @@ All properties are chainable. When used as standalone variables, they resolve fo
 | `.start_of_month` | 1st of current month | `2026-01-01` |
 | `.start_of_day` | Midnight of current day | `2026-01-17` |
 | `.start_of_week` | Monday of current week | `2026-01-12` |
-| `.start_of_hour` | Start of current hour (chain with format) | `D[0].start_of_hour.flat_hour` → `2026-01-17T10` |
-| `.start_of_minute` | Start of current minute (chain with format) | `D[0].start_of_minute.flat_minute` → `2026-01-17T10-30` |
+| `.start_of_hour` | Start of current hour (chain with format) | `DAY[0].start_of_hour.flat_hour` → `2026-01-17T10` |
+| `.start_of_minute` | Start of current minute (chain with format) | `DAY[0].start_of_minute.flat_minute` → `2026-01-17T10-30` |
 | `.midnight` | This day at 00:00:00 | `2026-01-17T00:00:00+00:00` |
 | `.noon` | This day at 12:00:00 | `2026-01-17T12:00:00+00:00` |
-| `.at00` to `.at23` | This day at HH:00:00 | `D[0].at09` → `2026-01-17T09:00:00+00:00` |
+| `.at00` to `.at23` | This day at HH:00:00 | `DAY[0].at09` → `2026-01-17T09:00:00+00:00` |
 
 ### ISO / datetime formats
 
