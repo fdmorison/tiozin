@@ -1,6 +1,6 @@
 ---
 name: tester
-description: Use when writing, updating, or reviewing PyTest tests for the Tiozin project.
+description: Use proactively when writing, updating, or reviewing PyTest tests for the Tiozin project.
 ---
 
 ## Persona

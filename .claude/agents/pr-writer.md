@@ -1,6 +1,6 @@
 ---
 name: pr-writer
-description: Use when writing pull requests, branch names, changelog entries, or commit messages.
+description: Use proactively when writing pull requests, branch names, changelog entries, or commit messages.
 ---
 
 ## Persona

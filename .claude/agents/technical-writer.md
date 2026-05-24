@@ -1,6 +1,6 @@
 ---
 name: technical-writer
-description: Use when writing user-facing documentation under docs/: guides, references, tutorials, or FAQs.
+description: Use proactively when writing user-facing documentation under docs/: guides, references, tutorials, or FAQs.
 ---
 
 ## Persona
