@@ -8,20 +8,24 @@ Write for any developer using the framework. Introduce Tiozin terms before using
 
 ## Tone
 
-- Short sentences, active voice
+- Use active voice
+- Develop one idea per sentence or paragraph.
+- Write prose that reads naturally to a human, not a chain of robotic clauses.
 - No filler: "It is worth noting that", "In order to", "In this section, we will"
 - No marketing: "powerful", "seamless", "robust", "intuitive"
 - No academic framing: "This document describes", "The following section covers"
 - No em-dashes or en-dashes. Use a period, colon, or parentheses instead
+- Headings are conversational, not bureaucratic:
+
 
 ```
-# ❌ "The TemplateDate class provides a fluent interface that enables composability..."
-# ✔  "Every property returns a TemplateDate, so you can chain them freely."
-```
+# ❌ "The TemplateDate class provides a fluent interface."
+# ✔  "The TemplateDate class provides a fluent interface: every property returns a TemplateDate, so you can chain them freely."
 
-Headings are conversational, not bureaucratic:
+# ❌ "Explicit arguments always override defaults. The merge is deep: for nested mappings,
+#      only missing or null fields are filled in. Non-null values in the job definition are never replaced."
+# ✔  "Job arguments always win. Defaults fill in missing or null fields only, including inside nested mappings."
 
-```
 # ❌ "Introduction", "Overview", "API Surface"
 # ✔  "The basics", "Common patterns", "All available options"
 ```
