@@ -1,6 +1,12 @@
 # Settings Reference
 
-Tiozin configuration has two independent layers:
+`tiozin.yaml` is the framework configuration file. It is separate from your job files.
+
+Job files define what to do: which plugins to run, with what inputs and outputs. `tiozin.yaml` defines how the framework is wired: which registry services to use, where to find them, and how to reach them.
+
+This separation is intentional. Service URLs, endpoints, and credentials belong in one place. If a registry URL changes, you update `tiozin.yaml` once. You do not touch any job file.
+
+Framework configuration has two independent layers:
 
 - `tiozin.yaml`: declares which registries to use and where to find them
 - Environment variables: control logging, hostname, and registry defaults
@@ -150,6 +156,7 @@ registries:
   transaction:
     kind: NoOpTransactionRegistry
     location: "postgresql://postgres:{{ ENV.PGPASSWORD | default('postgres') }}@localhost:5432/tiozin"
+    # → postgresql://postgres:postgres@localhost:5432/tiozin
 
   lineage:
     kind: OpenLineageRegistry
@@ -171,6 +178,42 @@ Use `| default(...)` for optional environment variables to avoid errors when the
 Rendered values remain in effect for the registry's entire lifetime. Tiozin restores the original template strings on teardown.
 
 Job variables (`name`, `org`, `domain`, `nominal_time`, and other context fields) are not available here. `SECRET` is also not available: registries are set up before the secret registry is initialized, so secrets cannot be used to configure other registries.
+
+## Runtime defaults
+
+`runtime_defaults` lets you declare shared plugin arguments once in `tiozin.yaml`. Any job that loads a matching plugin kind receives those arguments automatically.
+
+```yaml
+runtime_defaults:
+
+  - kind: LocalRunner
+    log_level: info
+
+  - kind: SqlTransform
+    dialect: ansi
+
+  - kind: CsvInput
+    encoding: utf-8
+    schema_subject: auto
+
+  - kind: ParquetOutput
+    compression: snappy
+    mode: append
+```
+
+### Explicit values always win
+
+Job arguments always win. Defaults fill in missing or `null` fields only, including inside nested mappings.
+
+### Templates in defaults
+
+Values in `runtime_defaults` accept the same Jinja template expressions available in job definitions:
+
+```yaml
+runtime_defaults:
+  - kind: CsvInput
+    encoding: "{{ ENV.FILE_ENCODING | default('utf-8') }}"
+```
 
 ## Settings delegation
 

@@ -35,6 +35,11 @@ class AppContainer(Loggable):
         self._setup_registry(setting_registry)
 
         manifest = setting_registry.get()
+
+        tiozin_registry.with_defaults(
+            [e.model_dump() for e in manifest.runtime_defaults],
+        )
+
         self.registries = Registries(
             setting=setting_registry,
             secret=tiozin_registry.load_manifest(manifest.registries.secret),

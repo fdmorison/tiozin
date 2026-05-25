@@ -1,0 +1,32 @@
+registries:
+
+  job:
+    kind: tio_kernel:FileJobRegistry
+    name: my-job-registry-1
+
+  schema:
+    kind: tio_kernel:NoOpSchemaRegistry
+    name: my-schema-registry-1
+
+  secret:
+    kind: tio_kernel:EnvSecretRegistry
+    name: my-secret-registry-1
+    failfast: true
+
+  transaction:
+    kind: tio_kernel:NoOpTransactionRegistry
+    name: my-transaction-registry-1
+
+  lineage:
+    kind: tio_kernel:NoOpLineageRegistry
+    name: my-lineage-registry-1
+
+  metric:
+    kind: tio_kernel:NoOpMetricRegistry
+    name: my-metric-registry-1
+
+runtime_defaults:
+  - kind: NoOpInput
+    verbose: false
+    schema_subject: "{{ domain }}.{{ subdomain }}.{{ product }}"
+    other_field: 12345

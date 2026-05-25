@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from tiozin.api import Tiozin
 from tiozin.api.loggable import Loggable
@@ -12,6 +12,7 @@ from tiozin.exceptions import (
     RequiredArgumentError,
     TiozinInputError,
 )
+from tiozin.utils import default
 from tiozin.utils.decorators import ensure_setup
 
 from .. import reflection
@@ -62,6 +63,7 @@ class TiozinRegistry(Loggable):
         super().__init__()
         self._index: dict[str, set[type[Tiozin]]] = defaultdict(set)
         self._tiozins: set[type[Tiozin]] = set()
+        self._defaults: dict[str, dict[str, Any]] = {}
         self.ready = False
 
     def setup(self, *args, **kwargs) -> None:
@@ -77,6 +79,12 @@ class TiozinRegistry(Loggable):
                 self.register(t)
 
         self.ready = True
+
+    def with_defaults(self, defaults: list[dict[str, Any]]) -> None:
+        for entry in defaults:
+            kind = entry.get("kind")
+            if kind:
+                self._defaults[kind] = entry
 
     def register(self, tiozin: type[Tiozin]) -> None:
         """
@@ -157,6 +165,7 @@ class TiozinRegistry(Loggable):
             role=role,
         )
 
+        arguments = default(arguments, self._defaults.get(kind))
         params = arguments.copy()
         params.pop("description", None)
         self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined", **params)

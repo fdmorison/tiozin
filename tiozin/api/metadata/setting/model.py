@@ -225,6 +225,23 @@ class Registries(BaseSettings):
     metric: MetricRegistryManifest = Field(default_factory=MetricRegistryManifest)
 
 
+class RuntimeDefault(BaseSettings):
+    """
+    Default argument values for a specific plugin kind.
+
+    Applied by TiozinRegistry when loading the matching plugin, filling in
+    arguments not provided at the call site.
+    """
+
+    model_config = SettingsConfigDict(
+        extra="allow",
+        str_strip_whitespace=True,
+        env_ignore_empty=True,
+    )
+
+    kind: str
+
+
 class SettingsManifest(Manifest):
     """
     Root manifest for a Tiozin settings file (tiozin.yaml).
@@ -235,3 +252,4 @@ class SettingsManifest(Manifest):
 
     kind: Literal["Settings"] = "Settings"
     registries: Registries = Field(default_factory=Registries)
+    runtime_defaults: list[RuntimeDefault] = Field(default_factory=list)

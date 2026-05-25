@@ -56,3 +56,49 @@ registries:
     readonly: false
     cache: false
     failfast: false
+
+runtime_defaults:
+
+  - kind: SparkRunner
+    streaming: false
+    log_level: "{{ ENV.LOG_LEVEL }}"
+
+  - kind: SparkFileInput
+    format: parquet
+    schema_subject: auto
+
+  - kind: SparkFileOutput
+    format: parquet
+    mode: append
+    schema_subject: auto
+
+  - kind: SparkWordCountTransform
+    content_field: value
+    lowercase: true
+
+  - kind: DuckdbRunner
+    streaming: false
+    read_only: false
+
+  - kind: DuckdbFileInput
+    format: parquet
+    schema_subject: auto
+
+  - kind: DuckdbFileOutput
+    format: parquet
+    mode: append
+    schema_subject: auto
+
+  - kind: DuckdbWordCountTransform
+    content_field: value
+    lowercase: true
+
+  - kind: DuckdbPostgresOutput
+    mode: merge
+    primary_key: id
+    schema: public
+    database: postgres
+    port: 5432
+    user: "{{ ENV.PGUSER | default('postgres') }}"
+    password: "{{ ENV.PGPASSWORD | default('postgres') }}"
+    schema_subject: auto

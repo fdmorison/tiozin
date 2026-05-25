@@ -324,3 +324,47 @@ def test_load_manifest_should_fail_when_manifest_has_no_tiozin_role(factory: Tio
     # Act/Assert
     with pytest.raises(TiozinInputError):
         factory.load_manifest(manifest)
+
+
+# ============================================================================
+# with_defaults()
+# ============================================================================
+def test_with_defaults_should_index_defaults_by_kind(factory: TiozinRegistry):
+    # Arrange
+    entry = {"kind": "NoOpInput", "verbose": False}
+
+    # Act
+    factory.with_defaults([entry])
+
+    # Assert
+    actual = factory._defaults["NoOpInput"]
+    expected = {"kind": "NoOpInput", "verbose": False}
+    assert actual == expected
+
+
+def test_load_should_fill_missing_arguments_from_defaults(factory: TiozinRegistry):
+    # Arrange
+    factory.with_defaults([{"kind": "NoOpInput", "verbose": False}])
+
+    # Act
+    result = factory.load("NoOpInput", name="test")
+
+    # Assert
+    actual = result.verbose
+    expected = False
+    assert actual == expected
+
+
+def test_load_should_not_override_explicit_arguments_with_defaults(
+    factory: TiozinRegistry,
+):
+    # Arrange
+    factory.with_defaults([{"kind": "NoOpInput", "verbose": False}])
+
+    # Act
+    result = factory.load("NoOpInput", name="test", verbose=True)
+
+    # Assert
+    actual = result.verbose
+    expected = True
+    assert actual == expected
