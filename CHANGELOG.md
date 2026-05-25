@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.0.0...tiozin-v3.1.0) (2026-05-25)
+
+
+### Features
+
+* **core:** Support default values for plugin properties in tiozin.yaml ([#206](https://github.com/fdmorison/tiozin/issues/206)) ([6e92b92](https://github.com/fdmorison/tiozin/commit/6e92b9262c4ef9d7b5e1aebe7d686054e62109f3))
+
+
+### Documentation
+
+* **core:** Update obsolete documentation across all user-facing guides ([#205](https://github.com/fdmorison/tiozin/issues/205)) ([16511e8](https://github.com/fdmorison/tiozin/commit/16511e8986c2f3300a36f11759a3ecf945d947eb))
+
 ## [3.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v2.0.0...tiozin-v3.0.0) (2026-04-26)
 
 

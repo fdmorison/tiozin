@@ -2648,7 +2648,7 @@ wheels = [
 
 [[package]]
 name = "tiozin"
-version = "3.0.0"
+version = "3.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "datacontract-cli" },
