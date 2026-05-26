@@ -33,6 +33,7 @@ from .registries.noop_lineage_registry import NoOpLineageRegistry
 from .registries.open_lineage_registry import OpenLineageRegistry
 from .registries.noop_metric_registry import NoOpMetricRegistry
 from .registries.noop_schema_registry import NoOpSchemaRegistry
+from .registries.aws_parameter_store_secret_registry import AwsParameterStoreSecretRegistry
 from .registries.env_secret_registry import EnvSecretRegistry
 from .registries.noop_secret_registry import NoOpSecretRegistry
 from .registries.noop_setting_registry import NoOpSettingRegistry
@@ -51,6 +52,7 @@ __all__ = [
     "OpenLineageRegistry",
     "NoOpMetricRegistry",
     "NoOpSchemaRegistry",
+    "AwsParameterStoreSecretRegistry",
     "EnvSecretRegistry",
     "NoOpSecretRegistry",
     "NoOpSettingRegistry",

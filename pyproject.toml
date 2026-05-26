@@ -49,6 +49,9 @@ tio_spark = [
 tio_duckdb = [
   "duckdb>=1.4.4,<2.0.0",
 ]
+aws = [
+  "boto3 ~=1.38",
+]
 
 [dependency-groups]
 dev = [
@@ -66,7 +69,7 @@ test = [
   "pandas ==2.3.3",
   "pyarrow ==23.0.0",
   "numpy ==1.26.4",
-  "tiozin[tio_spark,tio_duckdb]",
+  "tiozin[tio_spark,tio_duckdb,aws]",
 ]
 
 lint = [

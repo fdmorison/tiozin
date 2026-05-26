@@ -15,19 +15,16 @@ codebase.
 
 ## Rules
 
-- Never duplicate tests.
-- Never remove a failing test without explicit authorization.
-- Never weaken assertions to make a test pass.
-- Never mock what is not a process boundary.
+- One test file per class, named `<class>_test.py`. If the module only contains functions, name it `<module>_test.py`.
+- Test names must follow `test_<subject>_should_<expected>(_when_<condition>)?`, where `subject` is the method or function under test and `when` is reserved for edge cases, error cases, or alternative flows. Do not use `when` in happy-path tests or when the condition is already obvious in the test name. Example: `test_create_user_should_return_user` instead of `test_create_user_should_return_user_when_input_is_valid`.
+- The `expected` and `when` parts must describe business behavior, not implementation details. Avoid SDK method names, infrastructure terms, or internal mechanics. Example: `test_get_should_decrypt_secret` instead of `test_get_should_call_get_parameter_with_decryption`.
+- Each test must contain exactly one assertion. When asserting multiple attributes of the same entity, group them into a tuple instead of writing separate assertions or tests. Prefer direct object comparison when equality semantics are well-defined and stable.
+- Structure every test using `# Arrange`, `# Act`, and `# Assert` blocks. Never combine Arrange and Act.
+- Never duplicate tests. Tests are considered duplicates when `subject + expected + condition` are identical or semantically equivalent. Use `@pytest.mark.parametrize` for input-only variations. If the expected outcome or condition also changes, write separate tests.
+- Never remove a failing test or weaken its assertions to make it pass without explicit authorization.
 - Never test private methods or private attributes.
-- Use `@pytest.mark.parametrize` when variation is input-only.
-- Reuse existing fixtures, mocks, and stubs before creating new ones.
-- Test names must follow `test_<subject>_should_<expected>(_when_<condition>)?`.
-- Tests are duplicated when subject, expected and condition are the same.
-- Each test must have exactly one `assert`.
-- When asserting multiple attributes of the same entity, group them into a tuple rather than writing separate tests.
-- Organize each test into `# Arrange`, `# Act`, and `# Assert` blocks. Never combine Arrange and Act.
-- Follow additional rules from `.claude/rules/testing.md`.
+- Reuse existing fixtures, mocks, and stubs before creating new ones. Extend or update existing ones when necessary to support additional scenarios.
+- Follow additional rules defined in `.claude/rules/testing.md`.
 
 ## Workflow
 
