@@ -14,7 +14,7 @@ from unittest.mock import patch
 import pytest
 
 from tiozin import TiozinApp
-from tiozin.exceptions import TiozinInputError
+from tiozin.exceptions import SecretNotFoundError, TiozinInputError
 
 MOCK_SETTINGS = "tests/mocks/settings/default.yaml"
 
@@ -145,6 +145,14 @@ def test_app_should_raise_when_secret_is_missing(_atexit, _signal, app: TiozinAp
             name: noop_output
     """
 
-    # Act / Assert
-    with pytest.raises(TiozinInputError):
+    # Act
+    with pytest.raises(
+        TiozinInputError,
+        match="Cannot render `{ SECRET.DB_PASSWORD }` because Secret 'DB_PASSWORD' not found.",
+    ) as exc_info:
         app.run(yaml_job)
+
+    # Assert
+    actual = type(exc_info.value.__cause__)
+    expected = SecretNotFoundError
+    assert actual == expected
