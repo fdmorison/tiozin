@@ -4,8 +4,10 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from jinja2 import TemplateError
+
 from tiozin.api import Tiozin
-from tiozin.exceptions import TiozinInputError
+from tiozin.exceptions import TiozinError, TiozinInputError, TiozinInternalError
 
 from .. import reflection
 from . import filters
@@ -74,12 +76,13 @@ class TiozinTemplateOverlay:
             obj = self._tiozin
             for key in path:
                 obj = reflection.get(obj, key)
-
             try:
                 rendered = JINJA_ENV.from_string(template).render(self._template_vars)
                 reflection.set_field(obj, field, rendered)
+            except (TemplateError, TiozinError) as e:
+                raise TiozinInputError(f"Cannot render `{template}` because {e}") from e
             except Exception as e:
-                raise TiozinInputError(f"Cannot render template {template} because {e}") from e
+                raise TiozinInternalError(f"Cannot render `{template}` because {e}") from e
 
     def _restore_templates(self) -> None:
         """Restore each rendered field back to its original template string."""

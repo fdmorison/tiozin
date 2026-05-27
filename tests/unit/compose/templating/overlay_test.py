@@ -1,6 +1,7 @@
 import copy
 import logging
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -9,7 +10,8 @@ from tests.stubs.lineage import LineageRegistryStub
 from tiozin import Context
 from tiozin.api.metadata.bundle import Registries
 from tiozin.compose import TiozinTemplateOverlay
-from tiozin.exceptions import TiozinInputError
+from tiozin.compose.templating import overlay as overlay_module
+from tiozin.exceptions import SecretNotFoundError, TiozinInputError, TiozinInternalError
 from tiozin.family.tio_kernel import NoOpInput
 
 
@@ -233,6 +235,44 @@ def test_overlay_should_raise_error_on_missing_variable(fake_domain: dict):
 
     # Act & Assert
     with pytest.raises(TiozinInputError):
+        with TiozinTemplateOverlay(tiozin, fake_domain):
+            pass
+
+
+@patch.object(
+    overlay_module.JINJA_ENV, "from_string", side_effect=SecretNotFoundError("DB_PASSWORD")
+)
+def test_overlay_should_explain_template_failure_when_tiozin_error(
+    _mock_from_string,
+    fake_domain: dict,
+):
+    # Arrange
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{secret}}"
+
+    # Act / Assert
+    with pytest.raises(
+        TiozinInputError,
+        match=r"Cannot render `./data/\{secret\}` because Secret 'DB_PASSWORD' not found\.",
+    ):
+        with TiozinTemplateOverlay(tiozin, fake_domain):
+            pass
+
+
+@patch.object(overlay_module.JINJA_ENV, "from_string", side_effect=RuntimeError("REASON"))
+def test_overlay_should_explain_template_failure_when_unexpected_exception(
+    _mock_from_string,
+    fake_domain: dict,
+):
+    # Arrange
+    tiozin = NoOpInput(name="test")
+    tiozin.path = "./data/{{domain}}"
+
+    # Act / Assert
+    with pytest.raises(
+        TiozinInternalError,
+        match=r"Cannot render `./data/\{domain\}` because REASON",
+    ):
         with TiozinTemplateOverlay(tiozin, fake_domain):
             pass
 
