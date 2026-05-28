@@ -48,10 +48,7 @@ examples/        # Sample jobs and schemas
 tests/           # Unit and integration tests
 ```
 
-## References
+# Additional Instructions
 
-- When writing tests, follow @.claude/agents/tester.md.
-- When writing documentation, follow @.claude/agents/technical-writer.md.
-- When writing pull requests, follow @.claude/agents/pr-writer.md.
 - Tech stack: `@.claude/knowledge/tech-stack.md`
 - Concepts: `@.claude/knowledge/glossary.md`
