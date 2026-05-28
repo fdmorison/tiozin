@@ -1,31 +1,18 @@
 ## 📌 Description
 <!--
-Summarize the behavior from the user's perspective.
-- 1 sentence (required)
-- + optional short follow-up (max 2–3 lines)
-- No implementation details
+What the system now does, from the user's perspective.
+1 sentence + optional follow-up. No implementation details.
 -->
 
 ## 📌 What
 <!--
-Detail the behavior changes introduced.
-- One bullet per meaningful change
-- Add precision (scope, conditions, constraints)
-- Do not repeat the Description
-- Include only changes (no unaffected behavior)
-- No implementation details
+One bullet per behavioral change. No repetition of Description. No implementation details.
 -->
 
 ## 📎 Notes
 <!--
-Required:
-- Runtime behavior change: Yes/No
-- Breaking change: Yes/No
-
-Optional:
-- scope limitations (where the change applies)
-- unaffected behavior (what remains unchanged)
-- clarifications that are not changes
+Runtime behavior change: Yes/No
+Breaking change: Yes/No
 -->
 
 ## 🔗 References
