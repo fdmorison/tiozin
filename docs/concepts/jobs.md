@@ -85,7 +85,7 @@ These constraints apply to all job types:
 └───────────┘    └─────────────┘    └─────────────┘    └──────────┘
 ```
 
-`LinearJob` has no branches, no conditions, no retry logic, and no dependency rules between steps. Use it when data flows forward in one direction.
+`LinearJob` executes steps in a fixed forward order: inputs feed transforms, transforms feed outputs. Use it when data flows forward in one direction.
 
 If your pipeline needs conditional execution, parallel steps, or DAG-style dependency control, extend `Job` directly and implement `submit()`. The framework keeps `Job` pluggable for exactly this reason.
 

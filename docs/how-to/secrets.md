@@ -1,10 +1,10 @@
 # How to Use Secrets in Jobs
 
-Keep credentials out of your job files by reading them from a secret registry at runtime. Tiozin masks secret values in all logs and reprs, so they never appear in output even when embedded in connection strings.
+Keep credentials out of job files by reading them from a secret registry at runtime. Tiozin masks secret values in all logs and reprs, so they never appear in output even when embedded in connection strings.
 
 ## The basics
 
-`EnvSecretRegistry` is the default secret registry. It reads secrets from environment variables and works out of the box. You do not need to declare it in `tiozin.yaml`. If you want to be explicit:
+`EnvSecretRegistry` is the default secret registry. It reads secrets from environment variables and works out of the box. Declaring it in `tiozin.yaml` is optional. To be explicit:
 
 ```yaml
 # tiozin.yaml
@@ -13,7 +13,7 @@ registries:
     kind: tio_kernel:EnvSecretRegistry
 ```
 
-Set the secret in your environment:
+Set the secret in the environment:
 
 ```bash
 export DB_PASSWORD=supersecret
@@ -50,7 +50,7 @@ class PostgresInput(Input[list]):
         return conn.execute(self.query).fetchall()
 ```
 
-By default (`failfast: false`), `get()` returns `None` when the secret is not found. With `failfast: true`, it raises `SecretNotFoundError`. When the secret is optional, check the return value:
+By default (`failfast: true`), `get()` raises `SecretNotFoundError` when the secret is not found. With `failfast: false`, it returns `None` instead. When the secret is optional, set `failfast: false` and check the return value:
 
 ```python
 api_token = self.context.registries.secret.get("API_TOKEN")
@@ -62,7 +62,7 @@ if api_token:
 
 `Secret` is a `str` subtype. It is accepted anywhere a plain string is expected: Jinja templates, Pydantic models, connection libraries. No explicit conversion needed.
 
-When you concatenate a `Secret` with a plain string, the result is a new `Secret` where only the sensitive segment is masked:
+When a `Secret` is concatenated with a plain string, the result is a new `Secret` where only the sensitive segment is masked:
 
 ```python
 secret = Secret("mypassword")
@@ -108,13 +108,13 @@ To use it, the registry must belong to a registered Tiozin Family. See [Creating
 
 ## All parameters
 
-`EnvSecretRegistry` has no required parameters beyond the common registry fields:
+`EnvSecretRegistry` accepts the common registry fields and works out of the box with their defaults:
 
 | Property | Description | Example output |
 |---|---|---|
 | `kind` | Plugin class name | `tio_kernel:EnvSecretRegistry` |
 | `readonly` | Reject write operations | `false` |
 | `cache` | Cache retrieved secrets in memory | `false` |
-| `failfast` | When `true`, raises when the secret is not found; when `false`, returns `None` | `false` |
+| `failfast` | When `true`, raises when the secret is not found; when `false`, returns `None` | `true` |
 | `name` | Display name for this registry instance | |
 | `description` | Human-readable description | |

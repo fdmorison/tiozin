@@ -27,7 +27,7 @@ transforms:
     # raw_customers is available because the input was registered under that slug
 ```
 
-This view registration happens at the framework level for all inputs and transforms. No step needs to do it explicitly.
+This view registration happens at the framework level for all inputs and transforms. Steps inherit the registered views automatically.
 
 ## Components
 
@@ -36,7 +36,7 @@ This view registration happens at the framework level for all inputs and transfo
 - [DuckdbSqlTransform](sql-transform.md)
 - [DuckdbFileOutput](file-output.md)
 - [DuckdbPostgresOutput](postgres-output.md)
-- [DuckdbWordCountTransform](../extending/families.md)
+- [DuckdbWordCountTransform](../examples.md#shakespeare)
 
 To implement a custom Input, Transform, or Output from scratch, see [Creating Pluggable Tiozins](../extending/tiozins.md).
 
