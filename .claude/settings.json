@@ -11,7 +11,7 @@
       "Edit",
       "Bash(gh *)",
       "Bash(mkdir *)",
-      "Bash(uv pip *)",
+      "Bash(uv pip *)"
     ],
     "deny": []
   }
