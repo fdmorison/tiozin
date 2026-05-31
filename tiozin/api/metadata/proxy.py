@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING
 
 import wrapt
@@ -14,44 +15,62 @@ if TYPE_CHECKING:
 
 class RegistryProxy(wrapt.ObjectProxy):
     """
-    Internal proxy that wraps Registry plugins with template rendering support.
+    Internal proxy that enables template variables in Registry attributes.
 
-    Intercepts ``setup()`` and ``teardown()`` to apply a persistent
-    ``TiozinTemplateOverlay`` for the entire registry lifetime. Templates in
-    configuration values such as ``location`` are resolved at setup time and
-    remain rendered until teardown.
+    During setup, string attributes can reference runtime values such as
+    {{ ENV.HOME }} or {{ DAY.ds }}. The rendered values remain available for
+    the entire registry lifetime and are restored to their original values on
+    teardown.
 
-    Template variables available during registry setup:
+    Available template variables:
 
-    - ``ENV``: read-only view of ``os.environ`` via ``SafeEnv``
-    - ``DAY``: ``TemplateDate`` anchored to the moment ``setup()`` is called,
-      plus all shorthand properties from ``TemplateDate.to_dict()``
-      (e.g. ``ds``, ``ts``, ``flat_date``, …)
+    - ENV: read-only access to environment variables.
+    - DAY: TemplateDate representing the setup timestamp.
 
     This is an internal implementation detail. Tiozin developers should refer to
     the Registry base class for the public API contract.
     """
 
-    _overlay: TiozinTemplateOverlay | None = None
+    def __init__(self, wrapped) -> None:
+        super().__init__(wrapped)
+        self._self_context = contextlib.ExitStack()
 
-    def setup(self, *args, **kwargs) -> None:
-        registry: Registry = self.__wrapped__
+    @property
+    def registry(self) -> Registry:
+        return self.__wrapped__
 
-        now = TemplateDate()
-        template_vars = now.to_dict()
-        template_vars["DAY"] = now
-        template_vars["ENV"] = TemplateEnv()
+    @wrapt.synchronized
+    def setup(self) -> None:
+        if self.registry.ready:
+            return
 
-        self._overlay = TiozinTemplateOverlay(registry, template_vars)
-        self._overlay.__enter__()
-        registry.setup(*args, **kwargs)
+        try:
+            now = TemplateDate()
+            template_vars = now.to_dict()
+            template_vars["DAY"] = now
+            template_vars["ENV"] = TemplateEnv()
 
-    def teardown(self, *args, **kwargs) -> None:
-        registry: Registry = self.__wrapped__
-        registry.teardown(*args, **kwargs)
-        if self._overlay:
-            self._overlay.__exit__(None, None, None)
-            self._overlay = None
+            self._self_context.enter_context(TiozinTemplateOverlay(self.registry, template_vars))
+            self.registry.setup()
+            self.registry.ready = True
+        except Exception as e:
+            self.registry.error(f"🚨 Setup failed: {e}.")
+            self._self_context.close()
+            if self.registry.failfast:
+                raise
+
+    @wrapt.synchronized
+    def teardown(self) -> None:
+        if not self.registry.ready:
+            return
+
+        try:
+            self.registry.teardown()
+        except Exception:
+            self.registry.exception("🚨 Shutdown failed.")
+        finally:
+            self._self_context.close()
+            self.registry.ready = False
 
     def __repr__(self) -> str:
         return repr(self.__wrapped__)
