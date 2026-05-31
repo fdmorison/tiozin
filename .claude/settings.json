@@ -7,12 +7,31 @@
       "Edit",
       "WebSearch",
       "WebFetch",
-      "Bash(gh *)",
-      "Bash(mkdir *)",
-      "Bash(uv pip *)",
-      "Bash(awk *)",
-      "Bash(git *)"
+      "Bash(gh:*)",
+      "Bash(git:*)",
+      "Bash(mkdir:*)",
+      "Bash(uv pip:*)",
+      "Bash(awk:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sed:*)"
     ],
-    "deny": []
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(chmod *777*)",
+      "Bash(chown:*)",
+      "Bash(dd:*)",
+      "Bash(mkfs:*)",
+      "Bash(eval:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ],
+    "additionalDirectories": [
+      "/.claude/*",
+      "/home/fdmorison/Projetos/merak/tiozin/.claude/skills"
+    ]
   }
 }
