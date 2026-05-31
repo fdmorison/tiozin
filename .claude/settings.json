@@ -5,22 +5,14 @@
     "allow": [
       "Write",
       "Edit",
+      "WebSearch",
+      "WebFetch",
       "Bash(gh *)",
       "Bash(mkdir *)",
       "Bash(uv pip *)",
       "Bash(awk *)",
-      "Bash(git reset *)"
+      "Bash(git *)"
     ],
-    "deny": [],
-    "additionalDirectories": [
-      "/home/fdmorison/Projetos/merak/tiozin/docs"
-    ]
-  },
-  "companyAnnouncements": [
-    "Welcome to Tiozin!",
-    "Reminder: Code reviews required for all PRs"
-  ],
-  "additionalDirectories": [
-    "/tmp"
-  ]
+    "deny": []
+  }
 }
