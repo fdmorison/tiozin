@@ -52,6 +52,9 @@ tio_duckdb = [
 aws = [
   "boto3 ~=1.38",
 ]
+gcp = [
+  "google-cloud-secret-manager ~=2.23",
+]
 
 [dependency-groups]
 dev = [
