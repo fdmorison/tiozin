@@ -49,7 +49,7 @@ tiozin_family_unknown = "tio_unknown"
 registry_default_timeout = 3
 registry_default_readonly = False
 registry_default_cache = False
-registry_default_failfast = False
+registry_default_failfast = True
 
 default_job_registry = "tio_kernel:FileJobRegistry"
 default_setting_registry = "tio_kernel:FileSettingRegistry"

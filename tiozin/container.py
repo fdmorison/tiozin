@@ -22,7 +22,7 @@ class AppContainer(Loggable):
         self.ready = False
         self.settings_path = settings_path
         self.registries: Registries = Registries()
-        self._boot_order: list[Registry] = []
+        self._setup_order: list[Registry] = []
 
     def setup(self) -> None:
         defaults = SettingRegistryManifest()
@@ -32,7 +32,7 @@ class AppContainer(Loggable):
             tiozin_role=SettingRegistry,
             **defaults.model_dump(),
         )
-        self._setup_registry(setting_registry)
+        setting_registry.setup()
 
         manifest = setting_registry.get()
 
@@ -50,7 +50,7 @@ class AppContainer(Loggable):
             lineage=tiozin_registry.load_manifest(manifest.registries.lineage),
         )
 
-        self._boot_order = [
+        self._setup_order = [
             self.registries.setting,
             self.registries.secret,
             self.registries.schema,
@@ -60,30 +60,15 @@ class AppContainer(Loggable):
             self.registries.job,
         ]
 
-        for registry in self._boot_order:
-            self._setup_registry(registry)
+        for registry in self._setup_order:
+            registry.setup()
+            if registry.ready:
+                self.info(f"🟢 {registry} is ready.")
 
         self.ready = True
 
-    def _setup_registry(self, registry: Registry) -> None:
-        try:
-            if not registry.ready:
-                registry.setup()
-                registry.ready = True
-                self.info(f"🟢 {registry.uri} is ready.")
-        except Exception as e:
-            self.error(f"🚨 {registry.uri} setup failed: {e}.")
-            raise
-
     def teardown(self) -> None:
-        for registry in reversed(self._boot_order):
-            try:
-                if registry.ready:
-                    registry.teardown()
-                    self.info(f"🛑 {registry.uri} shutdown is successful.")
-                else:
-                    self.info(f"🛑 {registry.uri} shutdown skipped (uninitialized).")
-            except Exception:
-                self.exception(f"🚨 {registry.uri} shutdown failed.")
-            finally:
-                registry.ready = False
+        for registry in reversed(self._setup_order):
+            registry.teardown()
+            self.info(f"🛑 {registry} shutdown completed.")
+        self.ready = False
