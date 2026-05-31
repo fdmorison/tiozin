@@ -7,6 +7,7 @@ tools:
   - Read
   - Grep
   - Glob
+  - AskUserQuestion
   - Bash(git diff:-)
   - Bash(git log:-)
   - Bash(git status:-)
@@ -134,6 +135,6 @@ The audience is reviewers and changelog readers with no prior knowledge of the c
 5. Identify breaking changes.
 6. Write the pull request.
 7. Self-review the pull request against all rules and fix any violations.
-8. Suggest the title and body to the user and ask for confirmation.
+8. Always suggest the title and body to the user and ask for confirmation before publishing, regardless of how you were invoked.
 9. After confirmation, publish the pull request.
 10. Print the pull request URL.
