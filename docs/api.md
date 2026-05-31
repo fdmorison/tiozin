@@ -77,7 +77,7 @@ from tiozin import Job
 
 class MyJob(Job[Any]):
     def submit(self) -> Any:
-        # implement your execution model here
+        # implement the execution model here
         ...
 ```
 
@@ -112,23 +112,34 @@ Lifecycle: `setup(data)` → `write(data)` → `teardown(data)`
 
 ## Registry
 
-Abstract base for metadata services. Extend and implement `get()` and `register()`.
+Abstract base for metadata services. The base class defines the construction and lifecycle contract shared by every registry. Each registry subtype declares its own method interface.
 
-```python
-from tiozin import Registry
+| Parameter | Type | Description |
+|---|---|---|
+| `location` | `str` | Backend location (HTTP/HTTPS, FTP, local path, `s3://`, `gs://`, `az://`) |
+| `readonly` | `bool` | If `True`, disables write operations |
+| `cache` | `bool` | If `True`, enables in-memory caching |
+| `timeout` | `int` | Request timeout in seconds |
+| `failfast` | `bool` | If `True`, raises when metadata is not found. If `False`, returns `None` |
+| `ready` | `bool` | Instance attribute. `True` after `setup()` runs, `False` after `teardown()` |
 
-class MyRegistry(Registry):
-    def get(self, identifier: str, version: str | None = None) -> Any:
-        return fetch(identifier)
+Defaults for `readonly`, `cache`, `timeout`, and `failfast` are resolved from `tiozin.config`. The base class also inherits `setup()` and `teardown()`, which toggle the `ready` flag.
 
-    def register(self, identifier: str, value: Any) -> None:
-        store(identifier, value)
-```
+### Registry Subtypes
 
-| Method | Description |
+Each subtype defines its own contract. The table below lists the methods or extension role for each one.
+
+| Registry | Contract |
 |---|---|
-| `get(identifier, version=None)` | Retrieve metadata. Raises if not found and `failfast=True`; returns `None` otherwise |
-| `register(identifier, value)` | Store metadata |
+| `SettingRegistry` | `get() -> SettingsManifest` |
+| `SecretRegistry` | `get(identifier: str) -> Secret`, `register(identifier: str, value: Secret) -> None` |
+| `SchemaRegistry` | `get(subject: str, version: str = None) -> Schema`, `register(subject: str, value: Schema) -> None` |
+| `JobRegistry` | `get(identifier: str) -> JobManifest`, `register(identifier: str, value: JobManifest) -> None` |
+| `LineageRegistry` | `emit(event: LineageEvent) -> None` |
+| `MetricRegistry` | Extend to implement custom metric tracking against a backend such as Prometheus, InfluxDB, or Datadog |
+| `TransactionRegistry` | Extend to track transaction states and commit logs (pending, running, committed, failed) against a database or key/value store |
+
+`SchemaRegistry` and `LineageRegistry` accept extra constructor parameters on top of the base ones. See [Extending the Registry](extending/registry.md) for the full subtype contracts.
 
 ## Context
 
@@ -154,7 +165,7 @@ ctx = Context.current()                # same
 ctx = Context.current(required=False)  # returns None if not active
 ```
 
-Context is activated automatically by the framework before calling your `setup()`, `read()`, `transform()`, `write()`, or `teardown()` methods. You do not need to activate it manually.
+Context is activated automatically by the framework before calling `setup()`, `read()`, `transform()`, `write()`, or `teardown()` methods. Manual activation is not required.
 
 ### Key fields
 
