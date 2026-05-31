@@ -1,10 +1,10 @@
 # Settings Guide
 
-`tiozin.yaml` is the framework configuration file. It is separate from your job files.
+`tiozin.yaml` is the framework configuration file. It is separate from job files.
 
 Job files define what to do: which plugins to run, with what inputs and outputs. `tiozin.yaml` defines how the framework is wired: which registry services to use, where to find them, and how to reach them.
 
-This separation is intentional. Service URLs, endpoints, and credentials belong in one place. If a registry URL changes, you update `tiozin.yaml` once. You do not touch any job file.
+This separation is intentional. Service URLs, endpoints, and credentials belong in one place. When a registry URL changes, `tiozin.yaml` is the only file that needs updating.
 
 Framework configuration has two independent layers:
 
@@ -13,9 +13,9 @@ Framework configuration has two independent layers:
 
 Both layers work independently. Values in `tiozin.yaml` override the matching environment variable for the same field. See [YAML reference](reference.md) and [environment variable reference](env.md) for lookup tables.
 
-## The simplest setup
+## The Simplest Setup
 
-Create a `tiozin.yaml` in your project root:
+Create a `tiozin.yaml` in the project root:
 
 ```yaml
 registries:
@@ -30,11 +30,11 @@ That is enough to get started. Run any job in that directory:
 tiozin run examples/jobs/dummy.yaml
 ```
 
-Registries you do not declare fall back to their defaults. See [Default kinds](reference.md#default-kinds) for the full list.
+Any omitted registry falls back to its default. See [Default kinds](reference.md#default-kinds) for the full list.
 
-## How Tiozin finds tiozin.yaml
+## How Tiozin Finds tiozin.yaml
 
-If you do not specify a location explicitly, Tiozin searches for `tiozin.yaml` in this order:
+When no location is specified, Tiozin searches for `tiozin.yaml` in this order:
 
 1. Current working directory (`tiozin.yaml`)
 2. `~/tiozin.yaml`
@@ -46,9 +46,9 @@ If you do not specify a location explicitly, Tiozin searches for `tiozin.yaml` i
 
 The first file found wins. If none is found, Tiozin starts with built-in defaults.
 
-## Specifying the location explicitly
+## Specifying the Location
 
-Three ways to point Tiozin at a specific file, in order of precedence:
+Three ways to specify the location, in order of precedence:
 
 **From the CLI:**
 
@@ -74,7 +74,7 @@ tiozin run examples/jobs/dummy.yaml
 
 ## Registries
 
-`tiozin.yaml` has a `registries` key where you configure up to seven registries. Each registry connects the framework to a backend service: job definitions, schemas, and secrets.
+The `registries` key declares the registry implementations that connect the framework to the metadata backends: job definitions, schemas, and secrets.
 
 Every registry block uses the same set of fields:
 
@@ -91,13 +91,13 @@ registries:
     failfast: false
 ```
 
-See [Registry fields](reference.md#registry-fields) for a description of each field and [Default kinds](reference.md#default-kinds) for what Tiozin uses when you omit a registry.
+See [Registry fields](reference.md#registry-fields) for a description of each field and [Default kinds](reference.md#default-kinds) for what Tiozin uses when a registry is omitted.
 
 Tiozin resolves plugin kinds by class name, looking up the class across all installed families. If two families define a class with the same name, qualify it with the family prefix: `tio_kernel:FileJobRegistry`.
 
 The `transaction` and `metric` registries are declared in the framework as reserved slots. They accept configuration but are not yet backed by functional implementations.
 
-## Runtime defaults
+## Runtime Defaults
 
 `runtime_defaults` declares fallback arguments for specific plugin kinds. When a job loads a plugin matching a declared `kind`, any fields not explicitly set in the job definition are filled from the defaults here.
 
@@ -121,11 +121,11 @@ runtime_defaults:
 
 Job arguments always win. Defaults fill in missing or `null` fields only, including inside nested mappings.
 
-## Templates in configuration
+## Templates in Configuration
 
 Both `registries` and `runtime_defaults` string fields accept Jinja2 templates, but with different variable scopes.
 
-### Registry fields
+### Registry Fields
 
 ```yaml
 registries:
@@ -144,7 +144,7 @@ Tiozin resolves these templates at setup time. Only two variables are available:
 
 Rendered values remain in effect for the registry's entire lifetime. Tiozin restores the original template strings on teardown.
 
-### Runtime defaults fields
+### Runtime Defaults Fields
 
 ```yaml
 runtime_defaults:
@@ -160,7 +160,7 @@ runtime_defaults:
 | `DAY` | Current date and time, as a [TemplateDate](../templates.md) |
 | `org`, `domain`, `product`, … | Job context fields |
 
-## Settings delegation
+## Settings Delegation
 
 A `tiozin.yaml` can hand off its configuration to another settings file by declaring a `setting` registry under `registries`. Tiozin boots that registry and reads its configuration instead. If that file also declares a `registries.setting`, the process repeats. The chain stops at the first file that has no `setting` key.
 
