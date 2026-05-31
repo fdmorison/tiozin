@@ -1,6 +1,6 @@
 # tio_kernel
 
-`tio_kernel` is the built-in Tiozin family. It ships with every Tiozin installation, cannot be disabled or replaced, and provides the baseline components for running pipelines, loading job manifests, and managing settings. No installation step is required.
+`tio_kernel` is the built-in Tiozin family. It ships with every Tiozin installation, cannot be disabled or replaced, and provides the baseline components for running pipelines, loading job manifests, and managing settings. It is available the moment Tiozin is installed.
 
 All defaults it provides can be overridden by plugins from other families.
 
@@ -10,5 +10,6 @@ All defaults it provides can be overridden by plugins from other families.
 - [FileJobRegistry](file-job-registry.md)
 - [FileSettingRegistry](file-setting-registry.md)
 - [EnvSecretRegistry](env-secret-registry.md)
+- [AwsParameterStoreSecretRegistry](aws-parameter-store-secret-registry.md)
 - [OpenLineageRegistry](open-lineage-registry.md)
 - [NoOp components](noops.md)
