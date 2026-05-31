@@ -2,12 +2,13 @@
 
 See the [settings guide](index.md) for a full walkthrough.
 
-Tiozin reads configuration from environment variables at startup. Set them in your shell or a `.env` file. See [.env files](#env-files) for how Tiozin discovers them.
+Tiozin reads configuration from environment variables at startup. Set them in a shell or a `.env` file. See [.env files](#env-files) for how Tiozin discovers them.
 
 ## General
 
 | Variable | Description | Default |
 |---|---|---|
+| `HOSTNAME` | Application hostname, also used as the pod name in Kubernetes | system hostname |
 | `TIO_JOB_NAMESPACE_TEMPLATE` | Jinja template used to derive `namespace` when not set on the job | `{{org}}.{{region}}.{{domain}}.{{subdomain}}` |
 
 Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`.
@@ -23,7 +24,7 @@ Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, 
 | `TIO_LOG_SHOW_LOCALS` | Include local variables in exception tracebacks | `false` |
 | `TIO_LOG_REDACT_MIN_LENGTH` | Minimum secret length to qualify for redaction in logs | `3` |
 
-## Registry settings
+## Registry Settings
 
 <table>
   <thead>
@@ -79,7 +80,7 @@ Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, 
   </tbody>
 </table>
 
-## .env files
+## .env Files
 
 Tiozin loads `.env` files automatically from these locations, in order:
 

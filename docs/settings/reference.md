@@ -2,7 +2,7 @@
 
 See the [settings guide](index.md) for a full walkthrough.
 
-## Registry fields
+## Registry Fields
 
 Every registry in `tiozin.yaml` accepts the same set of fields.
 
@@ -17,9 +17,9 @@ Every registry in `tiozin.yaml` accepts the same set of fields.
 | `cache` | When `true`, retrieved metadata is cached in memory | `false` |
 | `failfast` | When `true`, raises an error when metadata is not found; when `false`, returns `null` | `true` |
 
-## Default kinds
+## Default Kinds
 
-Registries you do not declare in `tiozin.yaml` fall back to these defaults.
+Any registry omitted from `tiozin.yaml` uses these defaults.
 
 | Registry | Default kind |
 |---|---|
@@ -31,7 +31,7 @@ Registries you do not declare in `tiozin.yaml` fall back to these defaults.
 | `lineage` | `tio_kernel:NoOpLineageRegistry` |
 | `metric` | `tio_kernel:NoOpMetricRegistry` |
 
-## runtime_defaults structure
+## runtime_defaults Entries
 
 `runtime_defaults` is a list. Each entry requires a `kind` field matching a plugin class name, followed by any number of plugin-specific arguments.
 
