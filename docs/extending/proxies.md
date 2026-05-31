@@ -1,6 +1,6 @@
 # Tio Proxy: Adding Cross Cutting Family Features
 
-When you build a family (a set of Inputs, Transforms, and Outputs for a specific engine), you often want the same behavior everywhere: logging, debug options, shortcuts to the session. Repeating that code in every step is error-prone. `@tioproxy` is how a provider family adds its own features and behaviors to every Tiozin it ships.
+When building a family (a set of Inputs, Transforms, and Outputs for a specific engine), the same behavior is often required everywhere: logging, debug options, shortcuts to the session. Repeating that code in every step is error-prone. `@tioproxy` is how a provider family adds its own features and behaviors to every Tiozin it ships.
 
 ## Adding Behavior
 
@@ -35,13 +35,13 @@ transforms:
 
 `self.info()` is a structured logging method inherited from the `Loggable` mixin that all Tiozin components extend. `wrapt.ObjectProxy` forwards attribute access to the wrapped object, so calling `self.info()` inside a proxy works the same as calling it on the Tiozin directly.
 
-A proxy wraps the real Tiozin and adds behavior around its methods. The framework and the Tiozin do not know the proxy is there. This is different from middleware or chain-of-responsibility, where multiple handlers decide whether to pass a request forward. A proxy wraps a single target. You are extending an object, not building a request pipeline.
+A proxy wraps the real Tiozin and adds behavior around its methods. The framework and the Tiozin do not know the proxy is there. This is different from middleware or chain-of-responsibility, where multiple handlers decide whether to pass a request forward. A proxy wraps a single target. It extends an object, rather than building a request pipeline.
 
 The proxy is invisible to the step author. It adds behavior automatically.
 
-## Adding a family-level feature
+## Adding a Family-Level Feature
 
-A proxy can also react to configuration the user sets in YAML. That is how you add a feature (like `show: true`) that any step can opt into without changing the step itself.
+A proxy can also react to configuration the user sets in YAML. That is how to add a feature (like `show: true`) that any step can opt into without changing the step itself.
 
 Every step in Tiozin collects any extra YAML properties that are not declared constructor parameters into `self.options`. When a user sets `show: true`, the value lands in `self.options["show"]`. The proxy reads it and calls `df.show()` after the transform:
 
@@ -74,7 +74,7 @@ transforms:
 
 ## Explicit Properties with a Mixin
 
-Reading `show` from `options` works, but it is implicit: nothing in the code tells you that `show` exists or what it does. A mixin makes it explicit by declaring `show` as a constructor parameter, keeping it out of `options` and making it visible to IDEs:
+Reading `show` from `options` works, but it is implicit: nothing in the code signals that `show` exists or what it does. A mixin makes it explicit by declaring `show` as a constructor parameter, keeping it out of `options` and making it visible to IDEs:
 
 ```python
 import wrapt
@@ -111,11 +111,11 @@ transforms:
 
 The proxy reads `self.show` directly instead of going through `options`.
 
-## Sharing behavior and features across a family
+## Sharing Behavior and Features Across a Family
 
 Applying `@tioproxy` to every step separately means repeating the decorator. The idiomatic approach is to apply it to shared base classes instead. Every step that extends one of those bases inherits the proxies automatically.
 
-At this stage, the proxies also need to cover `read()` and `write()` so the behavior applies to Inputs and Outputs too, not just Transforms:
+At this stage, the proxies also need to cover `read()` and `write()` so the behavior applies to Inputs and Outputs too, not only Transforms:
 
 ```python
 import wrapt
@@ -207,7 +207,7 @@ outputs:
 
 ## Quick reference
 
-Here is what the proxy gives you as a family developer:
+Here is what the proxy provides to a family developer:
 
 - Proxy classes must inherit from `wrapt.ObjectProxy`.
 - Attach a proxy with `@tioproxy(ProxyClass)`. Combine multiple proxies in one call: `@tioproxy(ProxyA, ProxyB)`. The first proxy listed is the outermost wrapper and runs first.

@@ -17,7 +17,6 @@ A design decision was required to define:
 
 Without a clear boundary, there is a risk of gradually accumulating execution logic, engine-specific behavior, or domain features in the default provider, leading to architectural drift.
 
----
 
 ## Decision
 
@@ -31,7 +30,6 @@ While TioKernel itself is fixed, the plugins it supplies act as **defaults** and
 
 The role of TioKernel is to guarantee that the system is always **complete and executable**, even in the absence of additional providers.
 
----
 
 ## Responsibilities of TioKernel
 
@@ -50,13 +48,12 @@ Feature-complete, production-usable implementations for common and stable config
 
 These defaults represent opinionated but broadly applicable practices commonly adopted by data teams, such as managing configuration, schemas, and job definitions in files or environment variables.
 
----
 
 ### No-op defaults
 
 Explicit no-op implementations that allow the system to remain complete while making optional or non-executable behavior explicit and safe.
 
-**Optional registries** — concerns that are cross-cutting or not always required:
+**Optional registries** (concerns that are cross-cutting or not always required):
 
 - Metric Registry
 - Lineage Registry
@@ -64,7 +61,7 @@ Explicit no-op implementations that allow the system to remain complete while ma
 
 These registries may remain as no-op in production when observability or governance concerns are not needed.
 
-**Execution plugins** — allow bootstrapping and validation without real execution:
+**Execution plugins** (allow bootstrapping and validation without real execution):
 
 - Inputs
 - Transforms
@@ -73,7 +70,6 @@ These registries may remain as no-op in production when observability or governa
 
 These implementations enable Tiozin to boot, validate configurations, run dry-runs, and demonstrate behavior without performing real execution. They are not intended for production workloads.
 
----
 
 ## Rationale
 
@@ -83,7 +79,7 @@ This decision is based on the following principles:
 
 - **Minimal in scope, not in capability**: TioKernel contains only essential system components, but those components may be fully featured when they represent common and stable patterns.
 
-- **Behavioral clarity**: Defaults make system behavior explicit — functionality is either provided, intentionally absent (no-op), or simplified for demonstration, but never implicit or missing.
+- **Behavioral clarity**: Defaults make system behavior explicit. Functionality is either provided, intentionally absent (no-op), or simplified for demonstration, but never implicit or missing.
 
 - **Clear separation of concerns**: TioKernel defines structure and safe defaults; specialized providers define real execution behavior and domain-specific logic.
 
@@ -91,7 +87,6 @@ This decision is based on the following principles:
 
 The name **TioKernel** reflects its foundational role: it guarantees system completeness without imposing execution strategy.
 
----
 
 ## Consequences
 
@@ -111,7 +106,6 @@ The name **TioKernel** reflects its foundational role: it guarantees system comp
 
 These trade-offs are intentional and accepted.
 
----
 
 ## Alternatives Considered
 
@@ -134,7 +128,6 @@ Rejected because the system would not be able to boot at all without explicit pr
 Without a default provider, Tiozin would fail during initialization, preventing validation,
 demonstration, or any form of simple execution, and making a quick start impossible.
 
----
 
 ## Notes
 

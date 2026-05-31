@@ -19,13 +19,14 @@ registries:
 | `api_key` | Bearer token for API key authentication | |
 | `readonly` | Reject write operations | `false` |
 | `cache` | Cache retrieved metadata in memory | `false` |
+| `emit_level` | Controls which events are emitted: `JOB` (job-level only), `STEP` (steps only), or `ALL` (job and steps) | `JOB` |
 | `failfast` | When `true`, raises when metadata is not found; when `false`, returns `null` | `false` |
 | `name` | Display name for this registry instance | |
 | `description` | Human-readable description | |
 
 ## How it works
 
-You do not call lineage methods directly. The framework emits events automatically at each job lifecycle transition:
+Lineage methods are not called directly. The framework emits events automatically at each job lifecycle transition:
 
 | State | When |
 |---|---|
@@ -95,7 +96,7 @@ registries:
 
 ## Custom transport
 
-Any extra field in the manifest is forwarded as a keyword argument to `OpenLineageClient`. This lets you configure transports beyond the default HTTP setup.
+Any extra field in the manifest is forwarded as a keyword argument to `OpenLineageClient`. This allows configuring transports beyond the default HTTP setup.
 
 The example below uses Kafka. The `transport` field is passed directly as `transport=` to `OpenLineageClient`:
 

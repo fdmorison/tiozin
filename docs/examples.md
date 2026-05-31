@@ -1,6 +1,6 @@
 # Examples
 
-All examples live under [`examples/jobs/`](../examples/jobs/) in the repository. Each is a self-contained job manifest you can run directly with `tiozin run`.
+All examples live under [`examples/jobs/`](../examples/jobs/) in the repository. Each is a self-contained job manifest runnable directly with `tiozin run`.
 
 ## How the folder structure works
 
@@ -42,7 +42,7 @@ Both approaches are valid. SQL transforms are faster to write for ad hoc logic. 
 
 **[`examples/jobs/dummy.yaml`](../examples/jobs/dummy.yaml)**
 
-The starting point. No additional packages needed, no execution engine to configure. Shows the full YAML layout: job metadata, domain fields, runner, inputs, transforms, and outputs. Also demonstrates Jinja templates in path fields.
+The starting point. Runs against `tio_kernel` alone, using the built-in NoOp runner and steps. Shows the full YAML layout: job metadata, domain fields, runner, inputs, transforms, and outputs. Also demonstrates Jinja templates in path fields.
 
 ```bash
 tiozin run examples/jobs/dummy.yaml
@@ -50,7 +50,7 @@ tiozin run examples/jobs/dummy.yaml
 
 ## Ecommerce
 
-A two-step pipeline split across three jobs: raw ingestion for customers and orders, followed by a refined join. The same scenario is implemented in both Spark and DuckDB so you can compare the two side by side. Only the `kind` fields change. The job structure, YAML layout, and intent are identical.
+A two-step pipeline split across three jobs: raw ingestion for customers and orders, followed by a refined join. The same scenario is implemented in both Spark and DuckDB for a side by side comparison. Only the `kind` fields change. The job structure, YAML layout, and intent are identical.
 
 ### Spark
 

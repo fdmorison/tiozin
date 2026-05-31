@@ -37,7 +37,7 @@ The `format` field is passed directly to Spark's `DataFrameReader.format()`.
 
 ## Adding file path columns
 
-When reading from multiple files, you often need to know which file each row came from. Set `explode_filepath: true` to add file-level columns to every row:
+When reading from multiple files, identifying which file each row came from is often necessary. Set `explode_filepath: true` to add file-level columns to every row:
 
 | Column | Value |
 |---|---|

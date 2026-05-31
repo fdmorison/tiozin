@@ -44,4 +44,4 @@ registries:
     location: s3://my-bucket/config/tiozin.yaml
 ```
 
-This lets you keep a minimal local file that points to a shared remote configuration.
+This keeps a minimal local file that points to a shared remote configuration.

@@ -30,9 +30,9 @@ The `tio_kernel` family ships several production-ready implementations:
 | `FileSchemaRegistry` | `SchemaRegistry` | Loads schema files from any fsspec-supported location |
 | `OpenLineageRegistry` | `LineageRegistry` | Sends run events to any OpenLineage-compatible backend via HTTP |
 
-NoOp versions are available for every registry type: `NoOpLineageRegistry`, `NoOpSchemaRegistry`, `NoOpMetricRegistry`, `NoOpSecretRegistry`, `NoOpSettingRegistry`, and `NoOpTransactionRegistry`. They do nothing or return safe fallback values. Use them in local development and testing when you do not need a real backend.
+NoOp versions are available for every registry type: `NoOpLineageRegistry`, `NoOpSchemaRegistry`, `NoOpMetricRegistry`, `NoOpSecretRegistry`, `NoOpSettingRegistry`, and `NoOpTransactionRegistry`. They do nothing or return safe fallback values. Use them in local development and testing when no real backend is needed.
 
-`FileJobRegistry` is the registry used when you run `tiozin run path/to/job.yaml`. Set `location` to a folder, S3 prefix, or HTTP base URL and jobs are loaded by name relative to it:
+`FileJobRegistry` is the registry used by `tiozin run path/to/job.yaml`. Set `location` to a folder, S3 prefix, or HTTP base URL and jobs are loaded by name relative to it:
 
 ```yaml
 registries:
@@ -78,4 +78,4 @@ class VaultSecretRegistry(SecretRegistry):
         vault_client.write_secret(identifier, value)
 ```
 
-Once implemented, register your registry as a Tiozin via Python `entry_points`. See [Working with Registries](../extending/registry.md).
+Once implemented, register the registry as a Tiozin via Python `entry_points`. See [Working with Registries](../extending/registry.md).

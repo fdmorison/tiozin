@@ -30,10 +30,10 @@ Inherits all [SparkRunner](runner.md) options, plus:
 
 | Value | Description |
 |---|---|
-| `hadoop` | Filesystem-based catalog. No external service needed. Works with local paths, S3, GCS, etc. |
+| `hadoop` | Filesystem-based catalog. Runs entirely on the filesystem and works with local paths, S3, GCS, etc. |
 | `hive` | Uses the Hive metastore. Requires `catalog_uri` pointing to the metastore |
 | `rest` | REST catalog API (Project Nessie, Polaris, Unity Catalog, etc.). Requires `catalog_uri` |
-| `glue` | AWS Glue Data Catalog. No `catalog_uri` needed. Uses the AWS SDK credential chain |
+| `glue` | AWS Glue Data Catalog. Resolves the catalog endpoint and credentials from the AWS SDK credential chain |
 | `jdbc` | JDBC-backed catalog. Requires `catalog_uri` with the JDBC connection string |
 | `nessie` | Project Nessie catalog. Requires `catalog_uri` pointing to the Nessie server |
 

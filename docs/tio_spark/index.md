@@ -27,7 +27,7 @@ transforms:
     # raw_customers is available because the input was registered under that slug
 ```
 
-This view registration happens at the framework level for all inputs and transforms. No step needs to do it explicitly.
+This view registration happens at the framework level for all inputs and transforms.
 
 ## Components
 
@@ -36,6 +36,7 @@ This view registration happens at the framework level for all inputs and transfo
 - [SparkFileInput](file-input.md)
 - [SparkSqlTransform](sql-transform.md)
 - [SparkFileOutput](file-output.md)
+- [SparkWordCountTransform](../examples.md#shakespeare)
 
 To implement a custom Input, Transform, or Output from scratch, see [Creating Pluggable Tiozins](../extending/tiozins.md).
 

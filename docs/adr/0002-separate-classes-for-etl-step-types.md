@@ -6,8 +6,8 @@ Accepted
 
 ## Context
 
-Tiozin's ETL layer is structured around three step types — `Input`, `Transform`, and `Output` —
-each with a corresponding proxy (`InputProxy`, `TransformProxy`, `OutputProxy`) and manifest
+Tiozin's ETL layer is structured around three step types: `Input`, `Transform`, and `Output`.
+Each has a corresponding proxy (`InputProxy`, `TransformProxy`, `OutputProxy`) and manifest
 (`InputManifest`, `TransformManifest`, `OutputManifest`).
 
 The three step types share structural similarities: lifecycle hooks (`setup`, `teardown`), schema
@@ -22,7 +22,6 @@ A design decision was required to define:
 * How to preserve intentional behavioral differences without them being mistaken for bugs
 * How to keep the door open for future unification without forcing it prematurely
 
----
 
 ## Decision
 
@@ -32,12 +31,11 @@ shared implementation base beyond `Tiozin` (the framework root).
 `InputProxy`, `TransformProxy`, and `OutputProxy` are likewise **separate, independent classes**
 with no shared proxy base.
 
-`InputManifest`, `TransformManifest`, and `OutputManifest` follow the same principle — each is
+`InputManifest`, `TransformManifest`, and `OutputManifest` follow the same principle. Each is
 a separate, independent class with no shared manifest base beyond `Manifest`.
 
 Behavioral similarities are maintained **by convention and discipline**, not by inheritance.
 
----
 
 ## Behavioral Differences That Motivate Separation
 
@@ -54,7 +52,6 @@ The three step types are not variations of a single concept. They have distinct 
 These differences are intentional and reflect the distinct role each type plays in the pipeline.
 Collapsing them into a shared base would require conditional branching that obscures those roles.
 
----
 
 ## Rationale
 
@@ -70,25 +67,23 @@ Collapsing them into a shared base would require conditional branching that obsc
   the three types have stabilized and their common ground is well-understood. That moment has
   not yet arrived.
 
----
 
 ## Conventions Maintained to Facilitate Future Unification
 
 To prevent the classes from diverging by accident rather than intent, the following conventions
 are enforced:
 
-* **Proxy structure**: all three proxies follow the same internal structure — `setup` and
+* **Proxy structure**: all three proxies follow the same internal structure. `setup` and
   `teardown` raise `AccessViolationError`, the execution method runs inside `context` and
   `TiozinTemplateOverlay`, and lifecycle timestamps are recorded in the same order.
 * **Schema handling pattern**: all three guard on `schema_subject` before calling the registry,
   and assign to `context.output_schema` in the same position.
-* **Manifest structure**: all three manifests declare the same field groups — identity, business
-  taxonomy, and specific fields — in the same order.
+* **Manifest structure**: all three manifests declare the same field groups (identity, business
+  taxonomy, and specific fields) in the same order.
 
 These conventions make accidental divergence visible in code review and make eventual extraction
 mechanical rather than investigative.
 
----
 
 ## Consequences
 
@@ -107,7 +102,6 @@ mechanical rather than investigative.
 
 These trade-offs are intentional and accepted.
 
----
 
 ## Alternatives Considered
 
@@ -120,10 +114,9 @@ purpose of each type.
 ### Single generic `StepProxy` with type parameters
 
 Rejected for the same reason. The differences between `read()`, `transform()`, and `write()`
-are not variations of a single operation — they are distinct contracts with different
+are not variations of a single operation. They are distinct contracts with different
 signatures, argument handling, and return semantics.
 
----
 
 ## Notes
 

@@ -41,7 +41,7 @@ transforms:
 
 ## The @data alias
 
-`@data` is a shorthand that resolves to the slug of the upstream step at query time. Use it when you want to write a generic transform without hardcoding the upstream step name.
+`@data` is a shorthand that resolves to the slug of the upstream step at query time. Use it to write a generic transform without hardcoding the upstream step name.
 
 ```yaml
 transforms:

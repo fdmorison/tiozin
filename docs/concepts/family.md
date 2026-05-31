@@ -38,8 +38,8 @@ runtime required to bootstrap the framework.
 Families evolve independently from the core. This keeps each provider replaceable and testable in isolation.
 
 Multiple Families together form the ecosystem, which expands as new ones
-are introduced. You are free to define your own, public or private,
-with whatever name you choose.
+are introduced. New families can be defined freely, public or private,
+with any chosen name.
 
 ## What is a Tiozin?
 

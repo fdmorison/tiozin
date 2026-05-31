@@ -50,7 +50,7 @@ outputs:
 
 This produces directories like `.output/lake/orders/country=BR/date=2024-01-01/`.
 
-When `partition_by` is empty, `PER_THREAD_OUTPUT true` is added to the `COPY TO` statement to allow parallel writes. When `partition_by` is set, `PER_THREAD_OUTPUT` is excluded — the two options are mutually exclusive in DuckDB.
+When `partition_by` is empty, `PER_THREAD_OUTPUT true` is added to the `COPY TO` statement to allow parallel writes. When `partition_by` is set, `PER_THREAD_OUTPUT` is excluded: the two options are mutually exclusive in DuckDB.
 
 ## Lineage
 

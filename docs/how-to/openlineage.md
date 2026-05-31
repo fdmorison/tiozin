@@ -4,7 +4,7 @@ Send job lineage events to any [OpenLineage](https://openlineage.io/)-compatible
 
 ## The basics
 
-Add `OpenLineageRegistry` to your `tiozin.yaml`:
+Add `OpenLineageRegistry` to `tiozin.yaml`:
 
 ```yaml
 # tiozin.yaml
@@ -14,7 +14,7 @@ registries:
     location: http://localhost:5000
 ```
 
-That is all you need. On every job run, Tiozin emits `START`, `COMPLETE`, and `FAIL` events automatically. You do not call any lineage methods in your code.
+That is all the configuration required. On every job run, Tiozin emits `START`, `COMPLETE`, and `FAIL` events automatically. Lineage methods are never called from user code.
 
 ## What gets emitted
 
@@ -61,7 +61,7 @@ When a dataset has a schema attached, it is included in the lineage event. Neste
 
 ## Emit level
 
-By default, Tiozin emits one pair of events per job run (job-level lineage). You can switch to step-level or emit both.
+By default, Tiozin emits one pair of events per job run (job-level lineage). Switch to step-level or emit both.
 
 | Value | What gets emitted |
 |---|---|
@@ -86,11 +86,11 @@ Or via environment variable:
 export TIO_LINEAGE_REGISTRY_EMIT_LEVEL=ALL
 ```
 
-Step-level events carry a `parent` facet pointing to the job run, so your lineage backend can group them correctly.
+Step-level events carry a `parent` facet pointing to the job run, so the lineage backend can group them correctly.
 
 ## Lineage is best-effort
 
-Lineage errors never interrupt job execution. If the backend is unreachable or returns an error, Tiozin logs a warning and continues. You will not see a job failure because of a lineage issue.
+Lineage errors never interrupt job execution. If the backend is unreachable or returns an error, Tiozin logs a warning and continues. A job will not fail because of a lineage issue.
 
 ## Marquez
 
@@ -149,7 +149,7 @@ For the full list of transport options, see the [OpenLineage Python client refer
 
 ## Job namespace
 
-The job namespace places the job in your organization's lineage graph. By default it is `{{org}}.{{region}}.{{domain}}.{{subdomain}}`.
+The job namespace places the job in the organization's lineage graph. By default it is `{{org}}.{{region}}.{{domain}}.{{subdomain}}`.
 
 Override it on a specific job:
 
@@ -165,7 +165,7 @@ Change the global default with `TIO_JOB_NAMESPACE_TEMPLATE`:
 TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{domain}}"
 ```
 
-The namespace is always logical: it represents where the job fits in your organization, not where the data lives.
+The namespace is always logical: it represents where the job fits in the organization, not where the data lives.
 
 ## Dataset namespaces
 
@@ -179,7 +179,7 @@ Dataset namespaces point to the system where data physically lives. Follow the [
 | Kafka | `kafka://broker:9092` |
 | BigQuery | `bigquery` |
 
-Override `external_datasets()` on your Input or Output to report the physical dataset it touches:
+Override `external_datasets()` on an Input or Output to report the physical dataset it touches:
 
 ```python
 from tiozin import Output, Dataset, Datasets
