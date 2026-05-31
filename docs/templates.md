@@ -88,7 +88,7 @@ url: jdbc:postgresql://host:5432/db?password={{ SECRET.DB_PASSWORD }}
 
 If the secret is not found, Tiozin raises `SecretNotFoundError` at render time.
 
-The default registry reads secrets from environment variables. To use a different backend (Vault, AWS Secrets Manager, etc.), configure `registries.secret` in `tiozin.yaml`. See [Settings Reference](settings.md) and [EnvSecretRegistry](tio_kernel/env-secret-registry.md).
+The default registry reads secrets from environment variables. To use a different backend (Vault, AWS Secrets Manager, etc.), configure `registries.secret` in `tiozin.yaml`. See [Settings Guide](settings/index.md) and [EnvSecretRegistry](tio_kernel/env-secret-registry.md).
 
 ## Date variables
 

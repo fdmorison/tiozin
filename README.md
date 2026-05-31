@@ -126,7 +126,9 @@ Tiozin is human-readable and machine-generatable:
 - [How to Use Secrets in Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/secrets.md)
 
 ### Reference
-- [Settings Reference: tiozin.yaml](https://github.com/fdmorison/tiozin/blob/main/docs/settings.md)
+- [Settings Guide](https://github.com/fdmorison/tiozin/blob/main/docs/settings/index.md)
+- [Settings: YAML Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings/reference.md)
+- [Settings: Environment Variable Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings/env.md)
 - [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)
 - [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
 

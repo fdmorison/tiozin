@@ -118,4 +118,4 @@ registries:
     region: us-east-1
 ```
 
-See [Settings Reference](../settings.md) for the full list of registry slots and configuration options.
+See [Settings Guide](../settings/index.md) for the full list of registry slots and configuration options.
