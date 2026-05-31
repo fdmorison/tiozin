@@ -19,12 +19,12 @@ which reads from any path supported by fsspec: local paths, `s3://`, `gs://`, `a
 
 ## How `app.run()` resolves a job
 
-When you pass a string, `TiozinApp.run()` first tries to parse it as YAML or JSON. If that
+When given a string, `TiozinApp.run()` first tries to parse it as YAML or JSON. If that
 succeeds, the manifest is built directly without a registry lookup. If parsing fails, the string is
 treated as an identifier and handed to the `JobRegistry`, which resolves it to a manifest.
 
 A custom [`JobRegistry`](api.md) could resolve identifiers from a REST API, a database table, or
-any other source. The identifier is just a string. The registry decides what to do with it.
+any other source. The identifier is a plain string. The registry decides what to do with it.
 
 In production, the recommended pattern is to store manifests in a registry-compatible backend and
 trigger execution by identifier. This decouples job authoring from job execution and keeps the
@@ -69,7 +69,7 @@ Useful when job definitions are assembled dynamically or come from an API.
 ## From a JobManifest
 
 [`JobManifest`](api.md) is a typed Pydantic object. Use it when jobs come from a database, API, or
-registry and you want validation at construction time:
+registry and validation at construction time is required:
 
 ```python
 from tiozin import (
@@ -260,7 +260,7 @@ outputs:
     name: write_to_archive
 ```
 
-## namespace
+## Namespace
 
 Every job has a `namespace` field. Set it to any string:
 

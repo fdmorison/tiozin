@@ -1,6 +1,6 @@
 # Working with Registries
 
-Registries are a type of Tiozin. Tiozin discovers them by class name via Python `entry_points`, just like Inputs, Transforms, and Outputs. Unlike step components, registries start before the first job runs and stop when the app shuts down.
+Registries are a type of Tiozin. Tiozin discovers them by class name via Python `entry_points`, the same way it discovers Inputs, Transforms, and Outputs. Unlike step components, registries start before the first job runs and stop when the app shuts down.
 
 ## Implementing a Registry
 

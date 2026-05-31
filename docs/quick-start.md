@@ -2,7 +2,7 @@
 
 Build a working job manifest one section at a time. Each section introduces one group of fields, explains what they do, and shows the final result.
 
-## Run your first job
+## Run a First Job
 
 Create this file and run it:
 
@@ -125,7 +125,7 @@ Tiozin passes `strategy`, `group_by`, and any other provider-specific fields dir
 
 ## Write outputs
 
-Outputs write data to a destination. They are optional. You can have more than one output.
+Outputs write data to a destination. They are optional. A job can declare more than one output.
 
 ```yaml
 outputs:

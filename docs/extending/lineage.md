@@ -18,11 +18,11 @@ Or change the default globally with `TIO_JOB_NAMESPACE_TEMPLATE`:
 TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{domain}}"
 ```
 
-The job namespace is always logical. It represents where the job fits in your organization, not where the data lives. `acme.latam.ecommerce.checkout` is a domain address, not a system address.
+The job namespace is always logical. It represents where the job fits in the organization, not where the data lives. `acme.latam.ecommerce.checkout` is a domain address, not a system address.
 
 ## Dataset lineage
 
-Override `external_datasets()` on your Input or Output to report the physical dataset it touches:
+Override `external_datasets()` on an Input or Output to report the physical dataset it touches:
 
 ```python
 from tiozin import Dataset, Datasets
@@ -44,6 +44,6 @@ class SQLiteOutput(Output[str]):
         )
 ```
 
-If you skip it, the framework falls back to a logical dataset derived from the job's taxonomy. Good enough for development, but it does not point to a real system.
+When omitted, the framework falls back to a logical dataset derived from the job's taxonomy. Good enough for development, but it does not point to a real system.
 
 The dataset namespace is always infrastructure. It points to the system where the data physically lives: `postgres://host:5432`, `kafka://broker:9092`, `s3://my-bucket`, `bigquery`. Follow the [OpenLineage naming spec](https://openlineage.io/docs/spec/naming/) for the exact format per backend. The `name` identifies the dataset within that system: a table, a topic, a path.

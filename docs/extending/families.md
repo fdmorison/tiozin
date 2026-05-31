@@ -2,7 +2,7 @@
 
 A provider family is an independent Python package that adds new execution backends to Tiozin. Families are discovered automatically via Python `entry_points`.
 
-**A family is a package, not a plugin.** One entry_point registration makes the entire package available, and every class you choose to expose becomes a Tiozin. This is different from frameworks like Airflow, where each plugin class is registered individually. Register the family once and expose as many Tiozins as you need from a single package.
+**A family is a package, not a plugin.** One entry_point registration makes the entire package available, and every class exposed by the package becomes a Tiozin. This is different from frameworks like Airflow, where each plugin class is registered individually. Register the family once and expose as many Tiozins as needed from a single package.
 
 ## Package naming
 
@@ -12,7 +12,7 @@ Provider packages must be prefixed with `tio_` or `tia_`:
 - `tia_cassandra`
 - `tio_john`
 
-The prefix is how the framework identifies and groups your Tiozins. Pick whichever prefix fits your style. Both work identically.
+The prefix is how the framework identifies and groups Tiozins. Pick whichever prefix fits. Both work identically.
 
 ## Project structure
 
@@ -30,24 +30,24 @@ tio_dilbert/
 │   └── compose/        ← optional: assembly helpers, utilities
 ```
 
-Add `proxies` and `compose` when you need shared behavior across all steps in your family or internal utilities that do not belong in the public API. See [Creating Pluggable Tiozins](tiozins.md) for how `@tioproxy` works.
+Add `proxies` and `compose` when shared behavior across all steps in the family is needed, or for internal utilities that do not belong in the public API. See [Creating Pluggable Tiozins](tiozins.md) for how `@tioproxy` works.
 
 ## Registering via entry_points
 
-In `pyproject.toml`, declare your family under the `tiozin.family` group:
+In `pyproject.toml`, declare the family under the `tiozin.family` group:
 
 ```toml
 [project.entry-points."tiozin.family"]
 tio_dilbert = "tio_dilbert"
 ```
 
-The key is the family name (your package name). The value is the Python import path of your package's `__init__.py`, which defines the family's public API.
+The key is the family name (the package name). The value is the Python import path of the package's `__init__.py`, which defines the family's public API.
 
-This single declaration is the entire registration contract. Tiozin discovers all installed families at startup by scanning packages registered under `tiozin.family`, imports each one, and makes all their exported Tiozins available by class name. No additional registration calls, decorators, or configuration files are needed.
+This single declaration is the entire registration contract. Tiozin discovers all installed families at startup by scanning packages registered under `tiozin.family`, imports each one, and makes all their exported Tiozins available by class name. The entry point declaration is the only registration step a family needs.
 
 ## Public API
 
-The family's public API is defined by its `__init__.py`. Export every Tiozin you want users to access:
+The family's public API is defined by its `__init__.py`. Export every Tiozin meant for user access:
 
 ```python
 # tio_dilbert/__init__.py
@@ -68,7 +68,7 @@ A family typically provides:
 - Optionally **Transforms** (technology-specific transformations)
 - Optionally **Registries** (metadata services backed by the technology)
 
-You do not need to implement all roles. Provide only what makes sense for your technology.
+A family can implement any subset of these roles. Provide only what makes sense for the underlying technology.
 
 ## Installing and using a family
 
@@ -87,7 +87,7 @@ pip install tiozin[tio_duckdb]
 
 `tio_kernel` is the exception: it ships with Tiozin and requires no separate installation. The next section explains what it provides.
 
-Once installed, all Tiozins from your family are immediately available in job YAML files using their class name as the `kind`:
+Once installed, all Tiozins from the family are immediately available in job YAML files using their class name as the `kind`:
 
 ```yaml
 runner:
@@ -115,7 +115,7 @@ kind: tio_dilbert:DilbertInput
 kind: tio_dilbert.inputs.dilbert_input.DilbertInput
 ```
 
-Use the short name by default. Switch to the family-qualified form if you get a `PluginConflictError` at startup.
+Use the short name by default. Switch to the family-qualified form when a `PluginConflictError` is raised at startup.
 
 ## tio_kernel: the built-in family
 

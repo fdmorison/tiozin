@@ -6,7 +6,7 @@ Build Runner, Input, Transform, and Output plugins using a SQLite family as the 
 
 The Runner is the only component that can hold state. It creates the connection during `setup`, executes the plan during `run`, and releases everything during `teardown`.
 
-Start by defining the contract between your outputs and your runner. A `SQLiteWriteSpec` tells the runner exactly what needs to be written, without writing it yet.
+Start by defining the contract between outputs and the runner. A `SQLiteWriteSpec` tells the runner exactly what needs to be written, without writing it yet.
 
 ```python
 from dataclasses import dataclass
@@ -97,7 +97,7 @@ inputs:
         AND total > 100
 ```
 
-The `kind` is your class name exactly. The `name` is a required unique identifier within the job. The `description` is optional but useful for anyone reading the YAML later. Any parameter you define in `__init__`, like `query`, becomes a YAML field automatically.
+The `kind` is the class name exactly. The `name` is a required unique identifier within the job. The `description` is optional but useful for anyone reading the YAML later. Any parameter declared in `__init__`, like `query`, becomes a YAML field automatically.
 
 ## Implementing a Transform
 
@@ -120,7 +120,7 @@ class TaxTransform(Transform[str]):
         """
 ```
 
-This is where your business logic lives. Call external APIs, apply ML models, run SQL, compute aggregations. As long as you accept what the previous step returned and return something the next step can use, the framework does not care what happens in between.
+This is where business logic lives. Call external APIs, apply ML models, run SQL, compute aggregations. As long as the transform accepts what the previous step returned and returns something the next step can consume, the framework does not care what happens in between.
 
 In YAML:
 
@@ -245,22 +245,22 @@ Save it as `sqlite_orders_etl.yaml` and run it:
 tiozin run sqlite_orders_etl.yaml
 ```
 
-For `tiozin run` to resolve `SQLiteRunner`, `SQLiteInput`, `TaxTransform`, and `SQLiteOutput` by name, your package must declare a `tiozin.family` entry point. If you packaged your SQLite components as `tio_sqlite`, add this to your `pyproject.toml`:
+For `tiozin run` to resolve `SQLiteRunner`, `SQLiteInput`, `TaxTransform`, and `SQLiteOutput` by name, the package must declare a `tiozin.family` entry point. When the SQLite components are packaged as `tio_sqlite`, add this to `pyproject.toml`:
 
 ```toml
 [project.entry-points."tiozin.family"]
 tio_sqlite = "tio_sqlite"
 ```
 
-Install your package (e.g. `uv sync`, `poetry install`) and the classes become available to the framework. See [Creating a Provider Family](families.md) for the full walkthrough, including how to structure the package and what the family module must export.
+Install the package (e.g. `uv sync`, `poetry install`) and the classes become available to the framework. See [Creating a Provider Family](families.md) for the full walkthrough, including how to structure the package and what the family module must export.
 
 ## Additional patterns
 
 ### Lineage
 
-Tiozin automatically reports lineage at each job execution, making your plugins visible in a lineage graph.
+Tiozin automatically reports lineage at each job execution, making plugins visible in a lineage graph.
 
-To enable this, see [Lineage](lineage.md) for details on configuring the job namespace and overriding `external_datasets()` in your plugins.
+To enable this, see [Lineage](lineage.md) for details on configuring the job namespace and overriding `external_datasets()` in plugins.
 
 ### Stateless steps, stateful runner
 
