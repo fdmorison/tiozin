@@ -35,6 +35,13 @@ The audience is developers who will maintain, extend, and debug this code, and w
   - `# Arrange` for mocks, fixtures, inputs, and object setup
   - `# Act` for the SUT execution
   - `# Assert` for result validation
+- Reuse existing fixtures, mocks, and stubs before creating new ones
+- Never duplicate tests
+- Never remove or weaken failing tests without explicit authorization
+- Must follow additional rules from `.claude/rules/testing.md`
+
+## Policies
+
 - Always use explicit `actual` and `expected` variables in every assertion
   - ✔ `actual = result.status; expected = "ok"; assert actual == expected`
   - ✘ `assert result.status == "ok"`
@@ -44,13 +51,6 @@ The audience is developers who will maintain, extend, and debug this code, and w
 - Prefer `@patch` decorators over inline `with patch(...)` blocks
   - ✔ `@patch("tiozin.api.runner.load_job")`
   - ✘ `with patch("tiozin.api.runner.load_job") as mock_load:`
-- Reuse existing fixtures, mocks, and stubs before creating new ones
-- Never duplicate tests
-- Never remove or weaken failing tests without explicit authorization
-- Must follow additional rules from `.claude/rules/testing.md`
-
-## Policies
-
 - Each test should contain exactly one assertion
   - ✔ `assert actual == expected`
   - ✘ `assert result.status == "ok"; assert result.count == 3`
