@@ -52,6 +52,9 @@ tio_duckdb = [
 aws = [
   "boto3 ~=1.38",
 ]
+gcp = [
+  "google-cloud-secret-manager ~=2.23",
+]
 
 [dependency-groups]
 dev = [
@@ -69,7 +72,7 @@ test = [
   "pandas ==2.3.3",
   "pyarrow ==23.0.0",
   "numpy ==1.26.4",
-  "tiozin[tio_spark,tio_duckdb,aws]",
+  "tiozin[tio_spark,tio_duckdb,aws,gcp]",
 ]
 
 lint = [
