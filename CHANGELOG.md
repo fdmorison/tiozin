@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.2.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.1.0...tiozin-v3.2.0) (2026-06-01)
+
+
+### Features
+
+* **tio_kernel:** Add AwsParameterStoreSecretRegistry ([#208](https://github.com/fdmorison/tiozin/issues/208)) ([5c3c96b](https://github.com/fdmorison/tiozin/commit/5c3c96b6a53fe22837b48aa6c6f857e7a8730be8))
+* **tio_kernel:** Add Google Secret Manager registry ([#222](https://github.com/fdmorison/tiozin/issues/222)) ([bfd5545](https://github.com/fdmorison/tiozin/commit/bfd5545ca7137d0a22ae4943713a9295cbe8c2b6))
+
+
+### Bug Fixes
+
+* **core:** Surface infrastructure errors during template rendering ([#210](https://github.com/fdmorison/tiozin/issues/210)) ([ed62fb3](https://github.com/fdmorison/tiozin/commit/ed62fb303f339c63c3eb635cdb2fd89a485040e4))
+
+
+### Documentation
+
+* **core:** General prose review and documentation fixes ([#220](https://github.com/fdmorison/tiozin/issues/220)) ([1dce16b](https://github.com/fdmorison/tiozin/commit/1dce16b97c8d5ce6ee62c1b1a66339ee59e592da))
+* **core:** Split settings reference into focused pages ([#216](https://github.com/fdmorison/tiozin/issues/216)) ([4cd8228](https://github.com/fdmorison/tiozin/commit/4cd8228a7d91dd699f8ef4826191cc25a9e15605))
+
 ## [3.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.0.0...tiozin-v3.1.0) (2026-05-25)
 
 
