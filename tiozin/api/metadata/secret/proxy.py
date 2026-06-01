@@ -26,6 +26,7 @@ class SecretRegistryProxy(wrapt.ObjectProxy):
         registry: SecretRegistry = self.__wrapped__
 
         try:
+            registry.debug(f"Retrieving secret '{identifier}'")
             secret = registry.get(identifier)
             if not secret:
                 raise SecretNotFoundError(identifier)
