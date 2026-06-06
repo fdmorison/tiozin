@@ -51,4 +51,6 @@ tests/           # Unit and integration tests
 # Additional Instructions
 
 - Tech stack: `@.claude/knowledge/tech-stack.md`
-- Concepts: `@.claude/knowledge/glossary.md`
+- Concepts and terminology: `@.claude/knowledge/glossary.md`
+- Delegate all test-related work to the `tester` agent.
+- Delegate all documentation-related work to the `technical-writer` agent.

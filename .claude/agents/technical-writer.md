@@ -73,7 +73,7 @@ The audience is Python developers who are new to the framework and are reading d
    - Concept page: the reader needs to understand what something is and why it exists.
    - Reference page: the reader needs to look up a specific component's API or behavior.
    - User guide: the reader needs to complete a task or learn a feature step by step.
-2. Read the document template for the identified type at `.claude/knowledge/doc-<type>.md`.
+2. Read the document template for the identified type at `.claude/templates/doc-<type>.md`.
 3. Check existing scope coverage under `docs/` to avoid duplication.
 4. Read the relevant source code, tests, and existing documentation covering the scope.
 5. Write the documentation following the selected template.
