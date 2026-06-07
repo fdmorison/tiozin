@@ -113,8 +113,10 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         **options,
     ) -> None:
         super().__init__(**options)
+        # Plugin parameters
         self.json_columns = as_list(json_columns, [])
         self.flatten = flatten
+        # Datasource parameters
         self.options = default(
             camelize(self.options),
             DEFAULT_READER_OPTIONS,
