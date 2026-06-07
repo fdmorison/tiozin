@@ -32,6 +32,7 @@ dependencies = [
   "jinja2 ~=3.1.6",
   "pendulum ~=3.1.0",
   "python-slugify ~=8.0.4",
+  "pyhumps ~=3.8.0",
   "openlineage-python ~=1.45.0",
   "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
   # NOTE: Temporary dependencies (to be removed)
