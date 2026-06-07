@@ -1,3 +1,4 @@
+from humps.main import camelize
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StructType
@@ -7,15 +8,18 @@ from tiozin.utils import as_list, default
 from .. import SparkTransform
 
 FULL_SAMPLING_RATIO = 1.0
-DEFAULT_SAMPLING_RATIO = 0.10
-DEFAULT_READER_OPTIONS = {
-    "mode": "FAILFAST",
-    "timeZone": "UTC",
-    "primitivesAsString": False,
-    "allowComments": True,
-    "allowSingleQuotes": True,
-    "allowNumericLeadingZeros": True,
-}
+
+DEFAULT_READER_OPTIONS = dict(
+    mode="FAILFAST",
+    timeZone="UTC",
+    primitivesAsString=False,
+    allowComments=True,
+    allowSingleQuotes=True,
+    allowNumericLeadingZeros=True,
+    dateFormat="yyyy-MM-dd",
+    timestampFormat="yyyy-MM-dd'T'HH:mm:ss[.SSS][XXX]",
+    samplingRatio=0.10,
+)
 
 
 class SparkJsonSchemaInferenceTransform(SparkTransform):
@@ -51,6 +55,15 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         flatten:
             When ``True``, expands inferred fields into top-level columns.
             Defaults to ``False``.
+
+        dateFormat:
+            Pattern used to parse date strings. Accepts Java ``SimpleDateFormat``
+            patterns. Defaults to ``yyyy-MM-dd``.
+
+        timestampFormat:
+            Pattern used to parse timestamp strings. Accepts Java
+            ``SimpleDateFormat`` patterns. Defaults to
+            ``yyyy-MM-dd'T'HH:mm:ss[.SSS][XXX]``.
 
     Examples:
 
@@ -96,18 +109,21 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
     def __init__(
         self,
         json_columns: list[str] = None,
-        sampling_ratio: float = None,
         flatten: bool = False,
         **options,
     ) -> None:
         super().__init__(**options)
+        # Plugin parameters
         self.json_columns = as_list(json_columns, [])
-        self.sampling_ratio = default(sampling_ratio, DEFAULT_SAMPLING_RATIO)
         self.flatten = flatten
-        self.options = {
-            **DEFAULT_READER_OPTIONS,
-            **self.options,
-        }
+        # Datasource parameters
+        self.options = default(
+            camelize(self.options),
+            DEFAULT_READER_OPTIONS,
+        )
+        self.sampling_ratio = self.options["samplingRatio"]
+        self.date_format = self.options["dateFormat"]
+        self.timestamp_format = self.options["timestampFormat"]
 
     def transform(self, data: DataFrame) -> DataFrame:
         source_df = data
@@ -125,21 +141,19 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         return inferred_df
 
     def infer_json_schema(self, data: DataFrame, column: str) -> StructType:
-        json_data = data.select(column).rdd.map(lambda row: row[0])
+        json_rdd = data.select(column).rdd.map(lambda row: row[0])
+        sample_df = self.spark.read.options(**self.options).json(json_rdd)
 
-        sample = self.spark.read.options(
-            **self.options,
-            samplingRatio=self.sampling_ratio,
-        ).json(json_data)
-
-        if not sample.schema.fields:
-            sample = self.spark.read.options(
+        if not sample_df.schema.fields:
+            options = {
                 **self.options,
-                samplingRatio=FULL_SAMPLING_RATIO,
-            ).json(json_data)
+                "samplingRatio": FULL_SAMPLING_RATIO,
+            }
+            sample_df = self.spark.read.options(**options).json(json_rdd)
 
-        self.info(f"Inferred schema for '{column}': {sample.schema.simpleString()}")
-        return sample.schema
+        self.info(f"Inferred schema for '{column}'")
+        sample_df.printSchema()
+        return sample_df.schema
 
     def flatten_json_columns(self, data: DataFrame) -> DataFrame:
         columns = [
