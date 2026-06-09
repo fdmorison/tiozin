@@ -40,16 +40,21 @@ def split_field(field: str) -> list[str]:
     return [part.replace(FIELD_PLACEHOLDER, FIELD_DELIMITER) for part in parts]
 
 
-def join_field(fields: list[str]) -> str:
+def join_field(fields: list[str], escape: bool = False) -> str:
     """
     Joins field path components into a dotted path.
 
-    Any literal dot inside a component is escaped with a backslash, so the
-    result round-trips back through `split_field`.
+    By default the components are joined as is. Spark does not understand
+    backslash-escaped dots, so escaping is opt-in: enable `escape` only when
+    the result must round-trip back through `split_field`, in which case a
+    literal dot inside a component is escaped with a backslash.
 
     Args:
         fields:
             Field path components to join.
+        escape:
+            Whether to escape literal dots inside a component so the result
+            round-trips through `split_field`. Defaults to False.
 
     Returns:
         The dotted field path.
@@ -60,11 +65,15 @@ def join_field(fields: list[str]) -> str:
         # -> "address.city"
 
         join_field(["created.at"])
+        # -> "created.at"
+
+        join_field(["created.at"], escape=True)
         # -> "created\\.at"
         ```
     """
-    escaped = [field.replace(FIELD_DELIMITER, FIELD_ESCAPED_DELIMITER) for field in fields]
-    return FIELD_DELIMITER.join(escaped)
+    if escape:
+        fields = [field.replace(FIELD_DELIMITER, FIELD_ESCAPED_DELIMITER) for field in fields]
+    return FIELD_DELIMITER.join(fields)
 
 
 def get_field(df: DataFrame, field: str) -> StructField | None:
