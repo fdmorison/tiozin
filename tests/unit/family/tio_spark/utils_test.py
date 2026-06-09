@@ -65,20 +65,36 @@ def test_join_field_should_keep_single_component() -> None:
     assert actual == "name"
 
 
-def test_join_field_should_escape_dots_in_component() -> None:
+def test_join_field_should_not_escape_dots_by_default() -> None:
+    # Arrange
+    fields = ["created.at"]
+
     # Act
-    actual = join_field(["created.at"])
+    actual = join_field(fields)
 
     # Assert
-    assert actual == "created\\.at"
+    expected = "created.at"
+    assert actual == expected
 
 
-def test_join_field_should_round_trip_through_split_field() -> None:
+def test_join_field_should_escape_dots_when_enabled() -> None:
+    # Arrange
+    fields = ["created.at"]
+
+    # Act
+    actual = join_field(fields, escape=True)
+
+    # Assert
+    expected = "created\\.at"
+    assert actual == expected
+
+
+def test_join_field_should_round_trip_through_split_field_when_escaping() -> None:
     # Arrange
     fields = ["event", "created.at", "value"]
 
     # Act
-    joined = join_field(fields)
+    joined = join_field(fields, escape=True)
     actual = split_field(joined)
 
     # Assert
