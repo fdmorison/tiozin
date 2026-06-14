@@ -149,7 +149,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
                 field, sf.from_json(field, inferred_schema, self.options)
             )
 
-        result_df = self.enforce_timestamps(result_df)
+        result_df = self.enforce_datetime(result_df)
 
         if self.flatten:
             result_df = self.flatten_json_fields(result_df)
@@ -171,7 +171,11 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         sample_df.printSchema()
         return sample_df.schema
 
-    def enforce_timestamps(self, data: DataFrame) -> DataFrame:
+    def flatten_json_fields(self, data: DataFrame) -> DataFrame:
+        fields = [f"{field}.*" if field in self.json_fields else field for field in data.columns]
+        return data.select(*fields)
+
+    def enforce_datetime(self, data: DataFrame) -> DataFrame:
         timestamp_format = sf.lit(self.timestamp_format) if self.timestamp_format else None
 
         for field in self.timestamp_with_timezone_fields:
@@ -182,7 +186,3 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
             data = with_field(data, field, sf.to_utc_timestamp(ts, self.timezone))
 
         return data
-
-    def flatten_json_fields(self, data: DataFrame) -> DataFrame:
-        fields = [f"{field}.*" if field in self.json_fields else field for field in data.columns]
-        return data.select(*fields)

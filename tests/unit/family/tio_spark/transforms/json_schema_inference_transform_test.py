@@ -11,8 +11,15 @@ from tiozin.family.tio_spark import SparkJsonSchemaInferenceTransform
 
 STR_2024_01_15T10_30_00Z = "2024-01-15T10:30:00Z"
 OBJ_2024_01_15T10_30_00Z = datetime.fromisoformat("2024-01-15T10:30:00Z")
+
+STR_2024_01_15T10_30_00 = "2024-01-15T10:30:00"
+OBJ_2024_01_15T10_30_00 = datetime.fromisoformat("2024-01-15T10:30:00")
+
 STR_15_01_2024_10_30_00Z = "15/01/2024 10:30:00Z"
-FMT_15_01_2024_10_30_00Z = "dd/MM/yyyy HH:mm:ssX"
+FMT_DD_MM_YYYY_HH_MM_SSX = "dd/MM/yyyy HH:mm:ssX"
+
+STR_15_01_2024_10_30_00 = "15/01/2024 10:30:00"
+FMT_DD_MM_YYYY_HH_MM_SS = "dd/MM/yyyy HH:mm:ss"
 
 STR_2024_01_15 = "2024-01-15"
 FMT_YYYY_MM_DD = "yyyy-MM-dd"
@@ -359,36 +366,39 @@ def test_transform_should_not_handle_duplicated_columns_when_flattening(
 
 
 # ============================================================================
-# Testing SparkJsonSchemaInferenceTransform - Temporal Enforcement
+# Testing SparkJsonSchemaInferenceTransform - Timestamp with timezone Enforcement
 # ============================================================================
 
 
-def test_transform_should_enforce_temporal_fields(spark: SparkSession) -> None:
+def test_transform_should_enforce_timestamp_with_timezone_fields(
+    spark: SparkSession,
+) -> None:
     # Arrange
     input = spark.createDataFrame(
-        [{"ts_ltz": STR_2024_01_15T10_30_00Z, "ts_ntz": "2024-01-15T10:30:00"}],
-        schema="ts_ltz STRING, ts_ntz STRING",
+        [{"ts": STR_2024_01_15T10_30_00Z}],
+        schema="ts STRING",
     )
 
     # Act
     actual = SparkJsonSchemaInferenceTransform(
         name="test",
-        timestamp_with_timezone_fields="ts_ltz",
-        timestamp_without_timezone_fields="ts_ntz",
+        timestamp_with_timezone_fields="ts",
     ).transform(input)
 
     # Assert
     expected = spark.createDataFrame(
-        [{"ts_ltz": OBJ_2024_01_15T10_30_00Z, "ts_ntz": OBJ_2024_01_15T10_30_00Z}],
-        schema="ts_ltz TIMESTAMP, ts_ntz TIMESTAMP",
+        [{"ts": OBJ_2024_01_15T10_30_00Z}],
+        schema="ts TIMESTAMP",
     )
     assertDataFrameEqual(actual, expected)
 
 
-def test_transform_should_accept_custom_timestamp_format(spark: SparkSession) -> None:
+def test_transform_should_enforce_nested_timestamp_with_timezone_fields(
+    spark: SparkSession,
+) -> None:
     # Arrange
     input = spark.createDataFrame(
-        [{"ts": {"created_at": STR_15_01_2024_10_30_00Z}}],
+        [{"ts": {"created_at": STR_2024_01_15T10_30_00Z}}],
         schema="ts STRUCT<created_at STRING>",
     )
 
@@ -396,13 +406,164 @@ def test_transform_should_accept_custom_timestamp_format(spark: SparkSession) ->
     actual = SparkJsonSchemaInferenceTransform(
         name="test",
         timestamp_with_timezone_fields="ts.created_at",
-        timestamp_format=FMT_15_01_2024_10_30_00Z,
     ).transform(input)
 
     # Assert
     expected = spark.createDataFrame(
         [{"ts": {"created_at": OBJ_2024_01_15T10_30_00Z}}],
         schema="ts STRUCT<created_at TIMESTAMP>",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_accept_custom_timestamp_with_timezone_format(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"ts": STR_15_01_2024_10_30_00Z}],
+        schema="ts STRING",
+    )
+
+    # Act
+    actual = SparkJsonSchemaInferenceTransform(
+        name="test",
+        timestamp_with_timezone_fields="ts",
+        timestamp_format=FMT_DD_MM_YYYY_HH_MM_SSX,
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [{"ts": OBJ_2024_01_15T10_30_00Z}],
+        schema="ts TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.xfail(reason="to_timestamp silently returns null on format mismatch")
+def test_transform_should_raise_error_when_timestamp_with_timezone_format_does_not_match(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"ts": {"created_at": STR_2024_01_15T10_30_00Z}}],
+        schema="ts STRUCT<created_at STRING>",
+    )
+
+    # Act / Assert
+    with pytest.raises(ValueError):
+        SparkJsonSchemaInferenceTransform(
+            name="test",
+            timestamp_with_timezone_fields="ts.created_at",
+            timestamp_format=FMT_DD_MM_YYYY_HH_MM_SSX,
+        ).transform(input)
+
+
+def test_transform_should_raise_error_when_timestamp_with_timezone_field_does_not_exist(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"root": {"fullname": "John Doe"}}],
+        schema="root STRUCT<fullname STRING>",
+    )
+
+    # Act / Assert
+    with pytest.raises(AnalysisException):
+        SparkJsonSchemaInferenceTransform(
+            name="test",
+            timestamp_with_timezone_fields="fullname",
+        ).transform(input)
+
+
+def test_transform_should_raise_error_when_nested_timestamp_with_timezone_field_does_not_exist(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"root": {"fullname": "John Doe"}}],
+        schema="root STRUCT<fullname STRING>",
+    )
+
+    # Act / Assert
+    with pytest.raises(AnalysisException):
+        SparkJsonSchemaInferenceTransform(
+            name="test",
+            timestamp_with_timezone_fields="root.first_name",
+        ).transform(input)
+
+
+# ============================================================================
+# Testing SparkJsonSchemaInferenceTransform - Timestamp without timezone Enforcement
+# ============================================================================
+
+
+def test_transform_should_enforce_timestamp_without_timezone_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"ts": "2024-01-15T10:30:00"}],
+        schema="ts STRING",
+    )
+
+    # Act
+    actual = SparkJsonSchemaInferenceTransform(
+        name="test",
+        timestamp_without_timezone_fields="ts",
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [{"ts": OBJ_2024_01_15T10_30_00Z}],
+        schema="ts TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_enforce_nested_timestamp_without_timezone_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"ts": {"created_at": STR_2024_01_15T10_30_00}}],
+        schema="ts STRUCT<created_at STRING>",
+    )
+
+    # Act
+    actual = SparkJsonSchemaInferenceTransform(
+        name="test",
+        timestamp_without_timezone_fields="ts.created_at",
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [{"ts": {"created_at": OBJ_2024_01_15T10_30_00Z}}],
+        schema="ts STRUCT<created_at TIMESTAMP>",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_accept_custom_timestamp_without_timezone_format(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"ts": STR_15_01_2024_10_30_00}],
+        schema="ts STRING",
+    )
+
+    # Act
+    actual = SparkJsonSchemaInferenceTransform(
+        name="test",
+        timestamp_without_timezone_fields="ts",
+        timestamp_format=FMT_DD_MM_YYYY_HH_MM_SS,
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [{"ts": OBJ_2024_01_15T10_30_00Z}],
+        schema="ts TIMESTAMP",
     )
     assertDataFrameEqual(actual, expected)
 
@@ -431,72 +592,35 @@ def test_transform_should_truncate_time_when_timestamp_field_contains_date_only(
     assertDataFrameEqual(actual, expected)
 
 
-@pytest.mark.xfail(reason="to_timestamp silently returns null on format mismatch")
-def test_transform_should_raise_error_when_timestamp_format_does_not_match(
+def test_transform_should_raise_error_when_timestamp_without_timezone_field_does_not_exist(
     spark: SparkSession,
 ) -> None:
     # Arrange
     input = spark.createDataFrame(
-        [{"ts": {"created_at": STR_2024_01_15T10_30_00Z}}],
-        schema="ts STRUCT<created_at STRING>",
+        [{"root": {"fullname": "John Doe"}}],
+        schema="root STRUCT<fullname STRING>",
     )
 
     # Act / Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(AnalysisException):
         SparkJsonSchemaInferenceTransform(
             name="test",
-            timestamp_with_timezone_fields="ts.created_at",
-            timestamp_format=FMT_15_01_2024_10_30_00Z,
+            timestamp_without_timezone_fields="fullname",
         ).transform(input)
 
 
-@pytest.mark.parametrize(
-    "fields",
-    [
-        "timestamp_with_timezone_fields",
-        "timestamp_without_timezone_fields",
-    ],
-)
-def test_transform_should_raise_error_when_field_does_not_exist(
+def test_transform_should_raise_error_when_nested_timestamp_without_timezone_field_does_not_exist(
     spark: SparkSession,
-    fields: str,
 ) -> None:
     # Arrange
     input = spark.createDataFrame(
         [{"root": {"fullname": "John Doe"}}],
         schema="root STRUCT<fullname STRING>",
     )
-    args = {
-        "name": "test",
-        fields: "fullname",
-    }
 
     # Act / Assert
     with pytest.raises(AnalysisException):
-        SparkJsonSchemaInferenceTransform(**args).transform(input)
-
-
-@pytest.mark.parametrize(
-    "fields",
-    [
-        "timestamp_with_timezone_fields",
-        "timestamp_without_timezone_fields",
-    ],
-)
-def test_transform_should_raise_error_when_nested_field_does_not_exist(
-    spark: SparkSession,
-    fields: str,
-) -> None:
-    # Arrange
-    input = spark.createDataFrame(
-        [{"root": {"fullname": "John Doe"}}],
-        schema="root STRUCT<fullname STRING>",
-    )
-    args = {
-        "name": "test",
-        fields: "root.first_name",
-    }
-
-    # Act / Assert
-    with pytest.raises(AnalysisException):
-        SparkJsonSchemaInferenceTransform(**args).transform(input)
+        SparkJsonSchemaInferenceTransform(
+            name="test",
+            timestamp_without_timezone_fields="root.first_name",
+        ).transform(input)
