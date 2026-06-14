@@ -7,6 +7,7 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import ArrayType, StructField, StructType
 
 FIELD_DELIMITER = "."
+TIMEZONE_OFFSET_PATTERN = r"(Z|[+-]\d{2}(?::?\d{2})?|[A-Za-z]{3,4})$"
 FIELD_PLACEHOLDER = "\x00"
 FIELD_ESCAPED_DELIMITER = "\\."
 
@@ -175,3 +176,14 @@ def with_field(
 
     path = FIELD_DELIMITER.join(nested)
     return df.withColumn(root, sf.col(root).withField(path, column))
+
+
+def to_timestamp(field: str, timezone: str, format: str = None) -> Column:
+    format = sf.lit(format) if format else None
+    has_tz = sf.col(field).rlike(TIMEZONE_OFFSET_PATTERN)
+    return sf.when(
+        has_tz,
+        sf.to_timestamp_ltz(sf.upper(field), format),
+    ).otherwise(
+        sf.to_utc_timestamp(sf.to_timestamp_ntz(field, format), timezone),
+    )
