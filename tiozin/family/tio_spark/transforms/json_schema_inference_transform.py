@@ -45,35 +45,32 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
 
     Attributes:
         json_fields:
-            Field name or list of field names containing JSON strings whose
-            schemas should be inferred.
+            Field or list of fields containing JSON strings to infer schemas from.
 
         sampling_ratio:
-            Fraction of rows used to infer the schema. Defaults to ``0.10``.
+            Fraction of rows used for schema inference. Defaults to ``0.10``.
 
         flatten:
-            When ``True``, expands inferred fields into top-level fields.
-            Defaults to ``False``.
+            When ``True``, expands inferred fields into top-level columns. Defaults to ``False``.
 
         timezone:
-            Timezone of the source data. Used to convert naive timestamps in
-            ``timestamp_without_timezone_fields`` to UTC. Defaults to ``UTC``.
+            Timezone of the source data. Used to interpret naive timestamps in
+            ``timestamp_without_timezone_fields``. Defaults to ``UTC``.
 
-        timestamp_with_timezone_fields:
-            Field or list of fields containing timestamp strings with an embedded
-            timezone offset (for example, ``"2024-01-15T10:30:00-03:00"``). The
-            offset in the string is respected. Nested fields are supported using
-            dot notation.
+        timestamp_fields:
+            Field or list of fields with naive or aware timestamp strings. If the string has a
+            timezone offset (e.g., "2024-01-15T10:30:00-03:00"), it is respected; otherwise, it
+            is interpreted using the Spark Session timezone. Applied after JSON schema inference.
+            Use dot notation (e.g., "user.created_at") for nested fields.
 
         timestamp_without_timezone_fields:
-            Field or list of fields containing naive timestamp strings without a
-            timezone offset (for example, ``"2024-01-15T10:30:00"``). The strings
-            are interpreted as being in ``timezone`` and converted to UTC. Nested
-            fields are supported using dot notation.
+            Field or list of fields with naive timestamp strings (e.g., "2024-01-15T10:30:00").
+            Applied after JSON schema inference. Values are assumed to be in ``timezone`` and
+            converted to UTC. Use dot notation (e.g., "user.created_at") for nested fields.
 
         timestamp_format:
-            Pattern used to parse timestamp strings. Accepts Java ``SimpleDateFormat`` patterns.
-            When omitted, Spark infers the format from the data.
+            Pattern used to parse timestamps (e.g., "dd/MM/yyyy HH:mm:ss"). Accepts Java
+            SimpleDateFormat patterns. When omitted, Spark infers the format.
 
     Examples:
 
@@ -119,7 +116,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
     def __init__(
         self,
         json_fields: list[str] = None,
-        timestamp_with_timezone_fields: list[str] = None,
+        timestamp_fields: list[str] = None,
         timestamp_without_timezone_fields: list[str] = None,
         flatten: bool = False,
         **options,
@@ -127,7 +124,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         super().__init__(**options)
         # Plugin parameters
         self.json_fields = as_list(json_fields, [])
-        self.timestamp_with_timezone_fields = as_list(timestamp_with_timezone_fields, [])
+        self.timestamp_fields = as_list(timestamp_fields, [])
         self.timestamp_without_timezone_fields = as_list(timestamp_without_timezone_fields, [])
         self.flatten = flatten
         # Datasource parameters
@@ -178,7 +175,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
     def enforce_datetime(self, data: DataFrame) -> DataFrame:
         timestamp_format = sf.lit(self.timestamp_format) if self.timestamp_format else None
 
-        for field in self.timestamp_with_timezone_fields:
+        for field in self.timestamp_fields:
             data = with_field(data, field, sf.to_timestamp_ltz(field, timestamp_format))
 
         for field in self.timestamp_without_timezone_fields:
