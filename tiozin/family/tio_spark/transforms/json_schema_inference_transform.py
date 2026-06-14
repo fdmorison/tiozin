@@ -6,6 +6,7 @@ from pyspark.sql.types import StructType
 from tiozin.utils import as_list, default
 
 from .. import SparkTransform
+from ..utils import with_field
 
 FULL_SAMPLING_RATIO = 1.0
 
@@ -16,15 +17,13 @@ DEFAULT_READER_OPTIONS = dict(
     allowComments=True,
     allowSingleQuotes=True,
     allowNumericLeadingZeros=True,
-    dateFormat="yyyy-MM-dd",
-    timestampFormat="yyyy-MM-dd'T'HH:mm:ss[.SSS][XXX]",
     samplingRatio=0.10,
 )
 
 
 class SparkJsonSchemaInferenceTransform(SparkTransform):
     """
-    Infers schemas from JSON string columns.
+    Infers schemas from JSON string fields.
 
     To infer the schema, the transform samples a portion of the data. By default,
     10% of the rows are used. For large datasets, a smaller sampling ratio may
@@ -45,32 +44,43 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
     https://spark.apache.org/docs/latest/sql-data-sources-json.html
 
     Attributes:
-        json_columns:
-            Column name or list of column names containing JSON strings whose
+        json_fields:
+            Field name or list of field names containing JSON strings whose
             schemas should be inferred.
 
         sampling_ratio:
             Fraction of rows used to infer the schema. Defaults to ``0.10``.
 
         flatten:
-            When ``True``, expands inferred fields into top-level columns.
+            When ``True``, expands inferred fields into top-level fields.
             Defaults to ``False``.
 
-        dateFormat:
-            Pattern used to parse date strings. Accepts Java ``SimpleDateFormat``
-            patterns. Defaults to ``yyyy-MM-dd``.
+        timezone:
+            Timezone of the source data. Used to convert naive timestamps in
+            ``timestamp_without_timezone_fields`` to UTC. Defaults to ``UTC``.
 
-        timestampFormat:
-            Pattern used to parse timestamp strings. Accepts Java
-            ``SimpleDateFormat`` patterns. Defaults to
-            ``yyyy-MM-dd'T'HH:mm:ss[.SSS][XXX]``.
+        timestamp_with_timezone_fields:
+            Field or list of fields containing timestamp strings with an embedded
+            timezone offset (for example, ``"2024-01-15T10:30:00-03:00"``). The
+            offset in the string is respected. Nested fields are supported using
+            dot notation.
+
+        timestamp_without_timezone_fields:
+            Field or list of fields containing naive timestamp strings without a
+            timezone offset (for example, ``"2024-01-15T10:30:00"``). The strings
+            are interpreted as being in ``timezone`` and converted to UTC. Nested
+            fields are supported using dot notation.
+
+        timestamp_format:
+            Pattern used to parse timestamp strings. Accepts Java ``SimpleDateFormat`` patterns.
+            When omitted, Spark infers the format from the data.
 
     Examples:
 
         ```python
         SparkJsonSchemaInferenceTransform(
             name="infer schema",
-            json_columns=["payload", "metadata"],
+            json_fields=["payload", "metadata"],
             flatten=True,
         )
         ```
@@ -78,7 +88,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         ```python
         SparkJsonSchemaInferenceTransform(
             name="infer schema",
-            json_columns="payload",
+            json_fields="payload",
             mode="PERMISSIVE",
             primitivesAsString=True,
             allowUnquotedFieldNames=True,
@@ -89,7 +99,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         transforms:
         - kind: SparkJsonSchemaInferenceTransform
             name: infer schema
-            json_columns:
+            json_fields:
             - payload
             - metadata
             flatten: true
@@ -99,7 +109,7 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
         transforms:
         - kind: SparkJsonSchemaInferenceTransform
             name: infer schema
-            json_columns: payload
+            json_fields: payload
             mode: PERMISSIVE
             primitivesAsString: true
             allowUnquotedFieldNames: true
@@ -108,40 +118,46 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
 
     def __init__(
         self,
-        json_columns: list[str] = None,
+        json_fields: list[str] = None,
+        timestamp_with_timezone_fields: list[str] = None,
+        timestamp_without_timezone_fields: list[str] = None,
         flatten: bool = False,
         **options,
     ) -> None:
         super().__init__(**options)
         # Plugin parameters
-        self.json_columns = as_list(json_columns, [])
+        self.json_fields = as_list(json_fields, [])
+        self.timestamp_with_timezone_fields = as_list(timestamp_with_timezone_fields, [])
+        self.timestamp_without_timezone_fields = as_list(timestamp_without_timezone_fields, [])
         self.flatten = flatten
         # Datasource parameters
         self.options = default(
             camelize(self.options),
             DEFAULT_READER_OPTIONS,
         )
-        self.sampling_ratio = self.options["samplingRatio"]
-        self.date_format = self.options["dateFormat"]
-        self.timestamp_format = self.options["timestampFormat"]
+        self.sampling_ratio = self.options.get("samplingRatio")
+        self.timezone = self.options.get("timeZone")
+        self.timestamp_format = self.options.get("timestampFormat")
 
     def transform(self, data: DataFrame) -> DataFrame:
         source_df = data
-        inferred_df = data
+        result_df = data
 
-        for column in self.json_columns:
-            inferred_schema = self.infer_json_schema(source_df, column)
-            inferred_df = inferred_df.withColumn(
-                column, sf.from_json(column, inferred_schema, self.options)
+        for field in self.json_fields:
+            inferred_schema = self.infer_json_schema(source_df, field)
+            result_df = result_df.withColumn(
+                field, sf.from_json(field, inferred_schema, self.options)
             )
 
+        result_df = self.enforce_timestamps(result_df)
+
         if self.flatten:
-            inferred_df = self.flatten_json_columns(inferred_df)
+            result_df = self.flatten_json_fields(result_df)
 
-        return inferred_df
+        return result_df
 
-    def infer_json_schema(self, data: DataFrame, column: str) -> StructType:
-        json_rdd = data.select(column).rdd.map(lambda row: row[0])
+    def infer_json_schema(self, data: DataFrame, field: str) -> StructType:
+        json_rdd = data.select(field).rdd.map(lambda row: row[0])
         sample_df = self.spark.read.options(**self.options).json(json_rdd)
 
         if not sample_df.schema.fields:
@@ -151,12 +167,22 @@ class SparkJsonSchemaInferenceTransform(SparkTransform):
             }
             sample_df = self.spark.read.options(**options).json(json_rdd)
 
-        self.info(f"Inferred schema for '{column}'")
+        self.info(f"Inferred schema for '{field}'")
         sample_df.printSchema()
         return sample_df.schema
 
-    def flatten_json_columns(self, data: DataFrame) -> DataFrame:
-        columns = [
-            f"{column}.*" if column in self.json_columns else column for column in data.columns
-        ]
-        return data.select(*columns)
+    def enforce_timestamps(self, data: DataFrame) -> DataFrame:
+        timestamp_format = sf.lit(self.timestamp_format) if self.timestamp_format else None
+
+        for field in self.timestamp_with_timezone_fields:
+            data = with_field(data, field, sf.to_timestamp_ltz(field, timestamp_format))
+
+        for field in self.timestamp_without_timezone_fields:
+            ts = sf.to_timestamp_ntz(field, timestamp_format)
+            data = with_field(data, field, sf.to_utc_timestamp(ts, self.timezone))
+
+        return data
+
+    def flatten_json_fields(self, data: DataFrame) -> DataFrame:
+        fields = [f"{field}.*" if field in self.json_fields else field for field in data.columns]
+        return data.select(*fields)
