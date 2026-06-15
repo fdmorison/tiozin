@@ -8,6 +8,7 @@ from pyspark.sql.types import ArrayType, StructField, StructType
 
 FIELD_DELIMITER = "."
 TIMEZONE_OFFSET_PATTERN = r"(Z|[+-]\d{2}(?::?\d{2})?|[A-Za-z]{3,4})$"
+EPOCH_PATTERN = r"^\d+$"
 FIELD_PLACEHOLDER = "\x00"
 FIELD_ESCAPED_DELIMITER = "\\."
 
@@ -178,12 +179,60 @@ def with_field(
     return df.withColumn(root, sf.col(root).withField(path, column))
 
 
-def to_timestamp(field: str, timezone: str, format: str = None) -> Column:
-    format = sf.lit(format) if format else None
-    has_tz = sf.col(field).rlike(TIMEZONE_OFFSET_PATTERN)
-    return sf.when(
-        has_tz,
-        sf.to_timestamp_ltz(sf.upper(field), format),
-    ).otherwise(
-        sf.to_utc_timestamp(sf.to_timestamp_ntz(field, format), timezone),
+def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> Column:
+    """
+    Converts a column to a UTC timestamp.
+
+    Useful for ingestion scenarios where timestamp formats are inconsistent.
+
+    Rules:
+        - Timezone-aware values use the timezone present in the value.
+        - Timezone-naive values assume the ``timezone`` parameter.
+        - Numeric values and numeric strings are interpreted as Unix epoch seconds.
+
+    Args:
+        field:
+            Column name to convert.
+        timezone:
+            Source timezone for values without a timezone indicator.
+            Defaults to ``UTC``.
+        format:
+            Optional datetime format. Disables epoch detection.
+
+    Returns:
+        A UTC timestamp column.
+
+    Examples:
+        "2024-01-15T10:30:00Z"      -> 2024-01-15T10:30:00Z
+        "2024-01-15T10:30:00-03:00" -> 2024-01-15T13:30:00Z
+        "2024-01-15T10:30:00"       -> 2024-01-15T10:30:00Z
+        "1705314600"                -> 2024-01-15T10:30:00Z
+        1705314600                  -> 2024-01-15T10:30:00Z
+
+        timezone="America/Sao_Paulo":
+        "2024-01-15T10:30:00"       -> 2024-01-15T13:30:00Z
+
+        format="dd/MM/yyyy HH:mm:ss":
+        "15/01/2024 10:30:00"       -> 2024-01-15T10:30:00Z
+    """
+    field = sf.upper(sf.col(field).cast("STRING"))
+    timezone = timezone or "UTC"
+    fmt = sf.lit(format) if format else None
+
+    expr = sf.when(
+        field.rlike(TIMEZONE_OFFSET_PATTERN),
+        sf.to_timestamp_ltz(field, fmt),
+    )
+
+    if not format:
+        expr = expr.when(
+            field.rlike(EPOCH_PATTERN),
+            sf.timestamp_seconds(field.cast("LONG")),
+        )
+
+    return expr.otherwise(
+        sf.to_utc_timestamp(
+            sf.to_timestamp_ntz(field, fmt),
+            timezone,
+        ),
     )
