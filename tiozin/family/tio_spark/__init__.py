@@ -28,7 +28,7 @@ from .runners.spark_iceberg_runner import SparkIcebergRunner
 from .runners.spark_runner import SparkRunner
 
 # Transforms
-from .transforms.json_schema_inference_transform import SparkJsonSchemaInferenceTransform
+from .transforms.schema_inference_transform import SparkSchemaInferenceTransform
 from .transforms.sql_transform import SparkSqlTransform
 from .transforms.word_count_transform import SparkWordCountTransform
 
@@ -41,7 +41,7 @@ __all__ = [
     "SparkIcebergRunner",
     "SparkFileInput",
     "SparkFileOutput",
-    "SparkJsonSchemaInferenceTransform",
+    "SparkSchemaInferenceTransform",
     "SparkSqlTransform",
     "SparkWordCountTransform",
 ]

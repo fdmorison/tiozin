@@ -3,11 +3,10 @@ from datetime import UTC, datetime
 import pytest
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession
-from pyspark.sql.types import _parse_datatype_string
 from pyspark.sql.utils import AnalysisException
-from pyspark.testing import assertDataFrameEqual, assertSchemaEqual
+from pyspark.testing import assertDataFrameEqual
 
-from tiozin.family.tio_spark import SparkJsonSchemaInferenceTransform
+from tiozin.family.tio_spark import SparkSchemaInferenceTransform
 
 STR_2024_01_15T10_30_00_UTC = "2024-01-15T10:30:00Z"
 STR_2024_01_15T10_30_00_BRT = "2024-01-15T10:30:00-03:00"
@@ -19,7 +18,7 @@ OBJ_2024_01_15T13_30_00_UTC = datetime(2024, 1, 15, 13, 30, 0, tzinfo=UTC)
 OBJ_2024_01_15T14_30_00_UTC = datetime(2024, 1, 15, 14, 30, 0, tzinfo=UTC)
 
 # ============================================================================
-# Testing SparkJsonSchemaInferenceTransform - Schema Inference
+# Testing SparkSchemaInferenceTransform - Schema Inference
 # ============================================================================
 
 
@@ -34,7 +33,7 @@ def test_transform_should_infer_schema(spark: SparkSession) -> None:
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
     ).transform(input)
@@ -67,7 +66,7 @@ def test_transform_should_infer_schema_of_multiple_columns(spark: SparkSession) 
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields=["user", "address"],
     ).transform(input)
@@ -103,7 +102,7 @@ def test_transform_should_infer_schema_when_sample_is_empty(spark: SparkSession)
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
         sampling_ratio=0.001,  # force empty sample
@@ -131,7 +130,7 @@ def test_transform_should_do_nothing_when_json_columns_is_empty(spark: SparkSess
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
     ).transform(input)
 
@@ -149,7 +148,7 @@ def test_transform_should_raise_error_when_json_is_malformed(spark: SparkSession
 
     # Act / Assert
     with pytest.raises(Py4JJavaError, match="FAILFAST"):
-        SparkJsonSchemaInferenceTransform(
+        SparkSchemaInferenceTransform(
             name="test",
             json_fields="value",
         ).transform(input)
@@ -174,14 +173,14 @@ def test_transform_should_raise_error_when_json_field_does_not_exist(
 
     # Act / Assert
     with pytest.raises(AnalysisException):
-        SparkJsonSchemaInferenceTransform(
+        SparkSchemaInferenceTransform(
             name="test",
             json_fields=json_fields,
         ).transform(input)
 
 
 # ============================================================================
-# Testing SparkJsonSchemaInferenceTransform - Flattening
+# Testing SparkSchemaInferenceTransform - Flattening
 # ============================================================================
 
 
@@ -196,10 +195,10 @@ def test_transform_should_flatten_json_columns(spark: SparkSession) -> None:
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
-        flatten=True,
+        unnest_fields=["value"],
     ).transform(input)
 
     # Assert
@@ -224,7 +223,7 @@ def test_transform_should_preserve_columns_not_in_json_columns(spark: SparkSessi
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
     ).transform(input)
@@ -241,7 +240,7 @@ def test_transform_should_preserve_columns_not_in_json_columns(spark: SparkSessi
 
 
 # ============================================================================
-# Testing SparkJsonSchemaInferenceTransform - Reader Options
+# Testing SparkSchemaInferenceTransform - Reader Options
 # ============================================================================
 
 
@@ -253,7 +252,7 @@ def test_transform_should_not_infer_primitive_as_string(spark: SparkSession) -> 
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
     ).transform(input)
@@ -274,7 +273,7 @@ def test_transform_should_accept_json_with_single_quotes(spark: SparkSession) ->
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
     ).transform(input)
@@ -295,7 +294,7 @@ def test_transform_should_accept_json_with_comments(spark: SparkSession) -> None
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
     ).transform(input)
@@ -316,7 +315,7 @@ def test_transform_should_accept_json_numbers_with_leading_zeros(spark: SparkSes
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
     ).transform(input)
@@ -344,20 +343,23 @@ def test_transform_should_not_handle_duplicated_columns_when_flattening(
     )
 
     # Act
-    result = SparkJsonSchemaInferenceTransform(
+    result = SparkSchemaInferenceTransform(
         name="test",
         json_fields=["user", "address"],
-        flatten=True,
+        unnest_fields=["user", "address"],
     ).transform(input)
 
     # Assert
-    actual = result.schema
-    expected = _parse_datatype_string("age BIGINT, name STRING, city STRING, name STRING")
-    assertSchemaEqual(actual, expected)
+    actual = result
+    expected = spark.createDataFrame(
+        [(30, "John", "New York", "Home")],
+        schema="age BIGINT, name STRING, city STRING, name STRING",
+    )
+    assertDataFrameEqual(actual, expected)
 
 
 # ============================================================================
-# Testing SparkJsonSchemaInferenceTransform - Auto Timestamp Enforcement
+# Testing SparkSchemaInferenceTransform - Auto Timestamp Enforcement
 # ============================================================================
 
 
@@ -376,7 +378,7 @@ def test_transform_should_enforce_auto_timestamp_fields(
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         auto_timestamp_fields="ts",
     ).transform(input)
@@ -402,7 +404,7 @@ def test_transform_should_enforce_nested_auto_timestamp_fields(spark: SparkSessi
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         auto_timestamp_fields="ts.created_at",
     ).transform(input)
@@ -425,7 +427,7 @@ def test_transform_should_enforce_timezone_for_naive_auto_timestamp_fields(
     )
 
     # Act
-    actual = SparkJsonSchemaInferenceTransform(
+    actual = SparkSchemaInferenceTransform(
         name="test",
         auto_timestamp_fields="ts",
         timezone="America/Sao_Paulo",
@@ -450,7 +452,7 @@ def test_transform_should_raise_error_when_auto_timestamp_field_is_missing(
 
     # Act / Assert
     with pytest.raises(AnalysisException):
-        SparkJsonSchemaInferenceTransform(
+        SparkSchemaInferenceTransform(
             name="test",
             auto_timestamp_fields="fullname",
         ).transform(input)
@@ -467,7 +469,7 @@ def test_transform_should_raise_error_when_nested_auto_timestamp_field_is_missin
 
     # Act / Assert
     with pytest.raises(AnalysisException):
-        SparkJsonSchemaInferenceTransform(
+        SparkSchemaInferenceTransform(
             name="test",
             auto_timestamp_fields="root.first_name",
         ).transform(input)
