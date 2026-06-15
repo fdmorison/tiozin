@@ -6,7 +6,12 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import StringType, StructField
 from pyspark.testing import assertDataFrameEqual
 
-from tiozin.family.tio_spark.utils import get_field, join_field, split_field, with_field
+from tiozin.family.tio_spark.utils import (
+    get_field,
+    join_field,
+    split_field,
+    with_field,
+)
 
 _2026_01_16T10_00_00 = datetime(2026, 1, 16, 10, 0, 0, tzinfo=UTC)
 _2026_01_16T10_00_00_STR = "2026-01-16 10:00:00"
