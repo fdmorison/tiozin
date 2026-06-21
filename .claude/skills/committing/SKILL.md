@@ -6,7 +6,6 @@ user-invocable: true
 
 ## Rules
 
-- All commits must be GPG-signed.
 - Keep commits focused and atomic:
   - Each commit should represent a single topic or unit of work.
   - Do not mix unrelated changes.
@@ -15,7 +14,7 @@ user-invocable: true
 - Stage files by name. Never use `git add .` or `git add -A`.
 - Never use `git reset --hard`.
 - Never commit directly to `main`. Always create a feature branch first.
-- Never skip git hooks (`--no-verify`, `--no-gpg-sign`) unless explicitly requested.
+- Never skip git hooks (`--no-verify`) unless explicitly requested.
 - Never commit files that may contain secrets (`.env`, `credentials.json`, etc.).
 - If a pre-commit hook fails, the commit did not happen. Fix the issue, re-stage affected files, and create a new commit.
 
