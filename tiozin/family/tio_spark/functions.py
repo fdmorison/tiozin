@@ -188,26 +188,46 @@ def to_auto_timestamp(
     timezone: str = None,
 ) -> Column:
     """
-    Converts a column to a UTC timestamp.
+    Converts a column to a UTC timestamp by trying a broad set of built-in formats.
 
-    Useful for ingestion scenarios where timestamp formats are inconsistent.
+    No ``format`` parameter is needed for most common timestamp shapes.
+    Custom formats are tried first; built-in formats always follow as a fallback,
+    so specifying a format extends the search without removing coverage.
+    Values that match no format produce ``null``.
 
     Rules:
         - Timezone-aware values use the timezone present in the value.
         - Timezone-naive values assume the ``timezone`` parameter.
         - Numeric values and numeric strings are interpreted as compact dates, not epoch.
 
+    Built-in formats (tried after any custom ``format``):
+        ISO / delimited (``_``, ``-``, ``.``, ``/``):
+            ``yyyy-MM-dd``, ``yyyy/MM/dd``, ``yyyy_MM_dd``, ``yyyy.MM.dd``
+            Each accepts an optional ``T`` or space separator, ``HH:mm[:ss][.SSSSSS]``,
+            and any timezone indicator.
+
+        European / delimited (``_``, ``-``, ``.``, ``/``):
+            ``dd-MM-yyyy``, ``dd/MM/yyyy``, ``dd_MM_yyyy``, ``dd.MM.yyyy``
+            Each accepts an optional time component and timezone indicator.
+
+        Compact:
+            ``yyyyMMdd``, ``yyyyMMddHHmmss``, each with optional timezone.
+
+        RFC 2822:
+            ``dd MMM yyyy HH:mm:ss`` with optional timezone
+            (e.g., ``15 Jan 2024 10:30:00 UTC``).
+
     Args:
         field:
-            Column name to convert.
+            Column name or Column to convert.
+        format:
+            Optional format or list of formats tried before the built-in defaults.
         timezone:
             Source timezone for values without a timezone indicator.
             Defaults to ``UTC``.
-        format:
-            Optional format or list of formats tried before the built-in defaults.
 
     Returns:
-        A UTC timestamp column.
+        A UTC timestamp column. Values that match no format are ``null``.
 
     Examples:
         "2024-01-15T10:30:00Z"      -> 2024-01-15T10:30:00Z
