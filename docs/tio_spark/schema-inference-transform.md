@@ -118,6 +118,8 @@ Where:
 * `[tz]` = `Z`, `UTC`, `GMT`, offsets such as `+00:00` and `-0300`, or IANA timezones such as `America/Sao_Paulo`
 * Bracketed components are optional
 
+The pattern letters above (`yyyy`, `MM`, `dd`, `HH`, and so on) follow the Java [DateTimeFormatter](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/time/format/DateTimeFormatter.html) and [SimpleDateFormat](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/text/SimpleDateFormat.html) syntax.
+
 Values that do not match any supported format are converted to `null`.
 
 ### timestamp_format
