@@ -6,7 +6,7 @@ from pyspark.sql.types import StructType
 from tiozin.utils import as_list, default
 
 from .. import SparkTransform
-from .. import utils as tio
+from .. import functions as tio
 
 FULL_SAMPLING_RATIO = 1.0
 
