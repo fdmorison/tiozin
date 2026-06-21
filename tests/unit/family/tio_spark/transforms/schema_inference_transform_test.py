@@ -11,6 +11,7 @@ from tiozin.family.tio_spark import SparkSchemaInferenceTransform
 STR_2024_01_15T10_30_00_UTC = "2024-01-15T10:30:00Z"
 STR_2024_01_15T10_30_00_BRT = "2024-01-15T10:30:00-03:00"
 STR_2024_01_15T10_30_00_NTZ = "2024-01-15T10:30:00"
+STR_20240115103000 = "20240115103000"
 OBJ_2024_01_15T10_30_00_UTC = datetime.fromisoformat(STR_2024_01_15T10_30_00_UTC)
 OBJ_2024_01_15T10_30_00_NTZ = datetime.fromisoformat(STR_2024_01_15T10_30_00_NTZ)
 
@@ -372,7 +373,7 @@ def test_transform_should_enforce_auto_timestamp_fields(
             (STR_2024_01_15T10_30_00_UTC,),
             (STR_2024_01_15T10_30_00_BRT,),
             (STR_2024_01_15T10_30_00_NTZ,),
-            ("1705314600",),
+            (STR_20240115103000,),
         ],
         schema="ts STRING",
     )

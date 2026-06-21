@@ -1,30 +1,34 @@
-from datetime import datetime
-
 import pytest
-from dateutil.parser import isoparse
+from dateutil.parser import parse
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StringType, StructField
 from pyspark.testing import assertDataFrameEqual
 
-from tiozin.family.tio_spark.functions import get_field, has_timezone, to_auto_timestamp, with_field
+from tiozin.family.tio_spark.functions import (
+    get_field,
+    has_timezone,
+    to_auto_timestamp,
+    with_field,
+)
 
-D2026_01_16T10_00_00 = isoparse("2026-01-16T10:00:00Z")
+D2026_01_16T10_00_00 = parse("2026-01-16T10:00:00Z")
 S2026_01_16T10_00_00 = "2026-01-16 10:00:00"
 
 S2024_01_15T10_30_00 = "2024-01-15T10:30:00"
 
 D15_01_2024_10_30_00 = "15/01/2024 10:30:00"
 DD_MM_YYYY_HH_MM_SS = "dd/MM/yyyy HH:mm:ss"
+YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss"
 
-D2024_01_15T01_30_00_UTC = isoparse("2024-01-15T01:30:00Z")
-D2024_01_15T07_30_00_UTC = isoparse("2024-01-15T07:30:00Z")
-D2024_01_15T10_30_00_UTC = isoparse("2024-01-15T10:30:00Z")
-D2024_01_15T13_30_00_UTC = isoparse("2024-01-15T13:30:00Z")
-D2024_01_15T15_30_00_UTC = isoparse("2024-01-15T15:30:00Z")
-D2024_01_15T16_30_00_UTC = isoparse("2024-01-15T16:30:00Z")
-D2024_01_15T17_30_00_UTC = isoparse("2024-01-15T17:30:00Z")
-D2024_01_15T18_30_00_UTC = isoparse("2024-01-15T18:30:00Z")
+D2024_01_15T01_30_00_UTC = parse("2024-01-15T01:30:00Z")
+D2024_01_15T07_30_00_UTC = parse("2024-01-15T07:30:00Z")
+D2024_01_15T10_30_00_UTC = parse("2024-01-15T10:30:00Z")
+D2024_01_15T13_30_00_UTC = parse("2024-01-15T13:30:00Z")
+D2024_01_15T15_30_00_UTC = parse("2024-01-15T15:30:00Z")
+D2024_01_15T16_30_00_UTC = parse("2024-01-15T16:30:00Z")
+D2024_01_15T17_30_00_UTC = parse("2024-01-15T17:30:00Z")
+D2024_01_15T18_30_00_UTC = parse("2024-01-15T18:30:00Z")
 
 SUPPORTED_TIMEZONE_CASES = [
     "Z",
@@ -51,6 +55,8 @@ SUPPORTED_TIMEZONE_CASES = [
     "GMT-08:00",
     "America/Sao_Paulo",
 ]
+
+DATE_DELIMITERS = "_-./"
 
 
 # ============================================================================
@@ -231,229 +237,310 @@ def test_with_field_should_apply_function_to_nested_field(spark: SparkSession) -
 # ============================================================================
 
 
-@pytest.mark.parametrize(
-    "suffix, expected_dt",
-    [
-        ("Z", D2024_01_15T10_30_00_UTC),
-        ("+03:00", D2024_01_15T07_30_00_UTC),
-        ("-03:00", D2024_01_15T13_30_00_UTC),
-        ("+0300", D2024_01_15T07_30_00_UTC),
-        ("-0300", D2024_01_15T13_30_00_UTC),
-    ],
-)
-def test_to_timestamp_should_convert_string_with_timezone(
-    spark: SparkSession, suffix: str, expected_dt: datetime
-) -> None:
-    # Arrange
-    df = spark.createDataFrame(
-        [(S2024_01_15T10_30_00 + suffix,)],
-        schema="created_at STRING",
-    )
-
-    # Act
-    result = df.withColumn("created_at", to_auto_timestamp("created_at"))
-
-    # Assert
-    actual = result
-    expected = spark.createDataFrame(
-        [(expected_dt,)],
-        schema="created_at TIMESTAMP",
-    )
-    assertDataFrameEqual(actual, expected)
-
-
-# EDT, CDT, MDT, PDT, KST are excluded: Spark's to_timestamp_ltz returns null for them.
-@pytest.mark.parametrize(
-    "suffix, expected_dt",
-    [
-        (" UTC", D2024_01_15T10_30_00_UTC),
-        (" utc", D2024_01_15T10_30_00_UTC),
-        (" GMT", D2024_01_15T10_30_00_UTC),
-        (" gmt", D2024_01_15T10_30_00_UTC),
-        (" EST", D2024_01_15T15_30_00_UTC),
-        (" est", D2024_01_15T15_30_00_UTC),
-        (" CST", D2024_01_15T16_30_00_UTC),
-        (" cst", D2024_01_15T16_30_00_UTC),
-        (" MST", D2024_01_15T17_30_00_UTC),
-        (" mst", D2024_01_15T17_30_00_UTC),
-        (" PST", D2024_01_15T18_30_00_UTC),
-        (" pst", D2024_01_15T18_30_00_UTC),
-        (" JST", D2024_01_15T01_30_00_UTC),
-        (" jst", D2024_01_15T01_30_00_UTC),
-    ],
-)
-def test_to_timestamp_should_convert_string_with_named_timezone(
-    suffix: str,
-    expected_dt: datetime,
-    spark: SparkSession,
-) -> None:
-    # Arrange
-    df = spark.createDataFrame(
-        [(S2024_01_15T10_30_00 + suffix,)],
-        schema="created_at STRING",
-    )
-
-    # Act
-    result = df.withColumn("created_at", to_auto_timestamp("created_at"))
-
-    # Assert
-    actual = result
-    expected = spark.createDataFrame(
-        [(expected_dt,)],
-        schema="created_at TIMESTAMP",
-    )
-    assertDataFrameEqual(actual, expected)
-
-
-def test_to_timestamp_should_convert_string_without_timezone(spark: SparkSession) -> None:
+def test_to_auto_timestamp_should_assume_timezone_for_naive_value(spark: SparkSession) -> None:
     # Arrange
     df = spark.createDataFrame(
         [(S2024_01_15T10_30_00,)],
-        schema="created_at STRING",
+        schema="date STRING",
     )
 
     # Act
-    result = df.withColumn("created_at", to_auto_timestamp("created_at"))
-
-    # Assert
-    actual = result
-    expected = spark.createDataFrame(
-        [(D2024_01_15T10_30_00_UTC,)],
-        schema="created_at TIMESTAMP",
-    )
-    assertDataFrameEqual(actual, expected)
-
-
-def test_to_timestamp_should_convert_string_without_timezone_when_timezone_is_provided(
-    spark: SparkSession,
-) -> None:
-    # Arrange
-    df = spark.createDataFrame(
-        [(S2024_01_15T10_30_00,)],
-        schema="created_at STRING",
-    )
-
-    # Act
-    result = df.withColumn(
-        "created_at", to_auto_timestamp("created_at", timezone="America/Sao_Paulo")
-    )
+    result = df.withColumn("date", to_auto_timestamp("date", timezone="America/Sao_Paulo"))
 
     # Assert
     actual = result
     expected = spark.createDataFrame(
         [(D2024_01_15T13_30_00_UTC,)],
-        schema="created_at TIMESTAMP",
+        schema="date TIMESTAMP",
     )
     assertDataFrameEqual(actual, expected)
 
 
-def test_to_timestamp_should_convert_epoch_string(spark: SparkSession) -> None:
-    # Arrange
-    df = spark.createDataFrame(
-        [("1705314600",)],
-        schema="created_at STRING",
-    )
-
-    # Act
-    result = df.withColumn("created_at", to_auto_timestamp("created_at"))
-
-    # Assert
-    actual = result
-    expected = spark.createDataFrame(
-        [(D2024_01_15T10_30_00_UTC,)],
-        schema="created_at TIMESTAMP",
-    )
-    assertDataFrameEqual(actual, expected)
-
-
-def test_to_timestamp_should_convert_epoch_integer(spark: SparkSession) -> None:
-    # Arrange
-    df = spark.createDataFrame(
-        [(1705314600,)],
-        schema="created_at LONG",
-    )
-
-    # Act
-    result = df.withColumn("created_at", to_auto_timestamp("created_at"))
-
-    # Assert
-    actual = result
-    expected = spark.createDataFrame(
-        [(D2024_01_15T10_30_00_UTC,)],
-        schema="created_at TIMESTAMP",
-    )
-    assertDataFrameEqual(actual, expected)
-
-
-def test_to_timestamp_should_convert_string_with_custom_format(spark: SparkSession) -> None:
+@pytest.mark.parametrize(
+    "format",
+    [
+        DD_MM_YYYY_HH_MM_SS,
+        [YYYY_MM_DD_HH_MM_SS, DD_MM_YYYY_HH_MM_SS],
+    ],
+)
+def test_to_auto_timestamp_should_accept_custom_format(
+    spark: SparkSession, format: str | list
+) -> None:
     # Arrange
     df = spark.createDataFrame(
         [(D15_01_2024_10_30_00,)],
-        schema="created_at STRING",
+        schema="date STRING",
     )
 
     # Act
-    result = df.withColumn(
-        "created_at",
-        to_auto_timestamp("created_at", format=DD_MM_YYYY_HH_MM_SS),
-    )
+    result = df.withColumn("date", to_auto_timestamp("date", format=format))
 
     # Assert
     actual = result
     expected = spark.createDataFrame(
         [(D2024_01_15T10_30_00_UTC,)],
-        schema="created_at TIMESTAMP",
+        schema="date TIMESTAMP",
     )
     assertDataFrameEqual(actual, expected)
 
 
-def test_to_timestamp_should_convert_column_with_mixed_timezones(
-    spark: SparkSession,
+def test_to_auto_timestamp_should_accept_column_argument(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [(S2024_01_15T10_30_00 + "Z",)],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp(sf.col("date")))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(D2024_01_15T10_30_00_UTC,)],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_to_auto_timestamp_should_accept_compact_date_as_integer(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [(20240115103000,)],
+        schema="date LONG",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(D2024_01_15T10_30_00_UTC,)],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_to_auto_timestamp_should_return_null_for_unparseable_value(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [("not a date",)],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(None,)],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize("d", DATE_DELIMITERS)
+def test_to_auto_timestamp_should_parse_naive_iso_datetime(spark: SparkSession, d: str) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [
+            (f"2023{d}01{d}01",),
+            (f"2023{d}01{d}01T10:20",),
+            (f"2023{d}01{d}01T10:20:30",),
+            (f"2023{d}01{d}01T10:20:30.123456",),
+            (f"2023{d}01{d}01 10:20",),
+            (f"2023{d}01{d}01 10:20:30",),
+            (f"2023{d}01{d}01 10:20:30.123456",),
+        ],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [
+            (parse("2023-01-01T00:00:00Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+        ],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize("d", DATE_DELIMITERS)
+def test_to_auto_timestamp_should_parse_aware_iso_datetime(spark: SparkSession, d: str) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [
+            (f"2023{d}01{d}01Z",),
+            (f"2023{d}01{d}01T10:20Z",),
+            (f"2023{d}01{d}01T10:20:30Z",),
+            (f"2023{d}01{d}01T10:20:30.123456Z",),
+            (f"2023{d}01{d}01 10:20Z",),
+            (f"2023{d}01{d}01 10:20:30Z",),
+            (f"2023{d}01{d}01 10:20:30.123456Z",),
+        ],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [
+            (parse("2023-01-01T00:00:00Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+        ],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize("d", DATE_DELIMITERS)
+def test_to_auto_timestamp_should_parse_naive_european_datetime(
+    spark: SparkSession, d: str
 ) -> None:
     # Arrange
     df = spark.createDataFrame(
         [
-            (S2024_01_15T10_30_00 + "Z",),
-            (S2024_01_15T10_30_00 + "+03:00",),
-            (S2024_01_15T10_30_00 + "-03:00",),
-            (S2024_01_15T10_30_00 + "+0300",),
-            (S2024_01_15T10_30_00 + "-0300",),
-            (S2024_01_15T10_30_00 + " UTC",),
-            (S2024_01_15T10_30_00 + " GMT",),
-            (S2024_01_15T10_30_00 + " EST",),
-            (S2024_01_15T10_30_00 + " CST",),
-            (S2024_01_15T10_30_00 + " MST",),
-            (S2024_01_15T10_30_00 + " PST",),
-            (S2024_01_15T10_30_00 + " JST",),
-            (S2024_01_15T10_30_00,),
+            (f"01{d}01{d}2023",),
+            (f"01{d}01{d}2023T10:20",),
+            (f"01{d}01{d}2023T10:20:30",),
+            (f"01{d}01{d}2023T10:20:30.123456",),
+            (f"01{d}01{d}2023 10:20",),
+            (f"01{d}01{d}2023 10:20:30",),
+            (f"01{d}01{d}2023 10:20:30.123456",),
         ],
-        schema="created_at STRING",
+        schema="date STRING",
     )
 
     # Act
-    result = df.withColumn("created_at", to_auto_timestamp("created_at"))
+    result = df.withColumn("date", to_auto_timestamp("date"))
 
     # Assert
     actual = result
     expected = spark.createDataFrame(
         [
-            (D2024_01_15T10_30_00_UTC,),
-            (D2024_01_15T07_30_00_UTC,),
-            (D2024_01_15T13_30_00_UTC,),
-            (D2024_01_15T07_30_00_UTC,),
-            (D2024_01_15T13_30_00_UTC,),
-            (D2024_01_15T10_30_00_UTC,),
-            (D2024_01_15T10_30_00_UTC,),
-            (D2024_01_15T15_30_00_UTC,),
-            (D2024_01_15T16_30_00_UTC,),
-            (D2024_01_15T17_30_00_UTC,),
-            (D2024_01_15T18_30_00_UTC,),
-            (D2024_01_15T01_30_00_UTC,),
-            (D2024_01_15T10_30_00_UTC,),
+            (parse("2023-01-01T00:00:00Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
         ],
-        schema="created_at TIMESTAMP",
+        schema="date TIMESTAMP",
     )
-    assertDataFrameEqual(actual, expected, checkRowOrder=True)
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize("d", DATE_DELIMITERS)
+def test_to_auto_timestamp_should_parse_aware_european_datetime(
+    spark: SparkSession, d: str
+) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [
+            (f"01{d}01{d}2023Z",),
+            (f"01{d}01{d}2023T10:20Z",),
+            (f"01{d}01{d}2023T10:20:30Z",),
+            (f"01{d}01{d}2023T10:20:30.123456Z",),
+            (f"01{d}01{d}2023 10:20Z",),
+            (f"01{d}01{d}2023 10:20:30Z",),
+            (f"01{d}01{d}2023 10:20:30.123456Z",),
+        ],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [
+            (parse("2023-01-01T00:00:00Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+            (parse("2023-01-01T10:20Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30.123456Z"),),
+        ],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_to_auto_timestamp_should_parse_compact_datetime(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [
+            ("20230101",),
+            ("20230101102030",),
+            ("20230101Z",),
+            ("20230101102030Z",),
+        ],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [
+            (parse("2023-01-01T00:00:00Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T00:00:00Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+        ],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_to_auto_timestamp_should_parse_rfc2822_datetime(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [
+            ("01 Jan 2023 10:20:30",),
+            ("01 Jan 2023 10:20:30Z",),
+        ],
+        schema="date STRING",
+    )
+
+    # Act
+    result = df.withColumn("date", to_auto_timestamp("date"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [
+            (parse("2023-01-01T10:20:30Z"),),
+            (parse("2023-01-01T10:20:30Z"),),
+        ],
+        schema="date TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
 
 
 # ============================================================================

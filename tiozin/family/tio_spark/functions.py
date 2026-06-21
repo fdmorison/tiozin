@@ -13,9 +13,12 @@ from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as sf
 from pyspark.sql.types import ArrayType, StructField, StructType
 
+from tiozin.utils import as_list
+
 from .utils import join_field, split_field
 
 FIELD_DELIMITER = "."
+DATE_DELIMITERS = "_-./"
 TIMEZONE_OFFSET_PATTERN = (
     r"("
     r"Z|UTC"
@@ -25,6 +28,13 @@ TIMEZONE_OFFSET_PATTERN = (
     r"|\s?[A-Za-z]+/[A-Za-z_]+(/[A-Za-z_]+)?"  # IANA zone: America/Sao_Paulo
     r")$"
 )
+TIMESTAMP_FORMATS = [
+    *[f"yyyy{d}MM{d}dd[['T'][' ']HH:mm[:ss][.SSSSSS][' ']][XXX][x][O][z]" for d in DATE_DELIMITERS],
+    *[f"dd{d}MM{d}yyyy[['T'][' ']HH:mm[:ss][.SSSSSS][' ']][XXX][x][O][z]" for d in DATE_DELIMITERS],
+    "yyyyMMdd[XXX][x][O][z]",
+    "yyyyMMddHHmmss[XXX][x][O][z]",
+    "dd MMM yyyy HH:mm:ss[ ][XXX][x][O][z]",
+]
 EPOCH_PATTERN = r"^\d+$"
 
 
@@ -172,7 +182,11 @@ def has_timezone(field: str | Column) -> Column:
     return field.rlike(TIMEZONE_OFFSET_PATTERN)
 
 
-def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> Column:
+def to_auto_timestamp(
+    field: str | Column,
+    format: str | list[str] = None,
+    timezone: str = None,
+) -> Column:
     """
     Converts a column to a UTC timestamp.
 
@@ -181,7 +195,7 @@ def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> C
     Rules:
         - Timezone-aware values use the timezone present in the value.
         - Timezone-naive values assume the ``timezone`` parameter.
-        - Numeric values and numeric strings are interpreted as Unix epoch seconds.
+        - Numeric values and numeric strings are interpreted as compact dates, not epoch.
 
     Args:
         field:
@@ -190,7 +204,7 @@ def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> C
             Source timezone for values without a timezone indicator.
             Defaults to ``UTC``.
         format:
-            Optional datetime format. Disables epoch detection.
+            Optional format or list of formats tried before the built-in defaults.
 
     Returns:
         A UTC timestamp column.
@@ -198,9 +212,10 @@ def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> C
     Examples:
         "2024-01-15T10:30:00Z"      -> 2024-01-15T10:30:00Z
         "2024-01-15T10:30:00-03:00" -> 2024-01-15T13:30:00Z
+        "2024-01-15T10:30:00 BRT"   -> 2024-01-15T13:30:00Z
         "2024-01-15T10:30:00"       -> 2024-01-15T10:30:00Z
-        "1705314600"                -> 2024-01-15T10:30:00Z
-        1705314600                  -> 2024-01-15T10:30:00Z
+        "20240115103000"            -> 2024-01-15T10:30:00Z
+        20240115103000              -> 2024-01-15T10:30:00Z
 
         timezone="America/Sao_Paulo":
         "2024-01-15T10:30:00"       -> 2024-01-15T13:30:00Z
@@ -208,24 +223,19 @@ def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> C
         format="dd/MM/yyyy HH:mm:ss":
         "15/01/2024 10:30:00"       -> 2024-01-15T10:30:00Z
     """
-    field = sf.upper(sf.col(field).cast("STRING"))
-    timezone = timezone or "UTC"
-    fmt = sf.lit(format) if format else None
+    field = sf.col(field) if isinstance(field, str) else field
+    field = field.cast("STRING")
+    timezone = sf.lit(timezone or "UTC")
+    formats = as_list(format, []) + TIMESTAMP_FORMATS
 
-    expr = sf.when(
-        field.rlike(TIMEZONE_OFFSET_PATTERN),
-        sf.to_timestamp_ltz(field, fmt),
+    parse_ntz = sf.coalesce(
+        *[sf.to_utc_timestamp(sf.try_to_timestamp(field, sf.lit(fmt)), timezone) for fmt in formats]
     )
+    parse_wtz = sf.coalesce(*[sf.try_to_timestamp(field, sf.lit(fmt)) for fmt in formats])
 
-    if not format:
-        expr = expr.when(
-            field.rlike(EPOCH_PATTERN),
-            sf.timestamp_seconds(field.cast("LONG")),
-        )
-
-    return expr.otherwise(
-        sf.to_utc_timestamp(
-            sf.to_timestamp_ntz(field, fmt),
-            timezone,
-        ),
+    return sf.when(
+        has_timezone(field),
+        parse_wtz,
+    ).otherwise(
+        parse_ntz,
     )

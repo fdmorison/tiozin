@@ -23,8 +23,8 @@ payload STRING  →  payload STRUCT<age BIGINT, name STRING>
 | `sampling_ratio` | No | `0.10` | Fraction of rows used to infer the schema |
 | `unnest_fields` | No | `[]` | Fields to expand into top-level columns after inference |
 | `timezone` | No | `UTC` | Source timezone for naive values in `auto_timestamp_fields` |
-| `timestamp_format` | No | inferred | Pattern used to parse timestamps in `auto_timestamp_fields` |
-| `auto_timestamp_fields` | No | `[]` | Fields to convert to UTC timestamps, auto-detecting each value at runtime: timezone-aware strings keep their embedded zone, naive strings are read in `timezone`, and numeric strings or integers are read as Unix epoch seconds |
+| `timestamp_format` | No | inferred | Pattern or list of patterns used to parse timestamps in `auto_timestamp_fields` |
+| `auto_timestamp_fields` | No | `[]` | Fields to convert to UTC timestamps, auto-detecting each value at runtime: timezone-aware strings keep their embedded zone, naive strings are read in `timezone`, and numeric strings or integers are read as compact dates (`yyyyMMdd` or `yyyyMMddHHmmss`) |
 | `**options` | No | see below | [Spark JSON reader options](https://spark.apache.org/docs/latest/sql-data-sources-json.html) that override the reader defaults |
 
 When `json_fields` is empty, the transform returns the input unchanged.
@@ -84,7 +84,7 @@ If the sample produces no fields, for example when the ratio is too small to cap
 
 ## auto_timestamp_fields
 
-`auto_timestamp_fields` converts the listed fields to UTC timestamps after schema inference. Each value is inspected at runtime: a timezone-aware string keeps its embedded timezone, a timezone-naive string is read in `timezone` and converted to UTC, and a numeric string or integer is treated as Unix epoch seconds. Epoch milliseconds are not supported. Use dot notation to reach a nested field.
+`auto_timestamp_fields` converts the listed fields to UTC timestamps after schema inference. Each value is inspected at runtime: a timezone-aware string keeps its embedded timezone, a timezone-naive string is read in `timezone` and converted to UTC, and a numeric string or integer is treated as a compact date (`yyyyMMdd` or `yyyyMMddHHmmss`). Use dot notation to reach a nested field.
 
 ```yaml
 transforms:
@@ -96,7 +96,7 @@ transforms:
       - payload.updated_at
 ```
 
-`timezone` sets the source zone for naive values and defaults to `UTC`. `timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`. When `timestamp_format` is omitted, Spark infers the format and the transform does not pass a format to the reader.
+`timezone` sets the source zone for naive values and defaults to `UTC`. `timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns. When a list is provided, the JSON reader uses the first pattern and `auto_timestamp_fields` tries each pattern in order before falling back to the built-in defaults. When `timestamp_format` is omitted, Spark infers the format and the transform does not pass a format to the reader.
 
 ## Reader Defaults And Options
 
