@@ -16,6 +16,8 @@ user-invocable: true
 - Never commit directly to `main`. Always create a feature branch first.
 - Never skip git hooks (`--no-verify`) unless explicitly requested.
 - Never commit files that may contain secrets (`.env`, `credentials.json`, etc.).
+- Never commit absolute paths, local paths, secrets, or PII to any file.
+- Only fake secrets and fake PII are allowed in test fixtures, stubs and tests.
 - If a pre-commit hook fails, the commit did not happen. Fix the issue, re-stage affected files, and create a new commit.
 
 ## Policies

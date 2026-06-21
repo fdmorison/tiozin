@@ -25,7 +25,6 @@
       "Bash(python *)",
       "Bash(pytest *)",
       "Bash(pip *)",
-      "Bash(rm /home/fdmorison/Projetos/merak/tiozin/tests/unit/family/tio_spark/utils_to_timestamp_test.py)",
       "Bash(cat > *)"
     ],
     "deny": [
@@ -39,7 +38,6 @@
       "Bash(wget *)"
     ],
     "additionalDirectories": [
-      "/home/fdmorison/Projetos/merak/tiozin/tests/unit/family/tio_spark",
       "/tmp"
     ]
   }
