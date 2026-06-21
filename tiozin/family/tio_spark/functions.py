@@ -204,7 +204,7 @@ def to_auto_timestamp(
             Source timezone for values without a timezone indicator.
             Defaults to ``UTC``.
         format:
-            Optional datetime format. Disables epoch detection.
+            Optional format or list of formats tried before the built-in defaults.
 
     Returns:
         A UTC timestamp column.
@@ -226,7 +226,7 @@ def to_auto_timestamp(
     field = sf.col(field) if isinstance(field, str) else field
     field = field.cast("STRING")
     timezone = sf.lit(timezone or "UTC")
-    formats = as_list(format or TIMESTAMP_FORMATS)
+    formats = as_list(format, []) + TIMESTAMP_FORMATS
 
     parse_ntz = sf.coalesce(
         *[sf.to_utc_timestamp(sf.try_to_timestamp(field, sf.lit(fmt)), timezone) for fmt in formats]

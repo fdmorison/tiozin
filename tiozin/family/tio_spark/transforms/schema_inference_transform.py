@@ -56,15 +56,19 @@ class SparkSchemaInferenceTransform(SparkTransform):
             indicator. Defaults to ``UTC``.
 
         timestamp_format:
-            Pattern used to parse timestamps (e.g., ``"dd/MM/yyyy HH:mm:ss"``). Accepts
-            Java SimpleDateFormat patterns. When omitted, Spark infers the format.
+            Pattern or list of patterns used to parse timestamps
+            (e.g., ``"dd/MM/yyyy HH:mm:ss"``). Accepts Java SimpleDateFormat patterns.
+            When a list is provided, the JSON reader uses the first pattern and
+            ``auto_timestamp_fields`` tries each pattern in order. When omitted,
+            Spark infers the format.
 
         auto_timestamp_fields:
             Field or list of fields to convert to UTC timestamps. Each value is inspected
             at runtime: timezone-aware strings use the embedded timezone; timezone-naive
-            strings are assumed to be in ``timezone`` and converted to UTC; numeric strings
-            and integers are treated as Unix epoch **seconds** (epoch milliseconds are not
-            supported). Applied after JSON schema inference. Use dot notation for nested fields.
+            strings are assumed to be in ``timezone`` and converted to UTC; numeric values
+            and numeric strings are interpreted as compact dates (``yyyyMMdd`` or
+            ``yyyyMMddHHmmss``). Applied after JSON schema inference. Use dot notation for
+            nested fields.
 
     Examples:
 
@@ -102,7 +106,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
         sampling_ratio: float = None,
         unnest_fields: list[str] = None,
         timezone: str = None,
-        timestamp_format: str = None,
+        timestamp_format: str | list[str] = None,
         auto_timestamp_fields: list[str] = None,
         **options,
     ) -> None:
@@ -112,7 +116,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
         self.sampling_ratio = default(sampling_ratio, 0.10)
         self.unnest_fields = as_list(unnest_fields, [])
         self.timezone = timezone or "UTC"
-        self.timestamp_format = timestamp_format
+        self.timestamp_format = as_list(timestamp_format)
         self.auto_timestamp_fields = as_list(auto_timestamp_fields, [])
         # Reader parameters
         self.reader_options = {
@@ -122,7 +126,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
                 **camelize(self.options),
                 "timeZone": self.timezone,
                 "samplingRatio": self.sampling_ratio,
-                "timestampFormat": self.timestamp_format,
+                "timestampFormat": timestamp_format[0] if timestamp_format else None,
             }.items()
             if v is not None
         }
@@ -168,7 +172,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
             data = tio.with_field(
                 data,
                 field,
-                tio.to_auto_timestamp(field, self.timezone, self.timestamp_format),
+                tio.to_auto_timestamp(field, format=self.timestamp_format, timezone=self.timezone),
             )
 
         return data
