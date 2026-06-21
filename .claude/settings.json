@@ -19,8 +19,14 @@
       "Bash(tail *)",
       "Bash(sed *)",
       "Bash(make *)",
+      "Bash(mv *)",
+      "Bash(cp *)",
       "Bash(python3 *)",
-      "Bash(mv *)"
+      "Bash(python *)",
+      "Bash(pytest *)",
+      "Bash(pip *)",
+      "Bash(rm /home/fdmorison/Projetos/merak/tiozin/tests/unit/family/tio_spark/utils_to_timestamp_test.py)",
+      "Bash(cat > *)"
     ],
     "deny": [
       "Bash(sudo *)",
@@ -31,6 +37,10 @@
       "Bash(eval *)",
       "Bash(curl *)",
       "Bash(wget *)"
+    ],
+    "additionalDirectories": [
+      "/home/fdmorison/Projetos/merak/tiozin/tests/unit/family/tio_spark",
+      "/tmp"
     ]
   }
 }
