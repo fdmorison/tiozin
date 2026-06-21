@@ -1,24 +1,50 @@
 ---
 name: committing
-description: Commits uncommitted changes using conventional commits, grouped by topic in dependency order. Use when the user has uncommitted changes to stage and commit.
+description: Commits uncommitted changes by grouping related changes into focused commits and applying the repository commit conventions.
 user-invocable: true
 ---
 
 ## Rules
 
-- Commit message format: `type: description`
-  - `description` is lowercase, no trailing period, max 50 characters
-  - No scope: omitting here saves characters
-  - Wording does not need to describe the overall PR intent; describe only the changes in this commit
-- Stage files by name, never with `git add -A` or `git add .`
-- Never skip git hooks (`--no-verify`, `--no-gpg-sign`) unless the user explicitly requests it
-- Never commit files that likely contain secrets (`.env`, `credentials.json`, etc.)
-- Never use `git reset --hard`; use `git reset --soft` only
-- If a pre-commit hook fails, the commit did not happen: fix the issue, re-stage, and commit again; never amend in this scenario
+- All commits must be GPG-signed.
+- Keep commits focused and atomic:
+  - Each commit should represent a single topic or unit of work.
+  - Do not mix unrelated changes.
+  - Split independent changes into separate commits whenever practical.
+  - A reviewer should be able to understand the implementation incrementally by reading the history from first to last.
+- Stage files by name. Never use `git add .` or `git add -A`.
+- Never use `git reset --hard`.
+- Never commit directly to `main`. Always create a feature branch first.
+- Never skip git hooks (`--no-verify`, `--no-gpg-sign`) unless explicitly requested.
+- Never commit files that may contain secrets (`.env`, `credentials.json`, etc.).
+- If a pre-commit hook fails, the commit did not happen. Fix the issue, re-stage affected files, and create a new commit.
+
+## Policies
+
+- Commit message format:
+  ```text
+  <type>: <description>
+
+  <body>
+  ```
+- `type` must be one of the commit types defined in `.github/workflows/pr-checks.yaml`.
+- `description` is lowercase, imperative, and has no trailing period.
+- Do not use scopes in commit messages on feature branches. This rule does not apply to PR titles.
+- The commit title (`<type>(<scope>): <description>`) is at most 50 characters.
+- Describe only the changes in the commit, not the overall PR intent.
+- The body is optional. When present:
+  - Leave a blank line between the title and body.
+  - Wrap lines at 72 characters.
+  - Explain why the change was made when the reason is not obvious.
+- Order commits using progressive disclosure patterns:
+  - Commit independent changes before dependent changes.
+  - Commit simpler changes before more complex changes.
+  - Each commit should build naturally on the commits that precede it.
 
 ## Workflow
 
-1. If the user asked to exclude any files, stash them before committing.
-2. Analyze all uncommitted changes and group them by topic or independent unit of change.
-3. Order the groups from least to most dependent: simpler, self-contained changes first; changes that depend on earlier ones last.
-4. Commit each group separately, in that order.
+1. Temporarily stash files the user asked not to commit.
+2. Run `make format`.
+3. Review all remaining uncommitted changes, including any changes introduced by formatting.
+4. Create the required commits.
+5. Restore the stashed files to their original state.

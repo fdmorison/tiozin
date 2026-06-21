@@ -2,18 +2,27 @@
 
 ## 1. Optional parameters default to `None`
 
-Plugin constructor parameters must default to `None`, never to a concrete value.
+Optional parameters in any Python function or method must default to `None`, never to a concrete value.
+
+Optional parameters are resolved in the method body, falling back to library or engine defaults when `None`.
 
 ```python
 # ✔ Correct
-def __init__(self, sampling_ratio: float = None, **options) -> None:
+from tiozin.utils import default
+
+def __init__(self, value: float = None) -> None:
+    value = default(value, 1.0)
+
+def foo(timezone: str = None) -> Any:
+    timezone = default(timezone, "UTC")
 
 # ❌ Incorrect
-def __init__(self, sampling_ratio: float = 1.0, **options) -> None:
-```
+def __init__(self, value: float = 1.0) -> None:
+    ...
 
-Concrete defaults hide behavior from the user. Optional parameters are resolved
-in the method body, falling back to library or engine defaults when `None`.
+def foo(timezone: str = "UTC") -> Any:
+    ...
+```
 
 ## 2. `sf.col()` only when necessary
 
@@ -57,16 +66,123 @@ self.columns = as_list(columns)
 self.columns = [columns] if isinstance(columns, str) else columns
 ```
 
-## 4. No magic numbers
+## 5. `default` for optional parameters with fallback values
+
+Use `default` from `tiozin.utils` to resolve an optional parameter to a concrete value in the method body.
+
+
+Unlike `or`, `default` checks for `None` explicitly, so falsy values like `0`, `False`, or `""` are preserved correctly.
+
+```python
+# ✔ Correct
+from tiozin.utils import default
+
+self.sampling_ratio = default(sampling_ratio, 0.10)  # sampling_ratio=0 stays 0
+
+# ❌ Incorrect — sampling_ratio=0 is incorrectly replaced by 0.10
+self.sampling_ratio = sampling_ratio or 0.10
+self.sampling_ratio = sampling_ratio if sampling_ratio is not None else 0.10
+```
+
+`or` is acceptable when an empty collection or string is semantically equivalent to "not provided":
+
+```python
+# ✔ Acceptable — empty list means "no columns selected", same as None
+self.columns = columns or []
+```
+
+## 6. No magic numbers
 
 Numeric literals must be assigned to a named constant at module level.
 
 ```python
 # ✔ Correct
 DEFAULT_SAMPLING_RATIO = 1.0
-
 sampling_ratio = self.sampling_ratio or DEFAULT_SAMPLING_RATIO
 
 # ❌ Incorrect
 sampling_ratio = self.sampling_ratio or 1.0
+
+# ✔ Correct
+STR_2024_01_15T10_30_00Z = "2024-01-15T10:30:00Z"
+input = spark.createDataFrame(
+    [{"created_at": STR_2024_01_15T10_30_00Z}],
+    schema="created_at STRING",
+)
+
+# ❌ Incorrect
+input = spark.createDataFrame(
+    [{"created_at": "2024-01-15T10:30:00Z"}],
+    schema="created_at STRING",
+)
+
+# ✔ Correct
+OBJ_2024_01_15T10_30_00Z = datetime.fromisoformat("2024-01-15T10:30:00Z")
+input = spark.createDataFrame(
+    [{"created_at": OBJ_2024_01_15T10_30_00Z}],
+    schema="created_at STRING",
+)
+
+# ❌ Incorrect
+input = spark.createDataFrame(
+    [{"created_at": datetime.fromisoformat("2024-01-15T10:30:00Z")}],
+    schema="created_at STRING",
+)
+```
+
+## 7. Imports at the top of the file
+
+All imports must be at the top of the file. The only exception is a local import inside a function or method to break a circular dependency.
+
+```python
+# ✔ Correct
+from tiozin.utils import default
+
+def foo():
+    ...
+
+# ✔ Correct — local import to avoid circular dependency
+def foo():
+    from tiozin.some_module import Bar
+    ...
+
+# ❌ Incorrect
+def foo():
+    from tiozin.utils import default
+    ...
+
+# ❌ Incorrect
+def foo():
+    ...
+
+from tiozin.utils import default
+```
+
+## 8. Constants at the top of the file
+
+All module-level constants must be declared at the top of the file, after imports.
+
+```python
+# ✔ Correct
+from datetime import datetime
+
+FOO = 1.0
+BAR = "12345"
+
+def my_function():
+    ...
+
+# ❌ Incorrect
+FOO = 1.0
+BAR = "12345"
+
+def my_function():
+    ...
+
+# ❌ Incorrect
+def my_function():
+    ...
+
+FOO = 1.0
+BAR = "12345"
 ```
