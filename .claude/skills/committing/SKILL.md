@@ -26,6 +26,8 @@ user-invocable: true
   <type>: <description>
 
   <body>
+
+  Co-Authored-By: Claude <model> <noreply@anthropic.com>
   ```
 - `type` must be one of the commit types defined in `.github/workflows/pr-checks.yaml`.
 - `description` is lowercase, imperative, and has no trailing period.
