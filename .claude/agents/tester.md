@@ -28,7 +28,7 @@ The audience is developers who maintain, extend, and debug the code, and who rel
     - Then Missing, null, empty, and other falsy-value variations.
     - Then Success edge-case variations.
     - Then Error edge-case variations.
-- Preserve the existing tests unless refactor is explicitly required by the user, as changes may introduce regressions.
+- Preserve the existing tests unless refactor is required by the user or the tests are obsolete.
   - Don't remove or weaken failing tests.
   - Don't rename tests.
   - Reuse existing fixtures, mocks, and stubs before creating new ones.

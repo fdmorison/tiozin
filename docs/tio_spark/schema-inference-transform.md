@@ -24,7 +24,7 @@ payload STRING  →  payload STRUCT<age BIGINT, name STRING>
 | `unnest_fields` | No | `[]` | Fields to expand into top-level columns after inference |
 | `timezone` | No | `UTC` | Source timezone for naive values in `auto_timestamp_fields` |
 | `timestamp_format` | No | inferred | Pattern or list of patterns used to parse timestamps in `auto_timestamp_fields` |
-| `auto_timestamp_fields` | No | `[]` | Fields to convert to UTC timestamps, auto-detecting each value at runtime: timezone-aware strings keep their embedded zone, naive strings are read in `timezone`, and numeric strings or integers are read as compact dates (`yyyyMMdd` or `yyyyMMddHHmmss`) |
+| `auto_timestamp_fields` | No | `[]` | Fields to convert to UTC timestamps by trying a broad set of built-in formats against each value at runtime: timezone-aware strings keep their embedded zone, naive strings are read in `timezone`, and numeric strings or integers are read as compact dates (`yyyyMMdd` or `yyyyMMddHHmmss`) |
 | `**options` | No | see below | [Spark JSON reader options](https://spark.apache.org/docs/latest/sql-data-sources-json.html) that override the reader defaults |
 
 When `json_fields` is empty, the transform returns the input unchanged.
@@ -96,7 +96,49 @@ transforms:
       - payload.updated_at
 ```
 
-`timezone` sets the source zone for naive values and defaults to `UTC`. `timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns. When a list is provided, the JSON reader uses the first pattern and `auto_timestamp_fields` tries each pattern in order before falling back to the built-in defaults. When `timestamp_format` is omitted, Spark infers the format and the transform does not pass a format to the reader.
+`timezone` sets the source zone for naive values and defaults to `UTC`, regardless of spark session timezone.
+
+### Built-In Formats
+
+`auto_timestamp_fields` automatically recognizes the most common date and timestamp formats, so `timestamp_format` is usually not required.
+
+| Category             | Format                                        | Examples                                                                 |
+| -------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| ISO-like Dates       | `yyyy<d>MM<d>dd[Z]`                           | `2023-01-01Z`, `2023-01-01`, `2023/01/01`, `2023.01.01`, `2023_01_01`    |
+| ISO-like Timestamps  | `yyyy<d>MM<d>dd[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `2023-01-01T10:20`, `2023-01-01 10:20:30`, `2023-01-01T10:20:30.123456Z` |
+| Day-First Dates      | `dd<d>MM<d>yyyy`                              | `01-01-2023Z`, `01-01-2023`, `01/01/2023`, `01.01.2023`, `01_01_2023`    |
+| Day-First Timestamps | `dd<d>MM<d>yyyy[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `01-01-2023 10:20`, `01-01-2023 10:20:30 UTC`                            |
+| Compact Dates        | `yyyyMMdd[Z]`                                 | `20230101`, `20230101Z`                                                  |
+| Compact Timestamps   | `yyyyMMddHHmmss[tz]`                          | `20230101102030`, `20230101102030-0300`                                  |
+| RFC 2822             | `dd MMM yyyy HH:mm:ss[tz]`                    | `01 Jan 2023 10:20:30 UTC`                                               |
+
+Where:
+
+* `<d>` = `-`, `/`, `_`, or `.`
+* `[tz]` = `Z`, `UTC`, `GMT`, offsets such as `+00:00` and `-0300`, or IANA timezones such as `America/Sao_Paulo`
+* Bracketed components are optional
+
+The pattern letters above (`yyyy`, `MM`, `dd`, `HH`, and so on) follow the Java [DateTimeFormatter](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/time/format/DateTimeFormatter.html) and [SimpleDateFormat](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/text/SimpleDateFormat.html) syntax.
+
+Values that do not match any supported format are converted to `null`.
+
+### timestamp_format
+
+`timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns. Custom patterns are tried first, and the built-in formats above always follow as a fallback. Providing a format narrows the search toward the expected shape without removing coverage for the built-in ones.
+
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    json_fields: payload
+    timestamp_format: dd/MM/yyyy HH:mm:ss
+    auto_timestamp_fields:
+      - payload.created_at
+```
+
+When `timestamp_format` is a list, the Spark JSON reader uses only the first pattern, a [Spark](https://spark.apache.org/docs/latest/sql-data-sources-json.html) limitation. `auto_timestamp_fields` is not bound by this: it tries each pattern in order and then falls back to the built-in formats. A value that matches no custom pattern and no built-in format becomes `null`.
+
+When `timestamp_format` is omitted, Spark infers the format during reading and the transform does not pass a format to the reader.
 
 ## Reader Defaults And Options
 
