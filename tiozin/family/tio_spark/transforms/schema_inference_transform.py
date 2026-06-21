@@ -126,7 +126,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
                 **camelize(self.options),
                 "timeZone": self.timezone,
                 "samplingRatio": self.sampling_ratio,
-                "timestampFormat": timestamp_format[0] if timestamp_format else None,
+                "timestampFormat": self.timestamp_format[0] if self.timestamp_format else None,
             }.items()
             if v is not None
         }
@@ -144,7 +144,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
         result_df = self.enforce_datetime(result_df)
 
         if self.unnest_fields:
-            result_df = self.flatten_json_fields(result_df)
+            result_df = self.unnest_json_fields(result_df)
 
         return result_df
 
@@ -163,7 +163,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
         sample_df.printSchema()
         return sample_df.schema
 
-    def flatten_json_fields(self, data: DataFrame) -> DataFrame:
+    def unnest_json_fields(self, data: DataFrame) -> DataFrame:
         fields = [f"{field}.*" if field in self.unnest_fields else field for field in data.columns]
         return data.select(*fields)
 
