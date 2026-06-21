@@ -96,18 +96,29 @@ transforms:
       - payload.updated_at
 ```
 
-`timezone` sets the source zone for naive values and defaults to `UTC`.
+`timezone` sets the source zone for naive values and defaults to `UTC`, regardless of spark session timezone.
 
 ### Built-In Formats
 
-`auto_timestamp_fields` works for most common timestamp shapes out of the box, so `timestamp_format` is not required. When no custom format matches a value, Tiozin tries a wide range of built-in formats automatically:
+`auto_timestamp_fields` automatically recognizes the most common date and timestamp formats, so `timestamp_format` is usually not required.
 
-- **ISO / delimited** (`_`, `-`, `.`, `/`): `yyyy-MM-dd`, `yyyy/MM/dd`, `yyyy_MM_dd`, `yyyy.MM.dd`. Each accepts an optional `T` or space separator, a time component `HH:mm[:ss][.SSSSSS]`, and any timezone indicator.
-- **European / delimited** (`_`, `-`, `.`, `/`): `dd-MM-yyyy`, `dd/MM/yyyy`, `dd_MM_yyyy`, `dd.MM.yyyy`. Each accepts an optional time component and timezone indicator.
-- **Compact**: `yyyyMMdd` and `yyyyMMddHHmmss`, each with an optional timezone indicator.
-- **RFC 2822**: `dd MMM yyyy HH:mm:ss` with an optional timezone, for example `15 Jan 2024 10:30:00 UTC`.
+| Category             | Format                                        | Examples                                                                 |
+| -------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| ISO-like Dates       | `yyyy<d>MM<d>dd[Z]`                           | `2023-01-01Z`, `2023-01-01`, `2023/01/01`, `2023.01.01`, `2023_01_01`    |
+| ISO-like Timestamps  | `yyyy<d>MM<d>dd[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `2023-01-01T10:20`, `2023-01-01 10:20:30`, `2023-01-01T10:20:30.123456Z` |
+| Day-First Dates      | `dd<d>MM<d>yyyy`                              | `01-01-2023Z`, `01-01-2023`, `01/01/2023`, `01.01.2023`, `01_01_2023`    |
+| Day-First Timestamps | `dd<d>MM<d>yyyy[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `01-01-2023 10:20`, `01-01-2023 10:20:30 UTC`                            |
+| Compact Dates        | `yyyyMMdd[Z]`                                 | `20230101`, `20230101Z`                                                  |
+| Compact Timestamps   | `yyyyMMddHHmmss[tz]`                          | `20230101102030`, `20230101102030-0300`                                  |
+| RFC 2822             | `dd MMM yyyy HH:mm:ss[tz]`                    | `01 Jan 2023 10:20:30 UTC`                                               |
 
-A value that matches none of these built-in formats becomes `null`.
+Where:
+
+* `<d>` = `-`, `/`, `_`, or `.`
+* `[tz]` = `Z`, `UTC`, `GMT`, offsets such as `+00:00` and `-0300`, or IANA timezones such as `America/Sao_Paulo`
+* Bracketed components are optional
+
+Values that do not match any supported format are converted to `null`.
 
 ### timestamp_format
 
