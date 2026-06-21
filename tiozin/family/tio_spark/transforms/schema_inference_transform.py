@@ -77,6 +77,20 @@ class SparkSchemaInferenceTransform(SparkTransform):
             exist in the DataFrame are silently ignored. Applied after
             ``auto_timestamp_fields``. Use dot notation for nested fields.
 
+        date_format:
+            Pattern or list of patterns used to parse date fields (e.g.,
+            ``"dd/MM/yyyy"``). Accepts Java SimpleDateFormat patterns. The first pattern
+            is used for ``date_fields``. All patterns are merged with
+            ``timestamp_format`` (deduplicated, preserving order) and passed to
+            ``auto_timestamp_fields`` as additional formats to try.
+
+        date_fields:
+            Field or list of fields to convert to dates using the Spark ``to_date``
+            function. When ``date_format`` is provided, it is used to parse the field;
+            otherwise Spark infers the format. Fields that do not exist in the DataFrame
+            are silently ignored. Applied after ``timestamp_fields``. Use dot notation
+            for nested fields.
+
     Examples:
 
         ```python
@@ -116,6 +130,8 @@ class SparkSchemaInferenceTransform(SparkTransform):
         timestamp_format: str | list[str] = None,
         auto_timestamp_fields: list[str] = None,
         timestamp_fields: list[str] = None,
+        date_fields: list[str] = None,
+        date_format: str | list[str] = None,
         **options,
     ) -> None:
         super().__init__(**options)
@@ -127,6 +143,14 @@ class SparkSchemaInferenceTransform(SparkTransform):
         self.timestamp_format = as_list(timestamp_format)
         self.timestamp_fields = as_list(timestamp_fields, [])
         self.auto_timestamp_fields = as_list(auto_timestamp_fields, [])
+        self.date_fields = as_list(date_fields, [])
+        self.date_format = as_list(date_format)
+        seen = set()
+        self.auto_formats = []
+        for fmt in (self.timestamp_format or []) + (self.date_format or []):
+            if fmt not in seen:
+                seen.add(fmt)
+                self.auto_formats.append(fmt)
         # Reader parameters
         self.reader_options = {
             k: v
@@ -178,12 +202,13 @@ class SparkSchemaInferenceTransform(SparkTransform):
 
     def enforce_datetime(self, data: DataFrame) -> DataFrame:
         first_timestamp_format = self.timestamp_format[0] if self.timestamp_format else None
+        first_date_format = self.date_format[0] if self.date_format else None
 
         for field in self.auto_timestamp_fields:
             data = tio.with_field(
                 data,
                 field,
-                tio.to_auto_timestamp(field, format=self.timestamp_format, timezone=self.timezone),
+                tio.to_auto_timestamp(field, format=self.auto_formats, timezone=self.timezone),
             )
 
         for field in self.timestamp_fields:
@@ -192,6 +217,14 @@ class SparkSchemaInferenceTransform(SparkTransform):
                     data,
                     field,
                     sf.to_timestamp(field, first_timestamp_format),
+                )
+
+        for field in self.date_fields:
+            if tio.get_field(data, field) is not None:
+                data = tio.with_field(
+                    data,
+                    field,
+                    sf.to_date(field, first_date_format),
                 )
 
         return data

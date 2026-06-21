@@ -1,3 +1,4 @@
+import datetime as dt
 from datetime import UTC, datetime
 
 import pytest
@@ -19,6 +20,11 @@ OBJ_2024_01_15T10_30_00_NTZ = datetime.fromisoformat(STR_2024_01_15T10_30_00_NTZ
 
 OBJ_2024_01_15T13_30_00_UTC = datetime(2024, 1, 15, 13, 30, 0, tzinfo=UTC)
 OBJ_2024_01_15T14_30_00_UTC = datetime(2024, 1, 15, 14, 30, 0, tzinfo=UTC)
+
+STR_2024_01_15 = "2024-01-15"
+STR_15_01_2024 = "15/01/2024"
+FMT_DD_MM_YYYY = "dd/MM/yyyy"
+OBJ_2024_01_15 = dt.date(2024, 1, 15)
 
 # ============================================================================
 # Testing SparkSchemaInferenceTransform - Schema Inference
@@ -571,3 +577,98 @@ def test_transform_should_ignore_missing_timestamp_fields(
 
     # Assert
     assertDataFrameEqual(actual, input)
+
+
+# ============================================================================
+# Testing SparkSchemaInferenceTransform - Date Fields
+# ============================================================================
+
+
+def test_transform_should_enforce_date_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [(STR_2024_01_15,)],
+        schema="dt STRING",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        date_fields="dt",
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [(OBJ_2024_01_15,)],
+        schema="dt DATE",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_enforce_date_fields_when_date_format_is_provided(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [(STR_15_01_2024,)],
+        schema="dt STRING",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        date_fields="dt",
+        date_format=FMT_DD_MM_YYYY,
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [(OBJ_2024_01_15,)],
+        schema="dt DATE",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_ignore_missing_date_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"root": {"fullname": "John Doe"}}],
+        schema="root STRUCT<fullname STRING>",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        date_fields="fullname",
+    ).transform(input)
+
+    # Assert
+    assertDataFrameEqual(actual, input)
+
+
+def test_transform_should_merge_date_format_into_auto_timestamp_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [(STR_15_01_2024,)],
+        schema="ts STRING",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        auto_timestamp_fields="ts",
+        date_format=FMT_DD_MM_YYYY,
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [(OBJ_2024_01_15T10_30_00_UTC.replace(hour=0, minute=0, second=0),)],
+        schema="ts TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
