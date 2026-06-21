@@ -16,7 +16,15 @@ from pyspark.sql.types import ArrayType, StructField, StructType
 from .utils import join_field, split_field
 
 FIELD_DELIMITER = "."
-TIMEZONE_OFFSET_PATTERN = r"(Z|[+-]\d{2}(?::?\d{2})?|[A-Za-z]{3,4})$"
+TIMEZONE_OFFSET_PATTERN = (
+    r"("
+    r"Z|UTC"
+    r"|[+-]\d\d:\d\d"
+    r"|([\./:]\d{2}|\.\d+|\d{3,})\s?[+-]\d{2}(?::?\d{2})?"  # +HH, +HHMM, +HH:MM
+    r"|\s?[A-Za-z]{2,5}([+-]\d{1,2}(:?\d{2})?)?"  # any abbrev: UTC, GMT+8, PST, BRT, AEST
+    r"|\s?[A-Za-z]+/[A-Za-z_]+(/[A-Za-z_]+)?"  # IANA zone: America/Sao_Paulo
+    r")$"
+)
 EPOCH_PATTERN = r"^\d+$"
 
 
@@ -119,6 +127,49 @@ def with_field(
 
     path = join_field(nested)
     return df.withColumn(root, sf.col(root).withField(path, column))
+
+
+def has_timezone(field: str | Column) -> Column:
+    """
+    Detects whether a timestamp-like string ends with a timezone indicator.
+
+    Assumes the field holds timestamp strings; it is not a validator for free-form text.
+    Detection is lexical (anchored at the end), not a check that the timezone is real.
+
+    Detects:
+        - `Z`
+        - Numeric offset (`+HH`, `+HHMM`, `+HH:MM`), only when following a time component,
+          so a trailing year (e.g. `-2024` in `01-01-2024`) is not mistaken for an offset.
+        - 2-5 letter abbreviation, optional offset (`UTC`, `PST`, `AEST`, `GMT+8`).
+        - IANA zone id, two or three segments (`America/Sao_Paulo`).
+
+    Args:
+        field:
+            Column name or Column holding timestamp-like strings.
+
+    Returns:
+        A boolean Column, `True` when a timezone indicator is found at the end.
+
+    Examples:
+        "2024-01-15T10:30:00Z"                   -> True
+        "2024/01/15T10:30:00Z"                   -> True
+        "15/01/2024T10:30:00Z"                   -> True
+        "2024-01-15T10:30:00 Z"                  -> True
+        "2024-01-15T10:30:00 UTC"                -> True
+        "2024-01-15T10:30:00-04:00"              -> True
+        "2024-01-15T10:30:00+04:00"              -> True
+        "2024-01-15T10:30:00 GMT+8"              -> True
+        "2024-01-15T10:30:00 America/Sao_Paulo"  -> True
+        "2024-01-15T10:30:00"                    -> False
+        "20240115103000Z"                        -> True
+        "20240115103000"                         -> False
+        "2024-01-01Z"                            -> True
+        "2024/01/01Z"                            -> True
+        "01/01/2024Z"                            -> True
+        "2024-01-01"                             -> False
+    """
+    field = sf.col(field) if isinstance(field, str) else field
+    return field.rlike(TIMEZONE_OFFSET_PATTERN)
 
 
 def to_auto_timestamp(field: str, timezone: str = None, format: str = None) -> Column:

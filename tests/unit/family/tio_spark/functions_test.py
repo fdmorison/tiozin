@@ -7,7 +7,7 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import StringType, StructField
 from pyspark.testing import assertDataFrameEqual
 
-from tiozin.family.tio_spark.functions import get_field, to_auto_timestamp, with_field
+from tiozin.family.tio_spark.functions import get_field, has_timezone, to_auto_timestamp, with_field
 
 D2026_01_16T10_00_00 = isoparse("2026-01-16T10:00:00Z")
 S2026_01_16T10_00_00 = "2026-01-16 10:00:00"
@@ -25,6 +25,32 @@ D2024_01_15T15_30_00_UTC = isoparse("2024-01-15T15:30:00Z")
 D2024_01_15T16_30_00_UTC = isoparse("2024-01-15T16:30:00Z")
 D2024_01_15T17_30_00_UTC = isoparse("2024-01-15T17:30:00Z")
 D2024_01_15T18_30_00_UTC = isoparse("2024-01-15T18:30:00Z")
+
+SUPPORTED_TIMEZONE_CASES = [
+    "Z",
+    "UTC",
+    "GMT",
+    "BRT",
+    "KST",
+    "PST",
+    "AEST",
+    "NZST",
+    "CEST",
+    "AKST",
+    "-03:00",
+    "-0300",
+    "+03:00",
+    "+0300",
+    "-03",
+    "+03",
+    "GMT-03:00",
+    "GMT+8",
+    "GMT+08",
+    "GMT-08",
+    "GMT+08:00",
+    "GMT-08:00",
+    "America/Sao_Paulo",
+]
 
 
 # ============================================================================
@@ -428,3 +454,143 @@ def test_to_timestamp_should_convert_column_with_mixed_timezones(
         schema="created_at TIMESTAMP",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=True)
+
+
+# ============================================================================
+# has_timezone
+# ============================================================================
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2024-01-15",
+        "2024-01-15 ",
+        "2024/01/15",
+        "2024.01.15",
+        "20240115",
+    ],
+)
+def test_has_timezone_should_return_true_when_aware_date(spark: SparkSession, value: str) -> None:
+    # Arrange
+    sample = [tz for tz in SUPPORTED_TIMEZONE_CASES if tz not in ["+03", "+0300", "-03", "-0300"]]
+    df = spark.createDataFrame(
+        [(f"{value}{tz}",) for tz in sample],
+        schema="value STRING",
+    )
+
+    # Act
+    result = df.withColumn("has_timezone", has_timezone("value"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(f"{value}{tz}", True) for tz in sample],
+        schema="value STRING, has_timezone BOOLEAN",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2024-01-15T10:30:00",
+        "2024-01-15T10:30:00 ",
+    ],
+)
+def test_has_timezone_should_return_true_when_aware_timestamp(
+    spark: SparkSession, value: str
+) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [(f"{value}{tz}",) for tz in SUPPORTED_TIMEZONE_CASES],
+        schema="value STRING",
+    )
+
+    # Act
+    result = df.withColumn("has_timezone", has_timezone("value"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(f"{value}{tz}", True) for tz in SUPPORTED_TIMEZONE_CASES],
+        schema="value STRING, has_timezone BOOLEAN",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2024-01-15",
+        "2024/01/15",
+        "2024.01.15",
+        "20240115",
+    ],
+)
+def test_has_timezone_should_return_false_when_naive_date(spark: SparkSession, value: str) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [(value,)],
+        schema="created_at STRING",
+    )
+
+    # Act
+    result = df.withColumn("created_at", has_timezone("created_at"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(False,)],
+        schema="created_at BOOLEAN",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2024-01-15T10",
+        "2024-01-15T10:30",
+        "2024-01-15T10:30:00",
+        "2024-01-15T10:30:00.123456",
+        "20240115103000",
+        "15 Jan 2024 10:30:00",
+    ],
+)
+def test_has_timezone_should_return_false_when_naive_timestamp(
+    spark: SparkSession, value: str
+) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [(value,)],
+        schema="created_at STRING",
+    )
+
+    # Act
+    result = df.withColumn("created_at", has_timezone("created_at"))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(False,)],
+        schema="created_at BOOLEAN",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_has_timezone_should_accept_column_argument(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [(S2024_01_15T10_30_00 + " +03:00",)],
+        schema="created_at STRING",
+    )
+
+    # Act
+    result = df.withColumn("created_at", has_timezone(sf.col("created_at")))
+
+    # Assert
+    actual = result
+    expected = spark.createDataFrame(
+        [(True,)],
+        schema="created_at BOOLEAN",
+    )
+    assertDataFrameEqual(actual, expected)
