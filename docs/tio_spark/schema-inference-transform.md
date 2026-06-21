@@ -23,8 +23,9 @@ payload STRING  →  payload STRUCT<age BIGINT, name STRING>
 | `sampling_ratio` | No | `0.10` | Fraction of rows used to infer the schema |
 | `unnest_fields` | No | `[]` | Fields to expand into top-level columns after inference |
 | `timezone` | No | `UTC` | Source timezone for naive values in `auto_timestamp_fields` |
-| `timestamp_format` | No | inferred | Pattern or list of patterns used to parse timestamps in `auto_timestamp_fields` |
+| `timestamp_format` | No | inferred | Pattern or list of patterns used to parse timestamps in `auto_timestamp_fields` and `timestamp_fields` |
 | `auto_timestamp_fields` | No | `[]` | Fields to convert to UTC timestamps by trying a broad set of built-in formats against each value at runtime: timezone-aware strings keep their embedded zone, naive strings are read in `timezone`, and numeric strings or integers are read as compact dates (`yyyyMMdd` or `yyyyMMddHHmmss`) |
+| `timestamp_fields` | No | `[]` | Fields to convert to timestamps with Spark's `to_timestamp`, parsing with `timestamp_format` when provided and inferring otherwise; missing fields are ignored |
 | `**options` | No | see below | [Spark JSON reader options](https://spark.apache.org/docs/latest/sql-data-sources-json.html) that override the reader defaults |
 
 When `json_fields` is empty, the transform returns the input unchanged.
@@ -124,7 +125,7 @@ Values that do not match any supported format are converted to `null`.
 
 ### timestamp_format
 
-`timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns. Custom patterns are tried first, and the built-in formats above always follow as a fallback. Providing a format narrows the search toward the expected shape without removing coverage for the built-in ones.
+`timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns. It drives both `auto_timestamp_fields` and `timestamp_fields`. For `auto_timestamp_fields`, custom patterns are tried first, and the built-in formats above always follow as a fallback, so providing a format narrows the search toward the expected shape without removing coverage for the built-in ones. For `timestamp_fields`, the first pattern is passed to Spark's `to_timestamp`.
 
 ```yaml
 transforms:
@@ -139,6 +140,33 @@ transforms:
 When `timestamp_format` is a list, the Spark JSON reader uses only the first pattern, a [Spark](https://spark.apache.org/docs/latest/sql-data-sources-json.html) limitation. `auto_timestamp_fields` is not bound by this: it tries each pattern in order and then falls back to the built-in formats. A value that matches no custom pattern and no built-in format becomes `null`.
 
 When `timestamp_format` is omitted, Spark infers the format during reading and the transform does not pass a format to the reader.
+
+## timestamp_fields
+
+`timestamp_fields` converts the listed fields to timestamps with Spark's [`to_timestamp`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.to_timestamp.html) function. When `timestamp_format` is provided, the first pattern parses each field; otherwise Spark infers the format. Unlike `auto_timestamp_fields`, this runs no per-value format detection, so it suits fields that already share one known shape. Use dot notation to reach a nested field.
+
+A field listed under `timestamp_fields` that does not exist in the DataFrame is silently ignored, so listing a field that only appears in some inputs does not fail the transform. Conversion runs after `auto_timestamp_fields`.
+
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    json_fields: payload
+    timestamp_format: dd/MM/yyyy HH:mm:ss
+    timestamp_fields:
+      - payload.created_at
+```
+
+The same call expressed programmatically:
+
+```python
+SparkSchemaInferenceTransform(
+    name="parse_payload",
+    json_fields="payload",
+    timestamp_format="dd/MM/yyyy HH:mm:ss",
+    timestamp_fields=["payload.created_at"],
+)
+```
 
 ## Reader Defaults And Options
 

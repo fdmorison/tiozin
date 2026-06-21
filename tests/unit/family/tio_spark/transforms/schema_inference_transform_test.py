@@ -12,6 +12,8 @@ STR_2024_01_15T10_30_00_UTC = "2024-01-15T10:30:00Z"
 STR_2024_01_15T10_30_00_BRT = "2024-01-15T10:30:00-03:00"
 STR_2024_01_15T10_30_00_NTZ = "2024-01-15T10:30:00"
 STR_20240115103000 = "20240115103000"
+STR_15_01_2024_10_30_00 = "15/01/2024 10:30:00"
+FMT_DD_MM_YYYY_HH_MM_SS = "dd/MM/yyyy HH:mm:ss"
 OBJ_2024_01_15T10_30_00_UTC = datetime.fromisoformat(STR_2024_01_15T10_30_00_UTC)
 OBJ_2024_01_15T10_30_00_NTZ = datetime.fromisoformat(STR_2024_01_15T10_30_00_NTZ)
 
@@ -474,3 +476,98 @@ def test_transform_should_raise_error_when_nested_auto_timestamp_field_is_missin
             name="test",
             auto_timestamp_fields="root.first_name",
         ).transform(input)
+
+
+# ============================================================================
+# Testing SparkSchemaInferenceTransform - Timestamp Fields
+# ============================================================================
+
+
+def test_transform_should_enforce_timestamp_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [(STR_2024_01_15T10_30_00_NTZ,)],
+        schema="ts STRING",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        timestamp_fields="ts",
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [(OBJ_2024_01_15T10_30_00_UTC,)],
+        schema="ts TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_enforce_timestamp_fields_when_timestamp_format_is_provided(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [(STR_15_01_2024_10_30_00,)],
+        schema="ts STRING",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        timestamp_fields="ts",
+        timestamp_format=FMT_DD_MM_YYYY_HH_MM_SS,
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [(OBJ_2024_01_15T10_30_00_UTC,)],
+        schema="ts TIMESTAMP",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_enforce_nested_timestamp_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"ts": {"created_at": STR_15_01_2024_10_30_00}}],
+        schema="ts STRUCT<created_at STRING>",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        timestamp_fields="ts.created_at",
+        timestamp_format=FMT_DD_MM_YYYY_HH_MM_SS,
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [{"ts": {"created_at": OBJ_2024_01_15T10_30_00_UTC}}],
+        schema="ts STRUCT<created_at TIMESTAMP>",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
+def test_transform_should_ignore_missing_timestamp_fields(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [{"root": {"fullname": "John Doe"}}],
+        schema="root STRUCT<fullname STRING>",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        timestamp_fields="fullname",
+    ).transform(input)
+
+    # Assert
+    assertDataFrameEqual(actual, input)
