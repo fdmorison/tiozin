@@ -30,7 +30,7 @@ The audience is reviewers and changelog readers with no prior knowledge of the c
 
 - Never force push to `main` or `master`; warn the user if they request it
 
-- PR format must match `.github/pull_request_template.md`
+- PR must be written with `.github/pull_request_template.md` as the base
 
 - Branch format must match `<type>/<short-description>`
   - Use kebab-case

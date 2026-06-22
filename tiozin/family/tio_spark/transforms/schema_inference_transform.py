@@ -52,23 +52,46 @@ class SparkSchemaInferenceTransform(SparkTransform):
             Field or list of fields to expand into top-level columns after schema inference.
 
         timezone:
-            Source timezone for values in ``auto_timestamp_fields`` that carry no timezone
-            indicator. Defaults to ``UTC``.
+            Default timezone used when parsing timestamp values without a timezone
+            indicator. This setting is applied to ``auto_timestamp_fields`` and passed
+            to Spark readers that support timezone-aware parsing (such as JSON).
+            Defaults to ``UTC``.
 
         timestamp_format:
             Pattern or list of patterns used to parse timestamps
             (e.g., ``"dd/MM/yyyy HH:mm:ss"``). Accepts Java SimpleDateFormat patterns.
-            When a list is provided, the JSON reader uses the first pattern and
-            ``auto_timestamp_fields`` tries each pattern in order. When omitted,
-            Spark infers the format.
+            Only the first pattern is passed to the JSON reader and ``timestamp_fields``.
+            When omitted, Spark infers the format.
+
+        date_format:
+            Pattern or list of patterns used to parse date values
+            (e.g., ``"dd/MM/yyyy"``). Accepts Java SimpleDateFormat patterns.
+            Only the first pattern is passed to ``date_fields``. When omitted, Spark
+            infers the format.
 
         auto_timestamp_fields:
             Field or list of fields to convert to UTC timestamps. Each value is inspected
             at runtime: timezone-aware strings use the embedded timezone; timezone-naive
             strings are assumed to be in ``timezone`` and converted to UTC; numeric values
             and numeric strings are interpreted as compact dates (``yyyyMMdd`` or
-            ``yyyyMMddHHmmss``). Applied after JSON schema inference. Use dot notation for
-            nested fields.
+            ``yyyyMMddHHmmss``). When ``timestamp_format`` or ``date_format`` are
+            provided, all patterns from both are combined (deduplicated, preserving order)
+            and tried in sequence. Applied after JSON schema inference. Use dot notation
+            for nested fields.
+
+        timestamp_fields:
+            Field or list of fields to convert to timestamps using the Spark
+            ``to_timestamp`` function. When ``timestamp_format`` is provided, it is used
+            to parse the field; otherwise Spark infers the format. Fields that do not
+            exist in the DataFrame are silently ignored. Applied after JSON schema
+            inference. Use dot notation for nested fields.
+
+        date_fields:
+            Field or list of fields to convert to dates using the Spark ``to_date``
+            function. When ``date_format`` is provided, it is used to parse the field;
+            otherwise Spark infers the format. Fields that do not exist in the DataFrame
+            are silently ignored. Applied after JSON schema inference. Use dot notation
+            for nested fields.
 
     Examples:
 
@@ -108,6 +131,9 @@ class SparkSchemaInferenceTransform(SparkTransform):
         timezone: str = None,
         timestamp_format: str | list[str] = None,
         auto_timestamp_fields: list[str] = None,
+        timestamp_fields: list[str] = None,
+        date_fields: list[str] = None,
+        date_format: str | list[str] = None,
         **options,
     ) -> None:
         super().__init__(**options)
@@ -117,7 +143,10 @@ class SparkSchemaInferenceTransform(SparkTransform):
         self.unnest_fields = as_list(unnest_fields, [])
         self.timezone = timezone or "UTC"
         self.timestamp_format = as_list(timestamp_format)
+        self.timestamp_fields = as_list(timestamp_fields, [])
         self.auto_timestamp_fields = as_list(auto_timestamp_fields, [])
+        self.date_fields = as_list(date_fields, [])
+        self.date_format = as_list(date_format)
         # Reader parameters
         self.reader_options = {
             k: v
@@ -168,11 +197,31 @@ class SparkSchemaInferenceTransform(SparkTransform):
         return data.select(*fields)
 
     def enforce_datetime(self, data: DataFrame) -> DataFrame:
+        first_timestamp_format = self.timestamp_format[0] if self.timestamp_format else None
+        first_date_format = self.date_format[0] if self.date_format else None
+        auto_formats = list(set(self.timestamp_format or []) | set(self.date_format or []))
+
         for field in self.auto_timestamp_fields:
             data = tio.with_field(
                 data,
                 field,
-                tio.to_auto_timestamp(field, format=self.timestamp_format, timezone=self.timezone),
+                tio.to_auto_timestamp(field, format=auto_formats, timezone=self.timezone),
             )
+
+        for field in self.timestamp_fields:
+            if tio.get_field(data, field) is not None:
+                data = tio.with_field(
+                    data,
+                    field,
+                    sf.to_timestamp(field, first_timestamp_format),
+                )
+
+        for field in self.date_fields:
+            if tio.get_field(data, field) is not None:
+                data = tio.with_field(
+                    data,
+                    field,
+                    sf.to_date(field, first_date_format),
+                )
 
         return data
