@@ -24,8 +24,10 @@ payload STRING  →  payload STRUCT<age BIGINT, name STRING>
 | `unnest_fields` | No | `[]` | Fields to expand into top-level columns after inference |
 | `timezone` | No | `UTC` | Source timezone for naive values in `auto_timestamp_fields` |
 | `timestamp_format` | No | inferred | Pattern or list of patterns used to parse timestamps in `auto_timestamp_fields` and `timestamp_fields` |
+| `date_format` | No | inferred | Pattern or list of patterns used to parse dates in `auto_timestamp_fields` and `date_fields` |
 | `auto_timestamp_fields` | No | `[]` | Fields to convert to UTC timestamps by trying a broad set of built-in formats against each value at runtime: timezone-aware strings keep their embedded zone, naive strings are read in `timezone`, and numeric strings or integers are read as compact dates (`yyyyMMdd` or `yyyyMMddHHmmss`) |
 | `timestamp_fields` | No | `[]` | Fields to convert to timestamps with Spark's `to_timestamp`, parsing with `timestamp_format` when provided and inferring otherwise; missing fields are ignored |
+| `date_fields` | No | `[]` | Fields to convert to dates with Spark's `to_date`, parsing with `date_format` when provided and inferring otherwise; missing fields are ignored |
 | `**options` | No | see below | [Spark JSON reader options](https://spark.apache.org/docs/latest/sql-data-sources-json.html) that override the reader defaults |
 
 When `json_fields` is empty, the transform returns the input unchanged.
@@ -83,35 +85,85 @@ transforms:
 
 If the sample produces no fields, for example when the ratio is too small to capture any row, the transform retries the inference using the full dataset. The conversion still succeeds.
 
-## auto_timestamp_fields
+### timestamp_format
 
-`auto_timestamp_fields` converts the listed fields to UTC timestamps after schema inference. Each value is inspected at runtime: a timezone-aware string keeps its embedded timezone, a timezone-naive string is read in `timezone` and converted to UTC, and a numeric string or integer is treated as a compact date (`yyyyMMdd` or `yyyyMMddHHmmss`). Use dot notation to reach a nested field.
+`timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns.
 
 ```yaml
 transforms:
   - kind: SparkSchemaInferenceTransform
     name: parse_payload
-    json_fields: payload
+    timestamp_format: dd/MM/yyyy HH:mm:ss
+```
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    timestamp_format:
+    - dd/MM/yyyy HH:mm:ss
+    - dd/MM/yyyyTHH:mm:ss
+```
+
+### date_format
+
+`date_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy`, or a list of patterns.
+
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    date_format: dd/MM/yyyy
+```
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    date_format:
+    - dd/MM/yyyy
+    - dd-MM-yyyy
+```
+
+## auto_timestamp_fields
+
+Converts the listed fields to UTC timestamps after schema inference.
+A timezone-aware string keeps its embedded timezone, a timezone-naive string is read in `timezone` and converted to UTC, and a numeric string or integer is treated as a compact date.
+
+Custom patterns from `timestamp_format` and `date_format` extend the recognized formats. Use dot notation to reach a nested field.
+
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
     auto_timestamp_fields:
       - payload.created_at
       - payload.updated_at
 ```
 
-`timezone` sets the source zone for naive values and defaults to `UTC`, regardless of spark session timezone.
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    timezone: KST
+    date_format: dd/MM/yyyy
+    timestamp_format: dd/MM/yyyy HH:mm:ss
+    auto_timestamp_fields:
+      - payload.created_at
+      - payload.updated_at
+```
 
 ### Built-In Formats
 
-`auto_timestamp_fields` automatically recognizes the most common date and timestamp formats, so `timestamp_format` is usually not required.
+The `auto_timestamp_fields` automatically recognizes the most common date and timestamp formats, so `timestamp_format` is usually not required. The pattern letters below follow the Java [DateTimeFormatter](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/time/format/DateTimeFormatter.html) and [SimpleDateFormat](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/text/SimpleDateFormat.html) syntax:
 
-| Category             | Format                                        | Examples                                                                 |
-| -------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
-| ISO-like Dates       | `yyyy<d>MM<d>dd[Z]`                           | `2023-01-01Z`, `2023-01-01`, `2023/01/01`, `2023.01.01`, `2023_01_01`    |
-| ISO-like Timestamps  | `yyyy<d>MM<d>dd[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `2023-01-01T10:20`, `2023-01-01 10:20:30`, `2023-01-01T10:20:30.123456Z` |
-| Day-First Dates      | `dd<d>MM<d>yyyy`                              | `01-01-2023Z`, `01-01-2023`, `01/01/2023`, `01.01.2023`, `01_01_2023`    |
-| Day-First Timestamps | `dd<d>MM<d>yyyy[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `01-01-2023 10:20`, `01-01-2023 10:20:30 UTC`                            |
-| Compact Dates        | `yyyyMMdd[Z]`                                 | `20230101`, `20230101Z`                                                  |
-| Compact Timestamps   | `yyyyMMddHHmmss[tz]`                          | `20230101102030`, `20230101102030-0300`                                  |
-| RFC 2822             | `dd MMM yyyy HH:mm:ss[tz]`                    | `01 Jan 2023 10:20:30 UTC`                                               |
+| Category             | Format                                        | Examples                                     |
+| -------------------- | --------------------------------------------- | -------------------------------------------- |
+| ISO-like Dates       | `yyyy<d>MM<d>dd[Z]`                           | `2023-01-01Z`, `2023-01-01`, `2023/01/01`,   |
+| ISO-like Timestamps  | `yyyy<d>MM<d>dd[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `2023-01-01T10:20`, `2023-01-01 10:20:30`,   |
+| Day-First Dates      | `dd<d>MM<d>yyyy`                              | `01-01-2023Z`, `01-01-2023`, `01/01/2023`,   |
+| Day-First Timestamps | `dd<d>MM<d>yyyy[T\| ]HH:mm[:ss][.SSSSSS][tz]` | `01-01-2023 10:20`, `01-01-2023 10:20:30 UTC`|
+| Compact Dates        | `yyyyMMdd[Z]`                                 | `20230101`, `20230101Z`                      |
+| Compact Timestamps   | `yyyyMMddHHmmss[tz]`                          | `20230101102030`, `20230101102030-0300`      |
+| RFC 2822             | `dd MMM yyyy HH:mm:ss[tz]`                    | `01 Jan 2023 10:20:30 UTC`                   |
 
 Where:
 
@@ -119,53 +171,56 @@ Where:
 * `[tz]` = `Z`, `UTC`, `GMT`, offsets such as `+00:00` and `-0300`, or IANA timezones such as `America/Sao_Paulo`
 * Bracketed components are optional
 
-The pattern letters above (`yyyy`, `MM`, `dd`, `HH`, and so on) follow the Java [DateTimeFormatter](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/time/format/DateTimeFormatter.html) and [SimpleDateFormat](https://docs.oracle.com/en/java/latest/docs/api/java.base/java/text/SimpleDateFormat.html) syntax.
+
 
 Values that do not match any supported format are converted to `null`.
 
-### timestamp_format
-
-`timestamp_format` accepts a [Java SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html) pattern such as `dd/MM/yyyy HH:mm:ss`, or a list of patterns. It drives both `auto_timestamp_fields` and `timestamp_fields`. For `auto_timestamp_fields`, custom patterns are tried first, and the built-in formats above always follow as a fallback, so providing a format narrows the search toward the expected shape without removing coverage for the built-in ones. For `timestamp_fields`, the first pattern is passed to Spark's `to_timestamp`.
-
-```yaml
-transforms:
-  - kind: SparkSchemaInferenceTransform
-    name: parse_payload
-    json_fields: payload
-    timestamp_format: dd/MM/yyyy HH:mm:ss
-    auto_timestamp_fields:
-      - payload.created_at
-```
-
-When `timestamp_format` is a list, the Spark JSON reader uses only the first pattern, a [Spark](https://spark.apache.org/docs/latest/sql-data-sources-json.html) limitation. `auto_timestamp_fields` is not bound by this: it tries each pattern in order and then falls back to the built-in formats. A value that matches no custom pattern and no built-in format becomes `null`.
-
-When `timestamp_format` is omitted, Spark infers the format during reading and the transform does not pass a format to the reader.
-
 ## timestamp_fields
 
-`timestamp_fields` converts the listed fields to timestamps with Spark's [`to_timestamp`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.to_timestamp.html) function. When `timestamp_format` is provided, the first pattern parses each field; otherwise Spark infers the format. Unlike `auto_timestamp_fields`, this runs no per-value format detection, so it suits fields that already share one known shape. Use dot notation to reach a nested field.
-
-A field listed under `timestamp_fields` that does not exist in the DataFrame is silently ignored, so listing a field that only appears in some inputs does not fail the transform. Conversion runs after `auto_timestamp_fields`.
+Converts the listed fields to timestamps with Spark's [`to_timestamp`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.to_timestamp.html) function. When `timestamp_format` is provided, only the first pattern is used; otherwise Spark infers the format. Use dot notation to reach a nested field. A field listed under `timestamp_fields` that does not exist in the DataFrame is silently ignored.
 
 ```yaml
 transforms:
   - kind: SparkSchemaInferenceTransform
     name: parse_payload
     json_fields: payload
-    timestamp_format: dd/MM/yyyy HH:mm:ss
     timestamp_fields:
       - payload.created_at
+      - payload.updated_at
+```
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    json_fields: payload
+    timestamp_format: dd/MM/yyyyTHH:mm:ss.SSS
+    timestamp_fields:
+      - payload.created_at
+      - payload.updated_at
 ```
 
-The same call expressed programmatically:
+## date_fields
 
-```python
-SparkSchemaInferenceTransform(
-    name="parse_payload",
-    json_fields="payload",
-    timestamp_format="dd/MM/yyyy HH:mm:ss",
-    timestamp_fields=["payload.created_at"],
-)
+Converts the listed fields to dates with Spark's [`to_date`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.to_date.html) function. When `date_format` is provided, only the first pattern is used; otherwise Spark infers the format. Use dot notation to reach a nested field.
+A field listed under `date_fields` that does not exist in the DataFrame is silently ignored.
+
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    json_fields: payload
+    date_fields:
+      - payload.signup_date
+```
+```yaml
+transforms:
+  - kind: SparkSchemaInferenceTransform
+    name: parse_payload
+    json_fields: payload
+    date_format: dd/MM/yyyy
+    date_fields:
+      - payload.created_at
+      - payload.updated_at
 ```
 
 ## Reader Defaults And Options
