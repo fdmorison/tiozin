@@ -32,6 +32,7 @@ jobs:
             tio_kernel
             tio_duckdb
             tio_spark
+            claude
           requireScope: true
 
   validate-commits:

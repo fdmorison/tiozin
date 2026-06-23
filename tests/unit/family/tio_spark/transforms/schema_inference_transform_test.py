@@ -26,6 +26,8 @@ STR_15_01_2024 = "15/01/2024"
 FMT_DD_MM_YYYY = "dd/MM/yyyy"
 OBJ_2024_01_15 = dt.date(2024, 1, 15)
 
+EMPTY_SAMPLING_RATIO = 0.001  # too small to draw any row, forces a full-data retry
+
 # ============================================================================
 # Testing SparkSchemaInferenceTransform - Schema Inference
 # ============================================================================
@@ -114,7 +116,7 @@ def test_transform_should_infer_schema_when_sample_is_empty(spark: SparkSession)
     actual = SparkSchemaInferenceTransform(
         name="test",
         json_fields="value",
-        sampling_ratio=0.001,  # force empty sample
+        sampling_ratio=EMPTY_SAMPLING_RATIO,
     ).transform(input)
 
     # Assert
@@ -248,6 +250,35 @@ def test_transform_should_preserve_columns_not_in_json_columns(spark: SparkSessi
     assertDataFrameEqual(actual, expected)
 
 
+def test_transform_should_not_handle_duplicated_columns_when_flattening(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    input = spark.createDataFrame(
+        [
+            {
+                "user": '{"name": "John", "age": 30}',
+                "address": '{"name": "Home", "city": "New York"}',
+            },
+        ],
+        schema="user STRING, address STRING",
+    )
+
+    # Act
+    actual = SparkSchemaInferenceTransform(
+        name="test",
+        json_fields=["user", "address"],
+        unnest_fields=["user", "address"],
+    ).transform(input)
+
+    # Assert
+    expected = spark.createDataFrame(
+        [(30, "John", "New York", "Home")],
+        schema="age BIGINT, name STRING, city STRING, name STRING",
+    )
+    assertDataFrameEqual(actual, expected)
+
+
 # ============================================================================
 # Testing SparkSchemaInferenceTransform - Reader Options
 # ============================================================================
@@ -333,36 +364,6 @@ def test_transform_should_accept_json_numbers_with_leading_zeros(spark: SparkSes
     expected = spark.createDataFrame(
         [{"value": {"code": 7}}],
         schema="value STRUCT<code BIGINT>",
-    )
-    assertDataFrameEqual(actual, expected)
-
-
-def test_transform_should_not_handle_duplicated_columns_when_flattening(
-    spark: SparkSession,
-) -> None:
-    # Arrange
-    input = spark.createDataFrame(
-        [
-            {
-                "user": '{"name": "John", "age": 30}',
-                "address": '{"name": "Home", "city": "New York"}',
-            },
-        ],
-        schema="user STRING, address STRING",
-    )
-
-    # Act
-    result = SparkSchemaInferenceTransform(
-        name="test",
-        json_fields=["user", "address"],
-        unnest_fields=["user", "address"],
-    ).transform(input)
-
-    # Assert
-    actual = result
-    expected = spark.createDataFrame(
-        [(30, "John", "New York", "Home")],
-        schema="age BIGINT, name STRING, city STRING, name STRING",
     )
     assertDataFrameEqual(actual, expected)
 
