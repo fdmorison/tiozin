@@ -71,6 +71,9 @@ class State(Metadata):
     def quarantine(self, attributes: dict = None) -> State:
         return self._registry().quarantine(self, attributes)
 
+    def replay(self, attributes: dict = None) -> State:
+        return self._registry().replay(self, attributes)
+
     @property
     def taxonomy(self) -> str:
         return ".".join(self.taxonomy_key())

@@ -15,10 +15,10 @@ class StateRegistry(Registry[State]):
     def register(self, state: State) -> State:
         return state
 
-    def get_highest_cursor(self, state: State) -> State | None:
+    def latest_cursor(self, state: State) -> State | None:
         return None
 
-    def get_pending(self, state: State) -> list[State]:
+    def list_pending(self, state: State) -> list[State]:
         return []
 
     def start(self, state: State, attributes: dict = None) -> State:
@@ -34,4 +34,7 @@ class StateRegistry(Registry[State]):
         return state
 
     def quarantine(self, state: State, attributes: dict = None) -> State:
+        return state
+
+    def replay(self, state: State, attributes: dict = None) -> State:
         return state
