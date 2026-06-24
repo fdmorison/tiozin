@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import NAMESPACE_OID, uuid5
 
-from pendulum import DateTime
 from pydantic import Field, field_validator, model_validator
 
 from tiozin.utils import utcnow
@@ -90,8 +90,8 @@ class State(Metadata):
     status: StateStatus = StateStatus.PENDING
     attributes: dict = Field(default_factory=dict)
 
-    created_at: DateTime = Field(default_factory=utcnow)
-    updated_at: DateTime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
 
     @model_validator(mode="after")
     def _init_id(self) -> State:
