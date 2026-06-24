@@ -93,6 +93,12 @@ class State(Metadata):
     created_at: DateTime = Field(default_factory=utcnow)
     updated_at: DateTime = Field(default_factory=utcnow)
 
+    @model_validator(mode="after")
+    def _init_id(self) -> State:
+        if self.id is None:
+            self.id = str(uuid5(NAMESPACE_OID, ".".join(self.natural_key)))
+        return self
+
     @field_validator("attributes", mode="before")
     @classmethod
     def _init_attributes(cls, v: dict | None) -> dict:
@@ -162,9 +168,3 @@ class State(Metadata):
             self.model,
             self.cursor,
         )
-
-    @model_validator(mode="after")
-    def _generate_id(self) -> State:
-        if self.id is None:
-            self.id = str(uuid5(NAMESPACE_OID, ".".join(self.natural_key)))
-        return self
