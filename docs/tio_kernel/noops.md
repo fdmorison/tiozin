@@ -80,7 +80,7 @@ NoOp registries do nothing. Use them when the real registry is not available.
 | `tio_kernel:NoOpSchemaRegistry` | `SchemaRegistry` |
 | `tio_kernel:NoOpLineageRegistry` | `LineageRegistry` |
 | `tio_kernel:NoOpMetricRegistry` | `MetricRegistry` |
-| `tio_kernel:NoOpTransactionRegistry` | `TransactionRegistry` |
+| `tio_kernel:NoOpStateRegistry` | `StateRegistry` |
 
 ```yaml
 registries:

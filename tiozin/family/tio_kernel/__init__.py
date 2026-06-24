@@ -38,7 +38,7 @@ from .registries.google_secret_manager_registry import GoogleSecretManagerRegist
 from .registries.env_secret_registry import EnvSecretRegistry
 from .registries.noop_secret_registry import NoOpSecretRegistry
 from .registries.noop_setting_registry import NoOpSettingRegistry
-from .registries.noop_transaction_registry import NoOpTransactionRegistry
+from .registries.noop_state_registry import NoOpStateRegistry
 
 __all__ = [
     "NoOpInput",
@@ -58,5 +58,5 @@ __all__ = [
     "EnvSecretRegistry",
     "NoOpSecretRegistry",
     "NoOpSettingRegistry",
-    "NoOpTransactionRegistry",
+    "NoOpStateRegistry",
 ]

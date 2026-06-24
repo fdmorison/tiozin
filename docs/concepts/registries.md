@@ -16,7 +16,7 @@ The framework defines seven registry contracts:
 | `SchemaRegistry` | Retrieves schema definitions for validation |
 | `LineageRegistry` | Registers data lineage events |
 | `MetricRegistry` | Registers execution metrics |
-| `TransactionRegistry` | Registers execution transactions |
+| `StateRegistry` | Registers execution states |
 
 ## Built-in registries
 
@@ -30,7 +30,7 @@ The `tio_kernel` family ships several production-ready implementations:
 | `FileSchemaRegistry` | `SchemaRegistry` | Loads schema files from any fsspec-supported location |
 | `OpenLineageRegistry` | `LineageRegistry` | Sends run events to any OpenLineage-compatible backend via HTTP |
 
-NoOp versions are available for every registry type: `NoOpLineageRegistry`, `NoOpSchemaRegistry`, `NoOpMetricRegistry`, `NoOpSecretRegistry`, `NoOpSettingRegistry`, and `NoOpTransactionRegistry`. They do nothing or return safe fallback values. Use them in local development and testing when no real backend is needed.
+NoOp versions are available for every registry type: `NoOpLineageRegistry`, `NoOpSchemaRegistry`, `NoOpMetricRegistry`, `NoOpSecretRegistry`, `NoOpSettingRegistry`, and `NoOpStateRegistry`. They do nothing or return safe fallback values. Use them in local development and testing when no real backend is needed.
 
 `FileJobRegistry` is the registry used by `tiozin run path/to/job.yaml`. Set `location` to a folder, S3 prefix, or HTTP base URL and jobs are loaded by name relative to it:
 
@@ -59,7 +59,7 @@ Each registry type defines its own read and write methods. The signatures differ
 | `SchemaRegistry` | `get(subject, version=None)` | `register(subject, value)` |
 | `LineageRegistry` | (none) | `emit(event)` |
 | `MetricRegistry` | inherited from base | inherited from base |
-| `TransactionRegistry` | inherited from base | inherited from base |
+| `StateRegistry` | inherited from base | inherited from base |
 
 All registries that have a `get()` method raise when the item is not found and `failfast=True`. When `failfast=False` (the default), `get()` returns `None` instead.
 

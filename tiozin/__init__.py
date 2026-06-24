@@ -23,6 +23,8 @@ from tiozin.api import (
     Dataset,
     Datasets,
     Schema,
+    State,
+    StateStatus,
 )
 
 # Registries
@@ -33,7 +35,7 @@ from tiozin.api import (
     SchemaRegistry,
     SecretRegistry,
     SettingRegistry,
-    TransactionRegistry,
+    StateRegistry,
 )
 
 # Processors
@@ -63,6 +65,8 @@ __all__ = [
     "Secret",
     "SettingsManifest",
     "Schema",
+    "State",
+    "StateStatus",
     # Registries
     "JobRegistry",
     "LineageRegistry",
@@ -70,7 +74,7 @@ __all__ = [
     "SchemaRegistry",
     "SecretRegistry",
     "SettingRegistry",
-    "TransactionRegistry",
+    "StateRegistry",
     # Processors
     "Runner",
     "Transform",

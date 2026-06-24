@@ -27,7 +27,7 @@ Any registry omitted from `tiozin.yaml` uses these defaults.
 | `job` | `tio_kernel:FileJobRegistry` |
 | `schema` | `tio_kernel:FileSchemaRegistry` |
 | `secret` | `tio_kernel:EnvSecretRegistry` |
-| `transaction` | `tio_kernel:NoOpTransactionRegistry` |
+| `state` | `tio_kernel:NoOpStateRegistry` |
 | `lineage` | `tio_kernel:NoOpLineageRegistry` |
 | `metric` | `tio_kernel:NoOpMetricRegistry` |
 

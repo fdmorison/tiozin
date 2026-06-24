@@ -39,9 +39,9 @@ registries:
     failfast: false
     emit_level: job
 
-  transaction:
-    kind: NoOpTransactionRegistry
-    description: Transaction registry for job execution control
+  state:
+    kind: NoOpStateRegistry
+    description: State registry for job execution control
     location: "postgresql://postgres:{{ENV.PGPASSWORD|default('postgres')}}@localhost:5432/postgres"
     timeout: 5
     readonly: false
