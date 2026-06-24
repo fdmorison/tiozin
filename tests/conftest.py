@@ -12,7 +12,7 @@ from tests.stubs import (
     SchemaRegistryStub,
     SecretRegistryStub,
     SettingRegistryStub,
-    TransactionRegistryStub,
+    StateRegistryStub,
     TransformStub,
 )
 from tiozin import Context
@@ -24,7 +24,7 @@ from tiozin.api.metadata.setting.model import (
     SchemaRegistryManifest,
     SecretRegistryManifest,
     SettingsManifest,
-    TransactionRegistryManifest,
+    StateRegistryManifest,
 )
 
 # --------------------------------------------------
@@ -49,9 +49,9 @@ def default_settings_manifest() -> SettingsManifest:
                 name="my-secret-registry-1",
                 failfast=True,
             ),
-            transaction=TransactionRegistryManifest(
-                kind=config.default_transaction_registry,
-                name="my-transaction-registry-1",
+            state=StateRegistryManifest(
+                kind=config.default_state_registry,
+                name="my-state-registry-1",
             ),
             lineage=LineageRegistryManifest(
                 kind=config.default_lineage_registry,
@@ -164,8 +164,8 @@ def schema_registry_stub() -> SchemaRegistryStub:
 
 
 @pytest.fixture()
-def transaction_registry_stub() -> TransactionRegistryStub:
-    return TransactionRegistryStub()
+def state_registry_stub() -> StateRegistryStub:
+    return StateRegistryStub()
 
 
 @pytest.fixture()
@@ -194,7 +194,7 @@ def job_context(job_stub: JobStub):
         setting=SettingRegistryStub(),
         secret=SecretRegistryStub(),
         schema=SchemaRegistryStub(),
-        transaction=TransactionRegistryStub(),
+        state=StateRegistryStub(),
         job=JobRegistryStub(),
         metric=MetricRegistryStub(),
         lineage=LineageRegistryStub(),

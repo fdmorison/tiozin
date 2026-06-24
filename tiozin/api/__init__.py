@@ -27,6 +27,8 @@ from .metadata.lineage.model import LineageDataset, LineageEvent, LineageRunEven
 from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
 from .metadata.schema.model import Schema
+from .metadata.state.model import State
+from .metadata.state.status import StateStatus
 
 # Registries
 from .metadata.job.registry import JobRegistry
@@ -35,7 +37,7 @@ from .metadata.metric.registry import MetricRegistry
 from .metadata.schema.registry import SchemaRegistry
 from .metadata.secret.registry import SecretRegistry
 from .metadata.setting.registry import SettingRegistry
-from .metadata.transaction.registry import TransactionRegistry
+from .metadata.state.registry import StateRegistry
 
 # Runtime
 from .context import Context
@@ -67,6 +69,8 @@ __all__ = [
     "Secret",
     "SettingsManifest",
     "Schema",
+    "State",
+    "StateStatus",
     # Registries
     "JobRegistry",
     "LineageRegistry",
@@ -74,7 +78,7 @@ __all__ = [
     "SchemaRegistry",
     "SecretRegistry",
     "SettingRegistry",
-    "TransactionRegistry",
+    "StateRegistry",
     # Runtime
     "Context",
     "Input",

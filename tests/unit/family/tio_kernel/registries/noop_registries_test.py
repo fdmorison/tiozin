@@ -7,7 +7,7 @@ from tiozin.family.tio_kernel import (
     NoOpSchemaRegistry,
     NoOpSecretRegistry,
     NoOpSettingRegistry,
-    NoOpTransactionRegistry,
+    NoOpStateRegistry,
 )
 
 NOOP_REGISTRY_CLASSES = [
@@ -16,7 +16,7 @@ NOOP_REGISTRY_CLASSES = [
     NoOpMetricRegistry,
     NoOpSchemaRegistry,
     NoOpSecretRegistry,
-    NoOpTransactionRegistry,
+    NoOpStateRegistry,
 ]
 
 

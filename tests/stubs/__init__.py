@@ -12,7 +12,7 @@ from tests.stubs.schema_registry import (
 )
 from tests.stubs.secret_registry import MissingSecretRegistryStub, SecretRegistryStub
 from tests.stubs.setting_registry import SettingRegistryStub
-from tests.stubs.transaction_registry import TransactionRegistryStub
+from tests.stubs.state_registry import StateRegistryStub
 from tests.stubs.transform import TransformStub
 
 __all__ = [
@@ -30,6 +30,6 @@ __all__ = [
     "MissingSecretRegistryStub",
     "SecretRegistryStub",
     "SettingRegistryStub",
-    "TransactionRegistryStub",
+    "StateRegistryStub",
     "TransformStub",
 ]

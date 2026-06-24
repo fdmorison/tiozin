@@ -17,9 +17,9 @@ registries:
     kind: NoOpSecretRegistry
     name: my-secret-registry-1
 
-  transaction:
-    kind: NoOpTransactionRegistry
-    name: my-transaction-registry-1
+  state:
+    kind: NoOpStateRegistry
+    name: my-state-registry-1
 
   lineage:
     kind: NoOpLineageRegistry

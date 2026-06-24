@@ -1,9 +1,9 @@
-from tiozin.api.metadata.transaction.registry import TransactionRegistry
+from tiozin.api import StateRegistry
 
 
-class TransactionRegistryStub(TransactionRegistry):
+class StateRegistryStub(StateRegistry):
     def __init__(self):
-        super().__init__(location="stub://transaction")
+        super().__init__(location="stub://state")
 
     def get(self, identifier: str = None, version: str = None) -> None:
         return None

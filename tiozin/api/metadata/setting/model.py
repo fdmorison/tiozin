@@ -122,9 +122,9 @@ class SecretRegistryManifest(BaseSettings):
     failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
-class TransactionRegistryManifest(BaseSettings):
+class StateRegistryManifest(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="TIO_TRANSACTION_REGISTRY_",
+        env_prefix="TIO_STATE_REGISTRY_",
         extra="allow",
         str_strip_whitespace=True,
         env_ignore_empty=True,
@@ -132,12 +132,12 @@ class TransactionRegistryManifest(BaseSettings):
 
     @classmethod
     def __produces__(cls):
-        from ..transaction.registry import TransactionRegistry
+        from ..state.registry import StateRegistry
 
-        return TransactionRegistry
+        return StateRegistry
 
     # Identity
-    kind: str = Field(config.default_transaction_registry, description=docs.KIND)
+    kind: str = Field(config.default_state_registry, description=docs.KIND)
     name: str | None = Field(NULLABLE, description=docs.REGISTRY_NAME)
     description: str | None = Field(NULLABLE, description=docs.REGISTRY_DESCRIPTION)
     # Properties
@@ -220,7 +220,7 @@ class Registries(BaseSettings):
     job: JobRegistryManifest = Field(default_factory=JobRegistryManifest)
     schema: SchemaRegistryManifest = Field(default_factory=SchemaRegistryManifest)
     secret: SecretRegistryManifest = Field(default_factory=SecretRegistryManifest)
-    transaction: TransactionRegistryManifest = Field(default_factory=TransactionRegistryManifest)
+    state: StateRegistryManifest = Field(default_factory=StateRegistryManifest)
     lineage: LineageRegistryManifest = Field(default_factory=LineageRegistryManifest)
     metric: MetricRegistryManifest = Field(default_factory=MetricRegistryManifest)
 

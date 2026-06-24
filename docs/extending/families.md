@@ -149,7 +149,7 @@ Its purpose is to guarantee that the system is always complete and executable, e
 | `NoOpSchemaRegistry` | Always returns `None`. No schema resolution |
 | `NoOpLineageRegistry` | Discards all lineage events |
 | `NoOpMetricRegistry` | Discards all metrics |
-| `NoOpTransactionRegistry` | Discards all transactions |
+| `NoOpStateRegistry` | Discards all states |
 
 These no-ops allow Tiozin to boot, validate configurations, and run dry-runs without any real execution backend.
 

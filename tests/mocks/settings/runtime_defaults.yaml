@@ -13,9 +13,9 @@ registries:
     name: my-secret-registry-1
     failfast: true
 
-  transaction:
-    kind: tio_kernel:NoOpTransactionRegistry
-    name: my-transaction-registry-1
+  state:
+    kind: tio_kernel:NoOpStateRegistry
+    name: my-state-registry-1
 
   lineage:
     kind: tio_kernel:NoOpLineageRegistry

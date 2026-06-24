@@ -1,12 +1,12 @@
-from tiozin.api import TransactionRegistry
+from tiozin.api import StateRegistry
 
 
-class NoOpTransactionRegistry(TransactionRegistry):
+class NoOpStateRegistry(StateRegistry):
     """
-    No-op transaction registry.
+    No-op state registry.
 
     Does nothing. Returns None for all operations.
-    Useful for testing or when transaction tracking is disabled.
+    Useful for testing or when state tracking is disabled.
     """
 
     def __init__(self, location: str = None, **options) -> None:

@@ -32,7 +32,7 @@ Once implemented, register your registry as a Tiozin via Python `entry_points`. 
 
 ## Accessing Registries from Plugins
 
-Every plugin (Input, Transform, Output) runs inside a job execution. During that execution, Tiozin makes all configured registries available through `self.context.registries`. This gives your plugin direct access to secrets, schemas, transactions, and the other infrastructure services your job depends on, without passing anything through the constructor.
+Every plugin (Input, Transform, Output) runs inside a job execution. During that execution, Tiozin makes all configured registries available through `self.context.registries`. This gives your plugin direct access to secrets, schemas, states, and the other infrastructure services your job depends on, without passing anything through the constructor.
 
 ### The basics
 

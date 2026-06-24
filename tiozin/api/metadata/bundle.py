@@ -8,7 +8,7 @@ from .metric.registry import MetricRegistry
 from .schema.registry import SchemaRegistry
 from .secret.registry import SecretRegistry
 from .setting.registry import SettingRegistry
-from .transaction.registry import TransactionRegistry
+from .state.registry import StateRegistry
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,7 @@ class Registries:
     setting: SettingRegistry = None
     secret: SecretRegistry = None
     schema: SchemaRegistry = None
-    transaction: TransactionRegistry = None
+    state: StateRegistry = None
     job: JobRegistry = None
     metric: MetricRegistry = None
     lineage: LineageRegistry = None
@@ -40,14 +40,14 @@ class Registries:
             NoOpMetricRegistry,
             NoOpSchemaRegistry,
             NoOpSettingRegistry,
-            NoOpTransactionRegistry,
+            NoOpStateRegistry,
         )
 
         for name, factory in (
             ("setting", NoOpSettingRegistry),
             ("secret", EnvSecretRegistry),
             ("schema", NoOpSchemaRegistry),
-            ("transaction", NoOpTransactionRegistry),
+            ("state", NoOpStateRegistry),
             ("job", FileJobRegistry),
             ("metric", NoOpMetricRegistry),
             ("lineage", NoOpLineageRegistry),
