@@ -20,27 +20,27 @@ class NoOpStateRegistry(StateRegistry):
         return state
 
     def begin(self, state: State) -> State:
-        state.status = state.status.transition_to_running()
+        state.status = state.status.to_running()
         return state
 
     def commit(self, state: State) -> State:
-        state.status = state.status.transition_to_succeeded()
+        state.status = state.status.to_succeeded()
         return state
 
     def fail(self, state: State) -> State:
-        state.status = state.status.transition_to_failed()
+        state.status = state.status.to_failed()
         return state
 
     def cancel(self, state: State) -> State:
-        state.status = state.status.transition_to_canceled()
+        state.status = state.status.to_canceled()
         return state
 
     def quarantine(self, state: State) -> State:
-        state.status = state.status.transition_to_quarantined()
+        state.status = state.status.to_quarantined()
         return state
 
     def replay(self, state: State) -> State:
-        state.status = state.status.transition_to_pending()
+        state.status = state.status.to_pending()
         return state
 
     def get_watermark(self, **resource: Unpack[ResourceKwargs]) -> State | None:
