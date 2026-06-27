@@ -24,7 +24,6 @@ class Metadata(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_default=True,
-        use_enum_values=True,
     )
 
     def __init__(self, **data: Any):

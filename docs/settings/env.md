@@ -58,12 +58,13 @@ Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, 
     <tr><td><code>TIO_SECRET_REGISTRY_READONLY</code></td><td>Reject write operations when set</td><td><code>false</code></td></tr>
     <tr><td><code>TIO_SECRET_REGISTRY_CACHE</code></td><td>Cache retrieved metadata in memory when set</td><td><code>false</code></td></tr>
     <tr><td><code>TIO_SECRET_REGISTRY_FAILFAST</code></td><td>Raise on missing metadata when set</td><td><code>true</code></td></tr>
-    <tr><td rowspan="6">State</td><td><code>TIO_STATE_REGISTRY_KIND</code></td><td>Plugin class name</td><td><code>tio_kernel:NoOpStateRegistry</code></td></tr>
+    <tr><td rowspan="7">State</td><td><code>TIO_STATE_REGISTRY_KIND</code></td><td>Plugin class name</td><td><code>tio_kernel:NoOpStateRegistry</code></td></tr>
     <tr><td><code>TIO_STATE_REGISTRY_LOCATION</code></td><td>Path or URL to the registry backend</td><td><code>null</code></td></tr>
     <tr><td><code>TIO_STATE_REGISTRY_TIMEOUT</code></td><td>Request timeout in seconds</td><td><code>3</code></td></tr>
     <tr><td><code>TIO_STATE_REGISTRY_READONLY</code></td><td>Reject write operations when set</td><td><code>false</code></td></tr>
     <tr><td><code>TIO_STATE_REGISTRY_CACHE</code></td><td>Cache retrieved metadata in memory when set</td><td><code>false</code></td></tr>
     <tr><td><code>TIO_STATE_REGISTRY_FAILFAST</code></td><td>Raise on missing metadata when set</td><td><code>true</code></td></tr>
+    <tr><td><code>TIO_STATE_REGISTRY_RETRIES</code></td><td>Maximum retries before escalating a failed batch to QUARANTINED</td><td><code>3</code></td></tr>
     <tr><td rowspan="7">Lineage</td><td><code>TIO_LINEAGE_REGISTRY_KIND</code></td><td>Plugin class name</td><td><code>tio_kernel:NoOpLineageRegistry</code></td></tr>
     <tr><td><code>TIO_LINEAGE_REGISTRY_LOCATION</code></td><td>Path or URL to the registry backend</td><td><code>null</code></td></tr>
     <tr><td><code>TIO_LINEAGE_REGISTRY_TIMEOUT</code></td><td>Request timeout in seconds</td><td><code>3</code></td></tr>

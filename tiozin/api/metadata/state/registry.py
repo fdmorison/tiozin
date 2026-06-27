@@ -1,76 +1,84 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
+from typing_extensions import Unpack
+
+from tiozin import config
+from tiozin.compose import tioproxy
+from tiozin.utils import default
+
+from ...typehint import ResourceKwargs
 from ..registry import Registry
 from .model import State
+from .proxy import StateRegistryProxy
 
 
-class StateRegistry(Registry[State], ABC):
+@tioproxy(StateRegistryProxy)
+class StateRegistry(Registry[State]):
     """
-    Registry for tracking pipeline state in a transaction-like way.
+    Storage-agnostic registry for pipeline states.
 
-    Storage-agnostic contract for state backends (databases, key-value stores, etc.).
-    Supports both watermark tracking (single record per taxonomy) and pending-events
-    tracking (multiple records per taxonomy partition).
+    The registry persists and manages the lifecycle of batches represented by
+    `State` objects. Implementations may use REST backends, relational databases, key-value
+    stores, or table formats such as Iceberg or DuckLake.
 
-    Available in Context for custom inspection in Transforms, Inputs, and Outputs.
+    Besides state transitions, the registry exposes derived views over the
+    collection of states, such as watermarks and backlogs.
+
+    Attributes:
+        retries:
+            Maximum number of times a failed batch is retried before being
+            escalated to QUARANTINED.
     """
+
+    def __init__(self, retries: int = None, **options) -> None:
+        super().__init__(**options)
+        self.retries = default(retries, config.default_state_retries)
 
     @abstractmethod
     def register(self, state: State) -> State:
         """
-        Persists a new state record, assigning timestamps and generating the id if absent.
+        Registers a new state.
+
+        Fails if another state already exists for the same `(resource, cursor)`.
         """
 
     @abstractmethod
-    def latest_cursor(self, state: State) -> State | None:
-        """
-        Returns the state with the highest cursor for the given taxonomy, or None if absent.
+    def begin(self, state: State) -> State:
+        """Transitions the state to RUNNING and persists it."""
 
-        Used in watermark patterns to resume incremental processing from where the last
-        successful execution left off.
+    @abstractmethod
+    def commit(self, state: State) -> State:
+        """Transitions the state to SUCCEEDED and persists it."""
+
+    @abstractmethod
+    def fail(self, state: State) -> State:
+        """Transitions the state to FAILED and persists it."""
+
+    @abstractmethod
+    def cancel(self, state: State) -> State:
+        """Transitions the state to CANCELED and persists it."""
+
+    @abstractmethod
+    def quarantine(self, state: State) -> State:
+        """Transitions the state to QUARANTINED and persists it."""
+
+    @abstractmethod
+    def replay(self, state: State) -> State:
+        """Transitions the state to PENDING and persists it."""
+
+    @abstractmethod
+    def get_watermark(self, **resource: Unpack[ResourceKwargs]) -> State | None:
+        """
+        Returns the watermark for the resource.
+
+        The watermark is the state with the highest successfully processed cursor,
+        or `None` if no watermark exists.
         """
 
     @abstractmethod
-    def list_pending(self, state: State) -> list[State]:
+    def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[State]:
         """
-        Returns all states in pending status for the given taxonomy.
+        Returns the backlog for the resource.
 
-        Used in pending-events patterns by jobs that can process multiple pending
-        cursors in a single execution.
-        """
-
-    @abstractmethod
-    def begin(self, state: State, attributes: dict = None) -> State:
-        """
-        Transitions the state to in-progress, indicating processing has begun.
-        """
-
-    @abstractmethod
-    def commit(self, state: State, attributes: dict = None) -> State:
-        """
-        Marks the state as successfully completed.
-        """
-
-    @abstractmethod
-    def fail(self, state: State, attributes: dict = None) -> State:
-        """
-        Marks the state as failed. Does not guarantee any data rollback.
-        """
-
-    @abstractmethod
-    def cancel(self, state: State, attributes: dict = None) -> State:
-        """
-        Marks the state as cancelled, permanently abandoning this cursor.
-        """
-
-    @abstractmethod
-    def quarantine(self, state: State, attributes: dict = None) -> State:
-        """
-        Isolates the state after an unrecoverable error, preventing further processing.
-        """
-
-    @abstractmethod
-    def replay(self, state: State, attributes: dict = None) -> State:
-        """
-        Resets the state to pending, forcing reprocessing regardless of current status.
+        The backlog contains all batches currently awaiting processing.
         """

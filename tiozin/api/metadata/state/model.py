@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING
+from datetime import UTC, date, datetime
+from typing import TYPE_CHECKING, Any
 from uuid import NAMESPACE_OID, uuid5
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, model_validator
 
+from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
 from tiozin.utils import utcnow
 
 from ..model import Metadata
@@ -17,63 +18,69 @@ if TYPE_CHECKING:
 
 class State(Metadata):
     """
-    Represents the execution state of a pipeline partition.
+    Represents the lifecycle of a logical batch of data.
 
-    A state records the progress and lifecycle of incremental processing
-    for a specific taxonomy and cursor.
+    A state uniquely identifies a batch within a resource and tracks its
+    processing lifecycle. A batch may represent a partition, file, offset,
+    snapshot, or any other job-defined unit of work.
 
-    States support two common patterns:
+    States are uniquely identified by `(resource, batch_key)`. Their status
+    evolves over time as the batch progresses through processing, replay,
+    quarantine, or cancellation.
 
-    - Watermarks, where a single state stores the latest processed cursor.
-    - Pending events, where multiple states represent cursors awaiting
-      processing and track their execution lifecycle independently.
+    Collections of states support higher-level concepts such as:
+
+    - Watermarks, representing the highest successfully processed batch.
+    - Backlogs, representing batches awaiting processing.
 
     Attributes:
         id:
-            Deterministic UUID derived from the natural key (taxonomy + cursor). Stable across
-            updates to the same pair; the registry uses it to upsert rather than insert duplicates.
+            Deterministic UUID derived from the natural key
+            (`resource + batch_key`). Stable across updates to the same state.
 
         org:
-            Organization that owns the state.
+            Organization that owns the resource.
 
         region:
-            Region associated with the state.
+            Region associated with the resource.
 
         domain:
-            Domain that owns the pipeline.
+            Domain that owns the resource.
 
         subdomain:
             Subdomain within the domain.
 
         layer:
-            Data layer associated with the pipeline.
+            Data layer associated with the resource.
 
         product:
-            Product associated with the pipeline.
+            Product associated with the resource.
 
         model:
-            Model associated with the pipeline.
+            Model associated with the resource.
 
-        cursor:
-            Processing position tracked by the state, such as a watermark, an incremental date
-            partition, an offset, or any other job-defined value. Advances with each successful
-            execution. Tiozin treats cursor values as opaque strings; interpretation and ownership
-            belong to the job.
+        batch_key:
+            Job-defined identifier of the logical batch represented by this state. Typical values
+            include partition dates, filenames, offsets, snapshot identifiers, or any other value
+            that uniquely identifies a batch within the resource.
 
         status:
-            Current lifecycle status of the cursor. Controls which transitions the registry will
-            accept. See ``StateStatus`` for valid values and allowed transitions.
+            Current lifecycle status of the batch.
+
+        failure_count:
+            Number of failures since the batch was last replayed. Incremented
+            each time the batch fails and reset when the batch is replayed.
 
         attributes:
-            Arbitrary job-specific metadata persisted alongside the state. Jobs can write values
-            such as record counts, source file paths, checksums, or execution details and read them
-            back on the next run. Tiozin does not interpret this field.
+            Arbitrary job-specific metadata associated with the batch. Typical
+            values include record counts, source locations, checksums, execution
+            details, or any other application-defined information.
 
         created_at:
-            UTC timestamp set once when the state is first registered.
+            UTC timestamp when the state was first registered.
 
         updated_at:
-            UTC timestamp refreshed by the registry on every write.
+            UTC timestamp when the state was last updated.
     """
 
     id: str | None = None
@@ -86,85 +93,101 @@ class State(Metadata):
     product: str
     model: str
 
-    cursor: str
+    batch_key: str
     status: StateStatus = StateStatus.PENDING
-    attributes: dict = Field(default_factory=dict)
+    failure_count: int = Field(0, ge=0)
+    attributes: dict[str, Any] = Field(default_factory=dict)
 
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
 
     @model_validator(mode="after")
-    def _init_id(self) -> State:
-        if self.id is None:
+    def _init(self) -> State:
+        if not self.id:
             self.id = str(uuid5(NAMESPACE_OID, ".".join(self.natural_key)))
         return self
-
-    @field_validator("attributes", mode="before")
-    @classmethod
-    def _init_attributes(cls, v: dict | None) -> dict:
-        return v or {}
 
     def _registry(self) -> StateRegistry:
         from tiozin.api.context import Context
 
         return Context.current().registries.state
 
-    def register(self) -> State:
-        """Persists this state in the registry for the first time."""
-        return self._registry().register(self)
+    def persist(self) -> State:
+        self._registry().register(self)
+        return self
 
-    def begin(self, attributes: dict = None) -> State:
-        """Transitions the state to in-progress, indicating processing has begun."""
-        return self._registry().begin(self, attributes)
+    def begin(self, **attributes) -> State:
+        self.attributes |= attributes
+        self._registry().begin(self)
+        return self
 
-    def commit(self, attributes: dict = None) -> State:
-        """Marks the state as successfully completed."""
-        return self._registry().commit(self, attributes)
+    def commit(self, **attributes) -> State:
+        self.attributes |= attributes
+        self._registry().commit(self)
+        return self
 
-    def fail(self, attributes: dict = None) -> State:
-        """Marks the state as failed. Does not guarantee any data rollback."""
-        return self._registry().fail(self, attributes)
+    def fail(self, **attributes) -> State:
+        self.attributes |= attributes
+        self.failure_count += 1
+        self._registry().fail(self)
+        return self
 
-    def cancel(self, attributes: dict = None) -> State:
-        """Marks the state as cancelled, permanently abandoning this cursor."""
-        return self._registry().cancel(self, attributes)
+    def cancel(self, **attributes) -> State:
+        self.attributes |= attributes
+        self._registry().cancel(self)
+        return self
 
-    def quarantine(self, attributes: dict = None) -> State:
-        """Isolates the state after an unrecoverable error, preventing further processing."""
-        return self._registry().quarantine(self, attributes)
+    def quarantine(self, **attributes) -> State:
+        self.attributes |= attributes
+        self._registry().quarantine(self)
+        return self
 
-    def replay(self, attributes: dict = None) -> State:
-        """Resets the state to pending, forcing reprocessing regardless of current status."""
-        return self._registry().replay(self, attributes)
+    def replay(self, **attributes) -> State:
+        self.attributes |= attributes
+        self.failure_count = 0
+        self._registry().replay(self)
+        return self
 
     @property
-    def taxonomy(self) -> str:
-        """Single key that identifies the job within the platform hierarchy."""
-        return ".".join(self.taxonomy_key())
+    def batch_date(self) -> datetime:
+        return date.fromisoformat(self.batch_key)
+
+    @batch_date.setter
+    def batch_date(self, value: date | datetime) -> None:
+        if isinstance(value, datetime):
+            value = value.date()
+        self.batch_key = value.isoformat()
 
     @property
-    def taxonomy_key(self) -> tuple[str, ...]:
-        """Composite key that identifies the job within the platform hierarchy."""
-        return (
-            self.org,
-            self.region,
-            self.domain,
-            self.subdomain,
-            self.layer,
-            self.product,
-            self.model,
-        )
+    def batch_timestamp(self) -> datetime:
+        return datetime.fromisoformat(self.batch_key)
+
+    @batch_timestamp.setter
+    def batch_timestamp(self, value: date | datetime) -> None:
+        if type(value) is date:
+            value = datetime(value.year, value.month, value.day, tzinfo=UTC)
+        self.batch_key = value.isoformat()
+
+    @property
+    def batch_int(self) -> int:
+        return int(self.batch_key)
+
+    @batch_int.setter
+    def batch_int(self, value: int) -> None:
+        self.batch_key = str(value)
+
+    @property
+    def domain_key(self) -> tuple[str, ...]:
+        return tuple(getattr(self, field) for field in DOMAIN_FIELDS)
+
+    @property
+    def product_key(self) -> tuple[str, ...]:
+        return tuple(getattr(self, field) for field in PRODUCT_FIELDS)
+
+    @property
+    def resource_key(self) -> tuple[str, ...]:
+        return tuple(getattr(self, field) for field in RESOURCE_FIELDS)
 
     @property
     def natural_key(self) -> tuple[str, ...]:
-        """Composite key that uniquely identifies a state within a job context."""
-        return (
-            self.org,
-            self.region,
-            self.domain,
-            self.subdomain,
-            self.layer,
-            self.product,
-            self.model,
-            self.cursor,
-        )
+        return (*self.resource_key, self.batch_key)

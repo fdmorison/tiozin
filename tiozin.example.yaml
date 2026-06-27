@@ -47,6 +47,7 @@ registries:
     readonly: false
     cache: false
     failfast: true
+    retries: 3
 
   metric:
     kind: NoOpMetricRegistry
