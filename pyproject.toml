@@ -43,8 +43,8 @@ dependencies = [
 
 [project.optional-dependencies]
 tio_kernel = [
-  "google-cloud-secret-manager ~=2.23",
-  "boto3 ~=1.38",
+  "tiozin[aws]",
+  "tiozin[gcp]",
 ]
 tio_spark = [
   "pyspark >=3.5.0,<4.0.0",
@@ -54,6 +54,12 @@ tio_spark = [
 ]
 tio_duckdb = [
   "duckdb>=1.4.4,<2.0.0",
+]
+aws = [
+  "boto3 ~=1.38",
+]
+gcp = [
+  "google-cloud-secret-manager ~=2.23",
 ]
 
 [dependency-groups]
