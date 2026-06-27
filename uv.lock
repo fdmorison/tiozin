@@ -2705,6 +2705,10 @@ gcp = [
 tio-duckdb = [
     { name = "duckdb" },
 ]
+tio-kernel = [
+    { name = "boto3" },
+    { name = "google-cloud-secret-manager" },
+]
 tio-spark = [
     { name = "databricks-sdk" },
     { name = "pyspark" },
@@ -2723,7 +2727,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "testcontainers" },
-    { name = "tiozin", extra = ["aws", "gcp", "tio-duckdb", "tio-spark"] },
+    { name = "tiozin", extra = ["tio-duckdb", "tio-kernel", "tio-spark"] },
 ]
 lint = [
     { name = "pre-commit" },
@@ -2739,18 +2743,20 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "testcontainers" },
-    { name = "tiozin", extra = ["aws", "gcp", "tio-duckdb", "tio-spark"] },
+    { name = "tiozin", extra = ["tio-duckdb", "tio-kernel", "tio-spark"] },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "boto3", marker = "extra == 'aws'", specifier = "~=1.38" },
+    { name = "boto3", marker = "extra == 'tio-kernel'", specifier = "~=1.38" },
     { name = "databricks-sdk", marker = "extra == 'tio-spark'", specifier = "~=0.102.0" },
     { name = "datacontract-cli", specifier = "~=0.11.7" },
     { name = "duckdb", marker = "extra == 'tio-duckdb'", specifier = ">=1.4.4,<2.0.0" },
     { name = "environs", specifier = "~=14.3" },
     { name = "fsspec", extras = ["s3", "gcs", "adl", "sftp"], specifier = "~=2026.2.0" },
     { name = "google-cloud-secret-manager", marker = "extra == 'gcp'", specifier = "~=2.23" },
+    { name = "google-cloud-secret-manager", marker = "extra == 'tio-kernel'", specifier = "~=2.23" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "openlineage-python", specifier = "~=1.45.0" },
     { name = "pendulum", specifier = "~=3.1.0" },
@@ -2766,7 +2772,7 @@ requires-dist = [
     { name = "uuid-utils", specifier = "~=0.12" },
     { name = "wrapt", specifier = "~=2.0.1" },
 ]
-provides-extras = ["tio-spark", "tio-duckdb", "aws", "gcp"]
+provides-extras = ["tio-kernel", "tio-spark", "tio-duckdb", "aws", "gcp"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2781,7 +2787,7 @@ dev = [
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "ruff", specifier = "==0.14.10" },
     { name = "testcontainers", specifier = "==4.13.2" },
-    { name = "tiozin", extras = ["tio-spark", "tio-duckdb", "aws", "gcp"] },
+    { name = "tiozin", extras = ["tio-spark", "tio-duckdb", "tio-kernel"] },
 ]
 lint = [
     { name = "pre-commit", specifier = "==4.3.0" },
@@ -2797,7 +2803,7 @@ test = [
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "testcontainers", specifier = "==4.13.2" },
-    { name = "tiozin", extras = ["tio-spark", "tio-duckdb", "aws", "gcp"] },
+    { name = "tiozin", extras = ["tio-spark", "tio-duckdb", "tio-kernel"] },
 ]
 
 [[package]]

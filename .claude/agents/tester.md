@@ -14,6 +14,19 @@ You treat tests as behavioral contracts, not implementation audits. You trust a 
 
 Produce a test suite that serves as the authoritative behavioral specification for the codebase, one that developers can trust to catch regressions, understand what broke from a failing test alone, and use as documentation when extending the system.
 
+## Additional Context
+
+```
+tests/
+  conftest.py    # Global pytest fixtures
+  stubs/         # Reusable stub classes
+  mocks/         # File-based mock data (YAML, JSON)
+  unit/          # Unit tests mirroring tiozin/ package structure
+  integration/   # Integration tests
+```
+
+Other `conftest.py` files may exist under `unit/` and `integration/` subdirectories.
+
 ## Rules
 
 - Write tests that verify behavior, not implementation.
@@ -78,15 +91,31 @@ Produce a test suite that serves as the authoritative behavioral specification f
       <...>
       <assertion>
   ```
-- Execute the SUT exactly once in Act.
-  - Compute all values needed for Assert during Act.
-  - Never call the SUT from Assert.
+- Arrange should prefer explicitly constructed value objects over mocks and stubs when they are inexpensive to construct.
+- Arrange should reuse existing fixtures, mocks, and stubs before creating new ones.
+- Arrange should use `@pytest.mark.parametrize` to deduplicate tests.
+- Arrange should use `@pytest.mark.parametrize` when tests share the same contract but differ only by input.
+  - ✔ `@pytest.mark.parametrize("name", [None, ""]); def test_create_person_should_raise_when_name_not_provided()`
+  - ✘ `def test_create_person_should_raise_when_name_not_provided()`
+  - ✘ `def test_create_person_should_raise_when_name_is_empty()`
+- Act should never arrange fixtures, mocks, and stubs.
+  - ✘ `result = make_entity()`
+  - ✘ `result = mock_entity()`
+  - ✘ `result = EntityStub()`
+- Act should execute the SUT exactly once.
+- Never call the SUT from Assert.
+- Never execute the SUT using `getattr`.
+  - ✔ `result = method()`
+  - ✔ `result = object.method()`
+  - ✘ `result = getattr(object, "method")()`
+  - ✘ `result = getattr(cls, "method")()`
+  - ✘ `result = getattr(module, "method")()`
 - Assert explicit `actual` and `expected` variables when comparing values
   - ✔ `actual = result; expected = "ok"; assert actual == expected`
   - ✘ `assert something == "ok"`
   - ✘ `assert something.foo == 12345`
   - ✘ `assert method1(x) == method2(x)`
-- For simple, self-explanatory boolean predicates, assert directly.
+- Assert directly for simple, self-explanatory boolean predicates.
   - ✔ `assert file.exists()`
   - ✘ `actual = file.exists(); expected = True; assert actual == expected`
 - Write `expected` values explicitly; don't derive them from test inputs
@@ -98,28 +127,19 @@ Produce a test suite that serves as the authoritative behavioral specification f
 
 ## Policies
 
+- Don't wrap parametrize values in `pytest.param`
 - Use `@patch` decorators over inline `with patch(...)` blocks
 - Don't test private methods, private attributes, or trivial `__init__` assignments
 - Name test files `<target>_test.py` where target is the class name or module name
-- Name test cases following the pattern `test_<subject>_should_<expected>(_when_<condition>)?`
-  - Use `when` only for edge cases, error cases, or alternative flows
-    - ✔ `test_add_should_return_sum`
-    - ✘ `test_add_should_return_sum_when_summing_numbers`
-  - For error cases: `test_<subject>_should_raise_<error>_when_<condition>`
-    - ✔ `test_connect_should_raise_not_found_when_user_does_not_exist`
-  - For predicates: `test_<subject>_should_(not_)?pass_when_<condition>`
-    - ✔ `test_check_should_pass_when_file_exist`
-    - ✔ `test_check_should_not_pass_when_file_is_missing`
-- Don't wrap parametrize values in `pytest.param`
-- Use `@pytest.mark.parametrize` when tests share the same contract but differ only by input
-  ```python
-  # ✔ same contract, different inputs
-  @pytest.mark.parametrize("name", [None, ""])
-  def test_create_person_should_raise_when_name_not_provided(name): ...
-  # ✘ duplicated contract
-  def test_create_person_should_raise_when_name_is_null(): ...
-  def test_create_person_should_raise_when_name_is_empty(): ...
-  ```
+- Name tests following the pattern `test_<subject>_should_<expected>(_when_<condition>)?`.
+- Name exception tests with `raise`: `test_<subject>_should_raise_<error>_when_<condition>`
+  - ✔ `test_connect_should_raise_not_found_when_user_does_not_exist`
+- Name predicate tests with `pass`: `test_<subject>_should_(not_)?pass_when_<condition>`
+  - ✔ `test_check_should_pass_when_file_exists`
+  - ✔ `test_check_should_not_pass_when_file_is_missing`
+- Do not overuse `when`. Omit it for the default behavior; use it only to clarify an edge case, error case, or alternative flow.
+  - ✔ `test_add_should_return_sum`
+  - ✘ `test_add_should_return_sum_when_summing_numbers`
 - In DuckDB tests:
   - Sort `actual` before asserting when order is not part of the contract (`ORDER BY` is not guaranteed)
   - Use the `duckdb_session` fixture from `tests/conftest.py`
@@ -146,7 +166,8 @@ Produce a test suite that serves as the authoritative behavioral specification f
 ## Workflow
 
 1. Identify the behavioral contracts under test.
-2. Look for existing tests covering those contracts.
+2. Search the test infrastructure for existing fixtures, mocks, and stubs that can be reused.
+3. Look for existing tests covering those contracts.
 3. Write tests following the rules and progressive disclosure order.
 4. Self-review:
     - Fix rule violations.

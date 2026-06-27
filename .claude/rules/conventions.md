@@ -91,9 +91,70 @@ self.sampling_ratio = sampling_ratio if sampling_ratio is not None else 0.10
 self.columns = columns or []
 ```
 
-## 6. No magic numbers
+## 6. Imports at the top of the file
 
-Numeric literals must be assigned to a named constant at module level.
+All imports must be at the top of the file. The only exception is a local import inside a function or method to break a circular dependency.
+
+```python
+# ✔ Correct
+from tiozin.utils import default
+
+def foo():
+    ...
+
+# ✔ Correct — local import to avoid circular dependency
+def foo():
+    from tiozin.some_module import Bar
+    ...
+
+# ❌ Incorrect
+def foo():
+    from tiozin.utils import default
+    ...
+
+# ❌ Incorrect
+def foo():
+    ...
+
+from tiozin.utils import default
+```
+
+## 7. Constants at the top of the file
+
+All module-level constants must be declared at the top of the file, after imports.
+
+```python
+# ✔ Correct
+from datetime import datetime
+
+FOO = 1.0
+BAR = "12345"
+
+def my_function():
+    ...
+
+# ❌ Incorrect
+FOO = 1.0
+BAR = "12345"
+
+def my_function():
+    ...
+
+# ❌ Incorrect
+def my_function():
+    ...
+
+FOO = 1.0
+BAR = "12345"
+```
+
+## 8. No magic values
+
+Literals must be assigned to a named constant at module level.
+
+This rule applies only to production code (`tiozin/`).
+
+Tests are exempt. Test code should optimize for readability rather than reuse. Inline literals make the scenario self-contained, whereas extracting them into constants hides the behavior being verified and makes tests harder to understand.
 
 ```python
 # ✔ Correct
@@ -128,61 +189,4 @@ input = spark.createDataFrame(
     [{"created_at": datetime.fromisoformat("2024-01-15T10:30:00Z")}],
     schema="created_at STRING",
 )
-```
-
-## 7. Imports at the top of the file
-
-All imports must be at the top of the file. The only exception is a local import inside a function or method to break a circular dependency.
-
-```python
-# ✔ Correct
-from tiozin.utils import default
-
-def foo():
-    ...
-
-# ✔ Correct — local import to avoid circular dependency
-def foo():
-    from tiozin.some_module import Bar
-    ...
-
-# ❌ Incorrect
-def foo():
-    from tiozin.utils import default
-    ...
-
-# ❌ Incorrect
-def foo():
-    ...
-
-from tiozin.utils import default
-```
-
-## 8. Constants at the top of the file
-
-All module-level constants must be declared at the top of the file, after imports.
-
-```python
-# ✔ Correct
-from datetime import datetime
-
-FOO = 1.0
-BAR = "12345"
-
-def my_function():
-    ...
-
-# ❌ Incorrect
-FOO = 1.0
-BAR = "12345"
-
-def my_function():
-    ...
-
-# ❌ Incorrect
-def my_function():
-    ...
-
-FOO = 1.0
-BAR = "12345"
 ```
