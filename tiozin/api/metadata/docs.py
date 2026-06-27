@@ -17,6 +17,10 @@ REGISTRY_READY = "Whether the registry has been initialized and is ready to serv
 REGISTRY_DESCRIPTION = "Short description of the registry (optional)"
 
 LINEAGE_REGISTRY_EMIT_LEVEL = "Lineage emission level. VAlues: job, step or all"
+STATE_REGISTRY_RETRIES = (
+    "Maximum number of times a failed batch is retried before being escalated to QUARANTINED. "
+    "Default: 3"
+)
 SCHEMA_REGISTRY_SHOW_SCHEMA = "Print the schema to the console after retrieval. Default: false"
 SCHEMA_REGISTRY_SUBJECT_TEMPLATE = (
     "Jinja template used to resolve the schema subject when none is provided. "

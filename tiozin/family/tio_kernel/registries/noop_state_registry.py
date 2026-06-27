@@ -1,4 +1,7 @@
+from typing_extensions import Unpack
+
 from tiozin.api import State, StateRegistry
+from tiozin.api.typehint import ResourceKwargs
 
 
 class NoOpStateRegistry(StateRegistry):
@@ -6,7 +9,7 @@ class NoOpStateRegistry(StateRegistry):
     No-op state registry.
 
     Does nothing. Returns the received state for all transitions, None for the
-    latest cursor lookup, and an empty list for pending states.
+    watermark, and an empty list for the backlog.
     Useful for testing or when state tracking is disabled.
     """
 
@@ -16,26 +19,32 @@ class NoOpStateRegistry(StateRegistry):
     def register(self, state: State) -> State:
         return state
 
-    def latest_cursor(self, state: State) -> State | None:
+    def begin(self, state: State) -> State:
+        state.status = state.status.transition_to_running()
+        return state
+
+    def commit(self, state: State) -> State:
+        state.status = state.status.transition_to_succeeded()
+        return state
+
+    def fail(self, state: State) -> State:
+        state.status = state.status.transition_to_failed()
+        return state
+
+    def cancel(self, state: State) -> State:
+        state.status = state.status.transition_to_canceled()
+        return state
+
+    def quarantine(self, state: State) -> State:
+        state.status = state.status.transition_to_quarantined()
+        return state
+
+    def replay(self, state: State) -> State:
+        state.status = state.status.transition_to_pending()
+        return state
+
+    def get_watermark(self, **resource: Unpack[ResourceKwargs]) -> State | None:
         return None
 
-    def list_pending(self, state: State) -> list[State]:
+    def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[State]:
         return []
-
-    def begin(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def commit(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def fail(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def cancel(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def quarantine(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def replay(self, state: State, attributes: dict = None) -> State:
-        return state

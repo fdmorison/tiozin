@@ -146,6 +146,8 @@ class StateRegistryManifest(BaseSettings):
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
     failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
+    # State Properties
+    retries: int | None = Field(NULLABLE, description=docs.STATE_REGISTRY_RETRIES)
 
 
 class LineageRegistryManifest(BaseSettings):

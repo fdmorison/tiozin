@@ -1,4 +1,7 @@
+from typing_extensions import Unpack
+
 from tiozin.api import State, StateRegistry
+from tiozin.api.typehint import ResourceKwargs
 
 
 class StateRegistryStub(StateRegistry):
@@ -8,26 +11,26 @@ class StateRegistryStub(StateRegistry):
     def register(self, state: State) -> State:
         return state
 
-    def latest_cursor(self, state: State) -> State | None:
+    def begin(self, state: State) -> State:
+        return state
+
+    def commit(self, state: State) -> State:
+        return state
+
+    def fail(self, state: State) -> State:
+        return state
+
+    def cancel(self, state: State) -> State:
+        return state
+
+    def quarantine(self, state: State) -> State:
+        return state
+
+    def replay(self, state: State) -> State:
+        return state
+
+    def get_watermark(self, **resource: Unpack[ResourceKwargs]) -> State | None:
         return None
 
-    def list_pending(self, state: State) -> list[State]:
+    def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[State]:
         return []
-
-    def begin(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def commit(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def fail(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def cancel(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def quarantine(self, state: State, attributes: dict = None) -> State:
-        return state
-
-    def replay(self, state: State, attributes: dict = None) -> State:
-        return state
