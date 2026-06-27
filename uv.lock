@@ -2696,6 +2696,12 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+aws = [
+    { name = "boto3" },
+]
+gcp = [
+    { name = "google-cloud-secret-manager" },
+]
 tio-duckdb = [
     { name = "duckdb" },
 ]
@@ -2742,12 +2748,14 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "boto3", marker = "extra == 'aws'", specifier = "~=1.38" },
     { name = "boto3", marker = "extra == 'tio-kernel'", specifier = "~=1.38" },
     { name = "databricks-sdk", marker = "extra == 'tio-spark'", specifier = "~=0.102.0" },
     { name = "datacontract-cli", specifier = "~=0.11.7" },
     { name = "duckdb", marker = "extra == 'tio-duckdb'", specifier = ">=1.4.4,<2.0.0" },
     { name = "environs", specifier = "~=14.3" },
     { name = "fsspec", extras = ["s3", "gcs", "adl", "sftp"], specifier = "~=2026.2.0" },
+    { name = "google-cloud-secret-manager", marker = "extra == 'gcp'", specifier = "~=2.23" },
     { name = "google-cloud-secret-manager", marker = "extra == 'tio-kernel'", specifier = "~=2.23" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "openlineage-python", specifier = "~=1.45.0" },
@@ -2764,7 +2772,7 @@ requires-dist = [
     { name = "uuid-utils", specifier = "~=0.12" },
     { name = "wrapt", specifier = "~=2.0.1" },
 ]
-provides-extras = ["tio-kernel", "tio-spark", "tio-duckdb"]
+provides-extras = ["tio-kernel", "tio-spark", "tio-duckdb", "aws", "gcp"]
 
 [package.metadata.requires-dev]
 dev = [
