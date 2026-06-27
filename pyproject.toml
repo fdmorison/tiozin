@@ -20,27 +20,32 @@ classifiers = [
 ]
 
 dependencies = [
+  # Structural — framework won't work without these
   "pydantic ~=2.12",
   "pydantic-settings ~=2.13.1",
   "environs ~=14.3",
   "single-source ~=0.4",
   "structlog ~=25.5",
-  "uuid-utils ~=0.12",
-  "typer ~=0.20",
-  "ruamel-yaml ~=0.18",
-  "wrapt ~=2.0.1",
   "jinja2 ~=3.1.6",
+  "ruamel-yaml ~=0.18",
   "pendulum ~=3.1.0",
+  "wrapt ~=2.0.1",
+  "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
+  "openlineage-python ~=1.45.0",
+  # Utilities — small helpers with focused roles
+  "typer ~=0.20",
+  "uuid-utils ~=0.12",
   "python-slugify ~=8.0.4",
   "pyhumps ~=3.8.0",
-  "openlineage-python ~=1.45.0",
-  "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
-  # NOTE: Temporary dependencies (to be removed)
-  # Required to reuse schema converters, but most converters are bugged
+  # Temporary — to be removed once schema converters are rewritten
   "datacontract-cli ~=0.11.7",
 ]
 
 [project.optional-dependencies]
+tio_kernel = [
+  "google-cloud-secret-manager ~=2.23",
+  "boto3 ~=1.38",
+]
 tio_spark = [
   "pyspark >=3.5.0,<4.0.0",
   # NOTE: Temporary dependencies (to be removed)
@@ -50,19 +55,12 @@ tio_spark = [
 tio_duckdb = [
   "duckdb>=1.4.4,<2.0.0",
 ]
-aws = [
-  "boto3 ~=1.38",
-]
-gcp = [
-  "google-cloud-secret-manager ~=2.23",
-]
 
 [dependency-groups]
 dev = [
   { include-group = "lint" },
   { include-group = "test" },
 ]
-
 test = [
   "pytest ==8.4.2",
   "pytest-cov ==7.0.0",
@@ -73,9 +71,8 @@ test = [
   "pandas ==2.3.3",
   "pyarrow ==23.0.0",
   "numpy ==1.26.4",
-  "tiozin[tio_spark,tio_duckdb,aws,gcp]",
+  "tiozin[tio_spark,tio_duckdb,tio_kernel]",
 ]
-
 lint = [
   "ruff ==0.14.10",
   "pre-commit ==4.3.0",
@@ -96,6 +93,7 @@ Issues = "https://github.com/fdmorison/tiozin/issues"
 
 [tool.uv]
 required-version = ">=0.8.1"
+
 
 [[tool.uv.index]]
 name = "pypi"

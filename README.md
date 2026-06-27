@@ -15,17 +15,14 @@ Tiozin brings it back to basics: **Transform. Input. Output.** Nothing more, not
 
 A lightweight Python framework that makes data jobs declarative, testable, and actually enjoyable to write.
 
-## Philosophy
+## Who is Tiozin for?
 
-Your uncle's advice: keep it simple, readable, and testable.
+Tiozin is human-readable and machine-generatable:
 
-Tiozin is built around a small set of principles that are not features but constraints that shape the design.
-
-- **Declarative**: Define what, not how
-- **Pluggable**: Swap runners, registries, and plugins when needed
-- **Metadata-native**: Execution and metadata walk together
-- **Observable**: Logs that actually help
-- **Testable**: Mock anything, validate everything
+- Data engineers who want reusable pipeline components
+- Teams that value declarative jobs
+- Projects that require testable ETL logic
+- Pipelines where metadata is connected to the execution model
 
 ## One-Minute Example
 
@@ -33,7 +30,18 @@ Tiozin is built around a small set of principles that are not features but const
 pip install tiozin
 ```
 
-**Define a declarative job**
+**Using Python directly**
+
+```python
+from tiozin import TiozinApp
+
+app = TiozinApp()
+app.run("examples/jobs/dummy.yaml")
+```
+
+Done. No ceremony, no boilerplate.
+
+**Or define a declarative job**
 
 ```yaml
 kind: LinearJob
@@ -79,24 +87,17 @@ Run it:
 $ tiozin run examples/jobs/dummy.yaml
 ```
 
-**Using Python directly**
+## Philosophy
 
-```python
-from tiozin import TiozinApp
+Your uncle's advice: keep it simple, readable, and testable.
 
-app = TiozinApp()
-app.run("examples/jobs/dummy.yaml")
-```
-Done. No ceremony, no boilerplate.
+Tiozin is built around a small set of principles that are not features but constraints that shape the design.
 
-## Who is Tiozin for?
-Tiozin is human-readable and machine-generatable:
-
-- Data engineers who want reusable pipeline components
-- Teams that value declarative jobs
-- Projects that require testable ETL logic
-- Pipelines where metadata is connected to the execution model
-- Teams leveraging AI agents 🤖 to author and maintain data jobs
+- **Declarative**: Define what, not how. The YAML format is intentionally minimal, making it easy for both humans and LLMs to generate and maintain jobs.
+- **Pluggable**: Swap runners, registries, and plugins when needed
+- **Metadata-native**: Execution and metadata walk together
+- **Observable**: Logs that actually help
+- **Testable**: Mock anything, validate everything
 
 ## Documentation
 
@@ -131,6 +132,7 @@ Tiozin is human-readable and machine-generatable:
 - [Settings: Environment Variable Reference](https://github.com/fdmorison/tiozin/blob/main/docs/settings/env.md)
 - [Templates Reference](https://github.com/fdmorison/tiozin/blob/main/docs/templates.md)
 - [API Reference](https://github.com/fdmorison/tiozin/blob/main/docs/api.md)
+- [Dependencies](https://github.com/fdmorison/tiozin/blob/main/docs/dependencies.md)
 
 ## Contributing
 
