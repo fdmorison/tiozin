@@ -102,7 +102,10 @@ Other `conftest.py` files may exist under `unit/` and `integration/` subdirector
   - ✘ `result = make_entity()`
   - ✘ `result = mock_entity()`
   - ✘ `result = EntityStub()`
-- Act should execute the SUT exactly once.
+- Act must assign the SUT call to `result`, never to `actual`. Transformations needed for comparison (sorting, indexing, attribute access) belong in Assert, where `actual` is derived from `result`.
+  - ✔ `result = sut.get_items()`; then in Assert: `actual = sorted(result, key=...)`
+  - ✘ `actual = sorted(sut.get_items(), key=...)`
+- Never call the SUT from Arrange.
 - Never call the SUT from Assert.
 - Never execute the SUT using `getattr`.
   - ✔ `result = method()`
