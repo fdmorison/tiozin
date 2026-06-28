@@ -17,12 +17,12 @@ class StateRegistry(Registry[State]):
     """
     Storage-agnostic registry for pipeline states.
 
-    The registry persists and manages the lifecycle of batches represented by
-    `State` objects. Implementations may use REST backends, relational databases, key-value
-    stores, or table formats such as Iceberg or DuckLake.
+    The registry persists and manages the lifecycle of batches represented by `State` objects.
+    Implementations may use REST backends, relational databases, key-value stores, or table
+    formats such as Iceberg or DuckLake.
 
-    Besides state transitions, the registry exposes derived views over the
-    collection of states, such as watermarks and backlogs.
+    Besides state transitions, the registry exposes derived views over the collection of states,
+    such as watermarks and backlogs.
 
     Attributes:
         retries:
@@ -37,9 +37,10 @@ class StateRegistry(Registry[State]):
     @abstractmethod
     def register(self, state: State) -> State:
         """
-        Registers a new state.
+        Creates a new state.
 
-        Fails if another state already exists for the same `(resource, cursor)`.
+        Raises:
+            StateAlreadyExistsError: If a state with the same natural key already exists.
         """
 
     @abstractmethod
@@ -71,7 +72,7 @@ class StateRegistry(Registry[State]):
         """
         Returns the watermark for the resource.
 
-        The watermark is the state with the highest successfully processed cursor,
+        The watermark is the state with the highest successfully processed batch_key,
         or `None` if no watermark exists.
         """
 

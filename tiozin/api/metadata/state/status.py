@@ -5,7 +5,7 @@ from tiozin.api.metadata.model import LowerEnum
 from tiozin.api.metadata.state.exceptions import StateTransitionError
 
 
-class StateStatus(LowerEnum):
+class BatchStatus(LowerEnum):
     """
     Lifecycle states of a batch, forming a state machine.
 
@@ -72,8 +72,7 @@ class StateStatus(LowerEnum):
             return target
 
         if failfast:
-            valid = ", ".join(self.__transitions__[self]) or "none"
-            raise StateTransitionError(source=self, target=target, valid=valid)
+            raise StateTransitionError(source=self, target=target)
 
         return self
 

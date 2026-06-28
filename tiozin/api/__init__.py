@@ -28,7 +28,7 @@ from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
 from .metadata.schema.model import Schema
 from .metadata.state.model import State
-from .metadata.state.status import StateStatus
+from .metadata.state.status import BatchStatus
 
 # Registries
 from .metadata.job.registry import JobRegistry
@@ -70,7 +70,7 @@ __all__ = [
     "SettingsManifest",
     "Schema",
     "State",
-    "StateStatus",
+    "BatchStatus",
     # Registries
     "JobRegistry",
     "LineageRegistry",

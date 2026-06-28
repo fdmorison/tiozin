@@ -5,7 +5,7 @@ import pytest
 from tiozin.api.metadata.state.exceptions import StateTransitionError
 from tiozin.api.metadata.state.model import State
 from tiozin.api.metadata.state.proxy import StateRegistryProxy
-from tiozin.api.metadata.state.status import StateStatus
+from tiozin.api.metadata.state.status import BatchStatus
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def test_begin_should_transition_status_to_running(registry, state):
 
     # Assert
     actual = state.status
-    expected = StateStatus.RUNNING
+    expected = BatchStatus.RUNNING
     assert actual == expected
 
 
@@ -70,7 +70,7 @@ def test_begin_should_return_registry_result(registry, state):
 
 def test_begin_should_warn_when_state_is_already_running(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -93,7 +93,7 @@ def test_begin_should_not_warn_when_state_is_not_running(registry, state):
 
 def test_begin_should_raise_transition_error_when_transition_is_invalid(registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(registry)
 
     # Act / Assert
@@ -103,7 +103,7 @@ def test_begin_should_raise_transition_error_when_transition_is_invalid(registry
 
 def test_begin_should_keep_status_when_invalid_and_failfast_disabled(lenient_registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(lenient_registry)
 
     # Act
@@ -111,7 +111,7 @@ def test_begin_should_keep_status_when_invalid_and_failfast_disabled(lenient_reg
 
     # Assert
     actual = state.status
-    expected = StateStatus.SUCCEEDED
+    expected = BatchStatus.SUCCEEDED
     assert actual == expected
 
 
@@ -120,7 +120,7 @@ def test_begin_should_keep_status_when_invalid_and_failfast_disabled(lenient_reg
 # ============================================================================
 def test_commit_should_transition_status_to_succeeded(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -128,13 +128,13 @@ def test_commit_should_transition_status_to_succeeded(registry, state):
 
     # Assert
     actual = state.status
-    expected = StateStatus.SUCCEEDED
+    expected = BatchStatus.SUCCEEDED
     assert actual == expected
 
 
 def test_commit_should_delegate_to_registry(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -146,7 +146,7 @@ def test_commit_should_delegate_to_registry(registry, state):
 
 def test_commit_should_return_registry_result(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -159,7 +159,7 @@ def test_commit_should_return_registry_result(registry, state):
 
 def test_commit_should_warn_when_state_is_already_succeeded(registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -171,7 +171,7 @@ def test_commit_should_warn_when_state_is_already_succeeded(registry, state):
 
 def test_commit_should_not_warn_when_state_is_not_succeeded(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -199,7 +199,7 @@ def test_commit_should_keep_status_when_invalid_and_failfast_disabled(lenient_re
 
     # Assert
     actual = state.status
-    expected = StateStatus.PENDING
+    expected = BatchStatus.PENDING
     assert actual == expected
 
 
@@ -208,7 +208,7 @@ def test_commit_should_keep_status_when_invalid_and_failfast_disabled(lenient_re
 # ============================================================================
 def test_fail_should_transition_status_to_failed(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -216,13 +216,13 @@ def test_fail_should_transition_status_to_failed(registry, state):
 
     # Assert
     actual = state.status
-    expected = StateStatus.FAILED
+    expected = BatchStatus.FAILED
     assert actual == expected
 
 
 def test_fail_should_delegate_to_registry(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -234,7 +234,7 @@ def test_fail_should_delegate_to_registry(registry, state):
 
 def test_fail_should_return_registry_result(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -247,7 +247,7 @@ def test_fail_should_return_registry_result(registry, state):
 
 def test_fail_should_warn_when_state_is_already_failed(registry, state):
     # Arrange
-    state.status = StateStatus.FAILED
+    state.status = BatchStatus.FAILED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -259,7 +259,7 @@ def test_fail_should_warn_when_state_is_already_failed(registry, state):
 
 def test_fail_should_not_warn_when_state_is_not_failed(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -287,25 +287,25 @@ def test_fail_should_keep_status_when_invalid_and_failfast_disabled(lenient_regi
 
     # Assert
     actual = state.status
-    expected = StateStatus.PENDING
+    expected = BatchStatus.PENDING
     assert actual == expected
 
 
 @pytest.mark.parametrize(
     "failure_count,expected_status",
     [
-        (1, StateStatus.FAILED),  # 1st try
-        (2, StateStatus.FAILED),  # 1st retry
-        (3, StateStatus.FAILED),  # 2nd retry
-        (4, StateStatus.QUARANTINED),  # 3rd retry
+        (1, BatchStatus.FAILED),  # 1st try
+        (2, BatchStatus.FAILED),  # 1st retry
+        (3, BatchStatus.FAILED),  # 2nd retry
+        (4, BatchStatus.QUARANTINED),  # 3rd retry
     ],
 )
 def test_fail_should_quarantine_after_maximum_retries(
-    failure_count: int, expected_status: StateStatus, registry: MagicMock, state: State
+    failure_count: int, expected_status: BatchStatus, registry: MagicMock, state: State
 ):
     # Arrange
     proxy = StateRegistryProxy(registry)
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     state.failure_count = failure_count
 
     # Act
@@ -329,7 +329,7 @@ def test_cancel_should_transition_status_to_canceled(registry, state):
 
     # Assert
     actual = state.status
-    expected = StateStatus.CANCELED
+    expected = BatchStatus.CANCELED
     assert actual == expected
 
 
@@ -358,7 +358,7 @@ def test_cancel_should_return_registry_result(registry, state):
 
 def test_cancel_should_warn_when_state_is_already_canceled(registry, state):
     # Arrange
-    state.status = StateStatus.CANCELED
+    state.status = BatchStatus.CANCELED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -381,7 +381,7 @@ def test_cancel_should_not_warn_when_state_is_not_canceled(registry, state):
 
 def test_cancel_should_raise_transition_error_when_transition_is_invalid(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act / Assert
@@ -391,7 +391,7 @@ def test_cancel_should_raise_transition_error_when_transition_is_invalid(registr
 
 def test_cancel_should_keep_status_when_invalid_and_failfast_disabled(lenient_registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(lenient_registry)
 
     # Act
@@ -399,7 +399,7 @@ def test_cancel_should_keep_status_when_invalid_and_failfast_disabled(lenient_re
 
     # Assert
     actual = state.status
-    expected = StateStatus.RUNNING
+    expected = BatchStatus.RUNNING
     assert actual == expected
 
 
@@ -408,7 +408,7 @@ def test_cancel_should_keep_status_when_invalid_and_failfast_disabled(lenient_re
 # ============================================================================
 def test_quarantine_should_transition_status_to_quarantined(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -416,13 +416,13 @@ def test_quarantine_should_transition_status_to_quarantined(registry, state):
 
     # Assert
     actual = state.status
-    expected = StateStatus.QUARANTINED
+    expected = BatchStatus.QUARANTINED
     assert actual == expected
 
 
 def test_quarantine_should_delegate_to_registry(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -434,7 +434,7 @@ def test_quarantine_should_delegate_to_registry(registry, state):
 
 def test_quarantine_should_return_registry_result(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -447,7 +447,7 @@ def test_quarantine_should_return_registry_result(registry, state):
 
 def test_quarantine_should_warn_when_state_is_already_quarantined(registry, state):
     # Arrange
-    state.status = StateStatus.QUARANTINED
+    state.status = BatchStatus.QUARANTINED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -459,7 +459,7 @@ def test_quarantine_should_warn_when_state_is_already_quarantined(registry, stat
 
 def test_quarantine_should_not_warn_when_state_is_not_quarantined(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -487,7 +487,7 @@ def test_quarantine_should_keep_status_when_invalid_and_failfast_disabled(lenien
 
     # Assert
     actual = state.status
-    expected = StateStatus.PENDING
+    expected = BatchStatus.PENDING
     assert actual == expected
 
 
@@ -496,7 +496,7 @@ def test_quarantine_should_keep_status_when_invalid_and_failfast_disabled(lenien
 # ============================================================================
 def test_replay_should_transition_status_to_pending(registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -504,13 +504,13 @@ def test_replay_should_transition_status_to_pending(registry, state):
 
     # Assert
     actual = state.status
-    expected = StateStatus.PENDING
+    expected = BatchStatus.PENDING
     assert actual == expected
 
 
 def test_replay_should_delegate_to_registry(registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -522,7 +522,7 @@ def test_replay_should_delegate_to_registry(registry, state):
 
 def test_replay_should_return_registry_result(registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -546,7 +546,7 @@ def test_replay_should_warn_when_state_is_already_pending(registry, state):
 
 def test_replay_should_not_warn_when_state_is_not_pending(registry, state):
     # Arrange
-    state.status = StateStatus.SUCCEEDED
+    state.status = BatchStatus.SUCCEEDED
     proxy = StateRegistryProxy(registry)
 
     # Act
@@ -558,7 +558,7 @@ def test_replay_should_not_warn_when_state_is_not_pending(registry, state):
 
 def test_replay_should_raise_transition_error_when_transition_is_invalid(registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(registry)
 
     # Act / Assert
@@ -568,7 +568,7 @@ def test_replay_should_raise_transition_error_when_transition_is_invalid(registr
 
 def test_replay_should_keep_status_when_invalid_and_failfast_disabled(lenient_registry, state):
     # Arrange
-    state.status = StateStatus.RUNNING
+    state.status = BatchStatus.RUNNING
     proxy = StateRegistryProxy(lenient_registry)
 
     # Act
@@ -576,5 +576,5 @@ def test_replay_should_keep_status_when_invalid_and_failfast_disabled(lenient_re
 
     # Assert
     actual = state.status
-    expected = StateStatus.RUNNING
+    expected = BatchStatus.RUNNING
     assert actual == expected
