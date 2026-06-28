@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from pyiceberg.catalog import load_catalog
 
-from tiozin.api import State
-from tiozin.api.metadata.state.status import StateStatus
+from tiozin.api import BatchStatus, State
+from tiozin.api.metadata.state.exceptions import StateAlreadyExistsError, StateNotFoundError
 from tiozin.family.tio_kernel import IcebergStateRegistry
 
 
@@ -59,21 +59,16 @@ def test_register_should_persist_all_fields_to_iceberg_table(
     assert actual == expected
 
 
-def test_register_should_replace_state_when_same_natural_key_registered_twice(
+def test_register_should_raise_when_natural_key_already_exists(
     registry: IcebergStateRegistry, fake_domain: dict
 ):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
-
-    # Act
-    registry.register(state)
     registry.register(state)
 
-    # Assert
-    rows = _scan_table(registry.location)
-    actual = [row["id"] for row in rows]
-    expected = [state.id]
-    assert actual == expected
+    # Act / Assert
+    with pytest.raises(StateAlreadyExistsError):
+        registry.register(state)
 
 
 # ============================================================================
@@ -82,6 +77,7 @@ def test_register_should_replace_state_when_same_natural_key_registered_twice(
 def test_begin_should_persist_state_to_running(registry: IcebergStateRegistry, fake_domain: dict):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
+    registry.register(state)
 
     # Act
     registry.begin(state)
@@ -89,7 +85,7 @@ def test_begin_should_persist_state_to_running(registry: IcebergStateRegistry, f
     # Assert
     row = _scan_table(registry.location)[0]
     actual = row["status"]
-    expected = StateStatus.RUNNING
+    expected = BatchStatus.RUNNING
     assert actual == expected
 
 
@@ -98,6 +94,7 @@ def test_commit_should_persist_state_to_succeeded(
 ):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
+    registry.register(state)
     registry.begin(state)
 
     # Act
@@ -106,13 +103,14 @@ def test_commit_should_persist_state_to_succeeded(
     # Assert
     row = _scan_table(registry.location)[0]
     actual = row["status"]
-    expected = StateStatus.SUCCEEDED
+    expected = BatchStatus.SUCCEEDED
     assert actual == expected
 
 
 def test_fail_should_persist_state_to_failed(registry: IcebergStateRegistry, fake_domain: dict):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
+    registry.register(state)
     registry.begin(state)
 
     # Act
@@ -121,13 +119,14 @@ def test_fail_should_persist_state_to_failed(registry: IcebergStateRegistry, fak
     # Assert
     row = _scan_table(registry.location)[0]
     actual = row["status"]
-    expected = StateStatus.FAILED
+    expected = BatchStatus.FAILED
     assert actual == expected
 
 
 def test_cancel_should_persist_state_to_canceled(registry: IcebergStateRegistry, fake_domain: dict):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
+    registry.register(state)
 
     # Act
     registry.cancel(state)
@@ -135,7 +134,7 @@ def test_cancel_should_persist_state_to_canceled(registry: IcebergStateRegistry,
     # Assert
     row = _scan_table(registry.location)[0]
     actual = row["status"]
-    expected = StateStatus.CANCELED
+    expected = BatchStatus.CANCELED
     assert actual == expected
 
 
@@ -144,6 +143,7 @@ def test_quarantine_should_persist_state_to_quarantined(
 ):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
+    registry.register(state)
     registry.begin(state)
 
     # Act
@@ -152,13 +152,14 @@ def test_quarantine_should_persist_state_to_quarantined(
     # Assert
     row = _scan_table(registry.location)[0]
     actual = row["status"]
-    expected = StateStatus.QUARANTINED
+    expected = BatchStatus.QUARANTINED
     assert actual == expected
 
 
 def test_replay_should_persist_state_to_pending(registry: IcebergStateRegistry, fake_domain: dict):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15")
+    registry.register(state)
     registry.begin(state)
     registry.commit(state)
 
@@ -168,8 +169,30 @@ def test_replay_should_persist_state_to_pending(registry: IcebergStateRegistry, 
     # Assert
     row = _scan_table(registry.location)[0]
     actual = row["status"]
-    expected = StateStatus.PENDING
+    expected = BatchStatus.PENDING
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "status, transition",
+    [
+        (BatchStatus.PENDING, lambda registry, state: registry.begin(state)),
+        (BatchStatus.RUNNING, lambda registry, state: registry.commit(state)),
+        (BatchStatus.RUNNING, lambda registry, state: registry.fail(state)),
+        (BatchStatus.PENDING, lambda registry, state: registry.cancel(state)),
+        (BatchStatus.RUNNING, lambda registry, state: registry.quarantine(state)),
+        (BatchStatus.SUCCEEDED, lambda registry, state: registry.replay(state)),
+    ],
+)
+def test_lifecycle_transition_should_raise_not_found_when_state_is_not_registered(
+    registry: IcebergStateRegistry, fake_domain: dict, status: BatchStatus, transition
+):
+    # Arrange
+    state = State(**fake_domain, batch_key="2026-01-15", status=status)
+
+    # Act / Assert
+    with pytest.raises(StateNotFoundError):
+        transition(registry, state)
 
 
 # ============================================================================
@@ -207,10 +230,10 @@ def test_get_watermark_should_return_state_with_highest_batch_key(
 # ============================================================================
 @pytest.mark.parametrize(
     "status",
-    [StateStatus.PENDING, StateStatus.FAILED, StateStatus.RUNNING],
+    [BatchStatus.PENDING, BatchStatus.FAILED, BatchStatus.RUNNING],
 )
 def test_get_backlog_should_return_ongoing_states(
-    registry: IcebergStateRegistry, fake_domain: dict, status: StateStatus
+    registry: IcebergStateRegistry, fake_domain: dict, status: BatchStatus
 ):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15", status=status)
@@ -228,9 +251,9 @@ def test_get_backlog_should_return_all_ongoing_states(
     registry: IcebergStateRegistry, fake_domain: dict
 ):
     # Arrange
-    pending = State(**fake_domain, batch_key="2026-01-15", status=StateStatus.PENDING)
-    failed = State(**fake_domain, batch_key="2026-01-16", status=StateStatus.FAILED)
-    running = State(**fake_domain, batch_key="2026-01-17", status=StateStatus.RUNNING)
+    pending = State(**fake_domain, batch_key="2026-01-15", status=BatchStatus.PENDING)
+    failed = State(**fake_domain, batch_key="2026-01-16", status=BatchStatus.FAILED)
+    running = State(**fake_domain, batch_key="2026-01-17", status=BatchStatus.RUNNING)
     registry.register(pending)
     registry.register(failed)
     registry.register(running)
@@ -257,10 +280,10 @@ def test_get_backlog_should_return_nothing_when_nothing_to_process(
 
 @pytest.mark.parametrize(
     "status",
-    [StateStatus.SUCCEEDED, StateStatus.CANCELED, StateStatus.QUARANTINED],
+    [BatchStatus.SUCCEEDED, BatchStatus.CANCELED, BatchStatus.QUARANTINED],
 )
 def test_get_backlog_should_return_nothing_when_status_is_terminal(
-    registry: IcebergStateRegistry, fake_domain: dict, status: StateStatus
+    registry: IcebergStateRegistry, fake_domain: dict, status: BatchStatus
 ):
     # Arrange
     state = State(**fake_domain, batch_key="2026-01-15", status=status)

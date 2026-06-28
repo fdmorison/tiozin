@@ -2,26 +2,24 @@ from datetime import timedelta
 from functools import reduce
 
 import pyarrow as pa
-from pyiceberg.expressions import And, BooleanExpression, EqualTo, Or
+import pyarrow.compute as pc
+from pyiceberg.expressions import And, BooleanExpression, EqualTo, In
 from pyiceberg.table import Table
 
 from tiozin.api import State
-from tiozin.api.metadata.state.status import StateStatus
+from tiozin.api.conventions import RESOURCE_FIELDS
+from tiozin.api.metadata.state.status import BatchStatus
 from tiozin.utils import default, utcnow
 
 from . import config
 from .schema import IcebergStateSchema
 
+NATURAL_KEY_FIELDS = (*RESOURCE_FIELDS, "batch_key")
+
 
 class IcebergStateDao:
     def __init__(self, table: Table) -> None:
         self._table = table
-
-    def _where(self, **fields) -> BooleanExpression | None:
-        expressions = [EqualTo(field, value) for field, value in fields.items()]
-        if not expressions:
-            return None
-        return reduce(And, expressions)
 
     def _to_arrow(self, *states: State) -> pa.Table:
         return pa.Table.from_pylist(
@@ -29,32 +27,55 @@ class IcebergStateDao:
             schema=IcebergStateSchema.as_arrow(),
         )
 
-    def scan(self, row_filter: BooleanExpression | None = None) -> pa.Table:
-        return self._table.scan(row_filter=row_filter).to_arrow()
-
-    def upsert(self, state: State) -> None:
-        self._table.upsert(
-            df=self._to_arrow(state),
-            join_cols=["id"],
-        )
-
     def _to_state(self, row: dict) -> State:
         row["attributes"] = dict(row["attributes"])
         return State(**row)
 
+    def _scan(self, *expressions: BooleanExpression, **fields) -> pa.Table:
+        filters = [EqualTo(f, v) for f, v in fields.items()] + list(expressions)
+        row_filter = reduce(And, filters) if filters else None
+        return self._table.scan(row_filter=row_filter).to_arrow()
+
+    def create(self, state: State) -> bool:
+        result = self._table.upsert(
+            df=self._to_arrow(state),
+            join_cols=list(NATURAL_KEY_FIELDS),
+            when_matched_update_all=False,
+        )
+        return result.rows_inserted > 0
+
+    def update(self, state: State) -> bool:
+        result = self._table.upsert(
+            df=self._to_arrow(state),
+            join_cols=list(NATURAL_KEY_FIELDS),
+            when_not_matched_insert_all=False,
+        )
+        return result.rows_updated > 0
+
+    def upsert(self, state: State) -> None:
+        self._table.upsert(
+            df=self._to_arrow(state),
+            join_cols=list(NATURAL_KEY_FIELDS),
+        )
+
+    def find_all(self, **fields) -> list[State]:
+        return [self._to_state(row) for row in self._scan(**fields).to_pylist()]
+
     def find_latest(self, **fields) -> State | None:
-        df = self.scan(self._where(**fields))
+        df = self._scan(**fields)
 
         if not len(df):
             return None
 
-        df = df.sort_by([("batch_key", "descending")]).slice(0, 1)
-        return self._to_state(df.to_pylist()[0])
+        max_key = pc.max(df["batch_key"]).as_py()
+        row = df.filter(pc.equal(df["batch_key"], max_key)).slice(0, 1)
+        return self._to_state(row.to_pylist()[0])
 
-    def find_pending(self, **fields) -> list["State"]:
-        backlog_statuses = [StateStatus.PENDING, StateStatus.FAILED, StateStatus.RUNNING]
-        status_filter = reduce(Or, [EqualTo("status", s) for s in backlog_statuses])
-        df = self.scan(And(self._where(**fields), status_filter))
+    def find_by_status(self, *statuses: BatchStatus, **fields) -> list[State]:
+        df = self._scan(
+            In("status", statuses),
+            **fields,
+        )
         return [self._to_state(row) for row in df.to_pylist()]
 
     def expire_snapshots(self, days: int = None) -> None:

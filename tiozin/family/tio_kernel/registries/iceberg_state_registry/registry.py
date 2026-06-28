@@ -8,6 +8,8 @@ from typing_extensions import Unpack
 
 from tiozin.api import State, StateRegistry
 from tiozin.api.conventions import RESOURCE_FIELDS
+from tiozin.api.metadata.state.exceptions import StateAlreadyExistsError, StateNotFoundError
+from tiozin.api.metadata.state.status import BatchStatus
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.utils import default
 from tiozin.utils.io import mkdirs
@@ -17,6 +19,8 @@ from .dao import IcebergStateDao
 from .schema import IcebergStateSchema
 
 MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
+
+BACKLOG_STATUSES = (BatchStatus.PENDING, BatchStatus.RUNNING, BatchStatus.FAILED)
 
 
 class IcebergStateRegistry(StateRegistry):
@@ -102,35 +106,48 @@ class IcebergStateRegistry(StateRegistry):
         }
 
     def register(self, state: State) -> State:
-        self._dao.upsert(state)
+        if not self._dao.create(state):
+            raise StateAlreadyExistsError(state=state)
         return state
 
     def begin(self, state: State) -> State:
         state.status = state.status.to_running()
-        return self.register(state)
+        if not self._dao.update(state):
+            raise StateNotFoundError(state=state)
+        return state
 
     def commit(self, state: State) -> State:
         state.status = state.status.to_succeeded()
-        return self.register(state)
+        if not self._dao.update(state):
+            raise StateNotFoundError(state=state)
+        return state
 
     def fail(self, state: State) -> State:
         state.status = state.status.to_failed()
-        return self.register(state)
+        if not self._dao.update(state):
+            raise StateNotFoundError(state=state)
+        return state
 
     def cancel(self, state: State) -> State:
         state.status = state.status.to_canceled()
-        return self.register(state)
+        if not self._dao.update(state):
+            raise StateNotFoundError(state=state)
+        return state
 
     def quarantine(self, state: State) -> State:
         state.status = state.status.to_quarantined()
-        return self.register(state)
+        if not self._dao.update(state):
+            raise StateNotFoundError(state=state)
+        return state
 
     def replay(self, state: State) -> State:
         state.status = state.status.to_pending()
-        return self.register(state)
+        if not self._dao.update(state):
+            raise StateNotFoundError(state=state)
+        return state
 
     def get_watermark(self, **resource: Unpack[ResourceKwargs]) -> State | None:
         return self._dao.find_latest(**resource)
 
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[State]:
-        return self._dao.find_pending(**resource)
+        return self._dao.find_by_status(*BACKLOG_STATUSES, **resource)
