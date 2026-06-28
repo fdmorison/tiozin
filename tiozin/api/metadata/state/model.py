@@ -10,7 +10,7 @@ from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELD
 from tiozin.utils import utcnow
 
 from ..model import Metadata
-from .status import StateStatus
+from .status import BatchStatus
 
 if TYPE_CHECKING:
     from tiozin.api.metadata.state.registry import StateRegistry
@@ -94,7 +94,7 @@ class State(Metadata):
     model: str
 
     batch_key: str
-    status: StateStatus = StateStatus.PENDING
+    status: BatchStatus = BatchStatus.PENDING
     failure_count: int = Field(0, ge=0)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
@@ -112,7 +112,7 @@ class State(Metadata):
 
         return Context.current().registries.state
 
-    def persist(self) -> State:
+    def register(self) -> State:
         self._registry().register(self)
         return self
 
@@ -149,7 +149,7 @@ class State(Metadata):
         return self
 
     @property
-    def batch_date(self) -> datetime:
+    def batch_date(self) -> date:
         return date.fromisoformat(self.batch_key)
 
     @batch_date.setter
@@ -191,3 +191,6 @@ class State(Metadata):
     @property
     def natural_key(self) -> tuple[str, ...]:
         return (*self.resource_key, self.batch_key)
+
+    def __str__(self) -> str:
+        return ".".join(self.natural_key)

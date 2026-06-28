@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tiozin.api.metadata.state.model import State
-from tiozin.api.metadata.state.status import StateStatus
+from tiozin.api.metadata.state.status import BatchStatus
 from tiozin.exceptions.misc import ModelError
 
 DERIVED_ID = "65e51fad-4c65-5db7-b6a1-7849974e0d39"
@@ -55,7 +55,7 @@ def test_status_should_default_to_pending(fake_domain: dict):
     actual = state.status
 
     # Assert
-    expected = StateStatus.PENDING
+    expected = BatchStatus.PENDING
     assert actual == expected
 
 
@@ -290,27 +290,27 @@ def test_batch_int_setter_should_store_int_as_string(fake_domain: dict):
 # lifecycle - persist
 # ============================================================================
 @patch("tiozin.api.context.Context.current")
-def test_persist_should_delegate_to_registry(current, fake_domain):
+def test_register_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.state = registry
     state = State(**fake_domain, batch_key="2026-01-15")
 
     # Act
-    state.persist()
+    state.register()
 
     # Assert
     registry.register.assert_called_once_with(state)
 
 
 @patch("tiozin.api.context.Context.current")
-def test_persist_should_return_self(current, fake_domain):
+def test_register_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.state = MagicMock()
     state = State(**fake_domain, batch_key="2026-01-15")
 
     # Act
-    actual = state.persist()
+    actual = state.register()
 
     # Assert
     assert actual is state

@@ -24,7 +24,7 @@ from tiozin.api import (
     Datasets,
     Schema,
     State,
-    StateStatus,
+    BatchStatus,
 )
 
 # Registries
@@ -66,7 +66,7 @@ __all__ = [
     "SettingsManifest",
     "Schema",
     "State",
-    "StateStatus",
+    "BatchStatus",
     # Registries
     "JobRegistry",
     "LineageRegistry",
