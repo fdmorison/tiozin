@@ -6,24 +6,21 @@ from pyiceberg.table.sorting import NullOrder, SortDirection, SortField, SortOrd
 from pyiceberg.transforms import IdentityTransform
 from typing_extensions import Unpack
 
-from tiozin.api import State, StateRegistry
+from tiozin.api import Batch, BatchRegistry
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.api.metadata.state.exceptions import StateAlreadyExistsError, StateNotFoundError
-from tiozin.api.metadata.state.status import BatchStatus
+from tiozin.api.metadata.batch.status import BatchStatus
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.utils import default
 from tiozin.utils.io import mkdirs
 
 from . import config
-from .dao import IcebergStateDao
-from .schema import IcebergStateSchema
+from .dao import IcebergBatchDAO
+from .schema import FID_CREATED_AT, IcebergBatchSchema
 
 MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
-BACKLOG_STATUSES = (BatchStatus.PENDING, BatchStatus.RUNNING, BatchStatus.FAILED)
 
-
-class IcebergStateRegistry(StateRegistry):
+class IcebergBatchRegistry(BatchRegistry):
     def __init__(
         self,
         location: str = None,
@@ -41,7 +38,7 @@ class IcebergStateRegistry(StateRegistry):
         self.catalog_name = default(catalog_name, config.default_catalog_name)
         self.catalog_type = default(catalog_type, config.default_catalog_type)
         self.retention_days = default(retention_days, config.default_snapshot_retention_days)
-        self._dao: IcebergStateDao = None
+        self._dao: IcebergBatchDAO = None
 
     def teardown(self) -> None:
         self._dao.expire_snapshots(self.retention_days)
@@ -57,7 +54,7 @@ class IcebergStateRegistry(StateRegistry):
 
         table = catalog.create_table_if_not_exists(
             table_id,
-            schema=IcebergStateSchema,
+            schema=IcebergBatchSchema,
             partition_spec=PartitionSpec(
                 *(
                     PartitionField(i, 1000 + i - 2, IdentityTransform(), field)
@@ -66,7 +63,7 @@ class IcebergStateRegistry(StateRegistry):
             ),
             sort_order=SortOrder(
                 SortField(
-                    source_id=9,
+                    source_id=FID_CREATED_AT,
                     direction=SortDirection.ASC,
                     null_order=NullOrder.NULLS_LAST,
                 ),
@@ -80,7 +77,7 @@ class IcebergStateRegistry(StateRegistry):
             },
         )
 
-        self._dao = IcebergStateDao(table)
+        self._dao = IcebergBatchDAO(table)
 
     def _catalog_properties(self) -> dict[str, str]:
         if self.catalog_type == "sql":
@@ -105,49 +102,50 @@ class IcebergStateRegistry(StateRegistry):
             "uri": self.location,
         }
 
-    def register(self, state: State) -> State:
-        if not self._dao.create(state):
-            raise StateAlreadyExistsError(state=state)
+    def register(self, state: Batch) -> Batch:
+        self._dao.insert(state)
         return state
 
-    def begin(self, state: State) -> State:
+    def begin(self, state: Batch) -> Batch:
         state.status = state.status.to_running()
-        if not self._dao.update(state):
-            raise StateNotFoundError(state=state)
+        self._dao.update(state)
         return state
 
-    def commit(self, state: State) -> State:
+    def commit(self, state: Batch) -> Batch:
         state.status = state.status.to_succeeded()
-        if not self._dao.update(state):
-            raise StateNotFoundError(state=state)
+        self._dao.update(state)
         return state
 
-    def fail(self, state: State) -> State:
+    def fail(self, state: Batch) -> Batch:
         state.status = state.status.to_failed()
-        if not self._dao.update(state):
-            raise StateNotFoundError(state=state)
+        self._dao.update(state)
         return state
 
-    def cancel(self, state: State) -> State:
+    def cancel(self, state: Batch) -> Batch:
         state.status = state.status.to_canceled()
-        if not self._dao.update(state):
-            raise StateNotFoundError(state=state)
+        self._dao.update(state)
         return state
 
-    def quarantine(self, state: State) -> State:
+    def quarantine(self, state: Batch) -> Batch:
         state.status = state.status.to_quarantined()
-        if not self._dao.update(state):
-            raise StateNotFoundError(state=state)
+        self._dao.update(state)
         return state
 
-    def replay(self, state: State) -> State:
+    def replay(self, state: Batch) -> Batch:
         state.status = state.status.to_pending()
-        if not self._dao.update(state):
-            raise StateNotFoundError(state=state)
+        self._dao.update(state)
         return state
 
-    def get_watermark(self, **resource: Unpack[ResourceKwargs]) -> State | None:
+    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return self._dao.find_latest(**resource)
 
-    def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[State]:
-        return self._dao.find_by_status(*BACKLOG_STATUSES, **resource)
+    def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
+        return self._dao.find_by_status(
+            BatchStatus.PENDING,
+            BatchStatus.FAILED,
+            BatchStatus.RUNNING,
+            **resource,
+        )
+
+    def get_history(self, limit: int, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
+        return self._dao.find_history(limit, **resource)
