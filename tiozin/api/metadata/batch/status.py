@@ -1,8 +1,8 @@
 from enum import auto
 from typing import ClassVar, Self
 
+from tiozin.api.metadata.batch.exceptions import BatchTransitionError
 from tiozin.api.metadata.model import LowerEnum
-from tiozin.api.metadata.state.exceptions import StateTransitionError
 
 
 class BatchStatus(LowerEnum):
@@ -72,16 +72,14 @@ class BatchStatus(LowerEnum):
             return target
 
         if failfast:
-            raise StateTransitionError(source=self, target=target)
+            raise BatchTransitionError(source=self, target=target)
 
         return self
 
-    @property
     def is_terminal(self) -> bool:
         """Returns True if the batch is no longer progressing and can only be replayed."""
         return self.__transitions__[self] <= {self.PENDING}
 
-    @property
     def is_retriable(self) -> bool:
         """Returns True if this state can transition back to RUNNING for a retry."""
         return self.RUNNING in self.__transitions__[self]

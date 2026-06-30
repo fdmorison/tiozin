@@ -39,9 +39,9 @@ registries:
     failfast: false
     emit_level: job
 
-  state:
-    kind: NoOpStateRegistry
-    description: State registry for job execution control
+  batch:
+    kind: NoOpBatchRegistry
+    description: Batch registry for job execution control
     location: "postgresql://postgres:{{ENV.PGPASSWORD|default('postgres')}}@localhost:5432/postgres"
     timeout: 5
     readonly: false

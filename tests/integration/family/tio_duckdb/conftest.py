@@ -9,6 +9,7 @@ from testcontainers.compose import DockerCompose
 
 from tests.integration.family.tio_duckdb import env
 from tests.stubs import (
+    BatchRegistryStub,
     JobRegistryStub,
     JobStub,
     LineageRegistryStub,
@@ -17,7 +18,6 @@ from tests.stubs import (
     SchemaRegistryStub,
     SecretRegistryStub,
     SettingRegistryStub,
-    StateRegistryStub,
 )
 from tiozin import Context
 from tiozin.api.metadata.bundle import Registries
@@ -53,7 +53,7 @@ def duckdb_session(duckdb_job_stub: JobStub) -> Generator[Any, Any, None]:
         setting=SettingRegistryStub(),
         secret=SecretRegistryStub(),
         schema=SchemaRegistryStub(),
-        state=StateRegistryStub(),
+        batch=BatchRegistryStub(),
         job=JobRegistryStub(),
         metric=MetricRegistryStub(),
         lineage=LineageRegistryStub(),

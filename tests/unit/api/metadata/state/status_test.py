@@ -1,7 +1,7 @@
 import pytest
 
-from tiozin.api.metadata.state.exceptions import StateTransitionError
-from tiozin.api.metadata.state.status import BatchStatus
+from tiozin.api.metadata.batch.exceptions import BatchTransitionError
+from tiozin.api.metadata.batch.status import BatchStatus
 
 VALID_TRANSITIONS = [
     (BatchStatus.PENDING, BatchStatus.RUNNING),
@@ -88,7 +88,7 @@ def test_transition_to_should_raise_transition_error_when_transition_is_invalid(
     target: BatchStatus,
 ):
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         source.transition_to(target)
 
 
@@ -138,7 +138,7 @@ def test_can_transition_to_should_not_pass_when_transition_is_invalid(
 @pytest.mark.parametrize("status", TERMINAL_STATUSES)
 def test_is_terminal_should_pass_when_status_can_only_be_replayed(status: BatchStatus):
     # Act
-    actual = status.is_terminal
+    actual = status.is_terminal()
 
     # Assert
     assert actual is True
@@ -147,7 +147,7 @@ def test_is_terminal_should_pass_when_status_can_only_be_replayed(status: BatchS
 @pytest.mark.parametrize("status", NON_TERMINAL_STATUSES)
 def test_is_terminal_should_not_pass_when_status_can_still_progress(status: BatchStatus):
     # Act
-    actual = status.is_terminal
+    actual = status.is_terminal()
 
     # Assert
     assert actual is False
@@ -161,7 +161,7 @@ def test_is_retriable_should_pass_when_status_can_transition_back_to_running(
     status: BatchStatus,
 ):
     # Act
-    actual = status.is_retriable
+    actual = status.is_retriable()
 
     # Assert
     assert actual is True
@@ -172,7 +172,7 @@ def test_is_retriable_should_not_pass_when_status_cannot_transition_back_to_runn
     status: BatchStatus,
 ):
     # Act
-    actual = status.is_retriable
+    actual = status.is_retriable()
 
     # Assert
     assert actual is False
@@ -320,7 +320,7 @@ def test_to_pending_should_return_pending_when_valid():
 
 def test_to_pending_should_raise_transition_error_when_invalid():
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         BatchStatus.RUNNING.to_pending()
 
 
@@ -338,7 +338,7 @@ def test_to_running_should_return_running_when_valid():
 
 def test_to_running_should_raise_transition_error_when_invalid():
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         BatchStatus.SUCCEEDED.to_running()
 
 
@@ -356,7 +356,7 @@ def test_to_succeeded_should_return_succeeded_when_valid():
 
 def test_to_succeeded_should_raise_transition_error_when_invalid():
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         BatchStatus.PENDING.to_succeeded()
 
 
@@ -374,7 +374,7 @@ def test_to_failed_should_return_failed_when_valid():
 
 def test_to_failed_should_raise_transition_error_when_invalid():
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         BatchStatus.PENDING.to_failed()
 
 
@@ -392,7 +392,7 @@ def test_to_canceled_should_return_canceled_when_valid():
 
 def test_to_canceled_should_raise_transition_error_when_invalid():
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         BatchStatus.RUNNING.to_canceled()
 
 
@@ -410,5 +410,5 @@ def test_to_quarantined_should_return_quarantined_when_valid():
 
 def test_to_quarantined_should_raise_transition_error_when_invalid():
     # Act / Assert
-    with pytest.raises(StateTransitionError):
+    with pytest.raises(BatchTransitionError):
         BatchStatus.PENDING.to_quarantined()

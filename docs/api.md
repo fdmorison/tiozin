@@ -27,7 +27,7 @@ from tiozin import (
     SchemaRegistry,
     LineageRegistry,
     MetricRegistry,
-    StateRegistry,
+    BatchRegistry,
     # Runtime
     Context,
     TiozinApp,
@@ -137,7 +137,7 @@ Each subtype defines its own contract. The table below lists the methods or exte
 | `JobRegistry` | `get(identifier: str) -> JobManifest`, `register(identifier: str, value: JobManifest) -> None` |
 | `LineageRegistry` | `emit(event: LineageEvent) -> None` |
 | `MetricRegistry` | Extend to implement custom metric tracking against a backend such as Prometheus, InfluxDB, or Datadog |
-| `StateRegistry` | Extend to track execution states and commit logs (pending, running, success, failure) against a database or key/value store |
+| `BatchRegistry` | Extend to track batch executions and commit logs (pending, running, success, failure) against a database or key/value store |
 
 `SchemaRegistry` and `LineageRegistry` accept extra constructor parameters on top of the base ones. See [Extending the Registry](extending/registry.md) for the full subtype contracts.
 

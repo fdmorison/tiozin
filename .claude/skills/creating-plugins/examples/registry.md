@@ -129,6 +129,6 @@ class AcmeLineageRegistry(LineageRegistry):
         self._client.send(event)
 ```
 
-**MetricRegistry** and **StateRegistry** are reserved for future use and have no defined contract yet. Reject any request to implement these registry types.
+**MetricRegistry** and **BatchRegistry** are reserved for future use and have no defined contract yet. Reject any request to implement these registry types.
 
 When `get()` raises a not-found error, do not implement `failfast` logic. The Tiozin core handles that automatically.

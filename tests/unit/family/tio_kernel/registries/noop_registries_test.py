@@ -2,12 +2,12 @@ import pytest
 
 from tiozin import Registry
 from tiozin.family.tio_kernel import (
+    NoOpBatchRegistry,
     NoOpLineageRegistry,
     NoOpMetricRegistry,
     NoOpSchemaRegistry,
     NoOpSecretRegistry,
     NoOpSettingRegistry,
-    NoOpStateRegistry,
 )
 
 NOOP_REGISTRY_CLASSES = [
@@ -16,7 +16,7 @@ NOOP_REGISTRY_CLASSES = [
     NoOpMetricRegistry,
     NoOpSchemaRegistry,
     NoOpSecretRegistry,
-    NoOpStateRegistry,
+    NoOpBatchRegistry,
 ]
 
 

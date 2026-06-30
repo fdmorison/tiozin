@@ -23,7 +23,7 @@ from tiozin.api import (
     Dataset,
     Datasets,
     Schema,
-    State,
+    Batch,
     BatchStatus,
 )
 
@@ -35,7 +35,7 @@ from tiozin.api import (
     SchemaRegistry,
     SecretRegistry,
     SettingRegistry,
-    StateRegistry,
+    BatchRegistry,
 )
 
 # Processors
@@ -65,7 +65,7 @@ __all__ = [
     "Secret",
     "SettingsManifest",
     "Schema",
-    "State",
+    "Batch",
     "BatchStatus",
     # Registries
     "JobRegistry",
@@ -74,7 +74,7 @@ __all__ = [
     "SchemaRegistry",
     "SecretRegistry",
     "SettingRegistry",
-    "StateRegistry",
+    "BatchRegistry",
     # Processors
     "Runner",
     "Transform",

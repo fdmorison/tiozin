@@ -95,7 +95,7 @@ See [Registry fields](reference.md#registry-fields) for a description of each fi
 
 Tiozin resolves plugin kinds by class name, looking up the class across all installed families. If two families define a class with the same name, qualify it with the family prefix: `tio_kernel:FileJobRegistry`.
 
-The `state` and `metric` registries are declared in the framework as reserved slots. They accept configuration but are not yet backed by functional implementations.
+The `batch` and `metric` registries are declared in the framework as reserved slots. They accept configuration but are not yet backed by functional implementations.
 
 ## Runtime Defaults
 

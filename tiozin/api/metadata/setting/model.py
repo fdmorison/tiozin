@@ -122,9 +122,9 @@ class SecretRegistryManifest(BaseSettings):
     failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
 
 
-class StateRegistryManifest(BaseSettings):
+class BatchRegistryManifest(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="TIO_STATE_REGISTRY_",
+        env_prefix="TIO_BATCH_REGISTRY_",
         extra="allow",
         str_strip_whitespace=True,
         env_ignore_empty=True,
@@ -132,12 +132,12 @@ class StateRegistryManifest(BaseSettings):
 
     @classmethod
     def __produces__(cls):
-        from ..state.registry import StateRegistry
+        from ..batch.registry import BatchRegistry
 
-        return StateRegistry
+        return BatchRegistry
 
     # Identity
-    kind: str = Field(config.default_state_registry, description=docs.KIND)
+    kind: str = Field(config.default_batch_registry, description=docs.KIND)
     name: str | None = Field(NULLABLE, description=docs.REGISTRY_NAME)
     description: str | None = Field(NULLABLE, description=docs.REGISTRY_DESCRIPTION)
     # Properties
@@ -146,8 +146,8 @@ class StateRegistryManifest(BaseSettings):
     readonly: bool | None = Field(NULLABLE, description=docs.REGISTRY_READONLY)
     cache: bool | None = Field(NULLABLE, description=docs.REGISTRY_CACHE)
     failfast: bool | None = Field(NULLABLE, description=docs.REGISTRY_FAILFAST)
-    # State Properties
-    retries: int | None = Field(NULLABLE, description=docs.STATE_REGISTRY_RETRIES)
+    # Batch Properties
+    retries: int | None = Field(NULLABLE, description=docs.BATCH_REGISTRY_RETRIES)
 
 
 class LineageRegistryManifest(BaseSettings):
@@ -222,7 +222,7 @@ class Registries(BaseSettings):
     job: JobRegistryManifest = Field(default_factory=JobRegistryManifest)
     schema: SchemaRegistryManifest = Field(default_factory=SchemaRegistryManifest)
     secret: SecretRegistryManifest = Field(default_factory=SecretRegistryManifest)
-    state: StateRegistryManifest = Field(default_factory=StateRegistryManifest)
+    batch: BatchRegistryManifest = Field(default_factory=BatchRegistryManifest)
     lineage: LineageRegistryManifest = Field(default_factory=LineageRegistryManifest)
     metric: MetricRegistryManifest = Field(default_factory=MetricRegistryManifest)
 

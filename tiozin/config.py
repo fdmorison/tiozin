@@ -65,8 +65,9 @@ default_schema_subject_template = (
 default_lineage_registry = "tio_kernel:NoOpLineageRegistry"
 default_lineage_emit_level = "JOB"
 
-default_state_registry = "tio_kernel:NoOpStateRegistry"
-default_state_retries = 3
+default_batch_registry = "tio_kernel:NoOpBatchRegistry"
+default_batch_retries = 3
+default_batch_history_limit = 10
 
 default_metric_registry = "tio_kernel:NoOpMetricRegistry"
 
