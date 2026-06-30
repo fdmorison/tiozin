@@ -17,8 +17,8 @@ registries:
     kind: NoOpSecretRegistry
     name: my-secret-registry-2
 
-  state:
-    kind: NoOpStateRegistry
+  batch:
+    kind: NoOpBatchRegistry
     name: my-state-registry-2
 
   lineage:

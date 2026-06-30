@@ -2,6 +2,7 @@ import pytest
 
 from tests import config
 from tests.stubs import (
+    BatchRegistryStub,
     InputStub,
     JobRegistryStub,
     JobStub,
@@ -12,19 +13,18 @@ from tests.stubs import (
     SchemaRegistryStub,
     SecretRegistryStub,
     SettingRegistryStub,
-    StateRegistryStub,
     TransformStub,
 )
 from tiozin import Context
 from tiozin.api.metadata.bundle import Registries
 from tiozin.api.metadata.setting.model import (
+    BatchRegistryManifest,
     JobRegistryManifest,
     LineageRegistryManifest,
     MetricRegistryManifest,
     SchemaRegistryManifest,
     SecretRegistryManifest,
     SettingsManifest,
-    StateRegistryManifest,
 )
 
 # --------------------------------------------------
@@ -49,8 +49,8 @@ def default_settings_manifest() -> SettingsManifest:
                 name="my-secret-registry-1",
                 failfast=True,
             ),
-            state=StateRegistryManifest(
-                kind=config.default_state_registry,
+            batch=BatchRegistryManifest(
+                kind=config.default_batch_registry,
                 name="my-state-registry-1",
             ),
             lineage=LineageRegistryManifest(
@@ -164,8 +164,8 @@ def schema_registry_stub() -> SchemaRegistryStub:
 
 
 @pytest.fixture()
-def state_registry_stub() -> StateRegistryStub:
-    return StateRegistryStub()
+def state_registry_stub() -> BatchRegistryStub:
+    return BatchRegistryStub()
 
 
 @pytest.fixture()
@@ -194,7 +194,7 @@ def job_context(job_stub: JobStub):
         setting=SettingRegistryStub(),
         secret=SecretRegistryStub(),
         schema=SchemaRegistryStub(),
-        state=StateRegistryStub(),
+        batch=BatchRegistryStub(),
         job=JobRegistryStub(),
         metric=MetricRegistryStub(),
         lineage=LineageRegistryStub(),

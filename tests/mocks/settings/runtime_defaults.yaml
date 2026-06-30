@@ -13,8 +13,8 @@ registries:
     name: my-secret-registry-1
     failfast: true
 
-  state:
-    kind: tio_kernel:NoOpStateRegistry
+  batch:
+    kind: tio_kernel:NoOpBatchRegistry
     name: my-state-registry-1
 
   lineage:

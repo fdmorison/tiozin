@@ -44,7 +44,7 @@ class AppContainer(Loggable):
             setting=setting_registry,
             secret=tiozin_registry.load_manifest(manifest.registries.secret),
             schema=tiozin_registry.load_manifest(manifest.registries.schema),
-            state=tiozin_registry.load_manifest(manifest.registries.state),
+            batch=tiozin_registry.load_manifest(manifest.registries.batch),
             job=tiozin_registry.load_manifest(manifest.registries.job),
             metric=tiozin_registry.load_manifest(manifest.registries.metric),
             lineage=tiozin_registry.load_manifest(manifest.registries.lineage),
@@ -56,7 +56,7 @@ class AppContainer(Loggable):
             self.registries.schema,
             self.registries.metric,
             self.registries.lineage,
-            self.registries.state,
+            self.registries.batch,
             self.registries.job,
         ]
 

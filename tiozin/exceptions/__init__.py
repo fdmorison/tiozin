@@ -42,6 +42,12 @@ from tiozin.api.metadata.setting.exceptions import (
     SettingsError,
     SettingsNotFoundError,
 )
+from tiozin.api.metadata.batch.exceptions import (
+    BatchAlreadyExistsError,
+    BatchError,
+    BatchNotFoundError,
+    BatchTransitionError,
+)
 from tiozin.compose.exceptions import (
     PluginConflictError,
     PluginError,
@@ -73,6 +79,10 @@ __all__ = [
     "SettingsError",
     "SettingsNotFoundError",
     "SecretError",
+    "BatchError",
+    "BatchTransitionError",
+    "BatchAlreadyExistsError",
+    "BatchNotFoundError",
     "SecretNotFoundError",
     "PluginError",
     "PluginNotFoundError",

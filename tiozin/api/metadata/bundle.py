@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .batch.registry import BatchRegistry
 from .job.registry import JobRegistry
 from .lineage.registry import LineageRegistry
 from .metric.registry import MetricRegistry
 from .schema.registry import SchemaRegistry
 from .secret.registry import SecretRegistry
 from .setting.registry import SettingRegistry
-from .state.registry import StateRegistry
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,7 @@ class Registries:
     setting: SettingRegistry = None
     secret: SecretRegistry = None
     schema: SchemaRegistry = None
-    state: StateRegistry = None
+    batch: BatchRegistry = None
     job: JobRegistry = None
     metric: MetricRegistry = None
     lineage: LineageRegistry = None
@@ -36,18 +36,18 @@ class Registries:
         from tiozin.family.tio_kernel import (
             EnvSecretRegistry,
             FileJobRegistry,
+            NoOpBatchRegistry,
             NoOpLineageRegistry,
             NoOpMetricRegistry,
             NoOpSchemaRegistry,
             NoOpSettingRegistry,
-            NoOpStateRegistry,
         )
 
         for name, factory in (
             ("setting", NoOpSettingRegistry),
             ("secret", EnvSecretRegistry),
             ("schema", NoOpSchemaRegistry),
-            ("state", NoOpStateRegistry),
+            ("batch", NoOpBatchRegistry),
             ("job", FileJobRegistry),
             ("metric", NoOpMetricRegistry),
             ("lineage", NoOpLineageRegistry),
