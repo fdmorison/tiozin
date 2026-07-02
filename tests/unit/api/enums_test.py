@@ -2,7 +2,7 @@ from enum import auto
 
 import pytest
 
-from tiozin.api.metadata.model import LowerEnum, UpperEnum
+from tiozin.api.enums import LowerEnum, UpperEnum
 
 
 class SampleUpper(UpperEnum):
