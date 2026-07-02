@@ -19,6 +19,15 @@ def utcnow() -> pendulum.DateTime:
     return pendulum.now("UTC")
 
 
+def epoch() -> pendulum.DateTime:
+    """
+    Return the Unix epoch (1970-01-01T00:00:00Z) as a timezone-aware datetime.
+
+    Useful as a sentinel start date for open-ended time ranges.
+    """
+    return pendulum.datetime(1970, 1, 1, tz="UTC")
+
+
 def trim(value: str | None) -> str | None:
     """
     Strip leading and trailing whitespace from the string.

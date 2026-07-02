@@ -20,6 +20,7 @@ from tiozin.utils.helpers import (
     trim_upper,
     utcnow,
     human_join,
+    epoch,
 )
 
 # Filesystem I/O
@@ -50,6 +51,7 @@ __all__ = [
     "as_flat_list",
     "as_list",
     "default",
+    "epoch",
     "generate_id",
     "generate_job_run_id",
     "generate_step_run_id",
