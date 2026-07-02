@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.3.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.2.0...tiozin-v3.3.0) (2026-07-02)
+
+
+### Features
+
+* **core:** Add epoch() helper ([#246](https://github.com/fdmorison/tiozin/issues/246)) ([cd5d665](https://github.com/fdmorison/tiozin/commit/cd5d665d4015538a1941e44240219395e62f11c4))
+* **core:** State and StateRegistry specification ([#239](https://github.com/fdmorison/tiozin/issues/239)) ([a174edb](https://github.com/fdmorison/tiozin/commit/a174edbe39c061b3b2b41d3002bcf0fe2cb83d60))
+* **tio_spark:** add date_fields and date_format to schema inference transform ([#237](https://github.com/fdmorison/tiozin/issues/237)) ([733d22a](https://github.com/fdmorison/tiozin/commit/733d22a08d7436f86f5bf418e7a4fd36ad2e700b))
+* **tio_spark:** add has_timezone detection for timestamp strings ([#232](https://github.com/fdmorison/tiozin/issues/232)) ([7626568](https://github.com/fdmorison/tiozin/commit/7626568ff86e833d31408892749b08e9a92c883d))
+* **tio_spark:** add nested field path utilities ([#227](https://github.com/fdmorison/tiozin/issues/227)) ([bc07d8f](https://github.com/fdmorison/tiozin/commit/bc07d8f21f8714f591f7dc078e1b1d4c554a56c4))
+* **tio_spark:** add SparkJsonSchemaInferenceTransform ([#223](https://github.com/fdmorison/tiozin/issues/223)) ([7ec6e26](https://github.com/fdmorison/tiozin/commit/7ec6e261fc84d0a46722ac6c0f2839793944f5c0))
+* **tio_spark:** enforce timestamp fields with timezone-aware parsing ([#228](https://github.com/fdmorison/tiozin/issues/228)) ([f8b326e](https://github.com/fdmorison/tiozin/commit/f8b326ee560562e457edbf06bc4c63fea5fa8b4d))
+
+
+### Bug Fixes
+
+* **core:** ensure_setup now triggers setup on property access ([#247](https://github.com/fdmorison/tiozin/issues/247)) ([e75f7cb](https://github.com/fdmorison/tiozin/commit/e75f7cb77a4d99f064800a7b6c527dd0a8c47bf7))
+* **tio_kernel:** correct StateStatus method names in NoOpStateRegistry ([582a1c1](https://github.com/fdmorison/tiozin/commit/582a1c1f0b45fa6e844df21e7369c370fd21e33d))
+* **tio_kernel:** Correct StateStatus method names in NoOpStateRegistry ([#241](https://github.com/fdmorison/tiozin/issues/241)) ([7ca32a1](https://github.com/fdmorison/tiozin/commit/7ca32a1881ef5f37f20df3cdaa93783f724a4ac8))
+* **tio_spark:** make JSON reader options reliable in schema inference transform ([#226](https://github.com/fdmorison/tiozin/issues/226)) ([1db4aab](https://github.com/fdmorison/tiozin/commit/1db4aab3f77bd6e73a4d7cd591a50429a1a9b69d))
+
+
+### Documentation
+
+* **tio_spark:** document built-in timestamp formats for auto_timestamp_fields ([#235](https://github.com/fdmorison/tiozin/issues/235)) ([419463b](https://github.com/fdmorison/tiozin/commit/419463b3ab96fd03b874ec9951fafa113b97606c))
+
 ## [3.2.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.1.0...tiozin-v3.2.0) (2026-06-01)
 
 
