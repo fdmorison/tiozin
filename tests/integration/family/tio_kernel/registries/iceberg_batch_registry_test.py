@@ -2,7 +2,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pyiceberg.catalog import load_catalog
 
 from tiozin.api import Batch, BatchStatus
 from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
@@ -17,22 +16,10 @@ def registry(tmp_path: Path):
     registry.teardown()
 
 
-def _scan_table(location: str) -> list[dict]:
-    catalog = load_catalog(
-        "tiozin",
-        type="sql",
-        uri=f"sqlite:///{location}/catalog.db",
-        warehouse=f"file://{location}",
-    )
-    return catalog.load_table("tiozin.tiozin_batches").scan().to_arrow().to_pylist()
-
-
 # ============================================================================
 # register
 # ============================================================================
-def test_register_should_persist_all_fields_to_iceberg_table(
-    registry: IcebergBatchRegistry, fake_domain: dict
-):
+def test_register_should_persist_all_fields(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
     state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
 
@@ -40,23 +27,8 @@ def test_register_should_persist_all_fields_to_iceberg_table(
     registry.register(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = {**row, "attributes": dict(row["attributes"])}
-    expected = {
-        "id": state.id,
-        "org": state.org,
-        "region": state.region,
-        "domain": state.domain,
-        "subdomain": state.subdomain,
-        "layer": state.layer,
-        "product": state.product,
-        "model": state.model,
-        "nominal_time": state.nominal_time,
-        "status": state.status,
-        "attributes": state.attributes,
-        "created_at": state.created_at,
-        "updated_at": state.updated_at,
-    }
+    actual = registry.get_latest(**fake_domain)
+    expected = state
     assert actual == expected
 
 
@@ -84,8 +56,7 @@ def test_begin_should_persist_batch_to_running(registry: IcebergBatchRegistry, f
     registry.begin(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = row["status"]
+    actual = registry.get_latest(**fake_domain).status
     expected = BatchStatus.RUNNING
     assert actual == expected
 
@@ -102,8 +73,7 @@ def test_commit_should_persist_batch_to_succeeded(
     registry.commit(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = row["status"]
+    actual = registry.get_latest(**fake_domain).status
     expected = BatchStatus.SUCCEEDED
     assert actual == expected
 
@@ -118,8 +88,7 @@ def test_fail_should_persist_batch_to_failed(registry: IcebergBatchRegistry, fak
     registry.fail(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = row["status"]
+    actual = registry.get_latest(**fake_domain).status
     expected = BatchStatus.FAILED
     assert actual == expected
 
@@ -133,8 +102,7 @@ def test_cancel_should_persist_batch_to_canceled(registry: IcebergBatchRegistry,
     registry.cancel(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = row["status"]
+    actual = registry.get_latest(**fake_domain).status
     expected = BatchStatus.CANCELED
     assert actual == expected
 
@@ -151,8 +119,7 @@ def test_quarantine_should_persist_batch_to_quarantined(
     registry.quarantine(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = row["status"]
+    actual = registry.get_latest(**fake_domain).status
     expected = BatchStatus.QUARANTINED
     assert actual == expected
 
@@ -168,8 +135,7 @@ def test_replay_should_persist_batch_to_pending(registry: IcebergBatchRegistry, 
     registry.replay(state)
 
     # Assert
-    row = _scan_table(registry.location)[0]
-    actual = row["status"]
+    actual = registry.get_latest(**fake_domain).status
     expected = BatchStatus.PENDING
     assert actual == expected
 
@@ -301,4 +267,146 @@ def test_get_backlog_should_return_nothing_when_status_is_terminal(
 
     # Assert
     expected = []
+    assert actual == expected
+
+
+# ============================================================================
+# get_history
+# ============================================================================
+def test_get_history_should_return_empty_when_no_batch_exists(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange / Act
+    actual = registry.get_history(**fake_domain)
+
+    # Assert
+    expected = []
+    assert actual == expected
+
+
+def test_get_history_should_return_registered_batch(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    registry.register(state)
+
+    # Act
+    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+
+    # Assert
+    expected = [state]
+    assert actual == expected
+
+
+def test_get_history_should_return_batches_ordered_by_created_at_descending(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    oldest = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    middle = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
+        created_at=datetime(2026, 6, 2, tzinfo=UTC),
+    )
+    newest = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 12, tzinfo=UTC),
+        created_at=datetime(2026, 6, 3, tzinfo=UTC),
+    )
+    registry.register(oldest)
+    registry.register(middle)
+    registry.register(newest)
+
+    # Act
+    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+
+    # Assert
+    expected = [newest, middle, oldest]
+    assert actual == expected
+
+
+def test_get_history_should_truncate_to_limit(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    oldest = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    middle = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
+        created_at=datetime(2026, 6, 2, tzinfo=UTC),
+    )
+    newest = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 12, tzinfo=UTC),
+        created_at=datetime(2026, 6, 3, tzinfo=UTC),
+    )
+    registry.register(oldest)
+    registry.register(middle)
+    registry.register(newest)
+
+    # Act
+    actual = registry.get_history(limit=2, since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+
+    # Assert
+    expected = [newest, middle]
+    assert actual == expected
+
+
+def test_get_history_should_exclude_batches_older_than_since(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    older = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    newer = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    registry.register(older)
+    registry.register(newer)
+
+    # Act
+    actual = registry.get_history(since=datetime(2026, 5, 15, tzinfo=UTC), **fake_domain)
+
+    # Assert
+    expected = [newer]
+    assert actual == expected
+
+
+def test_get_history_should_scope_to_resource(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    other_domain = {**fake_domain, "model": "payments"}
+    target = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    other = Batch(
+        **other_domain,
+        nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
+        created_at=datetime(2026, 6, 2, tzinfo=UTC),
+    )
+    registry.register(target)
+    registry.register(other)
+
+    # Act
+    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+
+    # Assert
+    expected = [target]
     assert actual == expected

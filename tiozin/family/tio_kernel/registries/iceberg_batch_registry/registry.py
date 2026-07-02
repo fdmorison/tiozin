@@ -1,13 +1,11 @@
+from datetime import datetime
+
 import wrapt
 from pyiceberg.catalog import load_catalog
-from pyiceberg.partitioning import PartitionField
-from pyiceberg.table import PartitionSpec
 from pyiceberg.table.sorting import NullOrder, SortDirection, SortField, SortOrder
-from pyiceberg.transforms import IdentityTransform
 from typing_extensions import Unpack
 
 from tiozin.api import Batch, BatchRegistry
-from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.api.metadata.batch.status import BatchStatus
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.utils import default
@@ -15,7 +13,7 @@ from tiozin.utils.io import mkdirs
 
 from . import config
 from .dao import IcebergBatchDAO
-from .schema import FID_CREATED_AT, IcebergBatchSchema
+from .schema import CREATED_AT_INDEX, IcebergBatchPartitionSpec, IcebergBatchSchema
 
 MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
@@ -29,20 +27,15 @@ class IcebergBatchRegistry(BatchRegistry):
         catalog_name: str = None,
         catalog_type: str = None,
         retention_days: int = None,
-        retries: int = None,
         **options,
     ) -> None:
-        super().__init__(location=location, retries=retries, **options)
+        super().__init__(location=location, **options)
         self.namespace = default(namespace, config.default_namespace)
         self.table_name = default(table_name, config.default_table_name)
         self.catalog_name = default(catalog_name, config.default_catalog_name)
         self.catalog_type = default(catalog_type, config.default_catalog_type)
         self.retention_days = default(retention_days, config.default_snapshot_retention_days)
         self._dao: IcebergBatchDAO = None
-
-    def teardown(self) -> None:
-        self._dao.expire_snapshots(self.retention_days)
-        self._dao = None
 
     @wrapt.synchronized
     def setup(self) -> None:
@@ -55,15 +48,10 @@ class IcebergBatchRegistry(BatchRegistry):
         table = catalog.create_table_if_not_exists(
             table_id,
             schema=IcebergBatchSchema,
-            partition_spec=PartitionSpec(
-                *(
-                    PartitionField(i, 1000 + i - 2, IdentityTransform(), field)
-                    for i, field in enumerate(RESOURCE_FIELDS, start=2)
-                )
-            ),
+            partition_spec=IcebergBatchPartitionSpec,
             sort_order=SortOrder(
                 SortField(
-                    source_id=FID_CREATED_AT,
+                    source_id=CREATED_AT_INDEX,
                     direction=SortDirection.ASC,
                     null_order=NullOrder.NULLS_LAST,
                 ),
@@ -78,6 +66,10 @@ class IcebergBatchRegistry(BatchRegistry):
         )
 
         self._dao = IcebergBatchDAO(table)
+
+    def teardown(self) -> None:
+        self._dao.expire_snapshots(self.retention_days)
+        self._dao = None
 
     def _catalog_properties(self) -> dict[str, str]:
         if self.catalog_type == "sql":
@@ -102,39 +94,33 @@ class IcebergBatchRegistry(BatchRegistry):
             "uri": self.location,
         }
 
-    def register(self, state: Batch) -> Batch:
-        self._dao.insert(state)
-        return state
+    def register(self, batch: Batch) -> Batch:
+        self._dao.insert(batch)
+        return batch
 
-    def begin(self, state: Batch) -> Batch:
-        state.status = state.status.to_running()
-        self._dao.update(state)
-        return state
+    def begin(self, batch: Batch) -> Batch:
+        self._dao.update(batch)
+        return batch
 
-    def commit(self, state: Batch) -> Batch:
-        state.status = state.status.to_succeeded()
-        self._dao.update(state)
-        return state
+    def commit(self, batch: Batch) -> Batch:
+        self._dao.update(batch)
+        return batch
 
-    def fail(self, state: Batch) -> Batch:
-        state.status = state.status.to_failed()
-        self._dao.update(state)
-        return state
+    def fail(self, batch: Batch) -> Batch:
+        self._dao.update(batch)
+        return batch
 
-    def cancel(self, state: Batch) -> Batch:
-        state.status = state.status.to_canceled()
-        self._dao.update(state)
-        return state
+    def cancel(self, batch: Batch) -> Batch:
+        self._dao.update(batch)
+        return batch
 
-    def quarantine(self, state: Batch) -> Batch:
-        state.status = state.status.to_quarantined()
-        self._dao.update(state)
-        return state
+    def quarantine(self, batch: Batch) -> Batch:
+        self._dao.update(batch)
+        return batch
 
-    def replay(self, state: Batch) -> Batch:
-        state.status = state.status.to_pending()
-        self._dao.update(state)
-        return state
+    def replay(self, batch: Batch) -> Batch:
+        self._dao.update(batch)
+        return batch
 
     def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return self._dao.find_latest(**resource)
@@ -147,5 +133,7 @@ class IcebergBatchRegistry(BatchRegistry):
             **resource,
         )
 
-    def get_history(self, limit: int, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
-        return self._dao.find_history(limit, **resource)
+    def get_history(
+        self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
+    ) -> list[Batch]:
+        return self._dao.find_history(limit, since, **resource)
