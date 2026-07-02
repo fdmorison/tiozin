@@ -1,8 +1,8 @@
 from enum import auto
 from typing import ClassVar, Self
 
+from tiozin.api.enums import LowerEnum
 from tiozin.api.metadata.batch.exceptions import BatchTransitionError
-from tiozin.api.metadata.model import LowerEnum
 
 
 class BatchStatus(LowerEnum):

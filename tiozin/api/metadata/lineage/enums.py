@@ -1,6 +1,6 @@
 from enum import auto
 
-from ..model import UpperEnum
+from tiozin.api import UpperEnum
 
 
 class RunEventType(UpperEnum):

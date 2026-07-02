@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -164,45 +163,3 @@ class Manifest(Metadata):
         return None
 
     kind: str = Field(description=docs.KIND)
-
-
-class UpperEnum(StrEnum):
-    @staticmethod
-    def _generate_next_value_(name: str, *_) -> str:
-        return name.upper()
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return self.value
-
-    @classmethod
-    def _missing_(cls, value: str) -> Self:
-        if isinstance(value, str):
-            normalized = value.strip().upper()
-            member = cls._value2member_map_.get(normalized)
-            if member is not None:
-                return member
-        raise ValueError(f"{value!r} is not a valid {cls.__name__}")
-
-
-class LowerEnum(StrEnum):
-    @staticmethod
-    def _generate_next_value_(name: str, *_) -> str:
-        return name.lower()
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return self.value
-
-    @classmethod
-    def _missing_(cls, value: str) -> Self:
-        if isinstance(value, str):
-            normalized = value.strip().lower()
-            member = cls._value2member_map_.get(normalized)
-            if member is not None:
-                return member
-        raise ValueError(f"{value!r} is not a valid {cls.__name__}")
