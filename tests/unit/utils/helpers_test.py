@@ -12,6 +12,7 @@ from tiozin.utils import (
     as_flat_list,
     as_list,
     default,
+    epoch,
     human_join,
     slugify,
     utcnow,
@@ -393,6 +394,29 @@ def test_utcnow_should_return_current_time():
 
     # Assert
     assert before <= result <= after
+
+
+# ============================================================================
+# Testing epoch()
+# ============================================================================
+def test_epoch_should_return_unix_epoch():
+    # Act
+    result = epoch()
+
+    # Assert
+    actual = result
+    expected = datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
+    assert actual == expected
+
+
+def test_epoch_should_return_timezone_aware_datetime():
+    # Act
+    result = epoch()
+
+    # Assert
+    actual = result.tzinfo
+    expected = UTC
+    assert actual == expected
 
 
 # ============================================================================
