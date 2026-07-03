@@ -15,7 +15,7 @@ registries:
 
   batch:
     kind: tio_kernel:NoOpBatchRegistry
-    name: my-state-registry-1
+    name: my-batch-registry-1
 
   lineage:
     kind: tio_kernel:NoOpLineageRegistry

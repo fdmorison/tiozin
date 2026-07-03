@@ -1,3 +1,4 @@
+from tests.stubs.batch_registry import BatchRegistryStub
 from tests.stubs.input import InputStub
 from tests.stubs.job import JobStub
 from tests.stubs.job_registry import JobRegistryStub
@@ -12,7 +13,6 @@ from tests.stubs.schema_registry import (
 )
 from tests.stubs.secret_registry import MissingSecretRegistryStub, SecretRegistryStub
 from tests.stubs.setting_registry import SettingRegistryStub
-from tests.stubs.state_registry import BatchRegistryStub
 from tests.stubs.transform import TransformStub
 
 __all__ = [

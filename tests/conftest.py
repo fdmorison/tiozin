@@ -51,7 +51,7 @@ def default_settings_manifest() -> SettingsManifest:
             ),
             batch=BatchRegistryManifest(
                 kind=config.default_batch_registry,
-                name="my-state-registry-1",
+                name="my-batch-registry-1",
             ),
             lineage=LineageRegistryManifest(
                 kind=config.default_lineage_registry,
@@ -164,7 +164,7 @@ def schema_registry_stub() -> SchemaRegistryStub:
 
 
 @pytest.fixture()
-def state_registry_stub() -> BatchRegistryStub:
+def batch_registry_stub() -> BatchRegistryStub:
     return BatchRegistryStub()
 
 
