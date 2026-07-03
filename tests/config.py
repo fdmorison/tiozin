@@ -66,7 +66,8 @@ default_lineage_emit_level = "JOB"
 
 default_batch_registry = "tio_kernel:NoOpBatchRegistry"
 default_batch_retries = 3
-default_batch_history_limit = 10
+default_batch_history_limit = 100
+default_batch_history_since_days = 7
 
 default_metric_registry = "tio_kernel:NoOpMetricRegistry"
 

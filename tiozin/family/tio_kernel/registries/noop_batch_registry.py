@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from typing_extensions import Unpack
 
 from tiozin.api import Batch, BatchRegistry
@@ -20,27 +22,21 @@ class NoOpBatchRegistry(BatchRegistry):
         return batch
 
     def begin(self, batch: Batch) -> Batch:
-        batch.status = batch.status.to_running()
         return batch
 
     def commit(self, batch: Batch) -> Batch:
-        batch.status = batch.status.to_succeeded()
         return batch
 
     def fail(self, batch: Batch) -> Batch:
-        batch.status = batch.status.to_failed()
         return batch
 
     def cancel(self, batch: Batch) -> Batch:
-        batch.status = batch.status.to_canceled()
         return batch
 
     def quarantine(self, batch: Batch) -> Batch:
-        batch.status = batch.status.to_quarantined()
         return batch
 
     def replay(self, batch: Batch) -> Batch:
-        batch.status = batch.status.to_pending()
         return batch
 
     def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
@@ -49,5 +45,7 @@ class NoOpBatchRegistry(BatchRegistry):
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         return []
 
-    def get_history(self, limit: int, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
+    def get_history(
+        self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
+    ) -> list[Batch]:
         return []
