@@ -1,0 +1,52 @@
+from rich.console import Console
+from rich.table import Table
+
+from ..api import Batch
+from ..utils import human_join
+
+console = Console()
+
+BATCH_COLUMNS = (
+    "id",
+    "nominal_time",
+    "status",
+    "failure_count",
+    "attributes",
+    "created_at",
+    "updated_at",
+)
+
+
+def announce(job: str | list[str]) -> None:
+    """
+    Prints a command's opening status line — the one print a command makes outside the log.
+    """
+    label = human_join(job) if isinstance(job, list) else job
+    console.print(f"[green]Jobs:[/green] [bold cyan]{label}[/bold cyan]\n")
+
+
+def render_batches(batches: list[Batch]) -> None:
+    """
+    Renders batches as a Rich table.
+
+    Renders nothing when there are no batches — signalling emptiness is the caller's decision,
+    made through the Tiozin log, not this presentation helper.
+    """
+    batches = [batch for batch in batches if batch]
+    if not batches:
+        return
+
+    table = Table(show_header=True, header_style="bold")
+    for column in BATCH_COLUMNS:
+        table.add_column(column)
+    for batch in batches:
+        table.add_row(
+            batch.id,
+            batch.nominal_time.isoformat().replace("+00:00", "Z"),
+            batch.status.value,
+            str(batch.failure_count),
+            str(batch.attributes),
+            batch.created_at.isoformat().replace("+00:00", "Z"),
+            batch.updated_at.isoformat().replace("+00:00", "Z"),
+        )
+    console.print(table)

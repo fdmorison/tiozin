@@ -297,6 +297,44 @@ def test_manifest_should_reject_job_with_invalid_field_types(field_name, invalid
 
 
 # ============================================================================
+# JobManifest.resource tests
+# ============================================================================
+
+
+def test_resource_should_return_resource_fields():
+    # Arrange
+    manifest = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        runner=RunnerManifest(kind="TestRunner"),
+        inputs=[InputManifest(kind="TestInput", name="reader")],
+    )
+
+    # Act
+    resource = manifest.resource
+
+    # Assert
+    actual = resource
+    expected = {
+        "org": "tiozin",
+        "region": "latam",
+        "domain": "quality",
+        "subdomain": "pipeline",
+        "layer": "test",
+        "product": "test_cases",
+        "model": "some_case",
+    }
+    assert actual == expected
+
+
+# ============================================================================
 # JobManifest.to_yaml() tests
 # ============================================================================
 

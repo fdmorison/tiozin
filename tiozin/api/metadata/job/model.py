@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from tiozin.api.conventions import RESOURCE_FIELDS
+
 from .. import docs
 from ..model import Manifest
 
@@ -149,6 +151,8 @@ class JobManifest(Manifest):
     region: str = Field(description=docs.JOB_REGION)
     domain: str = Field(description=docs.JOB_DOMAIN)
     subdomain: str = Field(description=docs.JOB_SUBDOMAIN)
+
+    # Product
     layer: str = Field(description=docs.JOB_LAYER)
     product: str = Field(description=docs.JOB_PRODUCT)
     model: str = Field(description=docs.JOB_MODEL)
@@ -160,3 +164,7 @@ class JobManifest(Manifest):
         default_factory=list, description=docs.JOB_TRANSFORMS
     )
     outputs: list[OutputManifest] | None = Field(default_factory=list, description=docs.JOB_OUTPUTS)
+
+    @property
+    def resource(self) -> dict:
+        return {field: getattr(self, field) for field in RESOURCE_FIELDS}
