@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from typing_extensions import Unpack
 
 from tiozin.api import Batch, BatchRegistry
@@ -35,5 +37,7 @@ class BatchRegistryStub(BatchRegistry):
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         return []
 
-    def get_history(self, limit: int, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
+    def get_history(
+        self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
+    ) -> list[Batch]:
         return []

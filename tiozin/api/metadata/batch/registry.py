@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from datetime import datetime
 
 from typing_extensions import Unpack
 
@@ -86,10 +87,15 @@ class BatchRegistry(Registry[Batch]):
         """
 
     @abstractmethod
-    def get_history(self, limit: int, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
+    def get_history(
+        self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
+    ) -> list[Batch]:
         """
-        Returns the most recently registered batches for the resource, regardless of
-        status, ordered by created_at descending.
+        Returns the latest batches registered for the resource.
+
+        Results are ordered by `created_at` in descending order and include batches of
+        any status. Only batches registered at or after `since` are considered. Up to
+        `limit` batches are returned, starting with the most recent.
 
         Useful for debugging backlog progression over time.
         """

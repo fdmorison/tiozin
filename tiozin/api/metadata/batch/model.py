@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Annotated, Any
 
-from pydantic import Field
+from pydantic import AfterValidator, AwareDatetime, Field, field_validator
 
 from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
+from tiozin.api.enums import Cadence
 from tiozin.utils import generate_id, utcnow
 
 from ..model import Metadata
@@ -13,6 +14,11 @@ from .status import BatchStatus
 
 if TYPE_CHECKING:
     from tiozin.api.metadata.batch.registry import BatchRegistry
+
+NominalTime = Annotated[
+    AwareDatetime,
+    AfterValidator(Cadence.MINUTE.truncate),
+]
 
 
 class Batch(Metadata):
@@ -88,14 +94,19 @@ class Batch(Metadata):
     layer: str = Field(frozen=True)
     product: str = Field(frozen=True)
     model: str = Field(frozen=True)
-    nominal_time: datetime = Field(frozen=True)
+    nominal_time: NominalTime = Field(frozen=True)
 
     status: BatchStatus = BatchStatus.PENDING
     failure_count: int = Field(0, ge=0)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
-    created_at: datetime = Field(default_factory=utcnow, frozen=True)
-    updated_at: datetime = Field(default_factory=utcnow)
+    created_at: AwareDatetime = Field(default_factory=utcnow, frozen=True)
+    updated_at: AwareDatetime = Field(default_factory=utcnow)
+
+    @field_validator("nominal_time", "created_at", "updated_at")
+    @classmethod
+    def _normalize_timezone(cls, value: datetime) -> datetime:
+        return value.astimezone(UTC)
 
     def _registry(self) -> BatchRegistry:
         from tiozin.api.context import Context
