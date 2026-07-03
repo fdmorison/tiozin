@@ -19,7 +19,7 @@ registries:
 
   batch:
     kind: NoOpBatchRegistry
-    name: my-state-registry-2
+    name: my-batch-registry-2
 
   lineage:
     kind: NoOpLineageRegistry

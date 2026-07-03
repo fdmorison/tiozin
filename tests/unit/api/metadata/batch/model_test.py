@@ -366,7 +366,7 @@ def test_fail_should_delegate_to_registry(registry: MagicMock, fake_domain):
 
 
 @patch("tiozin.api.metadata.batch.model.Batch._registry")
-def test_fail_should_merge_attributes_into_state(registry: MagicMock, fake_domain):
+def test_fail_should_merge_attributes_into_batch(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3
     state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))

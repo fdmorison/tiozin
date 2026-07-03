@@ -14,8 +14,9 @@ registries:
     failfast: true
 
   batch:
-    kind: tio_kernel:NoOpBatchRegistry
+    kind: tio_kernel:IcebergBatchRegistry
     name: my-batch-registry-1
+    location: "{{ ENV.TIO_TEST_BATCH_LOCATION }}"
 
   lineage:
     kind: tio_kernel:NoOpLineageRegistry
@@ -24,9 +25,3 @@ registries:
   metric:
     kind: tio_kernel:NoOpMetricRegistry
     name: my-metric-registry-1
-
-runtime_defaults:
-  - kind: NoOpInput
-    verbose: false
-    schema_subject: "{{ domain }}.{{ subdomain }}.{{ product }}"
-    other_field: 12345

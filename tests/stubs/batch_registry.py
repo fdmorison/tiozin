@@ -6,7 +6,7 @@ from tiozin.api.typehint import ResourceKwargs
 
 class BatchRegistryStub(BatchRegistry):
     def __init__(self):
-        super().__init__(location="stub://state")
+        super().__init__(location="stub://batch")
 
     def register(self, batch: Batch) -> Batch:
         return batch
