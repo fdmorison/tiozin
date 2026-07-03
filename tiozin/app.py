@@ -3,7 +3,7 @@ import signal
 
 import wrapt
 
-from . import logs
+from . import config, logs  # noqa: F401
 from .api import Context, Job, JobManifest
 from .api.loggable import Loggable
 from .api.metadata.bundle import Registries
@@ -11,15 +11,17 @@ from .container import AppContainer
 from .exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
 from .status import AppStatus
 from .utils import as_flat_list
+from .utils.decorators import ensure_setup
 
 JobInput = str | JobManifest | Job
 
 
+@ensure_setup
 class TiozinApp(Loggable):
     """
     Main application entrypoint for Tiozin.
 
-    Initializes the framework to runs jobs. Handles registry setup, context initialization, and
+    Initializes the framework to run jobs. Handles registry setup, context initialization, and
     graceful shutdown.
     """
 
@@ -34,13 +36,18 @@ class TiozinApp(Loggable):
 
     @wrapt.synchronized
     def setup(self) -> None:
+        """
+        Boots the framework: installs shutdown hooks and starts the registries.
+
+        Idempotent — returns immediately if the application is already ready.
+        """
         if self._status.is_ready():
             return
 
         self.info("Application is starting.")
         self._status = self._status.set_booting()
 
-        # Install Shutdown hooks
+        # Install shutdown hooks
         def on_signal(signum, _) -> None:
             sigcode = signal.Signals(signum).name
             self.warning(f"🚨 Interrupted by {sigcode}")
@@ -58,6 +65,11 @@ class TiozinApp(Loggable):
 
     @wrapt.synchronized
     def teardown(self) -> None:
+        """
+        Shuts the framework down, tearing the registries down.
+
+        Idempotent — returns immediately if the application is already shut down.
+        """
         if self._status.is_shutdown():
             return
         self.info("Application is shutting down...")
@@ -65,51 +77,51 @@ class TiozinApp(Loggable):
         self._status = self._status.set_shutdown()
         self.info("Application shutdown completed.")
 
+    def resolve_manifest(self, job: str | JobManifest) -> JobManifest:
+        """
+        Resolves any job input into a `JobManifest`.
+
+        A `JobManifest` is returned as is. A string is first parsed as YAML/JSON content, then
+        falls back to a registry lookup by identifier. Raises `TiozinInputError` if it cannot be
+        resolved.
+        """
+        if isinstance(job, JobManifest):
+            return job
+
+        manifest = JobManifest.try_from_yaml(job)
+        manifest = manifest or self._containers.registries.job.get(job)
+
+        TiozinInputError.raise_if(
+            manifest is None,
+            f"Invalid job: {job}.",
+        )
+        return manifest
+
     def validate(self, *jobs: str) -> None:
         """
-        Validates one or more job raw string manifests without running them.
+        Validates one or more jobs without running them.
 
-        Accepts YAML/JSON content strings or job identifier strings.
-        Parses and validates each manifest without building or submitting the job.
+        Accepts YAML/JSON content strings or job identifier strings. Resolves each manifest
+        without building or submitting the job. Raises `TiozinInputError` on the first invalid
+        job; returns cleanly if all are valid.
         """
         for job in as_flat_list(*jobs):
-            try:
-                self.setup()
-                manifest = JobManifest.try_from_yaml(job)
-                manifest = manifest or self._containers.registries.job.get(job)
-
-                TiozinInputError.raise_if(
-                    manifest is None,
-                    f"Invalid job: {job}.",
-                )
-
-                self.info(f"✓ Job `{job}` is valid")
-            except TiozinUsageError as e:
-                self.error(e.message)
-                raise
+            self.resolve_manifest(job)
 
     def run(self, *jobs: JobInput) -> list[object]:
         """
         Runs one or more jobs in sequence.
 
-        Accepts one or more jobs as positional arguments, or a single list.
-        Each item may be a `Job` instance, a `JobManifest`, a YAML/JSON string,
-        or a job identifier string.
-
-        Returns the job result for a single job, or a list of results otherwise.
+        Accepts one or more jobs as positional arguments, or a single list. Each item may be a
+        `Job` instance, a `JobManifest`, a YAML/JSON string, or a job identifier string. Returns
+        the list of job results, one per input.
         """
         results = []
 
         for job in as_flat_list(*jobs):
             try:
-                self.setup()
-
                 if isinstance(job, (str, JobManifest)):
-                    # Attempt yaml string or JobManifest
-                    manifest = JobManifest.try_from_yaml(job)
-                    # Attempt identifier string
-                    manifest = manifest or self._containers.registries.job.get(job)
-                    # Manifest is parsed, now build the job
+                    manifest = self.resolve_manifest(job)
                     job = Job.builder().from_manifest(manifest).build()
 
                 TiozinInputError.raise_if(

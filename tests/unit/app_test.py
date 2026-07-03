@@ -5,7 +5,7 @@ import pytest
 import tiozin.app
 from tiozin import Job, JobManifest
 from tiozin.app import AppStatus, TiozinApp
-from tiozin.exceptions import TiozinInternalError
+from tiozin.exceptions import TiozinInputError, TiozinInternalError
 
 
 def test_app_should_forward_settings_path_to_container():
@@ -295,3 +295,94 @@ def test_run_should_execute_list_sequentially(job_builder: MagicMock, ready_app:
 
     # Assert
     assert call_order == ["a", "b"]
+
+
+def test_resolve_manifest_should_return_manifest_instance_as_is(ready_app: TiozinApp):
+    # Arrange
+    manifest = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        product="test_cases",
+        model="some_case",
+        layer="test",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+
+    # Act
+    result = ready_app.resolve_manifest(manifest)
+
+    # Assert
+    assert result is manifest
+
+
+@patch.object(tiozin.app.JobManifest, "try_from_yaml")
+def test_resolve_manifest_should_return_parsed_manifest_from_yaml_string(
+    try_from_yaml: MagicMock, ready_app: TiozinApp
+):
+    # Arrange
+    manifest = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        product="test_cases",
+        model="some_case",
+        layer="test",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+    try_from_yaml.return_value = manifest
+
+    # Act
+    result = ready_app.resolve_manifest("kind: Job")
+
+    # Assert
+    ready_app._containers.registries.job.get.assert_not_called()
+    assert result is manifest
+
+
+@patch.object(tiozin.app.JobManifest, "try_from_yaml", return_value=None)
+def test_resolve_manifest_should_fall_back_to_registry_when_string_does_not_parse(
+    try_from_yaml: MagicMock, ready_app: TiozinApp
+):
+    # Arrange
+    manifest = JobManifest(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        product="test_cases",
+        model="some_case",
+        layer="test",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+    ready_app._containers.registries.job.get.return_value = manifest
+
+    # Act
+    result = ready_app.resolve_manifest("job://registered_job")
+
+    # Assert
+    ready_app._containers.registries.job.get.assert_called_once_with("job://registered_job")
+    assert result is manifest
+
+
+@patch.object(tiozin.app.JobManifest, "try_from_yaml", return_value=None)
+def test_resolve_manifest_should_raise_input_error_when_job_cannot_be_resolved(
+    try_from_yaml: MagicMock, ready_app: TiozinApp
+):
+    # Arrange
+    ready_app._containers.registries.job.get.return_value = None
+
+    # Act / Assert
+    with pytest.raises(TiozinInputError):
+        ready_app.resolve_manifest("job://unknown")
