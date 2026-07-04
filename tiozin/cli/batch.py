@@ -5,6 +5,7 @@ import typer
 from ..api import Batch
 from ..app import TiozinApp
 from .render import announce, render_batches
+from .utils import parse_attributes
 
 REQUIRED = ...
 
@@ -52,8 +53,11 @@ def history(
     ctx: typer.Context,
     job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
     limit: int = typer.Option(None, "--limit", help="Maximum number of batches to show."),
-    since: str = typer.Option(
-        None, "--since", help="Only show batches registered at or after this ISO 8601 datetime."
+    since: datetime = typer.Option(
+        None,
+        "--since",
+        parser=datetime.fromisoformat,
+        help="Only show batches registered at or after this ISO 8601 datetime.",
     ),
 ) -> None:
     """
@@ -63,7 +67,6 @@ def history(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    since = datetime.fromisoformat(since) if since else None
     resource = app.resolve_manifest(job).resource
     batches = app.registries.batch.get_history(limit=limit, since=since, **resource)
     if not batches:
@@ -76,8 +79,17 @@ def history(
 def register(
     ctx: typer.Context,
     job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
-    nominal_time: str = typer.Argument(
-        REQUIRED, help="Nominal time to register, as an ISO 8601 datetime."
+    nominal_time: datetime = typer.Argument(
+        REQUIRED,
+        parser=datetime.fromisoformat,
+        help="Nominal time to register, as an ISO 8601 datetime.",
+    ),
+    attributes: list[str] = typer.Option(
+        [],
+        "--attribute",
+        "-a",
+        callback=parse_attributes,
+        help="Batch attribute as key=value. Can be specified multiple times.",
     ),
 ) -> None:
     """
@@ -86,7 +98,13 @@ def register(
     announce(job)
     app: TiozinApp = ctx.obj
     resource = app.resolve_manifest(job).resource
-    batch = Batch(**resource, nominal_time=datetime.fromisoformat(nominal_time))
+
+    batch = Batch(
+        **resource,
+        nominal_time=nominal_time,
+        attributes=attributes,
+    )
     batch = app.registries.batch.register(batch)
-    app.info(f"Batch registered for job {job}, nominal time {nominal_time}.")
+
+    app.info(f"Batch registered for job {job}, nominal time {nominal_time.isoformat()}.")
     render_batches([batch])

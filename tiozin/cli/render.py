@@ -28,9 +28,6 @@ def announce(job: str | list[str]) -> None:
 def render_batches(batches: list[Batch]) -> None:
     """
     Renders batches as a Rich table.
-
-    Renders nothing when there are no batches — signalling emptiness is the caller's decision,
-    made through the Tiozin log, not this presentation helper.
     """
     batches = [batch for batch in batches if batch]
     if not batches:
@@ -39,13 +36,14 @@ def render_batches(batches: list[Batch]) -> None:
     table = Table(show_header=True, header_style="bold")
     for column in BATCH_COLUMNS:
         table.add_column(column)
+
     for batch in batches:
         table.add_row(
             batch.id,
             batch.nominal_time.isoformat().replace("+00:00", "Z"),
             batch.status.value,
             str(batch.failure_count),
-            str(batch.attributes),
+            str({k: v for k, v in batch.attributes.items() if v is not None}),
             batch.created_at.isoformat().replace("+00:00", "Z"),
             batch.updated_at.isoformat().replace("+00:00", "Z"),
         )
