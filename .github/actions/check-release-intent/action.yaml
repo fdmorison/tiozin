@@ -29,4 +29,4 @@ runs:
             console.log("✅ Title and code changes agree on release impact");
             return;
           }
-          core.setFailed(`PR title and the files it touches disagree on release impact`);
+          core.setFailed(`PR title "${title}" and the files it touches disagree on release impact`);
