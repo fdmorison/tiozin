@@ -5,6 +5,7 @@ import typer
 from ..api import Batch
 from ..app import TiozinApp
 from .render import announce, render_batches
+from .utils import parse_attributes
 
 REQUIRED = ...
 
@@ -83,6 +84,13 @@ def register(
         parser=datetime.fromisoformat,
         help="Nominal time to register, as an ISO 8601 datetime.",
     ),
+    attributes: list[str] = typer.Option(
+        [],
+        "--attribute",
+        "-a",
+        callback=parse_attributes,
+        help="Batch attribute as key=value. Can be specified multiple times.",
+    ),
 ) -> None:
     """
     Creates a new pending batch for a job to work as watermark or backlog.
@@ -90,7 +98,13 @@ def register(
     announce(job)
     app: TiozinApp = ctx.obj
     resource = app.resolve_manifest(job).resource
-    batch = Batch(**resource, nominal_time=nominal_time)
+
+    batch = Batch(
+        **resource,
+        nominal_time=nominal_time,
+        attributes=attributes,
+    )
     batch = app.registries.batch.register(batch)
+
     app.info(f"Batch registered for job {job}, nominal time {nominal_time.isoformat()}.")
     render_batches([batch])
