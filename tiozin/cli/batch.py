@@ -88,7 +88,6 @@ def register(
         [],
         "--attribute",
         "-a",
-        callback=parse_attributes,
         help="Batch attribute as key=value. Can be specified multiple times.",
     ),
 ) -> None:
@@ -102,9 +101,90 @@ def register(
     batch = Batch(
         **resource,
         nominal_time=nominal_time,
-        attributes=attributes,
+        attributes=parse_attributes(attributes),
     )
     batch = app.registries.batch.register(batch)
 
     app.info(f"Batch registered for job {job}, nominal time {nominal_time.isoformat()}.")
+    render_batches([batch])
+
+
+@batch_cli.command()
+def cancel(
+    ctx: typer.Context,
+    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
+    batch_id: str = typer.Argument(REQUIRED, help="Batch identifier."),
+    attributes: list[str] = typer.Option(
+        [],
+        "--attribute",
+        "-a",
+        help="Batch attribute as key=value. Can be specified multiple times.",
+    ),
+) -> None:
+    """
+    Cancels a pending batch.
+    """
+    announce(job)
+    app: TiozinApp = ctx.obj
+    resource = app.resolve_manifest(job).resource
+
+    batch = app.registries.batch.get(id=batch_id, **resource)
+    batch.attributes |= parse_attributes(attributes)
+    batch = app.registries.batch.cancel(batch)
+
+    app.info(f"Batch {batch.id} cancelled.")
+    render_batches([batch])
+
+
+@batch_cli.command()
+def replay(
+    ctx: typer.Context,
+    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
+    batch_id: str = typer.Argument(REQUIRED, help="Batch identifier."),
+    attributes: list[str] = typer.Option(
+        [],
+        "--attribute",
+        "-a",
+        help="Batch attribute as key=value. Can be specified multiple times.",
+    ),
+) -> None:
+    """
+    Replays a completed batch by returning it to the pending state.
+    """
+    announce(job)
+    app: TiozinApp = ctx.obj
+    resource = app.resolve_manifest(job).resource
+
+    batch = app.registries.batch.get(id=batch_id, **resource)
+    batch.attributes |= parse_attributes(attributes)
+    batch = app.registries.batch.replay(batch)
+
+    app.info(f"Batch {batch.id} replayed.")
+    render_batches([batch])
+
+
+@batch_cli.command()
+def quarantine(
+    ctx: typer.Context,
+    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
+    batch_id: str = typer.Argument(REQUIRED, help="Batch identifier."),
+    attributes: list[str] = typer.Option(
+        [],
+        "--attribute",
+        "-a",
+        help="Batch attribute as key=value. Can be specified multiple times.",
+    ),
+) -> None:
+    """
+    Quarantines a failed batch, isolating it until it is manually replayed.
+    """
+    announce(job)
+    app: TiozinApp = ctx.obj
+    resource = app.resolve_manifest(job).resource
+
+    batch = app.registries.batch.get(id=batch_id, **resource)
+    batch.attributes |= parse_attributes(attributes)
+    batch = app.registries.batch.quarantine(batch)
+
+    app.info(f"Batch {batch.id} quarantined.")
     render_batches([batch])

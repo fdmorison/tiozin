@@ -4,12 +4,12 @@ from ruamel.yaml import YAML
 yaml = YAML(typ="safe")
 
 
-def parse_attributes(attributes: list[str]) -> dict:
+def parse_attributes(attributes: list[str] = None) -> dict:
     """
     Parses key=value attribute options into a dict, loading each value as YAML.
     """
     parsed = {}
-    for item in attributes:
+    for item in attributes or []:
         key, sep, value = item.partition("=")
         if not sep:
             raise typer.BadParameter(f"Invalid attribute '{item}'. Expected key=value.")
