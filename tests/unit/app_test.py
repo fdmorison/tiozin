@@ -5,7 +5,7 @@ import pytest
 import tiozin.app
 from tiozin import Job, JobManifest
 from tiozin.app import AppStatus, TiozinApp
-from tiozin.exceptions import TiozinInputError, TiozinInternalError
+from tiozin.exceptions import TiozinInputError
 
 
 def test_app_should_forward_settings_path_to_container():
@@ -135,14 +135,14 @@ def test_run_should_execute_job_and_return_result(job_builder: MagicMock, ready_
 
 
 @patch.object(tiozin.app.Job, "builder")
-def test_run_should_fail_and_propagate_exception(job_builder: MagicMock, ready_app: TiozinApp):
+def test_run_should_propagate_exception_unchanged(job_builder: MagicMock, ready_app: TiozinApp):
     # Arrange
     job = MagicMock(spec=Job)
     job.submit.side_effect = RuntimeError("boom")
     job_builder.return_value.from_manifest.return_value.build.return_value = job
 
-    # Act - TiozinApp wraps unexpected exceptions in TiozinInternalError
-    with pytest.raises(TiozinInternalError):
+    # Act - run() lets the original exception propagate without wrapping
+    with pytest.raises(RuntimeError):
         ready_app.run("job://fail")
 
 
