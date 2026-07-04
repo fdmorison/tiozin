@@ -31,6 +31,9 @@ class BatchRegistryStub(BatchRegistry):
     def replay(self, batch: Batch) -> Batch:
         return batch
 
+    def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+        return None
+
     def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return None
 

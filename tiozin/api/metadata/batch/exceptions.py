@@ -47,5 +47,5 @@ class BatchNotFoundError(BatchError, TiozinNotFoundError):
 
     message = "The batch '{batch}' was not found."
 
-    def __init__(self, message: str = None, *, batch: Batch) -> None:
+    def __init__(self, message: str = None, *, batch: Batch | str) -> None:
         super().__init__(message, batch=batch)
