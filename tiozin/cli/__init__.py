@@ -41,12 +41,12 @@ class TiozinCli(Loggable, typer.core.TyperGroup):
             return super().main(*args, **kwargs)
         except TiozinUsageError as e:
             self.error(e.message)
-            raise typer.Exit(code=2) from None
+            raise SystemExit(2)
         except (click.exceptions.Exit, click.exceptions.Abort, SystemExit):
             raise
-        except Exception:
-            self.exception("Unexpected error.")
-            raise typer.Exit(code=1) from None
+        except Exception as e:
+            self.exception(f"Unexpected error: {e}")
+            raise SystemExit(1)
 
 
 cli = typer.Typer(

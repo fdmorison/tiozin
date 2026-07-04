@@ -3,12 +3,12 @@ import signal
 
 import wrapt
 
-from . import config, logs  # noqa: F401
+from . import logs
 from .api import Context, Job, JobManifest
 from .api.loggable import Loggable
 from .api.metadata.bundle import Registries
 from .container import AppContainer
-from .exceptions import TiozinInputError, TiozinInternalError, TiozinUsageError
+from .exceptions import TiozinInputError
 from .status import AppStatus
 from .utils import as_flat_list
 from .utils.decorators import ensure_setup
@@ -119,29 +119,18 @@ class TiozinApp(Loggable):
         results = []
 
         for job in as_flat_list(*jobs):
-            try:
-                if isinstance(job, (str, JobManifest)):
-                    manifest = self.resolve_manifest(job)
-                    job = Job.builder().from_manifest(manifest).build()
+            if isinstance(job, (str, JobManifest)):
+                manifest = self.resolve_manifest(job)
+                job = Job.builder().from_manifest(manifest).build()
 
-                TiozinInputError.raise_if(
-                    not isinstance(job, Job),
-                    f"Invalid job: {job}.",
-                )
+            TiozinInputError.raise_if(
+                not isinstance(job, Job),
+                f"Invalid job: {job}.",
+            )
 
-                with Context.for_job(job, registries=self._containers.registries):
-                    data = job.submit()
-                    results.append(data)
-
-            except TiozinUsageError as e:
-                self.error(e.message)
-                raise
-            except TiozinInternalError as e:
-                self.exception(e.message)
-                raise
-            except Exception as e:
-                self.exception("Unexpected error while executing job.")
-                raise TiozinInternalError() from e
+            with Context.for_job(job, registries=self._containers.registries):
+                data = job.submit()
+                results.append(data)
 
         return results
 
