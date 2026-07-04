@@ -2,7 +2,7 @@ name: PR Actions
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, edited, synchronize, reopened]
     paths:
       - "tiozin/**/*.py"
       - "tests/**/*.py"
