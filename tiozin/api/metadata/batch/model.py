@@ -145,7 +145,6 @@ class Batch(Metadata):
 
     def replay(self, **attributes) -> Batch:
         self.attributes |= attributes
-        self.failure_count = 0
         self._registry().replay(self)
         return self
 

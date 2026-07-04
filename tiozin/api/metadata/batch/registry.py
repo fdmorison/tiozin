@@ -69,6 +69,15 @@ class BatchRegistry(Registry[Batch]):
         """Transitions the batch to PENDING and persists it."""
 
     @abstractmethod
+    def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+        """
+        Returns the batch identified by `id` within the resource.
+
+        Raises:
+            BatchNotFoundError: If no batch with the given id exists.
+        """
+
+    @abstractmethod
     def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         """
         Returns the most recently registered batch for the resource by created_at, or
