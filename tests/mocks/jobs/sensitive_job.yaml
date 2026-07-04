@@ -1,0 +1,19 @@
+kind: LinearJob
+name: sensitive_job
+org: tiozin
+region: latam
+domain: test
+subdomain: verification
+product: security
+model: log_check
+layer: raw
+runner:
+  kind: NoOpRunner
+inputs:
+- kind: NoOpInput
+  name: source
+transforms:
+- kind: NoOpTransform
+  name: will_fail
+  force_error: true
+  api_key: secret123
