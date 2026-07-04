@@ -21,7 +21,11 @@ runs:
         script: |
           const RELEASE_IMPACTING_TYPE = /^(feat|fix|perf|refactor|chore)(\(.+\))?!?:/;
 
-          const title = context.payload.pull_request.title;
+          const { data: pr } = await github.rest.pulls.get({
+            ...context.repo,
+            pull_number: context.payload.pull_request.number,
+          });
+          const title = pr.title;
           const titleImpactsRelease = RELEASE_IMPACTING_TYPE.test(title);
           const codeImpactsRelease = process.env.TOUCHED_PRODUCTION === "true";
 
@@ -29,4 +33,4 @@ runs:
             console.log("✅ Title and code changes agree on release impact");
             return;
           }
-          core.setFailed(`PR title and the files it touches disagree on release impact`);
+          core.setFailed(`PR title "${title}" and the files it touches disagree on release impact`);

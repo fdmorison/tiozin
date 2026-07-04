@@ -18,12 +18,14 @@ class BatchRegistry(Registry[Batch]):
     """
     Storage-agnostic registry for pipeline batches.
 
-    The registry persists and manages the lifecycle of batches represented by `Batch` objects.
-    Implementations may use REST backends, relational databases, key-value stores, or table
-    formats such as Iceberg or DuckLake.
+    A batch registry persists `Batch` objects and exposes operations for
+    registering, updating, and querying batches associated with a resource.
 
-    Besides status transitions, the registry exposes derived views over the collection of
-    batches, such as backlogs and history.
+    Implementations may use relational databases, REST services, key-value
+    stores, or open table formats.
+
+    Methods that mutate an existing batch may raise `BatchNotFoundError`.
+    Registering an already existing batch raises `BatchAlreadyExistsError`.
 
     Attributes:
         retries:
@@ -41,58 +43,88 @@ class BatchRegistry(Registry[Batch]):
         Creates a new batch.
 
         Raises:
-            BatchAlreadyExistsError: If a batch with the same natural key already exists.
+            BatchAlreadyExistsError: If another batch with the same natural key already exists.
         """
 
     @abstractmethod
     def begin(self, batch: Batch) -> Batch:
-        """Transitions the batch to RUNNING and persists it."""
+        """
+        Persists the batch in the RUNNING state.
+
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
     @abstractmethod
     def commit(self, batch: Batch) -> Batch:
-        """Transitions the batch to SUCCEEDED and persists it."""
+        """
+        Persists the batch in the SUCCEEDED state.
+
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
     @abstractmethod
     def fail(self, batch: Batch) -> Batch:
-        """Transitions the batch to FAILED and persists it."""
+        """
+        Persists the batch in the FAILED state.
+
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
     @abstractmethod
     def cancel(self, batch: Batch) -> Batch:
-        """Transitions the batch to CANCELED and persists it."""
+        """
+        Persists the batch in the CANCELED state.
+
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
     @abstractmethod
     def quarantine(self, batch: Batch) -> Batch:
-        """Transitions the batch to QUARANTINED and persists it."""
+        """
+        Persists the batch in the QUARANTINED state.
+
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
     @abstractmethod
     def replay(self, batch: Batch) -> Batch:
-        """Transitions the batch to PENDING and persists it."""
+        """
+        Persists the batch in the PENDING state.
+
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
     @abstractmethod
-    def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+    def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch:
         """
         Returns the batch identified by `id` within the resource.
 
         Raises:
-            BatchNotFoundError: If no batch with the given id exists.
+            BatchNotFoundError: If the batch does not exist.
         """
 
     @abstractmethod
     def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         """
-        Returns the most recently registered batch for the resource by created_at, or
-        `None` if none exists.
+        Returns the most recently registered batch for the resource.
 
-        The returned batch may have any status. Callers are responsible for inspecting
-        the status and deciding whether to retry, wait, or advance to the next batch.
+        Returns:
+            The latest batch, or `None` if no batches have been registered
+            for the resource.
         """
 
     @abstractmethod
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         """
-        Returns the backlog for the resource.
+        Returns batches awaiting for processing.
 
-        The backlog contains all batches currently awaiting processing.
+        The backlog should include only batches in the PENDING, RUNNING, or FAILED states.
         """
 
     @abstractmethod
@@ -100,11 +132,9 @@ class BatchRegistry(Registry[Batch]):
         self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:
         """
-        Returns the latest batches registered for the resource.
+        Returns recently registered batches for the resource.
 
-        Results are ordered by `created_at` in descending order and include batches of
-        any status. Only batches registered at or after `since` are considered. Up to
-        `limit` batches are returned, starting with the most recent.
-
-        Useful for debugging backlog progression over time.
+        Results are ordered by `created_at` in descending order and include
+        batches of any status. Only batches registered at or after `since`
+        are considered. Up to `limit` batches are returned.
         """

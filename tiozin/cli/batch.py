@@ -4,6 +4,7 @@ import typer
 
 from ..api import Batch
 from ..app import TiozinApp
+from . import docs
 from .render import announce, render_batches
 from .utils import parse_attributes
 
@@ -15,10 +16,10 @@ batch_cli = typer.Typer(no_args_is_help=True)
 @batch_cli.command()
 def latest(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
 ) -> None:
     """
-    Shows the most recently registered batch for a job.
+    Shows the latest batch produced by this job.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -33,10 +34,16 @@ def latest(
 @batch_cli.command()
 def backlog(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
 ) -> None:
     """
-    List the backlog of batches in pending, running, or failed state for a job.
+    Shows batches awaiting processing for this job.
+
+    The backlog includes batches in the PENDING, RUNNING, and FAILED states.
+    FAILED batches remain eligible for retry until they exceed the retry
+    limit or are quarantined. RUNNING batches are also included because an
+    interrupted execution may terminate before the batch can be transitioned
+    to FAILED, allowing it to be recovered and retried.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -51,19 +58,24 @@ def backlog(
 @batch_cli.command()
 def history(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
-    limit: int = typer.Option(None, "--limit", help="Maximum number of batches to show."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
+    limit: int = typer.Option(
+        None,
+        "--limit",
+        help=docs.LIMIT,
+    ),
     since: datetime = typer.Option(
         None,
         "--since",
         parser=datetime.fromisoformat,
-        help="Only show batches registered at or after this ISO 8601 datetime.",
+        help=docs.SINCE,
     ),
 ) -> None:
     """
-    Shows the most recently registered batches for a job, regardless of status.
+    Shows previously registered batches for this job.
 
-    Useful for debugging watermark and backlog progression over time.
+    History includes batches in every state and can be filtered by
+    registration time to inspect the lifecycle of past executions.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -78,21 +90,24 @@ def history(
 @batch_cli.command()
 def register(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
     nominal_time: datetime = typer.Argument(
         REQUIRED,
         parser=datetime.fromisoformat,
-        help="Nominal time to register, as an ISO 8601 datetime.",
+        help=docs.NOMINAL_TIME,
     ),
     attributes: list[str] = typer.Option(
         [],
         "--attribute",
         "-a",
-        help="Batch attribute as key=value. Can be specified multiple times.",
+        help=docs.ATTRIBUTES,
     ),
 ) -> None:
     """
-    Creates a new pending batch for a job to work as watermark or backlog.
+    Registers a new batch to be processed by this job.
+
+    New batches are created in the PENDING state and become eligible for
+    processing by future executions of the job.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -112,17 +127,20 @@ def register(
 @batch_cli.command()
 def cancel(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
-    batch_id: str = typer.Argument(REQUIRED, help="Batch identifier."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
+    batch_id: str = typer.Argument(REQUIRED, help=docs.BATCH_ID),
     attributes: list[str] = typer.Option(
         [],
         "--attribute",
         "-a",
-        help="Batch attribute as key=value. Can be specified multiple times.",
+        help=docs.ATTRIBUTES,
     ),
 ) -> None:
     """
-    Cancels a pending batch.
+    Cancels a batch produced by this job.
+
+    Cancelled batches are removed from the backlog and remain inactive until
+    they are replayed.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -139,17 +157,20 @@ def cancel(
 @batch_cli.command()
 def replay(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
-    batch_id: str = typer.Argument(REQUIRED, help="Batch identifier."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
+    batch_id: str = typer.Argument(REQUIRED, help=docs.BATCH_ID),
     attributes: list[str] = typer.Option(
         [],
         "--attribute",
         "-a",
-        help="Batch attribute as key=value. Can be specified multiple times.",
+        help=docs.ATTRIBUTES,
     ),
 ) -> None:
     """
-    Replays a completed batch by returning it to the pending state.
+    Replays a batch produced by this job.
+
+    The batch is returned to the PENDING state, making it eligible for
+    processing by future executions of the job.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -166,17 +187,20 @@ def replay(
 @batch_cli.command()
 def quarantine(
     ctx: typer.Context,
-    job: str = typer.Argument(REQUIRED, help="Identifier of the job."),
-    batch_id: str = typer.Argument(REQUIRED, help="Batch identifier."),
+    job: str = typer.Argument(REQUIRED, help=docs.JOB),
+    batch_id: str = typer.Argument(REQUIRED, help=docs.BATCH_ID),
     attributes: list[str] = typer.Option(
         [],
         "--attribute",
         "-a",
-        help="Batch attribute as key=value. Can be specified multiple times.",
+        help=docs.ATTRIBUTES,
     ),
 ) -> None:
     """
-    Quarantines a failed batch, isolating it until it is manually replayed.
+    Quarantines a batch produced by this job.
+
+    Quarantined batches are excluded from the backlog until they are
+    explicitly replayed.
     """
     announce(job)
     app: TiozinApp = ctx.obj
