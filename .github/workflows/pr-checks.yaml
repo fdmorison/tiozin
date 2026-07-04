@@ -8,10 +8,15 @@ permissions:
   pull-requests: read
 
 jobs:
-  validate-pr-title:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate PR title
+      - name: Setup environment
+        uses: fdmorison/tiozin/.github/actions/setup-env@main
+        with:
+          fetch-depth: 0
+
+      - name: Check PR Title
         uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,19 +40,11 @@ jobs:
             claude
           requireScope: true
 
-  validate-commits:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate commits
+      - name: Check Commits
         uses: wagoid/commitlint-github-action@v6
 
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup environment
-        uses: fdmorison/tiozin/.github/actions/setup-env@main
-        with:
-          fetch-depth: 0
+      - name: Check Release Intent
+        uses: fdmorison/tiozin/.github/actions/check-release-intent@main
 
       - name: Install Dependencies
         run: make install-dev
@@ -57,16 +54,3 @@ jobs:
 
       - name: Tests
         run: make test
-
-      - name: Validate release intent
-        run: |
-          set -e
-          VALID_RELEASE_COMMIT='^(feat|fix|perf|refactor|chore)(\(.+\))?!?:'
-          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=%s)
-
-          if ! echo "$COMMITS" | grep -Eq "$VALID_RELEASE_COMMIT"; then
-            echo "❌ PR must include at least one release-impacting commit (feat/fix/perf/refactor)"
-            exit 1
-          fi
-
-          echo "✅ Release intent detected"

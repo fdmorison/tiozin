@@ -1,0 +1,32 @@
+name: "Check release intent"
+description: "Fails if the PR title's release-impacting type disagrees with whether production code changed"
+
+runs:
+  using: composite
+  steps:
+    - name: Detect release-triggering paths
+      id: filter
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          release:
+            - 'tiozin/**/*.py'
+            - 'pyproject.toml'
+
+    - name: Validate release intent
+      uses: actions/github-script@v7
+      env:
+        TOUCHED_PRODUCTION: ${{ steps.filter.outputs.release }}
+      with:
+        script: |
+          const RELEASE_IMPACTING_TYPE = /^(feat|fix|perf|refactor|chore)(\(.+\))?!?:/;
+
+          const title = context.payload.pull_request.title;
+          const titleImpactsRelease = RELEASE_IMPACTING_TYPE.test(title);
+          const codeImpactsRelease = process.env.TOUCHED_PRODUCTION === "true";
+
+          if (titleImpactsRelease === codeImpactsRelease) {
+            console.log("✅ Title and code changes agree on release impact");
+            return;
+          }
+          core.setFailed(`PR title and the files it touches disagree on release impact`);
