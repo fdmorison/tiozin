@@ -100,6 +100,7 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
             registry.warning("The batch was already PENDING.")
 
         batch.status = batch.status.to_pending(failfast=registry.failfast)
+        batch.failure_count = 0
         batch.updated_at = utcnow()
         batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.replay(batch)

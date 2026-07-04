@@ -541,18 +541,3 @@ def test_replay_should_return_self(current, fake_domain):
 
     # Assert
     assert actual is state
-
-
-@patch("tiozin.api.context.Context.current")
-def test_replay_should_reset_failure_count(current, fake_domain):
-    # Arrange
-    current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC), failure_count=3)
-
-    # Act
-    state.replay()
-
-    # Assert
-    actual = state.failure_count
-    expected = 0
-    assert actual == expected

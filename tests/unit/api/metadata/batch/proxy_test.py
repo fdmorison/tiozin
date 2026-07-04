@@ -557,6 +557,21 @@ def test_replay_should_not_warn_when_batch_is_not_pending(registry, state):
     registry.warning.assert_not_called()
 
 
+def test_replay_should_reset_failure_count(registry, state):
+    # Arrange
+    state.status = BatchStatus.SUCCEEDED
+    state.failure_count = 3
+    proxy = BatchRegistryProxy(registry)
+
+    # Act
+    proxy.replay(state)
+
+    # Assert
+    actual = state.failure_count
+    expected = 0
+    assert actual == expected
+
+
 def test_replay_should_raise_transition_error_when_transition_is_invalid(registry, state):
     # Arrange
     state.status = BatchStatus.RUNNING
