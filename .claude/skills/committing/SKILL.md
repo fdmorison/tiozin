@@ -46,8 +46,6 @@ user-invocable: true
 
 ## Workflow
 
-1. Temporarily stash files the user asked not to commit.
-2. Run `make format`.
-3. Review all remaining uncommitted changes, including any changes introduced by formatting.
-4. Create the required commits.
-5. Restore the stashed files to their original state.
+1. Run `make format`.
+2. Review all remaining uncommitted changes.
+3. Create the required commits.

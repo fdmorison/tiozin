@@ -31,6 +31,7 @@ The audience is Python developers who are new to the framework and are reading d
 - When a class name appears in prose, link it to its reference page if one exists. Do not link class names inside code blocks.
 - When writing about an external engine, framework, standard, or technology (e.g., Spark, Iceberg, OpenLineage, Parquet), include a link to its official documentation. Never remove existing links to official external documentation.
 - Never document behavior, defaults, APIs, features, or configuration that are not verified against source code or tests.
+- When documenting a component built on an external engine or standard (Iceberg, Spark, OpenLineage, etc.), describe what Tiozin does with it and how its parameters map to that behavior. Do not restate the engine's own generic mechanics — link to its official docs for that instead.
 - Code blocks must declare a language (`yaml`, `python`, `bash`).
 - Structure documents using progressive disclosure: each section introduces exactly one new concept and builds on what came before. Start with the minimum a developer needs to be productive; add complexity only after the basics are established.
 - Every example must be minimal, realistic (drawn from `examples/jobs/`), correct (verified against source or tests), and ordered from simplest to most complex. Show rendered output when applicable:
@@ -62,6 +63,7 @@ The audience is Python developers who are new to the framework and are reading d
 - No unexplained jargon: introduce Tiozin-specific terms before using or writing about them.
 - No filler: "It is worth noting that", "In order to", "In this section, we will".
 - No academic framing: "This document describes", "The following section covers".
+- Don't open a section's first sentence by repeating its heading verbatim as the subject ("`catalog_type` selects..." under a heading called `catalog_type`). Rephrase or start from a different angle.
 - No marketing language: "powerful", "seamless", "robust", "intuitive".
 - No condescending qualifiers: "simply", "just", "it's easy", "obviously".
 - No "please" in instructions.
