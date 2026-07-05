@@ -9,7 +9,7 @@ from pyiceberg.table import Table
 
 from tiozin import Batch, BatchStatus
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import utcnow
+from tiozin.utils import prune, utcnow
 
 NATURAL_KEY_FIELDS = (*RESOURCE_FIELDS, "nominal_time")
 
@@ -85,14 +85,16 @@ class IcebergBatchDAO:
         record = batch.model_dump(mode="python")
         record["attributes"] = json.dumps(record["attributes"])
 
-        schema = pa.Table.from_pylist([record]).schema
-        schema = schema.set(
-            schema.get_field_index("id"),
-            schema.field("id").with_nullable(False),
-        )
-
         with self._table.update_schema() as update:
-            update.union_by_name(schema)
+            # Avoid Arrow inferring `null` types.
+            sample = prune(record, dicts=True, lists=True)
+            # Infer newly inferred fields.
+            inferred_schema = pa.Table.from_pylist([sample]).schema
+            inferred_schema = inferred_schema.set(
+                inferred_schema.get_field_index("id"),
+                inferred_schema.field("id").with_nullable(False),
+            )
+            update.union_by_name(inferred_schema)
 
         return pa.Table.from_pylist([record], schema=self._table.schema().as_arrow())
 

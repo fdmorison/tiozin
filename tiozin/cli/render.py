@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ..api import Batch
-from ..utils import human_join, prune
+from ..utils import human_join
 
 console = Console()
 
@@ -11,6 +11,7 @@ BATCH_COLUMNS = (
     "nominal_time",
     "status",
     "failure_count",
+    "state",
     "attributes",
     "created_at",
     "updated_at",
@@ -43,7 +44,8 @@ def render_batches(batches: list[Batch]) -> None:
             batch.nominal_time.isoformat().replace("+00:00", "Z"),
             batch.status.value,
             str(batch.failure_count),
-            str(prune(batch.attributes)),
+            str(batch.state.model_dump(mode="json")),
+            str(batch.attributes),
             batch.created_at.isoformat().replace("+00:00", "Z"),
             batch.updated_at.isoformat().replace("+00:00", "Z"),
         )
