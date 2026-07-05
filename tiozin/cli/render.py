@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ..api import Batch
-from ..utils import human_join
+from ..utils import human_join, prune
 
 console = Console()
 
@@ -43,7 +43,7 @@ def render_batches(batches: list[Batch]) -> None:
             batch.nominal_time.isoformat().replace("+00:00", "Z"),
             batch.status.value,
             str(batch.failure_count),
-            str({k: v for k, v in batch.attributes.items() if v is not None}),
+            str(prune(batch.attributes)),
             batch.created_at.isoformat().replace("+00:00", "Z"),
             batch.updated_at.isoformat().replace("+00:00", "Z"),
         )

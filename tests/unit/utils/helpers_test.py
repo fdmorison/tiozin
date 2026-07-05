@@ -14,6 +14,7 @@ from tiozin.utils import (
     default,
     epoch,
     human_join,
+    prune,
     slugify,
     utcnow,
 )
@@ -367,6 +368,276 @@ def test_as_flat_list_should_sort_sets_for_determinism(values: Any):
 
     # Assert - regardless of set order, output should always be sorted
     assert result == [1, 2, 3, 4, 5]
+
+
+# ============================================================================
+# Testing prune()
+# ============================================================================
+def test_prune_should_remove_root_nulls():
+    # Arrange
+    data = {
+        "a": 1,
+        "b": None,
+        "c": 3,
+    }
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = {"a": 1, "c": 3}
+    assert actual == expected
+
+
+def test_prune_should_remove_nested_nulls():
+    # Arrange
+    data = {
+        "a": {
+            "b": None,
+            "c": {
+                "d": None,
+                "e": 5,
+            },
+        },
+        "f": None,
+    }
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = {
+        "a": {
+            "c": {
+                "e": 5,
+            }
+        }
+    }
+    assert actual == expected
+
+
+def test_prune_should_remove_nested_nulls_from_list_of_dicts():
+    # Arrange
+    data = [
+        {"a": None, "b": 1},
+        {"c": 2, "d": None},
+    ]
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = [
+        {"b": 1},
+        {"c": 2},
+    ]
+    assert actual == expected
+
+
+def test_prune_should_remove_nulls_from_dict_of_list_of_dicts():
+    # Arrange
+    data = {
+        "items": [
+            {"a": None, "b": 1},
+            {"c": 2},
+        ],
+        "x": None,
+    }
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = {
+        "items": [
+            {"b": 1},
+            {"c": 2},
+        ]
+    }
+    assert actual == expected
+
+
+def test_prune_should_preserve_falsy_values():
+    # Arrange
+    data = {
+        "a": 0,
+        "b": False,
+        "c": "",
+        "d": [],
+        "e": {},
+    }
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = {
+        "a": 0,
+        "b": False,
+        "c": "",
+        "d": [],
+        "e": {},
+    }
+    assert actual == expected
+
+
+def test_prune_should_preserve_dict_when_no_nulls():
+    # Arrange
+    data = {"a": 1, "b": 2}
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = {"a": 1, "b": 2}
+    assert actual == expected
+
+
+def test_prune_should_remove_emptied_dict_when_dicts_enabled():
+    # Arrange
+    data = {
+        "a": {"b": None},
+        "c": 1,
+    }
+
+    # Act
+    result = prune(data, dicts=True)
+
+    # Assert
+    actual = result
+    expected = {"c": 1}
+    assert actual == expected
+
+
+def test_prune_should_cascade_emptied_dicts_when_dicts_enabled():
+    # Arrange
+    data = {
+        "a": {
+            "b": {
+                "c": None,
+            },
+        },
+        "d": 1,
+    }
+
+    # Act
+    result = prune(data, dicts=True)
+
+    # Assert
+    actual = result
+    expected = {"d": 1}
+    assert actual == expected
+
+
+def test_prune_should_preserve_non_empty_dict_when_dicts_enabled():
+    # Arrange
+    data = {
+        "a": {"b": 1},
+        "c": 2,
+    }
+
+    # Act
+    result = prune(data, dicts=True)
+
+    # Assert
+    actual = result
+    expected = {"a": {"b": 1}, "c": 2}
+    assert actual == expected
+
+
+def test_prune_should_keep_emptied_list_when_lists_disabled():
+    # Arrange
+    data = {
+        "items": [],
+        "x": 1,
+    }
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = {"items": [], "x": 1}
+    assert actual == expected
+
+
+def test_prune_should_remove_emptied_list_when_dicts_and_lists_enabled():
+    # Arrange
+    data = {
+        "x": [{"a": None}],
+    }
+
+    # Act
+    result = prune(data, dicts=True, lists=True)
+
+    # Assert
+    actual = result
+    expected = {}
+    assert actual == expected
+
+
+def test_prune_should_preserve_none_list_elements_when_lists_enabled():
+    # Arrange
+    data = {
+        "a": [None, None],
+    }
+
+    # Act
+    result = prune(data, lists=True)
+
+    # Assert
+    actual = result
+    expected = {"a": [None, None]}
+    assert actual == expected
+
+
+def test_prune_should_preserve_non_empty_containers_when_dicts_and_lists_enabled():
+    # Arrange
+    data = {
+        "a": {"b": 1},
+        "c": [1, 2],
+    }
+
+    # Act
+    result = prune(data, dicts=True, lists=True)
+
+    # Assert
+    actual = result
+    expected = {"a": {"b": 1}, "c": [1, 2]}
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["scalar", 42, 0, False, None],
+)
+def test_prune_should_return_scalar_unchanged(value: Any):
+    # Act
+    result = prune(value)
+
+    # Assert
+    actual = result
+    expected = value
+    assert actual == expected
+
+
+def test_prune_should_return_list_of_scalars_unchanged():
+    # Arrange
+    data = [1, None, "a"]
+
+    # Act
+    result = prune(data)
+
+    # Assert
+    actual = result
+    expected = [1, None, "a"]
+    assert actual == expected
 
 
 # ============================================================================

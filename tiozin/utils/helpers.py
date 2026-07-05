@@ -116,6 +116,52 @@ def default(value: T | None, default_: T = None) -> T:
     return value
 
 
+def prune(value: T, dicts: bool = False, lists: bool = False) -> T:
+    """
+    Recursively removes keys whose value is ``None`` from dicts.
+
+    Descends into nested dicts and into dicts nested inside lists. List elements
+    that are ``None`` are never removed; only dict keys are subject to removal.
+
+    Args:
+        value: The value to clean. Typically a dict or a list of dicts.
+        dicts: If True, also removes dicts that become empty after pruning.
+        lists: If True, also removes lists that become empty after pruning.
+
+    Returns:
+        A copy of ``value`` with all ``None``-valued dict keys removed.
+
+    Examples:
+        >>> prune({"a": 1, "b": None})
+        {"a": 1}
+        >>> prune({"a": {"b": None, "c": 2}})
+        {"a": {"c": 2}}
+        >>> prune([{"a": None, "b": 1}, {"c": 2}])
+        [{"b": 1}, {"c": 2}]
+        >>> prune({"a": {"b": None}, "c": 1}, dicts=True)
+        {"c": 1}
+    """
+
+    def should_remove(item) -> bool:
+        if dicts and isinstance(item, Mapping) and not item:
+            return True
+        if lists and isinstance(item, list) and not item:
+            return True
+        return False
+
+    if isinstance(value, Mapping):
+        return {
+            key: pruned
+            for key, item in value.items()
+            if item is not None and not should_remove(pruned := prune(item, dicts, lists))
+        }
+
+    if isinstance(value, list):
+        return [pruned for item in value if not should_remove(pruned := prune(item, dicts, lists))]
+
+    return value
+
+
 def as_list(
     value: T | list[T] | tuple[T, ...],
     default_: T | list[T] | tuple[T, ...] | None = None,
