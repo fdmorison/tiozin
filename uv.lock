@@ -2277,6 +2277,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pyarrow-stubs"
+version = "20.0.0.20260625"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyarrow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ff/7d/a3eadf94131428ec61b44bc40a52acca2b093bf0f6a90a0596c44aa9fe62/pyarrow_stubs-20.0.0.20260625.tar.gz", hash = "sha256:cae81ae0900d0710e5b8a6271fef34ccfacb08663bb5f805d94f129baf13130e", size = 237707, upload-time = "2026-06-25T07:27:47.496Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/29/65/00bb68d5951a1b758646fd33bca1735aebb6d9ed7184f260e1c1d17e6d97/pyarrow_stubs-20.0.0.20260625-py3-none-any.whl", hash = "sha256:26d8b6c0fa9d61ae49ad70d59988d8b88e2fe022cd782dd3333bcd33e6066486", size = 235701, upload-time = "2026-06-25T07:27:48.793Z" },
+]
+
+[[package]]
 name = "pyasn1"
 version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3119,6 +3131,7 @@ dev = [
     { name = "pre-commit" },
     { name = "psycopg2-binary" },
     { name = "pyarrow" },
+    { name = "pyarrow-stubs" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -3127,6 +3140,7 @@ dev = [
 ]
 lint = [
     { name = "pre-commit" },
+    { name = "pyarrow-stubs" },
     { name = "ruff" },
 ]
 test = [
@@ -3180,6 +3194,7 @@ dev = [
     { name = "pre-commit", specifier = "==4.3.0" },
     { name = "psycopg2-binary", specifier = "==2.9.11" },
     { name = "pyarrow", specifier = "==23.0.0" },
+    { name = "pyarrow-stubs", specifier = ">=20.0.0.20260625" },
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "ruff", specifier = "==0.14.10" },
@@ -3188,6 +3203,7 @@ dev = [
 ]
 lint = [
     { name = "pre-commit", specifier = "==4.3.0" },
+    { name = "pyarrow-stubs", specifier = ">=20.0.0.20260625" },
     { name = "ruff", specifier = "==0.14.10" },
 ]
 test = [
