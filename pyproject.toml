@@ -83,6 +83,7 @@ test = [
 lint = [
   "ruff ==0.14.10",
   "pre-commit ==4.3.0",
+  "pyarrow-stubs>=20.0.0.20260625",
 ]
 
 [project.scripts]
