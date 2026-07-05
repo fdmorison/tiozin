@@ -32,6 +32,42 @@ def test_register_should_persist_all_fields(registry: IcebergBatchRegistry, fake
     assert actual == expected
 
 
+def test_register_should_persist_attributes(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        attributes={"extra1": "value1", "existing1": "value2"},
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    actual = registry.get_latest(**fake_domain).attributes
+    expected = {"extra1": "value1", "existing1": "value2"}
+    assert actual == expected
+
+
+def test_register_should_persist_attributes_with_none_value(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        attributes={"extra1": None},
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    actual = registry.get_latest(**fake_domain).attributes
+    expected = {"extra1": None}
+    assert actual == expected
+
+
 def test_register_should_raise_when_natural_key_already_exists(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):

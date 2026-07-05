@@ -8,8 +8,7 @@ from pyiceberg.table import Table
 
 from tiozin import Batch, BatchStatus
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
-from tiozin.utils import utcnow
+from tiozin.utils import prune, utcnow
 
 NATURAL_KEY_FIELDS = (*RESOURCE_FIELDS, "nominal_time")
 
@@ -18,23 +17,27 @@ class IcebergBatchDAO:
     def __init__(self, table: Table) -> None:
         self._table = table
 
-    def insert(self, batch: Batch) -> None:
+    def insert(self, batch: Batch) -> int:
         result = self._table.upsert(
             df=self._to_arrow(batch),
             join_cols=list(NATURAL_KEY_FIELDS),
             when_matched_update_all=False,
         )
-        if result.rows_inserted == 0:
-            raise BatchAlreadyExistsError(batch=batch)
+        return result.rows_inserted
 
-    def update(self, batch: Batch) -> None:
+    def update(self, batch: Batch) -> int:
         result = self._table.upsert(
             df=self._to_arrow(batch),
             join_cols=[*RESOURCE_FIELDS, "id"],
             when_not_matched_insert_all=False,
         )
-        if result.rows_updated == 0:
-            raise BatchNotFoundError(batch=batch)
+        return result.rows_updated
+
+    def find(self, id: str, **fields) -> Batch | None:
+        df = self._scan(id=id, **fields)
+        if not len(df):
+            return None
+        return Batch(**df.to_pylist()[0])
 
     def find_latest(self, **fields) -> Batch | None:
         df = self._scan(**fields)
@@ -67,6 +70,7 @@ class IcebergBatchDAO:
 
     def _to_arrow(self, batch: Batch) -> pa.Table:
         record = batch.model_dump(mode="python")
+        record = prune(record, dicts=True, lists=True)
         schema = pa.Table.from_pylist([record]).schema
         schema = schema.set(
             schema.get_field_index("id"),

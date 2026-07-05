@@ -5,9 +5,10 @@ from pyiceberg.catalog import load_catalog
 from pyiceberg.table.sorting import NullOrder, SortDirection, SortField, SortOrder
 from typing_extensions import Unpack
 
+from tiozin import BatchStatus
 from tiozin.api import Batch, BatchRegistry
-from tiozin.api.metadata.batch.status import BatchStatus
 from tiozin.api.typehint import ResourceKwargs
+from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
 from tiozin.utils import default
 from tiozin.utils.io import mkdirs
 
@@ -95,31 +96,44 @@ class IcebergBatchRegistry(BatchRegistry):
         }
 
     def register(self, batch: Batch) -> Batch:
-        self._dao.insert(batch)
+        if self._dao.insert(batch) == 0:
+            raise BatchAlreadyExistsError(batch=batch)
         return batch
 
     def begin(self, batch: Batch) -> Batch:
-        self._dao.update(batch)
+        if self._dao.update(batch) == 0:
+            raise BatchNotFoundError(batch=batch)
         return batch
 
     def commit(self, batch: Batch) -> Batch:
-        self._dao.update(batch)
+        if self._dao.update(batch) == 0:
+            raise BatchNotFoundError(batch=batch)
         return batch
 
     def fail(self, batch: Batch) -> Batch:
-        self._dao.update(batch)
+        if self._dao.update(batch) == 0:
+            raise BatchNotFoundError(batch=batch)
         return batch
 
     def cancel(self, batch: Batch) -> Batch:
-        self._dao.update(batch)
+        if self._dao.update(batch) == 0:
+            raise BatchNotFoundError(batch=batch)
         return batch
 
     def quarantine(self, batch: Batch) -> Batch:
-        self._dao.update(batch)
+        if self._dao.update(batch) == 0:
+            raise BatchNotFoundError(batch=batch)
         return batch
 
     def replay(self, batch: Batch) -> Batch:
-        self._dao.update(batch)
+        if self._dao.update(batch) == 0:
+            raise BatchNotFoundError(batch=batch)
+        return batch
+
+    def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch:
+        batch = self._dao.find(id=id, **resource)
+        if not batch:
+            raise BatchNotFoundError(batch=id)
         return batch
 
     def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
