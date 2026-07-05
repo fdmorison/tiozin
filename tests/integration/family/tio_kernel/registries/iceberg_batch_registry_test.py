@@ -22,7 +22,14 @@ def registry(tmp_path: Path):
 # ============================================================================
 def test_register_should_persist_all_fields(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(
+            start=datetime(2026, 1, 14, tzinfo=UTC),
+            end=datetime(2026, 1, 15, tzinfo=UTC),
+        ),
+    )
 
     # Act
     registry.register(state)
@@ -84,7 +91,9 @@ def test_register_should_raise_when_natural_key_already_exists(
 # ============================================================================
 # state
 # ============================================================================
-def test_register_should_persist_default_state(registry: IcebergBatchRegistry, fake_domain: dict):
+def test_register_should_persist_default_start_and_watermark_as_epoch(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
     # Arrange
     state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
 
@@ -93,9 +102,27 @@ def test_register_should_persist_default_state(registry: IcebergBatchRegistry, f
 
     # Assert
     result = registry.get_latest(**fake_domain).state
-    actual = (result.start, result.end, result.watermark)
-    expected = (None, None, None)
+    actual = (result.start, result.watermark)
+    expected = (
+        datetime(1970, 1, 1, tzinfo=UTC),
+        datetime(1970, 1, 1, tzinfo=UTC),
+    )
     assert actual == expected
+
+
+def test_register_should_persist_default_end_as_registration_time(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    before = datetime.now(UTC).replace(second=0, microsecond=0)
+    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    result = registry.get_latest(**fake_domain).state
+    assert before <= result.end <= datetime.now(UTC)
 
 
 def test_register_should_persist_state_window(registry: IcebergBatchRegistry, fake_domain: dict):
@@ -334,7 +361,12 @@ def test_get_backlog_should_return_ongoing_states(
     registry: IcebergBatchRegistry, fake_domain: dict, status: BatchStatus
 ):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC), status=status)
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        status=status,
+        state=BatchState(end=datetime(2026, 1, 15, tzinfo=UTC)),
+    )
     registry.register(state)
 
     # Act
@@ -350,13 +382,22 @@ def test_get_backlog_should_return_all_ongoing_states(
 ):
     # Arrange
     pending = Batch(
-        **fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC), status=BatchStatus.PENDING
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        status=BatchStatus.PENDING,
+        state=BatchState(end=datetime(2026, 1, 15, tzinfo=UTC)),
     )
     failed = Batch(
-        **fake_domain, nominal_time=datetime(2026, 1, 16, tzinfo=UTC), status=BatchStatus.FAILED
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 16, tzinfo=UTC),
+        status=BatchStatus.FAILED,
+        state=BatchState(end=datetime(2026, 1, 16, tzinfo=UTC)),
     )
     running = Batch(
-        **fake_domain, nominal_time=datetime(2026, 1, 17, tzinfo=UTC), status=BatchStatus.RUNNING
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 17, tzinfo=UTC),
+        status=BatchStatus.RUNNING,
+        state=BatchState(end=datetime(2026, 1, 17, tzinfo=UTC)),
     )
     registry.register(pending)
     registry.register(failed)
@@ -423,6 +464,7 @@ def test_get_history_should_return_registered_batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
         created_at=datetime(2026, 6, 1, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 15, tzinfo=UTC)),
     )
     registry.register(state)
 
@@ -442,16 +484,19 @@ def test_get_history_should_return_batches_ordered_by_created_at_descending(
         **fake_domain,
         nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
         created_at=datetime(2026, 6, 1, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 10, tzinfo=UTC)),
     )
     middle = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
         created_at=datetime(2026, 6, 2, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 11, tzinfo=UTC)),
     )
     newest = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 12, tzinfo=UTC),
         created_at=datetime(2026, 6, 3, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 12, tzinfo=UTC)),
     )
     registry.register(oldest)
     registry.register(middle)
@@ -471,16 +516,19 @@ def test_get_history_should_truncate_to_limit(registry: IcebergBatchRegistry, fa
         **fake_domain,
         nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
         created_at=datetime(2026, 6, 1, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 10, tzinfo=UTC)),
     )
     middle = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
         created_at=datetime(2026, 6, 2, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 11, tzinfo=UTC)),
     )
     newest = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 12, tzinfo=UTC),
         created_at=datetime(2026, 6, 3, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 12, tzinfo=UTC)),
     )
     registry.register(oldest)
     registry.register(middle)
@@ -502,11 +550,13 @@ def test_get_history_should_exclude_batches_older_than_since(
         **fake_domain,
         nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
         created_at=datetime(2026, 5, 1, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 10, tzinfo=UTC)),
     )
     newer = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
         created_at=datetime(2026, 6, 1, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 11, tzinfo=UTC)),
     )
     registry.register(older)
     registry.register(newer)
@@ -526,11 +576,13 @@ def test_get_history_should_scope_to_resource(registry: IcebergBatchRegistry, fa
         **fake_domain,
         nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
         created_at=datetime(2026, 6, 1, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 10, tzinfo=UTC)),
     )
     other = Batch(
         **other_domain,
         nominal_time=datetime(2026, 1, 11, tzinfo=UTC),
         created_at=datetime(2026, 6, 2, tzinfo=UTC),
+        state=BatchState(end=datetime(2026, 1, 11, tzinfo=UTC)),
     )
     registry.register(target)
     registry.register(other)

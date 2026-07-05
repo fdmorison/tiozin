@@ -11,11 +11,14 @@ from tiozin.exceptions.misc import ModelError
 
 EXPLICIT_ID = "explicit-id-1234"
 
+# Default nominal_time for a test batch, and the value reassignment tests
+# attempt to set on frozen/mutable fields.
+NOMINAL_TIME = datetime(2026, 1, 15, tzinfo=UTC)
+REASSIGNED_TIME = datetime(2026, 2, 1, tzinfo=UTC)
+
 # Time constants for the acquire flow, named after their semantic role.
-# Every value the domain produces is minute-truncated, so these are the
-# canonical (already :00) forms. Tests that prove truncation feed a dirty,
-# sub-minute input inline (e.g. PREVIOUS_END.replace(second=45)) and assert
-# against the canonical constant.
+# Context always exposes a minute-truncated nominal_time, so these are the
+# canonical (already :00) forms.
 PREVIOUS_START = datetime(2026, 1, 15, tzinfo=UTC)
 PREVIOUS_END = datetime(2026, 1, 15, 10, 30, tzinfo=UTC)
 CURRENT_START = datetime(2026, 1, 17, tzinfo=UTC)
@@ -26,12 +29,9 @@ CURRENT_NOMINAL_TIME = datetime(2026, 1, 16, 8, 15, tzinfo=UTC)
 # construction / validation
 # ============================================================================
 def test_id_should_be_chronologically_sortable_when_not_provided(fake_domain: dict):
-    # Arrange
-    nominal_time = datetime(2026, 1, 15, tzinfo=UTC)
-
-    # Act
-    first = Batch(**fake_domain, nominal_time=nominal_time)
-    second = Batch(**fake_domain, nominal_time=nominal_time)
+    # Arrange / Act
+    first = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+    second = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Assert
     assert second.id > first.id
@@ -39,10 +39,10 @@ def test_id_should_be_chronologically_sortable_when_not_provided(fake_domain: di
 
 def test_id_should_be_preserved_when_provided(fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC), id=EXPLICIT_ID)
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, id=EXPLICIT_ID)
 
     # Act
-    actual = state.id
+    actual = batch.id
 
     # Assert
     expected = EXPLICIT_ID
@@ -51,10 +51,10 @@ def test_id_should_be_preserved_when_provided(fake_domain: dict):
 
 def test_status_should_default_to_pending(fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.status
+    actual = batch.status
 
     # Assert
     expected = BatchStatus.PENDING
@@ -63,10 +63,10 @@ def test_status_should_default_to_pending(fake_domain: dict):
 
 def test_failure_count_should_default_to_zero(fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.failure_count
+    actual = batch.failure_count
 
     # Assert
     expected = 0
@@ -75,10 +75,10 @@ def test_failure_count_should_default_to_zero(fake_domain: dict):
 
 def test_attributes_should_default_to_empty_dict(fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.attributes
+    actual = batch.attributes
 
     # Assert
     expected = {}
@@ -90,7 +90,7 @@ def test_batch_should_raise_when_failure_count_is_negative(fake_domain: dict):
     with pytest.raises(ModelError):
         Batch(
             **fake_domain,
-            nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+            nominal_time=NOMINAL_TIME,
             failure_count=-1,
         )
 
@@ -109,17 +109,17 @@ def test_batch_should_raise_when_failure_count_is_negative(fake_domain: dict):
         ("layer", "silver"),
         ("product", "leads"),
         ("model", "contacts"),
-        ("nominal_time", datetime(2026, 2, 1, tzinfo=UTC)),
-        ("created_at", datetime(2026, 2, 1, tzinfo=UTC)),
+        ("nominal_time", REASSIGNED_TIME),
+        ("created_at", REASSIGNED_TIME),
     ],
 )
 def test_batch_should_raise_when_frozen_field_is_reassigned(field, value, fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act / Assert
     with pytest.raises(ValidationError):
-        setattr(state, field, value)
+        setattr(batch, field, value)
 
 
 @pytest.mark.parametrize(
@@ -128,18 +128,18 @@ def test_batch_should_raise_when_frozen_field_is_reassigned(field, value, fake_d
         ("status", BatchStatus.SUCCEEDED),
         ("failure_count", 3),
         ("attributes", {"extra1": "value1"}),
-        ("updated_at", datetime(2026, 2, 1, tzinfo=UTC)),
+        ("updated_at", REASSIGNED_TIME),
     ],
 )
 def test_batch_should_reassign_when_mutable_field_is_set(field, value, fake_domain: dict):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    setattr(state, field, value)
+    setattr(batch, field, value)
 
     # Assert
-    actual = getattr(state, field)
+    actual = getattr(batch, field)
     expected = value
     assert actual == expected
 
@@ -149,7 +149,7 @@ def test_batch_should_reassign_when_mutable_field_is_set(field, value, fake_doma
 # ============================================================================
 def test_domain_key_should_return_domain_fields():
     # Arrange
-    state = Batch(
+    batch = Batch(
         org="acme",
         region="us-east",
         domain="sales",
@@ -157,11 +157,11 @@ def test_domain_key_should_return_domain_fields():
         layer="bronze",
         product="catalog",
         model="products",
-        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        nominal_time=NOMINAL_TIME,
     )
 
     # Act
-    actual = state.domain_key
+    actual = batch.domain_key
 
     # Assert
     expected = ("acme", "us-east", "sales", "orders")
@@ -170,7 +170,7 @@ def test_domain_key_should_return_domain_fields():
 
 def test_product_key_should_return_product_fields():
     # Arrange
-    state = Batch(
+    batch = Batch(
         org="acme",
         region="us-east",
         domain="sales",
@@ -178,11 +178,11 @@ def test_product_key_should_return_product_fields():
         layer="bronze",
         product="catalog",
         model="products",
-        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        nominal_time=NOMINAL_TIME,
     )
 
     # Act
-    actual = state.product_key
+    actual = batch.product_key
 
     # Assert
     expected = ("bronze", "catalog", "products")
@@ -191,7 +191,7 @@ def test_product_key_should_return_product_fields():
 
 def test_resource_key_should_return_domain_and_product_fields():
     # Arrange
-    state = Batch(
+    batch = Batch(
         org="acme",
         region="us-east",
         domain="sales",
@@ -199,11 +199,11 @@ def test_resource_key_should_return_domain_and_product_fields():
         layer="bronze",
         product="catalog",
         model="products",
-        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        nominal_time=NOMINAL_TIME,
     )
 
     # Act
-    actual = state.resource_key
+    actual = batch.resource_key
 
     # Assert
     expected = ("acme", "us-east", "sales", "orders", "bronze", "catalog", "products")
@@ -212,7 +212,7 @@ def test_resource_key_should_return_domain_and_product_fields():
 
 def test_natural_key_should_return_resource_fields_and_nominal_time():
     # Arrange
-    state = Batch(
+    batch = Batch(
         org="acme",
         region="us-east",
         domain="sales",
@@ -220,11 +220,11 @@ def test_natural_key_should_return_resource_fields_and_nominal_time():
         layer="bronze",
         product="catalog",
         model="products",
-        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        nominal_time=NOMINAL_TIME,
     )
 
     # Act
-    actual = state.natural_key
+    actual = batch.natural_key
 
     # Assert
     expected = (
@@ -235,7 +235,7 @@ def test_natural_key_should_return_resource_fields_and_nominal_time():
         "bronze",
         "catalog",
         "products",
-        datetime(2026, 1, 15, tzinfo=UTC).replace(second=0, microsecond=0).isoformat(),
+        NOMINAL_TIME.replace(second=0, microsecond=0).isoformat(),
     )
     assert actual == expected
 
@@ -248,26 +248,26 @@ def test_register_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.batch = registry
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.register()
+    batch.register()
 
     # Assert
-    registry.register.assert_called_once_with(state)
+    registry.register.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.context.Context.current")
 def test_register_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.register()
+    actual = batch.register()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 # ============================================================================
@@ -278,26 +278,26 @@ def test_begin_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.batch = registry
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.begin(extra1="value1")
+    batch.begin(extra1="value1")
 
     # Assert
-    registry.begin.assert_called_once_with(state)
+    registry.begin.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.context.Context.current")
 def test_begin_should_merge_attributes_into_state(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.begin(extra1="value1")
+    batch.begin(extra1="value1")
 
     # Assert
-    actual = state.attributes
+    actual = batch.attributes
     expected = {"extra1": "value1"}
     assert actual == expected
 
@@ -306,13 +306,13 @@ def test_begin_should_merge_attributes_into_state(current, fake_domain):
 def test_begin_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.begin()
+    actual = batch.begin()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 # ============================================================================
@@ -323,26 +323,26 @@ def test_commit_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.batch = registry
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.commit(extra1="value1")
+    batch.commit(extra1="value1")
 
     # Assert
-    registry.commit.assert_called_once_with(state)
+    registry.commit.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.context.Context.current")
 def test_commit_should_merge_attributes_into_state(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.commit(extra1="value1")
+    batch.commit(extra1="value1")
 
     # Assert
-    actual = state.attributes
+    actual = batch.attributes
     expected = {"extra1": "value1"}
     assert actual == expected
 
@@ -351,13 +351,13 @@ def test_commit_should_merge_attributes_into_state(current, fake_domain):
 def test_commit_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.commit()
+    actual = batch.commit()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 # ============================================================================
@@ -367,26 +367,26 @@ def test_commit_should_return_self(current, fake_domain):
 def test_fail_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.fail(extra1="value1")
+    batch.fail(extra1="value1")
 
     # Assert
-    registry.return_value.fail.assert_called_once_with(state)
+    registry.return_value.fail.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.metadata.batch.model.Batch._registry")
 def test_fail_should_merge_attributes_into_batch(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.fail(extra1="value1")
+    batch.fail(extra1="value1")
 
     # Assert
-    actual = state.attributes
+    actual = batch.attributes
     expected = {"extra1": "value1"}
     assert actual == expected
 
@@ -395,26 +395,26 @@ def test_fail_should_merge_attributes_into_batch(registry: MagicMock, fake_domai
 def test_fail_should_return_self(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.fail()
+    actual = batch.fail()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 @patch("tiozin.api.context.Context.current")
 def test_fail_should_increment_failure_count(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.fail()
+    batch.fail()
 
     # Assert
-    actual = state.failure_count
+    actual = batch.failure_count
     expected = 1
     assert actual == expected
 
@@ -427,26 +427,26 @@ def test_cancel_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.batch = registry
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.cancel(extra1="value1")
+    batch.cancel(extra1="value1")
 
     # Assert
-    registry.cancel.assert_called_once_with(state)
+    registry.cancel.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.context.Context.current")
 def test_cancel_should_merge_attributes_into_state(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.cancel(extra1="value1")
+    batch.cancel(extra1="value1")
 
     # Assert
-    actual = state.attributes
+    actual = batch.attributes
     expected = {"extra1": "value1"}
     assert actual == expected
 
@@ -455,13 +455,13 @@ def test_cancel_should_merge_attributes_into_state(current, fake_domain):
 def test_cancel_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.cancel()
+    actual = batch.cancel()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 # ============================================================================
@@ -472,26 +472,26 @@ def test_quarantine_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.batch = registry
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.quarantine(extra1="value1")
+    batch.quarantine(extra1="value1")
 
     # Assert
-    registry.quarantine.assert_called_once_with(state)
+    registry.quarantine.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.context.Context.current")
 def test_quarantine_should_merge_attributes_into_state(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.quarantine(extra1="value1")
+    batch.quarantine(extra1="value1")
 
     # Assert
-    actual = state.attributes
+    actual = batch.attributes
     expected = {"extra1": "value1"}
     assert actual == expected
 
@@ -500,13 +500,13 @@ def test_quarantine_should_merge_attributes_into_state(current, fake_domain):
 def test_quarantine_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.quarantine()
+    actual = batch.quarantine()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 # ============================================================================
@@ -517,26 +517,26 @@ def test_replay_should_delegate_to_registry(current, fake_domain):
     # Arrange
     registry = MagicMock()
     current.return_value.registries.batch = registry
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.replay(extra1="value1")
+    batch.replay(extra1="value1")
 
     # Assert
-    registry.replay.assert_called_once_with(state)
+    registry.replay.assert_called_once_with(batch)
 
 
 @patch("tiozin.api.context.Context.current")
 def test_replay_should_merge_attributes_into_state(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    state.replay(extra1="value1")
+    batch.replay(extra1="value1")
 
     # Assert
-    actual = state.attributes
+    actual = batch.attributes
     expected = {"extra1": "value1"}
     assert actual == expected
 
@@ -545,13 +545,13 @@ def test_replay_should_merge_attributes_into_state(current, fake_domain):
 def test_replay_should_return_self(current, fake_domain):
     # Arrange
     current.return_value.registries.batch = MagicMock()
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = state.replay()
+    actual = batch.replay()
 
     # Assert
-    assert actual is state
+    assert actual is batch
 
 
 # ============================================================================
@@ -627,11 +627,11 @@ def test_acquire_should_derive_window_from_previous_end(current, fake_domain):
         status=BatchStatus.SUCCEEDED,
         state=BatchState(
             start=datetime(2026, 1, 14, tzinfo=UTC),
-            end=PREVIOUS_END.replace(second=45),
+            end=PREVIOUS_END,
         ),
     )
     current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_NOMINAL_TIME.replace(second=30)
+    current.return_value.nominal_time = CURRENT_NOMINAL_TIME
     current.return_value.registries.batch.get_latest.return_value = previous
 
     # Act
@@ -647,24 +647,17 @@ def test_acquire_should_derive_window_from_previous_end(current, fake_domain):
 
 
 @patch("tiozin.api.context.Context.current")
-def test_acquire_should_derive_window_from_previous_nominal_time_when_state_end_is_none(
-    current, fake_domain
-):
+def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(current, fake_domain):
     # Arrange
-    previous = Batch(
-        **fake_domain,
-        nominal_time=PREVIOUS_END.replace(second=45),
-        status=BatchStatus.SUCCEEDED,
-    )
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = previous
+    current.return_value.registries.batch.get_latest.return_value = None
 
     # Act
-    actual = Batch.acquire().state.start
+    actual = Batch.acquire().state.end
 
     # Assert
-    expected = PREVIOUS_END
+    expected = CURRENT_START
     assert actual == expected
 
 
@@ -684,7 +677,7 @@ def test_acquire_should_start_from_epoch_when_no_previous_batch(current, fake_do
 
 
 @patch("tiozin.api.context.Context.current")
-def test_acquire_should_leave_watermark_none_when_no_previous_batch(current, fake_domain):
+def test_acquire_should_start_watermark_at_epoch_when_no_previous_batch(current, fake_domain):
     # Arrange
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
@@ -694,5 +687,5 @@ def test_acquire_should_leave_watermark_none_when_no_previous_batch(current, fak
     actual = Batch.acquire().state.watermark
 
     # Assert
-    expected = None
+    expected = datetime(1970, 1, 1, tzinfo=UTC)
     assert actual == expected

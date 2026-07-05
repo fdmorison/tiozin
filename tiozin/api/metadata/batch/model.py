@@ -1,25 +1,20 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Any
 
-from pydantic import AfterValidator, AwareDatetime, Field, field_validator
+from pydantic import AwareDatetime, Field, field_validator
 
 from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
-from tiozin.api.enums import Cadence
-from tiozin.utils import epoch, generate_id, utcnow
+from tiozin.utils import generate_id, utcnow
 
 from ..model import Metadata
 from .state import BatchState
 from .status import BatchStatus
+from .types import NominalTime
 
 if TYPE_CHECKING:
     from tiozin import BatchRegistry
-
-NominalTime = Annotated[
-    AwareDatetime,
-    AfterValidator(Cadence.MINUTE.truncate),
-]
 
 
 class Batch(Metadata):
@@ -73,6 +68,10 @@ class Batch(Metadata):
         failure_count:
             Number of failures since the batch was last replayed. Incremented
             each time the batch fails and reset when the batch is replayed.
+
+        state:
+            Typed processing state of the batch (execution window and
+            watermark), replicated across executions. See `BatchState`.
 
         attributes:
             Arbitrary job-specific metadata associated with the batch. Typical
@@ -174,22 +173,17 @@ class Batch(Metadata):
         resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
         previous = context.registries.batch.get_latest(**resources)
 
-        if previous and not previous.status.is_terminal():
+        if not previous:
+            current_state = BatchState(end=context.nominal_time)
+        elif previous.status.is_terminal():
+            current_state = previous.state.advance_to(context.nominal_time)
+        else:
             return previous
 
-        previous_end = previous.state.end or previous.nominal_time if previous else epoch()
-        current_start = context.nominal_time
-        state = previous.state if previous else BatchState()
-
-        return cls(
+        return Batch(
             **resources,
-            nominal_time=current_start,
-            state=state.model_copy(
-                update={
-                    "start": Cadence.MINUTE.truncate(previous_end),
-                    "end": Cadence.MINUTE.truncate(current_start),
-                }
-            ),
+            nominal_time=context.nominal_time,
+            state=current_state,
         ).register()
 
     def __str__(self) -> str:

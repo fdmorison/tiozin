@@ -3,14 +3,17 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from pydantic import (
-    AwareDatetime,
     BaseModel,
     ConfigDict,
+    Field,
     field_serializer,
     field_validator,
 )
 
-from .watermark import RawWatermark, Watermark, serialize_watermark
+from tiozin.utils.helpers import epoch, utcnow
+
+from .types import NominalTime, Watermark
+from .watermark import RawWatermark, serialize_watermark
 
 
 class BatchState(BaseModel):
@@ -42,9 +45,9 @@ class BatchState(BaseModel):
         validate_assignment=True,
     )
 
-    start: AwareDatetime | None = None
-    end: AwareDatetime | None = None
-    watermark: Watermark | None = None
+    start: NominalTime | None = Field(default_factory=epoch)
+    end: NominalTime | None = Field(default_factory=utcnow)
+    watermark: Watermark | None = Field(default_factory=epoch)
 
     @field_validator("start", "end")
     @classmethod
@@ -56,3 +59,24 @@ class BatchState(BaseModel):
     @field_serializer("watermark")
     def _serialize_watermark(self, value: Watermark) -> RawWatermark:
         return serialize_watermark(value)
+
+    def advance_to(self, end: datetime | None) -> BatchState:
+        """
+        Resolves the next processing state.
+
+        Args:
+            end: New end of the execution window, or `None` to leave the state unchanged.
+
+        Returns:
+            A new state with the execution window advanced and the watermark
+            preserved, or `self` if `end` is `None`.
+        """
+        if not end:
+            return self
+
+        return self.model_copy(
+            update={
+                "start": self.end,
+                "end": end,
+            }
+        )
