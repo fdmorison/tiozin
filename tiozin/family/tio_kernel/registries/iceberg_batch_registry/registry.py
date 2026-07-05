@@ -73,7 +73,7 @@ class IcebergBatchRegistry(BatchRegistry):
         self._dao = None
 
     def _catalog_properties(self) -> dict[str, str]:
-        if self.catalog_type == "sql":
+        if self.catalog_type == "sqlite":
             mkdirs(self.location)
             return {
                 **self.options,
@@ -82,17 +82,16 @@ class IcebergBatchRegistry(BatchRegistry):
                 "warehouse": f"file://{self.location}",
             }
 
-        if self.catalog_type in {"filesystem", "hadoop"}:
+        if self.catalog_type == "rest":
             return {
                 **self.options,
                 "type": self.catalog_type,
-                "warehouse": f"file://{self.location}",
+                "uri": self.location,
             }
 
         return {
             **self.options,
             "type": self.catalog_type,
-            "uri": self.location,
         }
 
     def register(self, batch: Batch) -> Batch:
