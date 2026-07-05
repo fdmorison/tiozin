@@ -24,16 +24,16 @@ class IcebergBatchRegistry(BatchRegistry):
         self,
         location: str = None,
         namespace: str = None,
-        table_name: str = None,
-        catalog_name: str = None,
+        table: str = None,
+        catalog: str = None,
         catalog_type: str = None,
         retention_days: int = None,
         **options,
     ) -> None:
         super().__init__(location=location, **options)
         self.namespace = default(namespace, config.default_namespace)
-        self.table_name = default(table_name, config.default_table_name)
-        self.catalog_name = default(catalog_name, config.default_catalog_name)
+        self.table = default(table, config.default_table)
+        self.catalog = default(catalog, config.default_catalog)
         self.catalog_type = default(catalog_type, config.default_catalog_type)
         self.retention_days = default(retention_days, config.default_snapshot_retention_days)
         self._dao: IcebergBatchDAO = None
@@ -41,9 +41,9 @@ class IcebergBatchRegistry(BatchRegistry):
     @wrapt.synchronized
     def setup(self) -> None:
         namespace = tuple(self.namespace.split("."))
-        table_id = (*namespace, self.table_name)
+        table_id = (*namespace, self.table)
 
-        catalog = load_catalog(self.catalog_name, **self._catalog_properties())
+        catalog = load_catalog(self.catalog, **self._catalog_properties())
         catalog.create_namespace_if_not_exists(namespace)
 
         table = catalog.create_table_if_not_exists(
