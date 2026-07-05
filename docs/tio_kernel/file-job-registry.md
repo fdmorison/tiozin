@@ -14,7 +14,7 @@ registries:
 | Property | Description | Default |
 |---|---|---|
 | `location` | Root path or URI where job manifests are stored | |
-| `**options` | fsspec storage options (credentials, region, etc.) | |
+| Any extra key | Any key not listed above is forwarded to [fsspec](https://filesystem-spec.readthedocs.io/en/latest/) as a storage option, such as credentials or region. Collected internally into `**options` | |
 
 ## location
 
@@ -40,7 +40,9 @@ Absolute paths and URIs passed directly to `tiozin run` are used as-is regardles
 
 ## Storage options
 
-Use `**options` to pass credentials and configuration to fsspec. The accepted keys depend on the storage backend.
+Remote backends such as S3 need credentials and connection settings. To pass one, add it as a key directly under `registries.job`. Any key that is not one of the named parameters (`location`, `readonly`, `cache`, `timeout`, `failfast`) is forwarded unchanged to [fsspec](https://filesystem-spec.readthedocs.io/en/latest/) when the registry reads or writes a manifest. The accepted keys depend on the storage backend.
+
+In the example below, `key`, `secret`, and `client_kwargs` are not named parameters, so they are collected into the registry's `**options` and forwarded to fsspec to authenticate against S3:
 
 ```yaml
 registries:
