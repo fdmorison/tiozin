@@ -43,6 +43,7 @@ class BatchState(BaseModel):
     model_config = ConfigDict(
         extra="ignore",
         validate_assignment=True,
+        validate_default=True,
     )
 
     start: NominalTime | None = Field(default_factory=epoch)
@@ -74,9 +75,4 @@ class BatchState(BaseModel):
         if not end:
             return self
 
-        return self.model_copy(
-            update={
-                "start": self.end,
-                "end": end,
-            }
-        )
+        return BatchState(start=self.end, end=end, watermark=self.watermark)

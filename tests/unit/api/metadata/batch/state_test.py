@@ -39,15 +39,26 @@ def test_state_should_default_watermark_to_epoch():
     assert actual == expected
 
 
-def test_state_should_default_end_to_a_current_utc_time():
+def test_state_should_default_end_to_current_utc_time_truncated_to_minute():
     # Arrange
-    before = datetime.now(UTC)
+    before = datetime.now(UTC).replace(second=0, microsecond=0)
 
     # Act
     result = BatchState()
 
     # Assert
-    assert before <= result.end <= datetime.now(UTC)
+    after = datetime.now(UTC).replace(second=0, microsecond=0)
+    assert before <= result.end <= after
+
+
+def test_state_should_default_end_with_zero_seconds_and_microseconds():
+    # Arrange / Act
+    result = BatchState()
+
+    # Assert
+    actual = (result.end.second, result.end.microsecond)
+    expected = (0, 0)
+    assert actual == expected
 
 
 # ============================================================================
@@ -242,6 +253,23 @@ def test_advance_to_should_not_mutate_the_original_state():
         PREVIOUS_START,
         PREVIOUS_END,
     )
+    assert actual == expected
+
+
+def test_advance_to_should_truncate_end_to_minute():
+    # Arrange
+    previous = BatchState(
+        start=PREVIOUS_START,
+        end=PREVIOUS_END,
+    )
+    dirty_end = datetime(2026, 1, 16, 8, 15, 7, 555, tzinfo=UTC)
+
+    # Act
+    result = previous.advance_to(dirty_end)
+
+    # Assert
+    actual = result.end
+    expected = datetime(2026, 1, 16, 8, 15, tzinfo=UTC)
     assert actual == expected
 
 

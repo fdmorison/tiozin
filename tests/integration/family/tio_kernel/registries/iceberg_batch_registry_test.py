@@ -110,7 +110,7 @@ def test_register_should_persist_default_start_and_watermark_as_epoch(
     assert actual == expected
 
 
-def test_register_should_persist_default_end_as_registration_time(
+def test_register_should_persist_default_end_as_registration_time_truncated_to_minute(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -121,8 +121,9 @@ def test_register_should_persist_default_end_as_registration_time(
     registry.register(state)
 
     # Assert
+    after = datetime.now(UTC).replace(second=0, microsecond=0)
     result = registry.get_latest(**fake_domain).state
-    assert before <= result.end <= datetime.now(UTC)
+    assert before <= result.end <= after
 
 
 def test_register_should_persist_state_window(registry: IcebergBatchRegistry, fake_domain: dict):
