@@ -66,11 +66,6 @@ The audience is reviewers and changelog readers with no prior knowledge of the c
   - Mark an item only if it was respected by the PR
   - If an item does not apply to the PR type, mark it anyway
 
-## Policy
-
-- Always show a preview of the full PR title and body to the user before publishing.
-- Only an explicit approval from the user counts as approval.
-
 ## Phrasing
 
 - Write in English regardless of the language the user is using.
@@ -115,6 +110,5 @@ The audience is reviewers and changelog readers with no prior knowledge of the c
 3. Infer the PR goal based on the change introduced by the diff.
 4. Write the pull request.
 5. Self-review against all rules and fix any violations.
-6. Use `AskUserQuestion` to ask the user whether to publish the PR.
-7. After the user approves, publish the pull request.
-8. Print the pull request URL.
+6. Always show a preview of the full PR title and body to the user before publishing.
+7. Print the pull request URL.
