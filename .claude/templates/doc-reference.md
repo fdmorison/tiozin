@@ -12,7 +12,7 @@ A reference page documents the API and behavior of a specific Tiozin component.
   - accepted values that require documentation;
   - non-obvious component behavior;
   - constraints, side effects, validations, or integrations.
-- Name each section after the documented subject.
+- Name each section after the documented subject. If the subject is a single parameter or field, the heading is that name verbatim (e.g. `## attributes`, `## retention_days`), never a paraphrase (e.g. not `## Attributes storage`).
 - Verify every code example against source code or tests before publishing.
 - Link to reference pages or conceptual pages instead of documenting them again.
 

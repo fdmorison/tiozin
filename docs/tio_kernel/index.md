@@ -12,4 +12,5 @@ All defaults it provides can be overridden by plugins from other families.
 - [EnvSecretRegistry](env-secret-registry.md)
 - [AwsParameterStoreSecretRegistry](aws-parameter-store-secret-registry.md)
 - [OpenLineageRegistry](open-lineage-registry.md)
+- [IcebergBatchRegistry](iceberg-batch-registry.md)
 - [NoOp components](noops.md)
