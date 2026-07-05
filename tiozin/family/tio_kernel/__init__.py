@@ -39,6 +39,7 @@ from .registries.env_secret_registry import EnvSecretRegistry
 from .registries.noop_secret_registry import NoOpSecretRegistry
 from .registries.noop_setting_registry import NoOpSettingRegistry
 from .registries.noop_batch_registry import NoOpBatchRegistry
+from .registries.iceberg_batch_registry.registry import IcebergBatchRegistry
 
 __all__ = [
     "NoOpInput",
@@ -59,4 +60,5 @@ __all__ = [
     "NoOpSecretRegistry",
     "NoOpSettingRegistry",
     "NoOpBatchRegistry",
+    "IcebergBatchRegistry",
 ]

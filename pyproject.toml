@@ -43,6 +43,7 @@ dependencies = [
 
 [project.optional-dependencies]
 tio_kernel = [
+  "pyiceberg[pyarrow,sql-sqlite] >=0.7.0,<1.0.0",
   "boto3 ~=1.38",
   "google-cloud-secret-manager ~=2.23",
 ]
