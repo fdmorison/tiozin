@@ -5,8 +5,8 @@ Field IDs are permanent identifiers embedded in every data file. Once a table ex
 changing or reusing an ID will cause existing data to be misread. To add a new column,
 always assign a new ID higher than all existing ones.
 
-`attributes` starts as an empty struct and evolves at write time via union_by_name,
-so it holds no declared sub-fields here.
+`attributes` is stored as a JSON-encoded string rather than a typed struct, so its
+keys can vary freely between batches without requiring schema evolution.
 
 Next available ID: 15
 """
@@ -18,7 +18,6 @@ from pyiceberg.types import (
     IntegerType,
     NestedField,
     StringType,
-    StructType,
     TimestamptzType,
 )
 
@@ -51,7 +50,7 @@ IcebergBatchSchema = IcebergSchema(
     NestedField(NOMINAL_TIME_INDEX, "nominal_time", TimestamptzType(), required=True),
     NestedField(STATUS_INDEX, "status", StringType(), required=True),
     NestedField(FAILURE_COUNT_INDEX, "failure_count", IntegerType(), required=True),
-    NestedField(ATTRIBUTES_INDEX, "attributes", StructType(), required=True),
+    NestedField(ATTRIBUTES_INDEX, "attributes", StringType(), required=True),
     NestedField(CREATED_AT_INDEX, "created_at", TimestamptzType(), required=True),
     NestedField(UPDATED_AT_INDEX, "updated_at", TimestamptzType(), required=True),
     identifier_field_ids=[ID_INDEX],

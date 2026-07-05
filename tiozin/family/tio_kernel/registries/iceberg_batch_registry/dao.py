@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from functools import reduce
 
@@ -8,7 +9,7 @@ from pyiceberg.table import Table
 
 from tiozin import Batch, BatchStatus
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import prune, utcnow
+from tiozin.utils import utcnow
 
 NATURAL_KEY_FIELDS = (*RESOURCE_FIELDS, "nominal_time")
 
@@ -35,9 +36,7 @@ class IcebergBatchDAO:
 
     def find(self, id: str, **fields) -> Batch | None:
         df = self._scan(id=id, **fields)
-        if not len(df):
-            return None
-        return Batch(**df.to_pylist()[0])
+        return self._to_batch(df)
 
     def find_latest(self, **fields) -> Batch | None:
         df = self._scan(**fields)
@@ -46,15 +45,15 @@ class IcebergBatchDAO:
             return None
 
         max_created_at = pc.max(df["created_at"]).as_py()
-        row = df.filter(pc.equal(df["created_at"], max_created_at)).slice(0, 1)
-        return Batch(**row.to_pylist()[0])
+        df = df.filter(pc.equal(df["created_at"], max_created_at)).slice(0, 1)
+        return self._to_batch(df)
 
     def find_by_status(self, *statuses: BatchStatus, **fields) -> list[Batch]:
         df = self._scan(
             In("status", statuses),
             **fields,
         )
-        return [Batch(**row) for row in df.to_pylist()]
+        return self._to_batches(df)
 
     def find_history(self, limit: int, since: datetime, **fields) -> list[Batch]:
         df = (
@@ -62,15 +61,30 @@ class IcebergBatchDAO:
             .sort_by([("created_at", "descending")])
             .slice(0, limit)
         )
-        return [Batch(**row) for row in df.to_pylist()]
+        return self._to_batches(df)
 
     def expire_snapshots(self, days: int) -> None:
         date = utcnow() - timedelta(days=days)
         self._table.maintenance.expire_snapshots().older_than(date).commit()
 
+    def _to_batch(self, df: pa.Table) -> Batch | None:
+        if not len(df):
+            return None
+        row = df.to_pylist()[0]
+        row["attributes"] = json.loads(row["attributes"])
+        return Batch(**row)
+
+    def _to_batches(self, df: pa.Table) -> list[Batch]:
+        batches = []
+        for row in df.to_pylist():
+            row["attributes"] = json.loads(row["attributes"])
+            batches.append(Batch(**row))
+        return batches
+
     def _to_arrow(self, batch: Batch) -> pa.Table:
         record = batch.model_dump(mode="python")
-        record = prune(record, dicts=True, lists=True)
+        record["attributes"] = json.dumps(record["attributes"])
+
         schema = pa.Table.from_pylist([record]).schema
         schema = schema.set(
             schema.get_field_index("id"),

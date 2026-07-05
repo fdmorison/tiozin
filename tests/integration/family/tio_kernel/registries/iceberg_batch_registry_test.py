@@ -45,7 +45,7 @@ def test_register_should_persist_attributes(registry: IcebergBatchRegistry, fake
 
     # Assert
     actual = registry.get_latest(**fake_domain).attributes
-    expected = {"extra1": "value1", "existing1": "value2"}
+    expected = {"extra1": "value1", "existing1": "value2", "__framework_version": "vtest"}
     assert actual == expected
 
 
@@ -64,7 +64,7 @@ def test_register_should_persist_attributes_with_none_value(
 
     # Assert
     actual = registry.get_latest(**fake_domain).attributes
-    expected = {"extra1": None}
+    expected = {"extra1": None, "__framework_version": "vtest"}
     assert actual == expected
 
 
