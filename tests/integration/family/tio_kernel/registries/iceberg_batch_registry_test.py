@@ -1,9 +1,10 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
-from tiozin.api import Batch, BatchStatus
+from tiozin import Batch, BatchStatus
+from tiozin.api.metadata.batch.state import BatchState
 from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
 from tiozin.family.tio_kernel import IcebergBatchRegistry
 
@@ -45,7 +46,7 @@ def test_register_should_persist_attributes(registry: IcebergBatchRegistry, fake
 
     # Assert
     actual = registry.get_latest(**fake_domain).attributes
-    expected = {"extra1": "value1", "existing1": "value2", "__framework_version": "vtest"}
+    expected = {"extra1": "value1", "existing1": "value2"}
     assert actual == expected
 
 
@@ -64,7 +65,7 @@ def test_register_should_persist_attributes_with_none_value(
 
     # Assert
     actual = registry.get_latest(**fake_domain).attributes
-    expected = {"extra1": None, "__framework_version": "vtest"}
+    expected = {"extra1": None}
     assert actual == expected
 
 
@@ -78,6 +79,100 @@ def test_register_should_raise_when_natural_key_already_exists(
     # Act / Assert
     with pytest.raises(BatchAlreadyExistsError):
         registry.register(state)
+
+
+# ============================================================================
+# state
+# ============================================================================
+def test_register_should_persist_default_state(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    result = registry.get_latest(**fake_domain).state
+    actual = (result.start, result.end, result.watermark)
+    expected = (None, None, None)
+    assert actual == expected
+
+
+def test_register_should_persist_state_window(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(
+            start=datetime(2026, 1, 14, tzinfo=UTC),
+            end=datetime(2026, 1, 15, tzinfo=UTC),
+        ),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    result = registry.get_latest(**fake_domain).state
+    actual = (result.start, result.end)
+    expected = (datetime(2026, 1, 14, tzinfo=UTC), datetime(2026, 1, 15, tzinfo=UTC))
+    assert actual == expected
+
+
+def test_register_should_persist_int_watermark(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(watermark=42),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    result = registry.get_latest(**fake_domain).state.watermark
+    actual = (result, type(result))
+    expected = (42, int)
+    assert actual == expected
+
+
+def test_register_should_persist_date_watermark(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(watermark=date(2026, 1, 15)),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    result = registry.get_latest(**fake_domain).state.watermark
+    actual = (result, type(result))
+    expected = (date(2026, 1, 15), date)
+    assert actual == expected
+
+
+def test_register_should_persist_datetime_watermark(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(watermark=datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC)),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    result = registry.get_latest(**fake_domain).state.watermark
+    actual = (result, type(result))
+    expected = (datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC), datetime)
+    assert actual == expected
 
 
 # ============================================================================

@@ -8,7 +8,7 @@ always assign a new ID higher than all existing ones.
 `attributes` is stored as a JSON-encoded string rather than a typed struct, so its
 keys can vary freely between batches without requiring schema evolution.
 
-Next available ID: 15
+Next available ID: 19
 """
 
 from pyiceberg.partitioning import PartitionField, PartitionSpec
@@ -18,6 +18,7 @@ from pyiceberg.types import (
     IntegerType,
     NestedField,
     StringType,
+    StructType,
     TimestamptzType,
 )
 
@@ -34,9 +35,13 @@ MODEL_INDEX = 8
 NOMINAL_TIME_INDEX = 9
 STATUS_INDEX = 10
 FAILURE_COUNT_INDEX = 11
-ATTRIBUTES_INDEX = 12
-CREATED_AT_INDEX = 13
-UPDATED_AT_INDEX = 14
+STATE_INDEX = 12
+STATE_START_INDEX = 13
+STATE_END_INDEX = 14
+STATE_WATERMARK_INDEX = 15
+ATTRIBUTES_INDEX = 16
+CREATED_AT_INDEX = 17
+UPDATED_AT_INDEX = 18
 
 IcebergBatchSchema = IcebergSchema(
     NestedField(ID_INDEX, "id", StringType(), required=True),
@@ -50,6 +55,16 @@ IcebergBatchSchema = IcebergSchema(
     NestedField(NOMINAL_TIME_INDEX, "nominal_time", TimestamptzType(), required=True),
     NestedField(STATUS_INDEX, "status", StringType(), required=True),
     NestedField(FAILURE_COUNT_INDEX, "failure_count", IntegerType(), required=True),
+    NestedField(
+        STATE_INDEX,
+        "state",
+        StructType(
+            NestedField(STATE_START_INDEX, "start", TimestamptzType(), required=False),
+            NestedField(STATE_END_INDEX, "end", TimestamptzType(), required=False),
+            NestedField(STATE_WATERMARK_INDEX, "watermark", StringType(), required=False),
+        ),
+        required=True,
+    ),
     NestedField(ATTRIBUTES_INDEX, "attributes", StringType(), required=True),
     NestedField(CREATED_AT_INDEX, "created_at", TimestamptzType(), required=True),
     NestedField(UPDATED_AT_INDEX, "updated_at", TimestamptzType(), required=True),

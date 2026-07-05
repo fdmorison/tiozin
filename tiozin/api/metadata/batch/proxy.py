@@ -14,9 +14,6 @@ if TYPE_CHECKING:
     from .model import Batch
     from .registry import BatchRegistry
 
-VERSION_KEY = "__framework_version"
-VERSION_VALUE = f"v{config.app_version}"
-
 
 class BatchRegistryProxy(wrapt.ObjectProxy):
     """
@@ -31,8 +28,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
 
     def register(self, batch: Batch) -> Batch:
         registry: BatchRegistry = self.__wrapped__
-
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.register(batch)
 
     def begin(self, batch: Batch) -> Batch:
@@ -43,7 +38,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
 
         batch.status = batch.status.to_running(failfast=registry.failfast)
         batch.updated_at = utcnow()
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.begin(batch)
 
     def commit(self, batch: Batch) -> Batch:
@@ -54,7 +48,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
 
         batch.status = batch.status.to_succeeded(failfast=registry.failfast)
         batch.updated_at = utcnow()
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.commit(batch)
 
     def fail(self, batch: Batch) -> Batch:
@@ -68,7 +61,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
 
         batch.status = batch.status.to_failed(failfast=registry.failfast)
         batch.updated_at = utcnow()
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.fail(batch)
 
     def cancel(self, batch: Batch) -> Batch:
@@ -79,7 +71,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
 
         batch.status = batch.status.to_canceled(failfast=registry.failfast)
         batch.updated_at = utcnow()
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.cancel(batch)
 
     def quarantine(self, batch: Batch) -> Batch:
@@ -90,7 +81,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
 
         batch.status = batch.status.to_quarantined(failfast=registry.failfast)
         batch.updated_at = utcnow()
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.quarantine(batch)
 
     def replay(self, batch: Batch) -> Batch:
@@ -102,7 +92,6 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
         batch.status = batch.status.to_pending(failfast=registry.failfast)
         batch.failure_count = 0
         batch.updated_at = utcnow()
-        batch.attributes |= {VERSION_KEY: VERSION_VALUE}
         return registry.replay(batch)
 
     def get_history(

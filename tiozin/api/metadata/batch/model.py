@@ -7,13 +7,14 @@ from pydantic import AfterValidator, AwareDatetime, Field, field_validator
 
 from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
 from tiozin.api.enums import Cadence
-from tiozin.utils import generate_id, utcnow
+from tiozin.utils import epoch, generate_id, utcnow
 
 from ..model import Metadata
+from .state import BatchState
 from .status import BatchStatus
 
 if TYPE_CHECKING:
-    from tiozin.api.metadata.batch.registry import BatchRegistry
+    from tiozin import BatchRegistry
 
 NominalTime = Annotated[
     AwareDatetime,
@@ -98,6 +99,7 @@ class Batch(Metadata):
 
     status: BatchStatus = BatchStatus.PENDING
     failure_count: int = Field(0, ge=0)
+    state: BatchState = Field(default_factory=BatchState)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
     created_at: AwareDatetime = Field(default_factory=utcnow, frozen=True)
@@ -163,6 +165,32 @@ class Batch(Metadata):
     @property
     def natural_key(self) -> tuple[str, ...]:
         return (*self.resource_key, self.nominal_time.isoformat())
+
+    @classmethod
+    def acquire(cls) -> Batch:
+        from tiozin.api.context import Context
+
+        context = Context.current()
+        resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
+        previous = context.registries.batch.get_latest(**resources)
+
+        if previous and not previous.status.is_terminal():
+            return previous
+
+        previous_end = previous.state.end or previous.nominal_time if previous else epoch()
+        current_start = context.nominal_time
+        state = previous.state if previous else BatchState()
+
+        return cls(
+            **resources,
+            nominal_time=current_start,
+            state=state.model_copy(
+                update={
+                    "start": Cadence.MINUTE.truncate(previous_end),
+                    "end": Cadence.MINUTE.truncate(current_start),
+                }
+            ),
+        ).register()
 
     def __str__(self) -> str:
         return ".".join(self.natural_key)
