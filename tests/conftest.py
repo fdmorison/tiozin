@@ -17,7 +17,7 @@ from tests.stubs import (
 )
 from tiozin import Context
 from tiozin.api.metadata.bundle import Registries
-from tiozin.api.metadata.setting.model import (
+from tiozin.api.metadata.setting.base import (
     BatchRegistryManifest,
     JobRegistryManifest,
     LineageRegistryManifest,

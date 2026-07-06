@@ -1,4 +1,4 @@
-from tiozin.api.metadata.setting.model import SettingsManifest
+from tiozin.api.metadata.setting.base import SettingsManifest
 from tiozin.api.metadata.setting.registry import SettingRegistry
 
 

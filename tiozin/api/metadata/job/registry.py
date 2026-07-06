@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from ..registry import Registry
-from .model import JobManifest
+from .base import JobManifest
 
 
 class JobRegistry(Registry[JobManifest]):

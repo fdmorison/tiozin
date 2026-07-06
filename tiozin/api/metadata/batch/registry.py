@@ -9,7 +9,7 @@ from tiozin.utils import default
 
 from ...typehint import ResourceKwargs
 from ..registry import Registry
-from .model import Batch
+from .base import Batch
 from .proxy import BatchRegistryProxy
 
 

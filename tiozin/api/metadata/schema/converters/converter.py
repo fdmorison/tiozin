@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic, Self, TypeVar
 
 if TYPE_CHECKING:
-    from ..model import Schema
+    from ..base import Schema
 
 T = TypeVar("T")
 

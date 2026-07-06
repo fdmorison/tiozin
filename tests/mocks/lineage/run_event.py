@@ -1,6 +1,6 @@
 import pendulum
 
-from tiozin.api.metadata.lineage.model import (
+from tiozin.api.metadata.lineage.base import (
     LineageJob,
     LineageParentRun,
     LineageRunEvent,

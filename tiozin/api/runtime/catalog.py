@@ -7,10 +7,10 @@ from tiozin.utils import slugify
 from .dataset import Dataset
 
 if TYPE_CHECKING:
-    from .input import Input
-    from .job import Job
-    from .output import Output
-    from .transform import Transform
+    from .input.base import Input
+    from .job.base import Job
+    from .output.base import Output
+    from .transform.base import Transform
 
     JobOrStep = Job | Transform | Input | Output
     JobOrStepOrStr = JobOrStep | str

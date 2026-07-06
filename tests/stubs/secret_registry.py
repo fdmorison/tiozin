@@ -1,5 +1,5 @@
+from tiozin.api.metadata.secret.base import Secret
 from tiozin.api.metadata.secret.exceptions import SecretNotFoundError
-from tiozin.api.metadata.secret.model import Secret
 from tiozin.api.metadata.secret.registry import SecretRegistry
 
 

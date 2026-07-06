@@ -3,7 +3,7 @@ from abc import abstractmethod
 from tiozin.compose import tioproxy
 
 from ..registry import Registry
-from .model import Secret
+from .base import Secret
 from .proxy import SecretRegistryProxy
 
 

@@ -1,5 +1,5 @@
 from tiozin import Secret
-from tiozin.api.metadata.secret.model import MASK
+from tiozin.api.metadata.secret.base import MASK
 
 # ============================================================================
 # Secret — construction

@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from tiozin.api.metadata.schema.base import Schema
 from tiozin.api.metadata.schema.exceptions import SchemaNotFoundError
-from tiozin.api.metadata.schema.model import Schema
 from tiozin.api.metadata.schema.proxy import SchemaRegistryProxy
 from tiozin.exceptions import RequiredArgumentError
 
