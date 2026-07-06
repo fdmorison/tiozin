@@ -3,8 +3,8 @@ from typing import Generic, TypeVar
 
 from tiozin.compose import tioproxy
 
-from ..tiozin import Tiozin
-from .runner_proxy import RunnerProxy
+from ...tiozin import Tiozin
+from .proxy import RunnerProxy
 
 TPlan = TypeVar("TPlan")
 TSession = TypeVar("TSession")

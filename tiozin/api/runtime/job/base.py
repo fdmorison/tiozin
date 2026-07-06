@@ -8,12 +8,12 @@ from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
 
-from ..tiozin import Tiozin
-from .input import Input
-from .job_proxy import JobProxy
-from .output import Output
-from .runner import Runner
-from .transform import Transform
+from ...tiozin import Tiozin
+from ..input.base import Input
+from ..output.base import Output
+from ..runner.base import Runner
+from ..transform.base import Transform
+from .proxy import JobProxy
 
 if TYPE_CHECKING:
     from tiozin.compose import JobBuilder

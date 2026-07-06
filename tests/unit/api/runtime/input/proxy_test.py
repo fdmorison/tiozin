@@ -6,7 +6,7 @@ from tests.stubs import InputStub, JobStub
 from tiozin import Dataset
 from tiozin.api.context import Context
 from tiozin.api.metadata.bundle import Registries
-from tiozin.api.runtime.input_proxy import InputProxy
+from tiozin.api.runtime.input.proxy import InputProxy
 from tiozin.exceptions import AccessViolationError
 
 

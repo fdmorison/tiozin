@@ -9,15 +9,15 @@ from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import utcnow
 
-from .dataset import Dataset
+from ..dataset import Dataset
 
 if TYPE_CHECKING:
     from tiozin import EtlStep
 
 
-class OutputProxy(wrapt.ObjectProxy):
+class InputProxy(wrapt.ObjectProxy):
     """
-    Wraps an Output to add Tiozin's runtime behavior.
+    Wraps an Input to add Tiozin's runtime behavior.
 
     The wrapped step focuses on ETL logic. The proxy handles everything else:
     context propagation, template rendering, lifecycle hooks, logging, and timing.
@@ -29,7 +29,7 @@ class OutputProxy(wrapt.ObjectProxy):
     def teardown(self) -> None:
         raise AccessViolationError(self)
 
-    def write(self, *data: Dataset) -> Dataset:
+    def read(self) -> Dataset:
         step: EtlStep = self.__wrapped__
         context = Context.for_step(step)
         catalog = context.catalog
@@ -37,11 +37,10 @@ class OutputProxy(wrapt.ObjectProxy):
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
-                step.info("▶️  Starting to write data")
+                step.info("▶️  Starting to read data")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 external = step.external_datasets()
-                unwrapped_data = [Dataset.unwrap(a) for a in data]
 
                 if step.schema_subject:
                     context.output_schema = context.registries.schema.get(
@@ -49,14 +48,14 @@ class OutputProxy(wrapt.ObjectProxy):
                         step.schema_version,
                     )
 
-                catalog.register(step, inputs=[*external.inputs, *data])
+                catalog.register(step, inputs=external.inputs)
                 lineage.run_started(inputs=catalog.get_inputs(step))
 
                 context.setup_at = utcnow()
                 step.setup()
 
                 context.executed_at = utcnow()
-                result = step.write(*unwrapped_data)
+                result = step.read()
 
             except Exception:
                 step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
@@ -74,7 +73,7 @@ class OutputProxy(wrapt.ObjectProxy):
                 )
                 catalog.register(step, output=output_dataset)
                 lineage.run_completed(outputs=catalog.get_outputs(step))
-                return output_dataset.tiozin_data
+                return output_dataset
 
             finally:
                 context.teardown_at = utcnow()

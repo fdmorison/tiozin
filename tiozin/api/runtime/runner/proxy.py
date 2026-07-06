@@ -8,8 +8,8 @@ import wrapt
 
 from tiozin.exceptions import AccessViolationError
 
-from ...compose import TiozinTemplateOverlay
-from .dataset import Dataset
+from ....compose import TiozinTemplateOverlay
+from ..dataset import Dataset
 
 if TYPE_CHECKING:
     from tiozin import Runner

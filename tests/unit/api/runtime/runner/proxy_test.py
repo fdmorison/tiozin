@@ -4,7 +4,7 @@ import pytest
 
 from tiozin.api.context import Context
 from tiozin.api.runtime.dataset import Dataset
-from tiozin.api.runtime.runner_proxy import RunnerProxy
+from tiozin.api.runtime.runner.proxy import RunnerProxy
 from tiozin.exceptions import AccessViolationError
 from tiozin.family.tio_kernel import NoOpRunner
 

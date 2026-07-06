@@ -8,10 +8,10 @@ from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import human_join, utcnow
 
-from ...compose import TiozinTemplateOverlay
+from ....compose import TiozinTemplateOverlay
 
 if TYPE_CHECKING:
-    from .job import Job
+    from .base import Job
 
 
 class JobProxy(wrapt.ObjectProxy):

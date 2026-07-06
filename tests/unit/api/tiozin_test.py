@@ -1,8 +1,8 @@
 import pytest
 
-from tiozin.api.runtime.input_proxy import InputProxy
-from tiozin.api.runtime.output_proxy import OutputProxy
-from tiozin.api.runtime.transform_proxy import TransformProxy
+from tiozin.api.runtime.input.proxy import InputProxy
+from tiozin.api.runtime.output.proxy import OutputProxy
+from tiozin.api.runtime.transform.proxy import TransformProxy
 from tiozin.family.tio_kernel import NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
 
 # ============================================================================

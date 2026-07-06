@@ -5,8 +5,8 @@ from tiozin.api.runtime.dataset import Datasets
 from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
 
-from ..tiozin import Tiozin
-from .input_proxy import InputProxy
+from ...tiozin import Tiozin
+from .proxy import InputProxy
 
 TData = TypeVar("TData")
 

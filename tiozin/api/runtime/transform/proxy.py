@@ -9,7 +9,7 @@ from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import utcnow
 
-from .dataset import Dataset
+from ..dataset import Dataset
 
 if TYPE_CHECKING:
     from tiozin import EtlStep
