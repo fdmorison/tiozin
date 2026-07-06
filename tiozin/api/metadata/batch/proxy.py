@@ -11,7 +11,7 @@ from tiozin.api.typehint import ResourceKwargs
 from tiozin.utils import default, utcnow
 
 if TYPE_CHECKING:
-    from .model import Batch
+    from .base import Batch
     from .registry import BatchRegistry
 
 

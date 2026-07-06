@@ -10,7 +10,7 @@ from tiozin import config
 from tiozin.utils import utcnow
 
 from ..model import Metadata
-from ..schema.model import Schema
+from ..schema.base import Schema
 from .enums import JobType, ProcessingType, RunEventType
 
 if TYPE_CHECKING:

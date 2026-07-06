@@ -6,7 +6,7 @@ from tiozin.compose.templating.template_string import TemplateString
 from tiozin.utils import default
 
 from ..registry import Registry
-from .model import Schema
+from .base import Schema
 from .proxy import SchemaRegistryProxy
 
 

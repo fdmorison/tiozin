@@ -3,14 +3,14 @@ from unittest.mock import ANY
 import pytest
 
 from tiozin.api import Input, Runner
-from tiozin.api.metadata.job.model import (
+from tiozin.api.metadata.job.base import (
     InputManifest,
     OutputManifest,
     RunnerManifest,
     TransformManifest,
 )
 from tiozin.api.metadata.model import Manifest
-from tiozin.api.metadata.setting.model import SchemaRegistryManifest
+from tiozin.api.metadata.setting.base import SchemaRegistryManifest
 from tiozin.compose import TiozinRegistry
 from tiozin.exceptions import (
     PluginConflictError,

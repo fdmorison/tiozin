@@ -1,4 +1,4 @@
-from tiozin.api.metadata.job.model import JobManifest
+from tiozin.api.metadata.job.base import JobManifest
 from tiozin.api.metadata.job.registry import JobRegistry
 
 

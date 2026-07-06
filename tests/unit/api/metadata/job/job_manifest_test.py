@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from tiozin.api.metadata.job.model import (
+from tiozin.api.metadata.job.base import (
     InputManifest,
     JobManifest,
     OutputManifest,

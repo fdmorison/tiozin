@@ -6,7 +6,7 @@ from tiozin.exceptions.base import TiozinUsageError
 from tiozin.exceptions.categories import TiozinConflictError, TiozinNotFoundError
 
 if TYPE_CHECKING:
-    from .model import Batch
+    from .base import Batch
     from .status import BatchStatus
 
 

@@ -8,7 +8,7 @@ from openlineage.client.generated.schema_dataset import SchemaDatasetFacet, Sche
 from .converter import SchemaConverter
 
 if TYPE_CHECKING:
-    from ..model import Schema
+    from ..base import Schema
 
 
 class OpenLineageConverter(SchemaConverter[SchemaDatasetFacet]):

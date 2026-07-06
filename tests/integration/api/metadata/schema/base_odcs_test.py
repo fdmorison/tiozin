@@ -2,7 +2,7 @@ from pathlib import Path
 
 from open_data_contract_standard.model import SchemaObject
 
-from tiozin.api.metadata.schema.model import Schema
+from tiozin.api.metadata.schema.base import Schema
 from tiozin.utils import load_yaml
 
 _TIOZIN_SCHEMA_YAML = Path("tests/mocks/schemas/user/tiozin.odcs.yaml").read_text()

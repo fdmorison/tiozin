@@ -1,7 +1,7 @@
 from tiozin.api import Registry, SettingRegistry
 from tiozin.api.loggable import Loggable
 from tiozin.api.metadata.bundle import Registries
-from tiozin.api.metadata.setting.model import SettingRegistryManifest
+from tiozin.api.metadata.setting.base import SettingRegistryManifest
 from tiozin.compose.assembly.tiozin_registry import tiozin_registry
 
 

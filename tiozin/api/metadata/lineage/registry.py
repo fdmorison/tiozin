@@ -5,8 +5,8 @@ from tiozin.compose import tioproxy
 
 from ...runtime.dataset import Dataset
 from ..registry import Registry
+from .base import LineageEvent, LineageRunEvent
 from .enums import EmitLevel, RunEventType
-from .model import LineageEvent, LineageRunEvent
 from .proxy import LineageRegistryProxy
 
 
