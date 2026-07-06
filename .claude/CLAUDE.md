@@ -32,10 +32,7 @@ examples/        # Sample jobs and schemas
 tests/           # Unit and integration tests
 ```
 
-# Additional Instructions
+# Additional Context
 
 - Tech stack: `@.claude/knowledge/tech-stack.md`
 - Concepts and terminology: `@.claude/knowledge/glossary.md`
-- Delegate all test-related work to the `tester` agent.
-- Delegate all documentation-related work to the `technical-writer` agent.
-- Delegate all PullRequest-related work to the `pr-writer` agent.
