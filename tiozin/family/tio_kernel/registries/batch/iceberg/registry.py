@@ -12,7 +12,7 @@ from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
 from tiozin.utils import default
 from tiozin.utils.io import mkdirs
 
-from . import config
+from .... import config
 from .dao import IcebergBatchDAO
 from .schema import CREATED_AT_INDEX, IcebergBatchPartitionSpec, IcebergBatchSchema
 
@@ -31,11 +31,13 @@ class IcebergBatchRegistry(BatchRegistry):
         **options,
     ) -> None:
         super().__init__(location=location, **options)
-        self.namespace = default(namespace, config.default_namespace)
-        self.table = default(table, config.default_table)
-        self.catalog = default(catalog, config.default_catalog)
-        self.catalog_type = default(catalog_type, config.default_catalog_type)
-        self.retention_days = default(retention_days, config.default_snapshot_retention_days)
+        self.namespace = default(namespace, config.iceberg_default_namespace)
+        self.table = default(table, config.iceberg_default_table)
+        self.catalog = default(catalog, config.iceberg_default_catalog)
+        self.catalog_type = default(catalog_type, config.iceberg_default_catalog_type)
+        self.retention_days = default(
+            retention_days, config.iceberg_default_snapshot_retention_days
+        )
         self._dao: IcebergBatchDAO = None
 
     @wrapt.synchronized
@@ -58,11 +60,11 @@ class IcebergBatchRegistry(BatchRegistry):
                 ),
             ),
             properties={
-                "format-version": config.table_format_version,
+                "format-version": config.iceberg_table_format_version,
                 "history.expire.max-snapshot-age-ms": str(
                     self.retention_days * MILLISECONDS_PER_DAY
                 ),
-                "history.expire.min-snapshots-to-keep": config.table_min_snapshots_to_keep,
+                "history.expire.min-snapshots-to-keep": config.iceberg_table_min_snapshots_to_keep,
             },
         )
 

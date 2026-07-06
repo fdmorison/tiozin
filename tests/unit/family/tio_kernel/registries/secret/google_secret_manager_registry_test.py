@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 from google.api_core.exceptions import AlreadyExists, NotFound
 
-from tiozin.api.metadata.secret.model import Secret
+from tiozin.api.metadata.secret.base import Secret
 from tiozin.exceptions import SecretNotFoundError
 from tiozin.family.tio_kernel import GoogleSecretManagerRegistry
 

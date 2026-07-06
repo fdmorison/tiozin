@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tiozin.api.metadata.secret.model import Secret
+from tiozin.api.metadata.secret.base import Secret
 from tiozin.exceptions import SecretNotFoundError
 from tiozin.family.tio_kernel import AwsParameterStoreSecretRegistry
 

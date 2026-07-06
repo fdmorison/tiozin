@@ -1,5 +1,5 @@
 from tiozin.api import SchemaRegistry
-from tiozin.api.metadata.schema.model import Schema
+from tiozin.api.metadata.schema.base import Schema
 from tiozin.exceptions import SchemaNotFoundError
 from tiozin.utils import join_path, write_text
 

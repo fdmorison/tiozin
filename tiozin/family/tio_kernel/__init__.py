@@ -26,20 +26,20 @@ from .runners.noop_runner import NoOpRunner
 from .jobs.linear_job import LinearJob
 
 # Registries
-from .registries.file_job_registry import FileJobRegistry
-from .registries.file_schema_registry import FileSchemaRegistry
-from .registries.file_setting_registry import FileSettingRegistry
-from .registries.noop_lineage_registry import NoOpLineageRegistry
-from .registries.open_lineage_registry import OpenLineageRegistry
-from .registries.noop_metric_registry import NoOpMetricRegistry
-from .registries.noop_schema_registry import NoOpSchemaRegistry
-from .registries.aws_parameter_store_secret_registry import AwsParameterStoreSecretRegistry
-from .registries.google_secret_manager_registry import GoogleSecretManagerRegistry
-from .registries.env_secret_registry import EnvSecretRegistry
-from .registries.noop_secret_registry import NoOpSecretRegistry
-from .registries.noop_setting_registry import NoOpSettingRegistry
-from .registries.noop_batch_registry import NoOpBatchRegistry
-from .registries.iceberg_batch_registry.registry import IcebergBatchRegistry
+from .registries.batch.iceberg.registry import IcebergBatchRegistry
+from .registries.batch.noop_registry import NoOpBatchRegistry
+from .registries.job.file_registry import FileJobRegistry
+from .registries.lineage.noop_registry import NoOpLineageRegistry
+from .registries.lineage.open_lineage_registry import OpenLineageRegistry
+from .registries.metric.noop_registry import NoOpMetricRegistry
+from .registries.schema.file_registry import FileSchemaRegistry
+from .registries.schema.noop_registry import NoOpSchemaRegistry
+from .registries.secret.aws_parameter_store_registry import AwsParameterStoreSecretRegistry
+from .registries.secret.env_registry import EnvSecretRegistry
+from .registries.secret.google_secret_manager_registry import GoogleSecretManagerRegistry
+from .registries.secret.noop_registry import NoOpSecretRegistry
+from .registries.setting.file_registry import FileSettingRegistry
+from .registries.setting.noop_registry import NoOpSettingRegistry
 
 __all__ = [
     "NoOpInput",
@@ -47,18 +47,18 @@ __all__ = [
     "NoOpRunner",
     "NoOpTransform",
     "LinearJob",
+    "IcebergBatchRegistry",
+    "NoOpBatchRegistry",
     "FileJobRegistry",
-    "FileSchemaRegistry",
-    "FileSettingRegistry",
     "NoOpLineageRegistry",
     "OpenLineageRegistry",
     "NoOpMetricRegistry",
+    "FileSchemaRegistry",
     "NoOpSchemaRegistry",
     "AwsParameterStoreSecretRegistry",
-    "GoogleSecretManagerRegistry",
     "EnvSecretRegistry",
+    "GoogleSecretManagerRegistry",
     "NoOpSecretRegistry",
+    "FileSettingRegistry",
     "NoOpSettingRegistry",
-    "NoOpBatchRegistry",
-    "IcebergBatchRegistry",
 ]

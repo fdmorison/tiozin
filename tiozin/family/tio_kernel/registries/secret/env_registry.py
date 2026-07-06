@@ -1,7 +1,7 @@
 import os
 
 from tiozin.api import SecretRegistry
-from tiozin.api.metadata.secret.model import Secret
+from tiozin.api.metadata.secret.base import Secret
 
 
 class EnvSecretRegistry(SecretRegistry):
