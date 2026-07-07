@@ -1,4 +1,4 @@
-from tiozin.api import Schema, SchemaRegistry
+from tiozin import Schema, SchemaRegistry
 
 
 class NoOpSchemaRegistry(SchemaRegistry):

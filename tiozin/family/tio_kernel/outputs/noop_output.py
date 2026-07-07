@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Output
+from tiozin import Output
 
 
 class NoOpOutput(Output):

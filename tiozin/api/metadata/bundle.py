@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .batch.registry import BatchRegistry
-from .job.registry import JobRegistry
-from .lineage.registry import LineageRegistry
-from .metric.registry import MetricRegistry
-from .schema.registry import SchemaRegistry
-from .secret.registry import SecretRegistry
-from .setting.registry import SettingRegistry
+from .batch.base import BatchRegistry
+from .job.base import JobRegistry
+from .lineage.base import LineageRegistry
+from .metric.base import MetricRegistry
+from .schema.base import SchemaRegistry
+from .secret.base import SecretRegistry
+from .setting.base import SettingRegistry
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import Transform
+from tiozin import Transform
 
 
 class NoOpTransform(Transform):

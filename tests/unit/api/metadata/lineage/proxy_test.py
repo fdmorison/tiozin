@@ -1,6 +1,6 @@
 from tests.mocks.lineage.run_event import job_start_event as event
 from tests.stubs import FailingLineageRegistryStub, LineageRegistryStub
-from tiozin.api.context import Context
+from tiozin import Context
 from tiozin.api.metadata.lineage.enums import EmitLevel
 
 # =============================================================================

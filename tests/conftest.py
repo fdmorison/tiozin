@@ -15,16 +15,15 @@ from tests.stubs import (
     SettingRegistryStub,
     TransformStub,
 )
-from tiozin import Context
+from tiozin import Context, SettingsManifest
 from tiozin.api.metadata.bundle import Registries
-from tiozin.api.metadata.setting.base import (
+from tiozin.api.metadata.setting.model import (
     BatchRegistryManifest,
     JobRegistryManifest,
     LineageRegistryManifest,
     MetricRegistryManifest,
     SchemaRegistryManifest,
     SecretRegistryManifest,
-    SettingsManifest,
 )
 
 # --------------------------------------------------

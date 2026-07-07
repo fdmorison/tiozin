@@ -2,7 +2,7 @@ from datetime import datetime
 
 from typing_extensions import Unpack
 
-from tiozin.api import Batch, BatchRegistry
+from tiozin import Batch, BatchRegistry
 from tiozin.api.typehint import ResourceKwargs
 
 

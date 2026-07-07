@@ -1,6 +1,6 @@
 from typing import Any
 
-from tiozin.api import CoTransform, Job
+from tiozin import CoTransform, Job
 from tiozin.utils import as_list
 
 

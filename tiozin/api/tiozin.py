@@ -107,7 +107,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
 
         return Context.current()
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self) -> None:
         """
         Optional initialization hook.
 
@@ -117,7 +117,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         """
         return None
 
-    def teardown(self, *args, **kwargs) -> None:
+    def teardown(self) -> None:
         """
         Optional cleanup hook.
 

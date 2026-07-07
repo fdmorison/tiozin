@@ -22,7 +22,7 @@ class SettingRegistryProxy(wrapt.ObjectProxy):
     This is an internal implementation detail of the settings boot process.
     """
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self) -> None:
         from tiozin.compose.assembly.tiozin_registry import tiozin_registry
 
         registry: SettingRegistry = self.__wrapped__
@@ -35,7 +35,7 @@ class SettingRegistryProxy(wrapt.ObjectProxy):
             )
             visited.append(registry.location)
 
-            registry.setup(*args, **kwargs)
+            registry.setup()
             settings = registry.get()
             if settings is None:
                 break

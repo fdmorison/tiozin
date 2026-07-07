@@ -2,8 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tiozin.api.context import Context
-from tiozin.api.runtime.dataset import Dataset
+from tiozin import Context, Dataset
 from tiozin.api.runtime.runner.proxy import RunnerProxy
 from tiozin.exceptions import AccessViolationError
 from tiozin.family.tio_kernel import NoOpRunner
@@ -16,7 +15,7 @@ def test_proxy_should_forbid_setup_access():
 
     # Act/Assert
     with pytest.raises(AccessViolationError):
-        proxy.setup(None)
+        proxy.setup()
 
 
 def test_proxy_should_forbid_teardown_access():
@@ -26,7 +25,7 @@ def test_proxy_should_forbid_teardown_access():
 
     # Act/Assert
     with pytest.raises(AccessViolationError):
-        proxy.teardown(None)
+        proxy.teardown()
 
 
 # =============================================================================

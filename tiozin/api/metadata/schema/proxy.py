@@ -6,8 +6,8 @@ import wrapt
 
 from tiozin.exceptions import RequiredArgumentError
 
-from .base import Schema
 from .exceptions import SchemaNotFoundError
+from .model import Schema
 
 if TYPE_CHECKING:
     from .registry import SchemaRegistry

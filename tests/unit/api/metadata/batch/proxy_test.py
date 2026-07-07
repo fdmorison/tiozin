@@ -3,10 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tiozin.api.metadata.batch.base import Batch
+from tiozin import Batch, BatchStatus
 from tiozin.api.metadata.batch.exceptions import BatchTransitionError
 from tiozin.api.metadata.batch.proxy import BatchRegistryProxy
-from tiozin.api.metadata.batch.status import BatchStatus
 
 
 @pytest.fixture

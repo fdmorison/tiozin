@@ -4,9 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from tiozin.api.metadata.batch.base import Batch
+from tiozin import Batch, BatchStatus
 from tiozin.api.metadata.batch.state import BatchState
-from tiozin.api.metadata.batch.status import BatchStatus
 from tiozin.exceptions.misc import ModelError
 
 EXPLICIT_ID = "explicit-id-1234"
@@ -363,7 +362,7 @@ def test_commit_should_return_self(current, fake_domain):
 # ============================================================================
 # lifecycle - fail
 # ============================================================================
-@patch("tiozin.api.metadata.batch.base.Batch._registry")
+@patch("tiozin.api.metadata.batch.model.Batch._registry")
 def test_fail_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3
@@ -376,7 +375,7 @@ def test_fail_should_delegate_to_registry(registry: MagicMock, fake_domain):
     registry.return_value.fail.assert_called_once_with(batch)
 
 
-@patch("tiozin.api.metadata.batch.base.Batch._registry")
+@patch("tiozin.api.metadata.batch.model.Batch._registry")
 def test_fail_should_merge_attributes_into_batch(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3
@@ -391,7 +390,7 @@ def test_fail_should_merge_attributes_into_batch(registry: MagicMock, fake_domai
     assert actual == expected
 
 
-@patch("tiozin.api.metadata.batch.base.Batch._registry")
+@patch("tiozin.api.metadata.batch.model.Batch._registry")
 def test_fail_should_return_self(registry: MagicMock, fake_domain):
     # Arrange
     registry.return_value.retries = 3

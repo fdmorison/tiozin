@@ -23,11 +23,12 @@ from unittest.mock import patch
 
 import pytest
 
-from tiozin import Job, TiozinApp
-from tiozin.api.metadata.job.base import (
+from tiozin import (
     InputManifest,
+    Job,
     OutputManifest,
     RunnerManifest,
+    TiozinApp,
     TransformManifest,
 )
 from tiozin.family.tio_kernel import (

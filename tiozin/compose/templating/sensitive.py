@@ -7,7 +7,7 @@ from tiozin.exceptions import RequiredArgumentError
 
 if TYPE_CHECKING:
     from tiozin.api import SecretRegistry
-    from tiozin.api.metadata.secret.base import Secret
+    from tiozin.api.metadata.secret.model import Secret
 
 
 class TemplateSecret(Mapping):

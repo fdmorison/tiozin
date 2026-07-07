@@ -1,5 +1,4 @@
-from tiozin.api.metadata.setting.base import SettingsManifest
-from tiozin.api.metadata.setting.registry import SettingRegistry
+from tiozin import SettingRegistry, SettingsManifest
 
 
 class SettingRegistryStub(SettingRegistry):

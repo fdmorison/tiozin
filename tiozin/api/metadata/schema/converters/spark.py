@@ -4,7 +4,7 @@ from datacontract.export.spark_exporter import to_spark_schema
 from datacontract.imports.spark_importer import _property_from_struct_type, create_schema_object
 from pyspark.sql.types import StructType
 
-from ..base import Schema
+from ..model import Schema
 from .converter import SchemaConverter
 
 

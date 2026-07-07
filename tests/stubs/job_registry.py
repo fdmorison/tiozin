@@ -1,5 +1,4 @@
-from tiozin.api.metadata.job.base import JobManifest
-from tiozin.api.metadata.job.registry import JobRegistry
+from tiozin import JobManifest, JobRegistry
 
 
 class JobRegistryStub(JobRegistry):

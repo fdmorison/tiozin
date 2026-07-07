@@ -1,5 +1,5 @@
+from tiozin import Dataset
 from tiozin.api.runtime.catalog import RunCatalog, RunRecord
-from tiozin.api.runtime.dataset import Dataset
 from tiozin.family.tio_kernel import NoOpInput
 
 

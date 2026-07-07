@@ -1,4 +1,4 @@
-from tiozin.api import SettingRegistry, SettingsManifest
+from tiozin import SettingRegistry, SettingsManifest
 
 
 class NoOpSettingRegistry(SettingRegistry):

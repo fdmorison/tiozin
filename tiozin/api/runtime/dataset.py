@@ -8,7 +8,7 @@ import wrapt
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils.io import normalize_uri
 
-from ..metadata.schema.base import Schema
+from ..metadata.schema.model import Schema
 
 TData = TypeVar("TData")
 

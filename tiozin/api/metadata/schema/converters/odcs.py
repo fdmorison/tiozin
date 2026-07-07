@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from open_data_contract_standard.model import SchemaObject
 
-from ..base import Schema
+from ..model import Schema
 from .converter import SchemaConverter
 
 

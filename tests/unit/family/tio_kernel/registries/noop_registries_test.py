@@ -64,7 +64,7 @@ def test_noop_schema_registry_should_return_none_on_get():
 
 
 def test_noop_setting_registry_should_return_empty_manifest_on_get():
-    from tiozin.api import SettingsManifest
+    from tiozin import SettingsManifest
 
     # Arrange
     registry = NoOpSettingRegistry().__wrapped__
