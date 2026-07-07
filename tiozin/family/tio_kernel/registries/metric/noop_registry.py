@@ -1,4 +1,4 @@
-from tiozin.api import MetricRegistry
+from tiozin import MetricRegistry
 
 
 class NoOpMetricRegistry(MetricRegistry):

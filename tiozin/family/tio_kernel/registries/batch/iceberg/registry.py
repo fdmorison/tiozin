@@ -5,8 +5,7 @@ from pyiceberg.catalog import load_catalog
 from pyiceberg.table.sorting import NullOrder, SortDirection, SortField, SortOrder
 from typing_extensions import Unpack
 
-from tiozin import BatchStatus
-from tiozin.api import Batch, BatchRegistry
+from tiozin import Batch, BatchRegistry, BatchStatus
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
 from tiozin.utils import default

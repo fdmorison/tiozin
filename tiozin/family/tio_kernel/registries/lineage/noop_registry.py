@@ -1,4 +1,4 @@
-from tiozin.api import LineageEvent, LineageRegistry
+from tiozin import LineageEvent, LineageRegistry
 
 
 class NoOpLineageRegistry(LineageRegistry):
