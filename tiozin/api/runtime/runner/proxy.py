@@ -31,10 +31,10 @@ class RunnerProxy(wrapt.ObjectProxy):
     refer to the Runner base class for the public API contract.
     """
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self) -> None:
         raise AccessViolationError(self)
 
-    def teardown(self, *args, **kwargs) -> None:
+    def teardown(self) -> None:
         raise AccessViolationError(self)
 
     def __repr__(self) -> str:

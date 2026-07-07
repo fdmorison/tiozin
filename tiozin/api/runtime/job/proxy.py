@@ -23,10 +23,10 @@ class JobProxy(wrapt.ObjectProxy):
     timing, and lineage emission.
     """
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self) -> None:
         raise AccessViolationError(self)
 
-    def teardown(self, *args, **kwargs) -> None:
+    def teardown(self) -> None:
         raise AccessViolationError(self)
 
     def submit(self) -> Any:

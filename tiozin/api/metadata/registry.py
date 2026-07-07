@@ -44,8 +44,8 @@ class Registry(Tiozin, Generic[TMetadata]):
         self.failfast = default(failfast, config.registry_default_failfast)
         self.ready = False
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self) -> None:
         self.ready = True
 
-    def teardown(self, *args, **kwargs) -> None:
+    def teardown(self) -> None:
         self.ready = False

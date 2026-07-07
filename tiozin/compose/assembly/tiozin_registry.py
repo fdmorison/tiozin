@@ -66,7 +66,7 @@ class TiozinRegistry(Loggable):
         self._defaults: dict[str, dict[str, Any]] = {}
         self.ready = False
 
-    def setup(self, *args, **kwargs) -> None:
+    def setup(self) -> None:
         if self.ready:
             return
 
