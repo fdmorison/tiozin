@@ -297,11 +297,11 @@ def test_manifest_should_reject_job_with_invalid_field_types(field_name, invalid
 
 
 # ============================================================================
-# JobManifest.resource tests
+# JobManifest.to_resource_dict tests
 # ============================================================================
 
 
-def test_resource_should_return_resource_fields():
+def test_to_resource_dict_should_return_resource_fields():
     # Arrange
     manifest = JobManifest(
         kind="Job",
@@ -318,7 +318,7 @@ def test_resource_should_return_resource_fields():
     )
 
     # Act
-    resource = manifest.resource
+    resource = manifest.to_resource_dict()
 
     # Assert
     actual = resource

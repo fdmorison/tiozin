@@ -23,7 +23,7 @@ def latest(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
     batch = app.registries.batch.get_latest(**resource)
     if not batch:
         app.warning(f"No batch found for job {job}.")
@@ -47,7 +47,7 @@ def backlog(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
     batches = app.registries.batch.get_backlog(**resource)
     if not batches:
         app.warning(f"No backlog found for job {job}.")
@@ -79,7 +79,7 @@ def history(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
     batches = app.registries.batch.get_history(limit=limit, since=since, **resource)
     if not batches:
         app.warning(f"No history found for job {job}.")
@@ -111,7 +111,7 @@ def register(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = Batch(
         **resource,
@@ -144,7 +144,7 @@ def cancel(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
     batch.attributes |= parse_attributes(attributes)
@@ -174,7 +174,7 @@ def replay(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
     batch.attributes |= parse_attributes(attributes)
@@ -204,7 +204,7 @@ def quarantine(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).resource
+    resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
     batch.attributes |= parse_attributes(attributes)

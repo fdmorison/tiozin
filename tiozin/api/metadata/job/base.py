@@ -165,6 +165,5 @@ class JobManifest(Manifest):
     )
     outputs: list[OutputManifest] | None = Field(default_factory=list, description=docs.JOB_OUTPUTS)
 
-    @property
-    def resource(self) -> dict:
+    def to_resource_dict(self) -> dict:
         return {field: getattr(self, field) for field in RESOURCE_FIELDS}
