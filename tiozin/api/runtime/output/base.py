@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
+from tiozin.api.resourceful import Resourceful
 from tiozin.api.runtime.dataset import Datasets
 from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
@@ -12,7 +13,7 @@ TData = TypeVar("TData")
 
 
 @tioproxy(OutputProxy)
-class Output(Tiozin, Generic[TData]):
+class Output(Resourceful, Tiozin, Generic[TData]):
     """
     Defines a data destination that persists processed data.
 
@@ -51,7 +52,18 @@ class Output(Tiozin, Generic[TData]):
         model: str = None,
         **options,
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(
+            name,
+            description,
+            org=org,
+            region=region,
+            domain=domain,
+            subdomain=subdomain,
+            layer=layer,
+            product=product,
+            model=model,
+            **options,
+        )
 
         RequiredArgumentError.raise_if_missing(
             name=name,
@@ -59,14 +71,6 @@ class Output(Tiozin, Generic[TData]):
 
         self.schema_subject = schema_subject
         self.schema_version = schema_version
-
-        self.org = org
-        self.region = region
-        self.domain = domain
-        self.subdomain = subdomain
-        self.layer = layer
-        self.product = product
-        self.model = model
 
     def setup(self) -> None:
         pass
