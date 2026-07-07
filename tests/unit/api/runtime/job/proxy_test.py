@@ -29,7 +29,7 @@ def test_proxy_should_forbid_setup_access():
 
     # Act/Assert
     with pytest.raises(AccessViolationError):
-        proxy.setup(None)
+        proxy.setup()
 
 
 def test_proxy_should_forbid_teardown_access():
@@ -50,4 +50,4 @@ def test_proxy_should_forbid_teardown_access():
 
     # Act/Assert
     with pytest.raises(AccessViolationError):
-        proxy.teardown(None)
+        proxy.teardown()
