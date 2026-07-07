@@ -1,7 +1,7 @@
 import pytest
 
+from tiozin import BatchStatus
 from tiozin.api.metadata.batch.exceptions import BatchTransitionError
-from tiozin.api.metadata.batch.status import BatchStatus
 
 VALID_TRANSITIONS = [
     (BatchStatus.PENDING, BatchStatus.RUNNING),

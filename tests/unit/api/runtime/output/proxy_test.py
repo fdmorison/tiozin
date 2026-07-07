@@ -3,8 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from tests.stubs import JobStub, OutputStub
-from tiozin import Dataset
-from tiozin.api.context import Context
+from tiozin import Context, Dataset
 from tiozin.api.metadata.bundle import Registries
 from tiozin.api.runtime.output.proxy import OutputProxy
 from tiozin.exceptions import AccessViolationError

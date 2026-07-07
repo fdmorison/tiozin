@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 import tiozin.config as config
-from tiozin.api import SettingsManifest
+from tiozin import SettingsManifest
 from tiozin.exceptions import SettingsNotFoundError
 from tiozin.family.tio_kernel import FileSettingRegistry
 
