@@ -1,8 +1,8 @@
 import pytest
 
-from tiozin.api import JobManifest
-from tiozin.api.metadata.job.base import (
+from tiozin import (
     InputManifest,
+    JobManifest,
     OutputManifest,
     RunnerManifest,
     TransformManifest,

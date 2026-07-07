@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from tiozin.api.metadata.job.base import (
+from tiozin import (
     InputManifest,
     JobManifest,
     OutputManifest,

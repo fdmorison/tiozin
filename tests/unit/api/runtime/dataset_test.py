@@ -2,8 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tiozin import Dataset
-from tiozin.api.metadata.schema.base import Schema
+from tiozin import Dataset, Schema
 from tiozin.exceptions import RequiredArgumentError
 
 # ============================================================================

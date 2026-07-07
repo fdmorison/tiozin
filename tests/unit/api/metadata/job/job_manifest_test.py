@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from tiozin.api.metadata.job.base import (
+from tiozin import (
     InputManifest,
     JobManifest,
     OutputManifest,
@@ -296,8 +296,6 @@ def test_manifest_should_reject_job_with_invalid_field_types(field_name, invalid
         JobManifest(**data)
 
 
-# ============================================================================
-# JobManifest.to_resource_dict tests
 # ============================================================================
 
 

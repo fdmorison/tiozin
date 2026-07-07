@@ -1,6 +1,5 @@
-from tiozin.api.metadata.secret.base import Secret
+from tiozin import Secret, SecretRegistry
 from tiozin.api.metadata.secret.exceptions import SecretNotFoundError
-from tiozin.api.metadata.secret.registry import SecretRegistry
 
 
 class SecretRegistryStub(SecretRegistry):

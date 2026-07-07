@@ -1,4 +1,4 @@
-from tiozin.api.metadata.secret.base import Secret
+from tiozin import Secret
 from tiozin.family.tio_kernel import EnvSecretRegistry
 
 # ============================================================================

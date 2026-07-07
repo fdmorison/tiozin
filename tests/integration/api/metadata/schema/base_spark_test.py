@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from tests.mocks.schemas.user.spark import SPARK_SCHEMA
-from tiozin.api.metadata.schema.base import Schema
+from tiozin import Schema
 
 _TIOZIN_SCHEMA_YAML = Path("tests/mocks/schemas/user/tiozin.odcs.yaml").read_text()
 _TIOZIN_SCHEMA_SPARK_YAML = Path("tests/mocks/schemas/user/spark.odcs.yaml").read_text()

@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from openlineage.client.generated.schema_dataset import SchemaDatasetFacet, SchemaDatasetFacetFields
 
-from tiozin.api.metadata.schema.base import Schema
+from tiozin import Schema
 
 _TIOZIN_SCHEMA_YAML = Path("tests/mocks/schemas/user/tiozin.odcs.yaml").read_text()
 

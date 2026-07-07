@@ -1,10 +1,7 @@
 import pendulum
 
-from tiozin.api.metadata.lineage.base import (
-    LineageJob,
-    LineageParentRun,
-    LineageRunEvent,
-)
+from tiozin import LineageRunEvent
+from tiozin.api.metadata.lineage.model import LineageJob, LineageParentRun
 
 _2024_01_01 = pendulum.datetime(2024, 1, 1, tz="UTC")
 

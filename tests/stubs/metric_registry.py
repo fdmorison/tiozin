@@ -1,4 +1,4 @@
-from tiozin.api.metadata.metric.registry import MetricRegistry
+from tiozin import MetricRegistry
 
 
 class MetricRegistryStub(MetricRegistry):
