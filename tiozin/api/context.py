@@ -15,7 +15,7 @@ from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
 from .metadata.bundle import Registries
-from .metadata.schema.base import Schema
+from .metadata.schema.model import Schema
 from .runtime.catalog import RunCatalog
 
 if TYPE_CHECKING:

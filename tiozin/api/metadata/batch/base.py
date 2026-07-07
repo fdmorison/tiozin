@@ -1,190 +1,140 @@
-from __future__ import annotations
+from abc import abstractmethod
+from datetime import datetime
 
-from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing_extensions import Unpack
 
-from pydantic import AwareDatetime, Field, field_validator
+from tiozin import config
+from tiozin.compose import tioproxy
+from tiozin.utils import default
 
-from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
-from tiozin.utils import generate_id, utcnow
-
-from ..model import Metadata
-from .state import BatchState
-from .status import BatchStatus
-from .types import NominalTime
-
-if TYPE_CHECKING:
-    from tiozin import BatchRegistry
+from ...typehint import ResourceKwargs
+from ..registry import Registry
+from .model import Batch
+from .proxy import BatchRegistryProxy
 
 
-class Batch(Metadata):
+@tioproxy(BatchRegistryProxy)
+class BatchRegistry(Registry[Batch]):
     """
-    Represents the lifecycle of a logical batch of data.
+    Storage-agnostic registry for pipeline batches.
 
-    A batch uniquely identifies a unit of work within a resource and tracks its
-    processing lifecycle. It may represent a partition, file, offset, snapshot,
-    or any other job-defined granularity.
+    A batch registry persists `Batch` objects and exposes operations for
+    registering, updating, and querying batches associated with a resource.
 
-    Batches are uniquely identified by `(resource, nominal_time)`. Their status
-    evolves over time as the batch progresses through processing, replay,
-    quarantine, or cancellation.
+    Implementations may use relational databases, REST services, key-value
+    stores, or open table formats.
 
-    Collections of batches support higher-level concepts such as backlogs,
-    representing batches awaiting processing.
+    Methods that mutate an existing batch may raise `BatchNotFoundError`.
+    Registering an already existing batch raises `BatchAlreadyExistsError`.
 
     Attributes:
-        id:
-            Deterministic UUID derived from the natural key
-            (`resource + nominal_time`). Stable across updates to the same batch.
-
-        org:
-            Organization that owns the resource.
-
-        region:
-            Region associated with the resource.
-
-        domain:
-            Domain that owns the resource.
-
-        subdomain:
-            Subdomain within the domain.
-
-        layer:
-            Data layer associated with the resource.
-
-        product:
-            Product associated with the resource.
-
-        model:
-            Model associated with the resource.
-
-        nominal_time:
-            UTC datetime identifying the technical execution increment. Analogous to Airflow's
-            logical_date. Truncated to minute precision (seconds and microseconds are zeroed).
-
-        status:
-            Current lifecycle status of the batch.
-
-        failure_count:
-            Number of failures since the batch was last replayed. Incremented
-            each time the batch fails and reset when the batch is replayed.
-
-        state:
-            Typed processing state of the batch (execution window and
-            watermark), replicated across executions. See `BatchState`.
-
-        attributes:
-            Arbitrary job-specific metadata associated with the batch. Typical
-            values include record counts, source locations, checksums, execution
-            details, or any other application-defined information.
-
-        created_at:
-            UTC timestamp when the batch was first registered.
-
-        updated_at:
-            UTC timestamp when the batch was last updated.
+        retries:
+            Maximum number of times a failed batch is retried before being
+            escalated to QUARANTINED.
     """
 
-    id: str = Field(default_factory=generate_id, frozen=True)
+    def __init__(self, retries: int = None, **options) -> None:
+        super().__init__(**options)
+        self.retries = default(retries, config.default_batch_retries)
 
-    org: str = Field(frozen=True)
-    region: str = Field(frozen=True)
-    domain: str = Field(frozen=True)
-    subdomain: str = Field(frozen=True)
-    layer: str = Field(frozen=True)
-    product: str = Field(frozen=True)
-    model: str = Field(frozen=True)
-    nominal_time: NominalTime = Field(frozen=True)
+    @abstractmethod
+    def register(self, batch: Batch) -> Batch:
+        """
+        Creates a new batch.
 
-    status: BatchStatus = BatchStatus.PENDING
-    failure_count: int = Field(0, ge=0)
-    state: BatchState = Field(default_factory=BatchState)
-    attributes: dict[str, Any] = Field(default_factory=dict)
+        Raises:
+            BatchAlreadyExistsError: If another batch with the same natural key already exists.
+        """
 
-    created_at: AwareDatetime = Field(default_factory=utcnow, frozen=True)
-    updated_at: AwareDatetime = Field(default_factory=utcnow)
+    @abstractmethod
+    def begin(self, batch: Batch) -> Batch:
+        """
+        Persists the batch in the RUNNING state.
 
-    @field_validator("nominal_time", "created_at", "updated_at")
-    @classmethod
-    def _normalize_timezone(cls, value: datetime) -> datetime:
-        return value.astimezone(UTC)
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    def _registry(self) -> BatchRegistry:
-        from tiozin.api.context import Context
+    @abstractmethod
+    def commit(self, batch: Batch) -> Batch:
+        """
+        Persists the batch in the SUCCEEDED state.
 
-        return Context.current().registries.batch
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    def register(self) -> Batch:
-        self._registry().register(self)
-        return self
+    @abstractmethod
+    def fail(self, batch: Batch) -> Batch:
+        """
+        Persists the batch in the FAILED state.
 
-    def begin(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().begin(self)
-        return self
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    def commit(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().commit(self)
-        return self
+    @abstractmethod
+    def cancel(self, batch: Batch) -> Batch:
+        """
+        Persists the batch in the CANCELED state.
 
-    def fail(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self.failure_count += 1
-        self._registry().fail(self)
-        return self
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    def cancel(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().cancel(self)
-        return self
+    @abstractmethod
+    def quarantine(self, batch: Batch) -> Batch:
+        """
+        Persists the batch in the QUARANTINED state.
 
-    def quarantine(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().quarantine(self)
-        return self
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    def replay(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().replay(self)
-        return self
+    @abstractmethod
+    def replay(self, batch: Batch) -> Batch:
+        """
+        Persists the batch in the PENDING state.
 
-    @property
-    def domain_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in DOMAIN_FIELDS)
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    @property
-    def product_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in PRODUCT_FIELDS)
+    @abstractmethod
+    def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch:
+        """
+        Returns the batch identified by `id` within the resource.
 
-    @property
-    def resource_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in RESOURCE_FIELDS)
+        Raises:
+            BatchNotFoundError: If the batch does not exist.
+        """
 
-    @property
-    def natural_key(self) -> tuple[str, ...]:
-        return (*self.resource_key, self.nominal_time.isoformat())
+    @abstractmethod
+    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+        """
+        Returns the most recently registered batch for the resource.
 
-    @classmethod
-    def acquire(cls) -> Batch:
-        from tiozin.api.context import Context
+        Returns:
+            The latest batch, or `None` if no batches have been registered
+            for the resource.
+        """
 
-        context = Context.current()
-        resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
-        previous = context.registries.batch.get_latest(**resources)
+    @abstractmethod
+    def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
+        """
+        Returns batches awaiting for processing.
 
-        if not previous:
-            current_state = BatchState(end=context.nominal_time)
-        elif previous.status.is_terminal():
-            current_state = previous.state.advance_to(context.nominal_time)
-        else:
-            return previous
+        The backlog should include only batches in the PENDING, RUNNING, or FAILED states.
+        """
 
-        return Batch(
-            **resources,
-            nominal_time=context.nominal_time,
-            state=current_state,
-        ).register()
+    @abstractmethod
+    def get_history(
+        self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
+    ) -> list[Batch]:
+        """
+        Returns recently registered batches for the resource.
 
-    def __str__(self) -> str:
-        return ".".join(self.natural_key)
+        Results are ordered by `created_at` in descending order and include
+        batches of any status. Only batches registered at or after `since`
+        are considered. Up to `limit` batches are returned.
+        """

@@ -1,75 +1,70 @@
-from __future__ import annotations
+from abc import abstractmethod
 
-from typing import Any
+from tiozin import config
+from tiozin.compose import tioproxy
+from tiozin.compose.templating.template_string import TemplateString
+from tiozin.utils import default
 
-from open_data_contract_standard.model import (
-    OpenDataContractStandard,
-    SchemaObject,
-)
-
-from tiozin.api.metadata.model import Metadata
-
-from .converters import SchemaConverter
-from .exceptions import SchemaNotFoundError
+from ..registry import Registry
+from .model import Schema
+from .proxy import SchemaRegistryProxy
 
 
-class Schema(SchemaObject, Metadata):
-    @classmethod
-    def from_contract(cls, contract: OpenDataContractStandard, name: str) -> Schema:
-        """
-        Creates a Schema from an Open Data Contract.
-        Looks up a schema by name and converts it using the "odcs" format.
-        Raises an exception if the schema is not found.
-        """
-        contract = contract.schema_ or []
-        schema = next((schema for schema in contract if schema.name == name), None)
-        SchemaNotFoundError.raise_if(
-            schema is None,
-            name=name,
+@tioproxy(SchemaRegistryProxy)
+class SchemaRegistry(Registry[Schema]):
+    """
+    Schema registry interface.
+
+    Provides a storage-agnostic contract for retrieving and storing schemas
+    (e.g., Confluent Schema Registry).
+
+    Configuration (priority order):
+    1. tiozin.yaml (recommended)
+    2. Environment variables: TIO_SCHEMA_REGISTRY_*
+    3. Direct instantiation (not recommended)
+
+    Environment variables are resolved into default configuration values
+    (e.g., subject_template, default_version) via `config`.
+
+    Attributes:
+        show_schema: If True, logs schemas after `get()`.
+        subject_template: Template to resolve subject when not provided.
+        default_version: Default schema version (e.g., "latest").
+
+    Example (tiozin.yaml):
+        schema:
+            kind: FileSchemaRegistry
+            location: examples/schemas
+            timeout: 5
+            readonly: false
+            cache: false
+            subject_template: "{{domain}}.{{layer}}.{{product}}.{{model}}"
+            default_version: latest
+    """
+
+    def __init__(
+        self,
+        show_schema: bool = None,
+        subject_template: str = None,
+        default_version: str = None,
+        **options,
+    ) -> None:
+        super().__init__(**options)
+        self.show_schema = default(show_schema, config.default_schema_show_schema)
+        self.subject_template = TemplateString(
+            subject_template or config.default_schema_subject_template
         )
-        return cls.import_("odcs", schema)
+        self.default_version = default(default_version, config.default_schema_default_version)
 
-    def export(self, format: str) -> Any:
+    @abstractmethod
+    def get(self, subject: str, version: str = None) -> Schema:
         """
-        Converts this schema to another format.
+        Retrieve a schema by identifier.
 
-        Supported formats include:
-        - "odcs": returns a `SchemaObject` from `open_data_contract_standard`
-        - "spark": returns a `StructType` from `pyspark.sql.types`
-        - "openlineage": returns a `SchemaDatasetFacet` from `openlineage.client`
-
-        Raises an exception if the format is not supported.
+        Raises:
+            NotFoundException: When not found and `failfast=True`.
         """
-        return SchemaConverter.for_format(format).export(self)
 
-    @classmethod
-    def import_(cls, format: str, schema: Any) -> Schema:
-        """
-        Creates a Schema from another format.
-
-        Supported formats include:
-        - "odcs": expects a `SchemaObject` from `open_data_contract_standard`
-        - "spark": expects a `StructType` from `pyspark.sql.types`
-
-        The "openlineage" format does not support import.
-
-        Raises an exception if the format is not supported.
-        """
-        return SchemaConverter.for_format(format).import_(schema)
-
-    @classmethod
-    def from_spark(cls, schema: Any) -> Schema:
-        return cls.import_("spark", schema)
-
-    @classmethod
-    def from_odcs(cls, schema: Any) -> Schema:
-        return cls.import_("odcs", schema)
-
-    def to_spark(self) -> Any:
-        return self.export("spark")
-
-    def to_odcs(self) -> Any:
-        return self.export("odcs")
-
-    def to_openlineage(self) -> Any:
-        return self.export("openlineage")
+    @abstractmethod
+    def register(self, subject: str, value: Schema) -> None:
+        """Register a schema in the registry."""

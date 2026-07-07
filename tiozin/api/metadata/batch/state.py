@@ -12,7 +12,7 @@ from pydantic import (
 
 from tiozin.utils.helpers import epoch, utcnow
 
-from .types import NominalTime, Watermark
+from ...types import NominalTime, Watermark
 from .watermark import RawWatermark, serialize_watermark
 
 

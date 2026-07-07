@@ -11,8 +11,8 @@ from tiozin.api.typehint import ResourceKwargs
 from tiozin.utils import default, utcnow
 
 if TYPE_CHECKING:
-    from .base import Batch
-    from .registry import BatchRegistry
+    from .base import BatchRegistry
+    from .model import Batch
 
 
 class BatchRegistryProxy(wrapt.ObjectProxy):

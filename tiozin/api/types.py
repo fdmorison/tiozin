@@ -7,7 +7,7 @@ from pydantic import AfterValidator, AwareDatetime, BeforeValidator
 
 from tiozin.api.enums import Cadence
 
-from .watermark import check_watermark, parse_watermark
+from .metadata.batch.watermark import check_watermark, parse_watermark
 
 NominalTime = Annotated[
     AwareDatetime,

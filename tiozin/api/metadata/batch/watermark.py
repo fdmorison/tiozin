@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, TypeAlias
 from tiozin import config
 
 if TYPE_CHECKING:
-    from .types import Watermark
+    from ...types import Watermark
 
 _WATERMARK_INT_MAX = 10**config.batch_watermark_int_digits
 _WATERMARK_INT_RE = re.compile(rf"^\d{{{config.batch_watermark_int_digits}}}$")
