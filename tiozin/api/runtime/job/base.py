@@ -4,6 +4,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin import config
+from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
@@ -22,7 +23,7 @@ TData = TypeVar("TData")
 
 
 @tioproxy(JobProxy)
-class Job(Tiozin, Generic[TData]):
+class Job(Resourceful, Tiozin, Generic[TData]):
     """
     Defines a complete data pipeline.
 
@@ -86,7 +87,18 @@ class Job(Tiozin, Generic[TData]):
         outputs: list[Output] = None,
         **options,
     ) -> None:
-        super().__init__(name, description, **options)
+        super().__init__(
+            name,
+            description,
+            org=org,
+            region=region,
+            domain=domain,
+            subdomain=subdomain,
+            layer=layer,
+            product=product,
+            model=model,
+            **options,
+        )
 
         RequiredArgumentError.raise_if_missing(
             name=name,
@@ -106,13 +118,6 @@ class Job(Tiozin, Generic[TData]):
         self.owner = owner
         self.labels = labels or {}
 
-        self.org = org
-        self.region = region
-        self.domain = domain
-        self.subdomain = subdomain
-        self.layer = layer
-        self.product = product
-        self.model = model
         self.namespace = JINJA.from_string(namespace or config.tiozin_namespace_template).render(
             org=org,
             region=region,

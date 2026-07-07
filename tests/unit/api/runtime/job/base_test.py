@@ -96,3 +96,56 @@ def test_job_should_render_namespace_from_custom_config_template(
     actual = job.namespace
     expected = "acme.ecommerce"
     assert actual == expected
+
+
+# =============================================================================
+# Testing Job.to_resource_dict
+# =============================================================================
+
+
+def test_job_should_expose_resource_fields(job_stub: JobStub):
+    # Act
+    result = job_stub.to_resource_dict()
+
+    # Assert
+    actual = result
+    expected = {
+        "org": "acme",
+        "region": "latam",
+        "domain": "ecommerce",
+        "subdomain": "checkout",
+        "layer": "raw",
+        "product": "sales",
+        "model": "orders",
+    }
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Job.qualified_domain
+# =============================================================================
+
+
+def test_job_should_expose_qualified_domain(job_stub: JobStub):
+    # Act
+    result = job_stub.qualified_domain
+
+    # Assert
+    actual = result
+    expected = "acme.latam.ecommerce.checkout"
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Job.qualified_product
+# =============================================================================
+
+
+def test_job_should_expose_qualified_product(job_stub: JobStub):
+    # Act
+    result = job_stub.qualified_product
+
+    # Assert
+    actual = result
+    expected = "raw.sales.orders"
+    assert actual == expected
