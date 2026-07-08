@@ -19,7 +19,9 @@ def latest(
     job: str = typer.Argument(REQUIRED, help=docs.JOB),
 ) -> None:
     """
-    Shows the latest batch produced by this job.
+    Show the most recently registered batch of a job.
+
+    The batch is selected by registration time and may be in any state.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -37,7 +39,7 @@ def backlog(
     job: str = typer.Argument(REQUIRED, help=docs.JOB),
 ) -> None:
     """
-    Shows batches awaiting processing for this job.
+    Show the batches awaiting processing for a job.
 
     The backlog includes batches in the PENDING, RUNNING, and FAILED states.
     FAILED batches remain eligible for retry until they exceed the retry
@@ -72,10 +74,10 @@ def history(
     ),
 ) -> None:
     """
-    Shows previously registered batches for this job.
+    Show the registration history of a job's batches.
 
-    History includes batches in every state and can be filtered by
-    registration time to inspect the lifecycle of past executions.
+    History includes batches in every state, ordered from the most to the
+    least recently registered. Use --since and --limit to narrow the results.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -104,10 +106,11 @@ def register(
     ),
 ) -> None:
     """
-    Registers a new batch to be processed by this job.
+    Register a new batch for a job.
 
-    New batches are created in the PENDING state and become eligible for
-    processing by future executions of the job.
+    The batch is created in the PENDING state, identified by its nominal
+    time, and becomes eligible for processing by future executions of the
+    job. Registering a batch whose nominal time already exists fails.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -137,10 +140,11 @@ def cancel(
     ),
 ) -> None:
     """
-    Cancels a batch produced by this job.
+    Cancel a batch of a job.
 
-    Cancelled batches are removed from the backlog and remain inactive until
-    they are replayed.
+    The batch is moved to the CANCELED state and leaves the backlog, so
+    executions of the job no longer pick it up. A canceled batch can be
+    made eligible again with the replay command.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -167,10 +171,11 @@ def replay(
     ),
 ) -> None:
     """
-    Replays a batch produced by this job.
+    Replay a batch of a job.
 
-    The batch is returned to the PENDING state, making it eligible for
-    processing by future executions of the job.
+    The batch is returned to the PENDING state, making it eligible again
+    for processing by future executions of the job. Use it to reprocess
+    canceled, quarantined, or already processed batches.
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -197,10 +202,11 @@ def quarantine(
     ),
 ) -> None:
     """
-    Quarantines a batch produced by this job.
+    Quarantine a batch of a job.
 
-    Quarantined batches are excluded from the backlog until they are
-    explicitly replayed.
+    The batch is moved to the QUARANTINED state and excluded from the
+    backlog until it is explicitly replayed. Quarantine also happens
+    automatically when a failed batch exceeds the retry limit.
     """
     announce(job)
     app: TiozinApp = ctx.obj
