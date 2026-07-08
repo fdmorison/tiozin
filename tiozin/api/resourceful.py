@@ -1,4 +1,4 @@
-from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
+from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS, SUBDOMAIN_FIELDS
 
 
 class Resourceful:
@@ -21,7 +21,7 @@ class Resourceful:
         layer: str = None,
         product: str = None,
         model: str = None,
-        **kwargs,
+        **options,
     ) -> None:
         self.org = org
         self.region = region
@@ -30,7 +30,7 @@ class Resourceful:
         self.layer = layer
         self.product = product
         self.model = model
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **options)
 
     def to_resource_dict(self) -> dict:
         return {field: getattr(self, field) for field in RESOURCE_FIELDS}
@@ -38,6 +38,10 @@ class Resourceful:
     @property
     def qualified_domain(self) -> str:
         return ".".join(getattr(self, field) for field in DOMAIN_FIELDS)
+
+    @property
+    def qualified_subdomain(self) -> str:
+        return ".".join(getattr(self, field) for field in SUBDOMAIN_FIELDS)
 
     @property
     def qualified_product(self) -> str:
