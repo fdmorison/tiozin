@@ -139,6 +139,32 @@ def test_qualified_domain_should_return_dot_joined_domain_key():
 
     # Assert
     actual = result
+    expected = "acme.latam.ecommerce"
+    assert actual == expected
+
+
+# ============================================================================
+# Testing Resourceful.qualified_subdomain
+# ============================================================================
+
+
+def test_qualified_subdomain_should_return_dot_joined_subdomain_key():
+    # Arrange
+    resource = ResourceDummy(
+        org="acme",
+        region="latam",
+        domain="ecommerce",
+        subdomain="checkout",
+        layer="raw",
+        product="sales",
+        model="orders",
+    )
+
+    # Act
+    result = resource.qualified_subdomain
+
+    # Assert
+    actual = result
     expected = "acme.latam.ecommerce.checkout"
     assert actual == expected
 

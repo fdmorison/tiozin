@@ -132,6 +132,21 @@ def test_job_should_expose_qualified_domain(job_stub: JobStub):
 
     # Assert
     actual = result
+    expected = "acme.latam.ecommerce"
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Job.qualified_subdomain
+# =============================================================================
+
+
+def test_job_should_expose_qualified_subdomain(job_stub: JobStub):
+    # Act
+    result = job_stub.qualified_subdomain
+
+    # Assert
+    actual = result
     expected = "acme.latam.ecommerce.checkout"
     assert actual == expected
 

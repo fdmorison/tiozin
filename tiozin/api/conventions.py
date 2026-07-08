@@ -20,6 +20,10 @@ DOMAIN_FIELDS = (
     "org",
     "region",
     "domain",
+)
+
+SUBDOMAIN_FIELDS = (
+    *DOMAIN_FIELDS,
     "subdomain",
 )
 
@@ -30,6 +34,6 @@ PRODUCT_FIELDS = (
 )
 
 RESOURCE_FIELDS = (
-    *DOMAIN_FIELDS,
+    *SUBDOMAIN_FIELDS,
     *PRODUCT_FIELDS,
 )

@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import AwareDatetime, Field, field_validator
 
-from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS
+from tiozin.api.conventions import (
+    DOMAIN_FIELDS,
+    PRODUCT_FIELDS,
+    RESOURCE_FIELDS,
+    SUBDOMAIN_FIELDS,
+)
 from tiozin.utils import generate_id, utcnow
 
 from ...types import NominalTime
@@ -152,6 +157,10 @@ class Batch(Metadata):
     @property
     def domain_key(self) -> tuple[str, ...]:
         return tuple(getattr(self, field) for field in DOMAIN_FIELDS)
+
+    @property
+    def subdomain_key(self) -> tuple[str, ...]:
+        return tuple(getattr(self, field) for field in SUBDOMAIN_FIELDS)
 
     @property
     def product_key(self) -> tuple[str, ...]:

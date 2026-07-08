@@ -163,6 +163,27 @@ def test_domain_key_should_return_domain_fields():
     actual = batch.domain_key
 
     # Assert
+    expected = ("acme", "us-east", "sales")
+    assert actual == expected
+
+
+def test_subdomain_key_should_return_subdomain_fields():
+    # Arrange
+    batch = Batch(
+        org="acme",
+        region="us-east",
+        domain="sales",
+        subdomain="orders",
+        layer="bronze",
+        product="catalog",
+        model="products",
+        nominal_time=NOMINAL_TIME,
+    )
+
+    # Act
+    actual = batch.subdomain_key
+
+    # Assert
     expected = ("acme", "us-east", "sales", "orders")
     assert actual == expected
 
