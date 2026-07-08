@@ -15,7 +15,11 @@ def run(
     jobs: list[str] = typer.Argument(REQUIRED, help="Identifiers of the jobs to run."),
 ) -> None:
     """
-    Submit and run one or more jobs.
+    Run one or more jobs.
+
+    Each job is resolved through the job registry and executed. Jobs run
+    in sequence, in the order given, and execution stops at the first
+    job that fails.
     """
     announce(jobs)
     app: TiozinApp = ctx.obj
@@ -30,8 +34,9 @@ def validate(
     """
     Validate one or more jobs without running them.
 
-    Accepts one or more job identifiers resolvable via the job registry.
-    Useful for CI/CD pipelines to catch manifest errors before execution.
+    Each job manifest is resolved and checked for errors without building
+    or executing the job. Validation stops at the first invalid job.
+    Useful in CI/CD pipelines to catch manifest errors before deployment.
     """
     announce(jobs)
     app: TiozinApp = ctx.obj

@@ -19,7 +19,7 @@ The nominal time uniquely identifies a batch within a job. It represents
 the logical execution window independently of when the batch was
 registered or processed.
 
-The value must be be an ISO 8601 datetime.
+The value must be an ISO 8601 datetime.
 """
 
 LIMIT = """
