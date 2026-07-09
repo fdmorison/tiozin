@@ -1,5 +1,6 @@
 import logging
 import sys
+import warnings
 
 import structlog
 import wrapt
@@ -64,6 +65,14 @@ class LogService:
             wrapper_class=structlog.make_filtering_bound_logger(config.log_level),
             logger_factory=structlog.stdlib.LoggerFactory(),
             cache_logger_on_first_use=True,
+        )
+
+        # schema is a legitimate tiozin domain field; renaming it to dodge pydantic's deprecated
+        # schema() compatibility warning would be unnecessary churn.
+        warnings.filterwarnings(
+            "ignore",
+            message=r'Field name "schema" .* shadows an attribute in parent .*',
+            category=UserWarning,
         )
 
         self._ready = True
