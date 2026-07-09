@@ -150,7 +150,12 @@ BAR = "12345"
 
 ## 8. No magic values
 
-Literals must be assigned to a named constant at module level.
+A value is "magic" when its meaning isn't obvious from where it's used, or when it's duplicated
+across the codebase. Assign these to a named constant at module level.
+
+A literal whose value **is** the message (log messages, error messages, warning filters) is not a
+magic value. Naming it adds a layer of indirection without adding meaning, since the string already
+carries its own meaning in full.
 
 This rule applies only to production code (`tiozin/`).
 
@@ -163,30 +168,4 @@ sampling_ratio = self.sampling_ratio or DEFAULT_SAMPLING_RATIO
 
 # ❌ Incorrect
 sampling_ratio = self.sampling_ratio or 1.0
-
-# ✔ Correct
-STR_2024_01_15T10_30_00Z = "2024-01-15T10:30:00Z"
-input = spark.createDataFrame(
-    [{"created_at": STR_2024_01_15T10_30_00Z}],
-    schema="created_at STRING",
-)
-
-# ❌ Incorrect
-input = spark.createDataFrame(
-    [{"created_at": "2024-01-15T10:30:00Z"}],
-    schema="created_at STRING",
-)
-
-# ✔ Correct
-OBJ_2024_01_15T10_30_00Z = datetime.fromisoformat("2024-01-15T10:30:00Z")
-input = spark.createDataFrame(
-    [{"created_at": OBJ_2024_01_15T10_30_00Z}],
-    schema="created_at STRING",
-)
-
-# ❌ Incorrect
-input = spark.createDataFrame(
-    [{"created_at": datetime.fromisoformat("2024-01-15T10:30:00Z")}],
-    schema="created_at STRING",
-)
 ```
