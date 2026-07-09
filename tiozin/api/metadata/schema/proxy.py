@@ -10,7 +10,7 @@ from .exceptions import SchemaNotFoundError
 from .model import Schema
 
 if TYPE_CHECKING:
-    from .registry import SchemaRegistry
+    from .base import SchemaRegistry
 
 
 class SchemaRegistryProxy(wrapt.ObjectProxy):
