@@ -6,16 +6,6 @@ The template defines the document structure and formatting. This guide explains 
 
 The examples use a fictional `tio_acme` family. They show only the content of each section, omitting template-specific formatting such as section headings, Notes metadata, References, and the checklist.
 
-## Rules
-
-- All PRs must follow `.github/pull_request_template.md`.
-- When this guide and the template disagree, the template wins.
-- Unless otherwise noted, structure **Description** in two paragraphs:
-  1. A single, one-line sentence introducing the PR goal.
-  2. An optional at most 2 lines paragraph that further develops the introduced goal.
-  3. Keep both paragraphs focused on the same idea.
-- Whenever practical, include and develop a code or YAML example in **Notes**.
-
 ## feat
 
 Description introduces the new capability and expands on the user benefit or resulting behavior.

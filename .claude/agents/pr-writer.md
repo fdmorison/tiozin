@@ -38,11 +38,17 @@ Write a pull request that lets reviewers understand the change without inspectin
   - `type` must be one of: `fix`, `feat`, `refactor`, `docs`, `chore`, or `perf`
   - `scope` must be `core` or a family name
   - `title-body` is sentence case, with no trailing period
+- All PRs must follow `.github/pull_request_template.md`
+- When `.claude/knowledge/pr-writing-guide.md` and the template disagree, the template wins
+- Unless otherwise noted, structure `Description` in two paragraphs:
+  1. A single, one-line sentence introducing the PR goal.
+  2. An optional at most 2 lines paragraph that further develops the introduced goal.
+  3. Keep both paragraphs focused on the same idea.
 - Implementation rationale belongs in `Notes`, never in `Description` or `What`
 - Keep `Notes` short: the two flags plus at most a few lines. Put the substance in `Description`; never move it to `Notes`
 - Changing how an existing capability works is `refactor`, not `feat`. Reserve `feat` for capabilities that did not exist before
 - Include a YAML example in `Notes` when adding or modifying a Tiozin plugin rendered in YAML
-- Whenever practical, include a code or YAML example in `Notes`
+- Whenever practical, include and develop a code or YAML example in `Notes`
 - Do not invent references. If none exist, write `None.`
 - Never state a fact, effect, or consequence that you have not personally verified in the diff, a test, or reproduced output
 - Never invent code, error messages, stack traces, or tool output
