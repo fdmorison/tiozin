@@ -169,3 +169,20 @@ sampling_ratio = self.sampling_ratio or DEFAULT_SAMPLING_RATIO
 # ❌ Incorrect
 sampling_ratio = self.sampling_ratio or 1.0
 ```
+
+## 9. `options`, not `kwargs`
+
+Every Tiozin plugin must collect extra parameters as `**options`, never `**kwargs`.
+
+The term follows data engines like Spark and keeps the model language-neutral. Tiozin may expand
+beyond Python, so its vocabulary stays tiotonic rather than pythonic.
+
+```python
+# ✔ Correct
+def __init__(self, location: str = None, **options) -> None:
+    ...
+
+# ❌ Incorrect
+def __init__(self, location: str = None, **kwargs) -> None:
+    ...
+```
