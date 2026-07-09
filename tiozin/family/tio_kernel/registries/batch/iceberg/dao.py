@@ -36,7 +36,7 @@ class IcebergBatchDAO:
 
     def find(self, id: str, **fields) -> Batch | None:
         df = self._scan(id=id, **fields)
-        return self._to_batch(df)
+        return self._to_object(df)
 
     def find_latest(self, **fields) -> Batch | None:
         df = self._scan(**fields)
@@ -46,14 +46,14 @@ class IcebergBatchDAO:
 
         max_created_at = pc.max(df["created_at"]).as_py()
         df = df.filter(pc.equal(df["created_at"], max_created_at)).slice(0, 1)
-        return self._to_batch(df)
+        return self._to_object(df)
 
     def find_by_status(self, *statuses: BatchStatus, **fields) -> list[Batch]:
         df = self._scan(
             In("status", statuses),
             **fields,
         )
-        return self._to_batches(df)
+        return self._to_objects(df)
 
     def find_history(self, limit: int, since: datetime, **fields) -> list[Batch]:
         df = (
@@ -61,20 +61,20 @@ class IcebergBatchDAO:
             .sort_by([("created_at", "descending")])
             .slice(0, limit)
         )
-        return self._to_batches(df)
+        return self._to_objects(df)
 
     def expire_snapshots(self, days: int) -> None:
         date = utcnow() - timedelta(days=days)
         self._table.maintenance.expire_snapshots().older_than(date).commit()
 
-    def _to_batch(self, df: pa.Table) -> Batch | None:
+    def _to_object(self, df: pa.Table) -> Batch | None:
         if not len(df):
             return None
         row = df.to_pylist()[0]
         row["attributes"] = json.loads(row["attributes"])
         return Batch(**row)
 
-    def _to_batches(self, df: pa.Table) -> list[Batch]:
+    def _to_objects(self, df: pa.Table) -> list[Batch]:
         batches = []
         for row in df.to_pylist():
             row["attributes"] = json.loads(row["attributes"])
