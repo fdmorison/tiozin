@@ -424,21 +424,6 @@ def test_fail_should_return_self(registry: MagicMock, fake_domain):
     assert actual is batch
 
 
-@patch("tiozin.api.context.Context.current")
-def test_fail_should_increment_failure_count(current, fake_domain):
-    # Arrange
-    current.return_value.registries.batch = MagicMock()
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Act
-    batch.fail()
-
-    # Assert
-    actual = batch.failure_count
-    expected = 1
-    assert actual == expected
-
-
 # ============================================================================
 # lifecycle - cancel
 # ============================================================================

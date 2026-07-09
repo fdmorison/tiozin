@@ -291,13 +291,27 @@ def test_fail_should_keep_status_when_invalid_and_failfast_disabled(lenient_regi
     assert actual == expected
 
 
+def test_fail_should_increment_failure_count(registry, state):
+    # Arrange
+    state.status = BatchStatus.RUNNING
+    proxy = BatchRegistryProxy(registry)
+
+    # Act
+    proxy.fail(state)
+
+    # Assert
+    actual = state.failure_count
+    expected = 1
+    assert actual == expected
+
+
 @pytest.mark.parametrize(
     "failure_count,expected_status",
     [
-        (1, BatchStatus.FAILED),  # 1st try
-        (2, BatchStatus.FAILED),  # 1st retry
-        (3, BatchStatus.FAILED),  # 2nd retry
-        (4, BatchStatus.QUARANTINED),  # 3rd retry
+        (0, BatchStatus.FAILED),  # 1st try
+        (1, BatchStatus.FAILED),  # 1st retry
+        (2, BatchStatus.FAILED),  # 2nd retry
+        (3, BatchStatus.QUARANTINED),  # 3rd retry
     ],
 )
 def test_fail_should_quarantine_after_maximum_retries(

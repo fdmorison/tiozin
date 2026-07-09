@@ -53,6 +53,8 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
     def fail(self, batch: Batch) -> Batch:
         registry: BatchRegistry = self.__wrapped__
 
+        batch.failure_count += 1
+
         if batch.failure_count > registry.retries:
             return self.quarantine(batch)
 
