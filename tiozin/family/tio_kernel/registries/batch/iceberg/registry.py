@@ -8,9 +8,9 @@ from tiozin import Batch, BatchRegistry, BatchStatus
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
 from tiozin.utils import default
-from tiozin.utils.io import mkdirs
 
 from .... import config
+from .catalogs import IcebergCatalogFactory
 from .dao import IcebergBatchDAO
 from .schema import IcebergBatchSchema
 from .utils import create_table_if_not_exists
@@ -72,7 +72,8 @@ class IcebergBatchRegistry(BatchRegistry):
         database = tuple(self.database.split("."))
         qualified_table = (*database, self.table)
 
-        catalog = load_catalog(self.catalog, **self._catalog_properties())
+        properties = IcebergCatalogFactory.build(self.catalog_type, self.location, **self.options)
+        catalog = load_catalog(self.catalog, **properties)
         catalog.create_namespace_if_not_exists(database)
 
         table = create_table_if_not_exists(
@@ -87,28 +88,6 @@ class IcebergBatchRegistry(BatchRegistry):
     def teardown(self) -> None:
         self._batch_dao.expire_snapshots(self.retention_days)
         self._batch_dao = None
-
-    def _catalog_properties(self) -> dict[str, str]:
-        if self.catalog_type == "sqlite":
-            mkdirs(self.location)
-            return {
-                **self.options,
-                "type": "sql",
-                "uri": f"sqlite:///{self.location}/catalog.db",
-                "warehouse": f"file://{self.location}",
-            }
-
-        if self.catalog_type == "rest":
-            return {
-                **self.options,
-                "type": self.catalog_type,
-                "uri": self.location,
-            }
-
-        return {
-            **self.options,
-            "type": self.catalog_type,
-        }
 
     def register(self, batch: Batch) -> Batch:
         if self._batch_dao.insert(batch) == 0:
