@@ -5,12 +5,38 @@ This module exposes helpers that depend on an active execution context and are
 intended to support provider implementations (e.g. SQL, Spark, DuckDB, Redshift).
 """
 
+from __future__ import annotations
+
 import re
 from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from tiozin.api.context import Context
 
 _TIO_ALIAS = "_tio_alias"
 _DATA_TOKEN_PATTERN = re.compile(r"@data(\d*)(?!\w)")
+
+
+def current_context() -> Context:
+    """
+    Returns the active execution Context.
+
+    Raises:
+        TiozinInternalError: If no execution scope is active.
+    """
+    from tiozin.api.context import Context
+
+    return Context.current()
+
+
+def try_current_context() -> Context | None:
+    """
+    Returns the active execution Context, or None if no scope is active.
+    """
+    from tiozin.api.context import Context
+
+    return Context.current(required=False)
 
 
 def tio_alias(obj: Any, value: str | None = None) -> str:
