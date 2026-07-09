@@ -11,7 +11,7 @@ from tiozin.api.conventions import (
     RESOURCE_FIELDS,
     SUBDOMAIN_FIELDS,
 )
-from tiozin.utils import generate_id, utcnow
+from tiozin.utils import current_context, generate_id, utcnow
 
 from ...types import NominalTime
 from ..model import Metadata
@@ -115,9 +115,7 @@ class Batch(Metadata):
         return value.astimezone(UTC)
 
     def _registry(self) -> BatchRegistry:
-        from tiozin.api.context import Context
-
-        return Context.current().registries.batch
+        return current_context().registries.batch
 
     def register(self) -> Batch:
         self._registry().register(self)
@@ -176,9 +174,7 @@ class Batch(Metadata):
 
     @classmethod
     def acquire(cls) -> Batch:
-        from tiozin.api.context import Context
-
-        context = Context.current()
+        context = current_context()
         resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
         previous = context.registries.batch.get_latest(**resources)
 
