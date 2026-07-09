@@ -8,7 +8,7 @@ always assign a new ID higher than all existing ones.
 `attributes` is stored as a JSON-encoded string rather than a typed struct, so its
 keys can vary freely between batches without requiring schema evolution.
 
-Next available ID: 19
+Next available ID: 21
 """
 
 from pyiceberg.partitioning import PartitionField, PartitionSpec
@@ -16,6 +16,7 @@ from pyiceberg.schema import Schema as IcebergSchema
 from pyiceberg.transforms import IdentityTransform
 from pyiceberg.types import (
     IntegerType,
+    MapType,
     NestedField,
     StringType,
     StructType,
@@ -38,10 +39,12 @@ FAILURE_COUNT_INDEX = 11
 STATE_INDEX = 12
 STATE_START_INDEX = 13
 STATE_END_INDEX = 14
-STATE_WATERMARK_INDEX = 15
-ATTRIBUTES_INDEX = 16
-CREATED_AT_INDEX = 17
-UPDATED_AT_INDEX = 18
+STATE_WATERMARKS_INDEX = 15
+STATE_WATERMARKS_KEY_INDEX = 16
+STATE_WATERMARKS_VALUE_INDEX = 17
+ATTRIBUTES_INDEX = 18
+CREATED_AT_INDEX = 19
+UPDATED_AT_INDEX = 20
 
 IcebergBatchSchema = IcebergSchema(
     NestedField(ID_INDEX, "id", StringType(), required=True),
@@ -61,7 +64,18 @@ IcebergBatchSchema = IcebergSchema(
         StructType(
             NestedField(STATE_START_INDEX, "start", TimestamptzType(), required=False),
             NestedField(STATE_END_INDEX, "end", TimestamptzType(), required=False),
-            NestedField(STATE_WATERMARK_INDEX, "watermark", StringType(), required=False),
+            NestedField(
+                STATE_WATERMARKS_INDEX,
+                "watermarks",
+                MapType(
+                    key_id=STATE_WATERMARKS_KEY_INDEX,
+                    key_type=StringType(),
+                    value_id=STATE_WATERMARKS_VALUE_INDEX,
+                    value_type=StringType(),
+                    value_required=False,
+                ),
+                required=False,
+            ),
         ),
         required=True,
     ),

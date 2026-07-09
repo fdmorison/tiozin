@@ -618,23 +618,23 @@ def test_acquire_should_register_new_batch_when_previous_is_terminal(current, fa
 
 
 @patch("tiozin.api.context.Context.current")
-def test_acquire_should_carry_watermark_forward_from_previous_state(current, fake_domain):
+def test_acquire_should_carry_watermarks_forward_from_previous_state(current, fake_domain):
     # Arrange
     previous = Batch(
         **fake_domain,
         nominal_time=PREVIOUS_START,
         status=BatchStatus.SUCCEEDED,
-        state=BatchState(watermark=42),
+        state=BatchState(watermarks={"orders": 42}),
     )
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = previous
 
     # Act
-    actual = Batch.acquire().state.watermark
+    actual = Batch.acquire().state.watermarks
 
     # Assert
-    expected = 42
+    expected = {"orders": 42}
     assert actual == expected
 
 
@@ -697,15 +697,15 @@ def test_acquire_should_start_from_epoch_when_no_previous_batch(current, fake_do
 
 
 @patch("tiozin.api.context.Context.current")
-def test_acquire_should_start_watermark_at_epoch_when_no_previous_batch(current, fake_domain):
+def test_acquire_should_start_watermarks_empty_when_no_previous_batch(current, fake_domain):
     # Arrange
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = None
 
     # Act
-    actual = Batch.acquire().state.watermark
+    actual = Batch.acquire().state.watermarks
 
     # Assert
-    expected = datetime(1970, 1, 1, tzinfo=UTC)
+    expected = {}
     assert actual == expected

@@ -29,13 +29,13 @@ def test_state_should_default_start_to_epoch():
     assert actual == expected
 
 
-def test_state_should_default_watermark_to_epoch():
+def test_state_should_default_watermarks_to_empty():
     # Arrange / Act
     result = BatchState()
 
     # Assert
-    actual = result.watermark
-    expected = datetime(1970, 1, 1, tzinfo=UTC)
+    actual = result.watermarks
+    expected = {}
     assert actual == expected
 
 
@@ -110,49 +110,52 @@ def test_state_should_truncate_start_and_end_to_minute():
 
 
 # ============================================================================
-# watermark - typed round-trip
+# watermarks - typed round-trip
 # ============================================================================
 def test_state_should_read_int_watermark_back_as_int():
     # Arrange
-    state = BatchState(watermark=42)
+    state = BatchState(watermarks={"orders": 42})
 
     # Act
-    result = state.watermark
+    result = state.watermarks
 
     # Assert
-    actual = (result, type(result))
+    mark = result["orders"]
+    actual = (mark, type(mark))
     expected = (42, int)
     assert actual == expected
 
 
 def test_state_should_read_date_watermark_back_as_date():
     # Arrange
-    state = BatchState(watermark=date(2026, 1, 15))
+    state = BatchState(watermarks={"orders": date(2026, 1, 15)})
 
     # Act
-    result = state.watermark
+    result = state.watermarks
 
     # Assert
-    actual = (result, type(result))
+    mark = result["orders"]
+    actual = (mark, type(mark))
     expected = (date(2026, 1, 15), date)
     assert actual == expected
 
 
 def test_state_should_read_datetime_watermark_back_as_datetime():
     # Arrange
-    state = BatchState(watermark=WATERMARK_DATETIME)
+    state = BatchState(watermarks={"orders": WATERMARK_DATETIME})
 
     # Act
-    result = state.watermark
+    result = state.watermarks
 
     # Assert
-    actual = (result, type(result))
+    mark = result["orders"]
+    actual = (mark, type(mark))
     expected = (WATERMARK_DATETIME, datetime)
     assert actual == expected
 
 
 # ============================================================================
-# watermark - serialization
+# watermarks - serialization
 # ============================================================================
 @pytest.mark.parametrize(
     "watermark, serialized",
@@ -163,39 +166,53 @@ def test_state_should_read_datetime_watermark_back_as_datetime():
         (None, None),
     ],
 )
-def test_state_should_serialize_watermark_as_string(watermark, serialized):
+def test_state_should_serialize_watermarks_as_strings(watermark, serialized):
     # Arrange
-    state = BatchState(watermark=watermark)
+    state = BatchState(watermarks={"orders": watermark})
 
     # Act
     result = state.model_dump()
 
     # Assert
-    actual = result["watermark"]
-    expected = serialized
+    actual = result["watermarks"]
+    expected = {"orders": serialized}
     assert actual == expected
 
 
-def test_state_should_round_trip_watermark_through_serialized_string():
+def test_state_should_round_trip_watermarks_through_serialized_string():
     # Arrange
-    dumped = BatchState(watermark=42).model_dump()
+    dumped = BatchState(watermarks={"orders": 42}).model_dump()
 
     # Act
-    result = BatchState(**dumped).watermark
+    result = BatchState(**dumped).watermarks
 
     # Assert
-    actual = (result, type(result))
+    mark = result["orders"]
+    actual = (mark, type(mark))
     expected = (42, int)
     assert actual == expected
 
 
+def test_state_should_round_trip_none_watermark_through_serialized_string():
+    # Arrange
+    dumped = BatchState(watermarks={"orders": None}).model_dump()
+
+    # Act
+    result = BatchState(**dumped).watermarks
+
+    # Assert
+    actual = result
+    expected = {"orders": None}
+    assert actual == expected
+
+
 # ============================================================================
-# watermark - validation
+# watermarks - validation
 # ============================================================================
 def test_state_should_raise_when_watermark_int_is_out_of_range():
     # Act / Assert
     with pytest.raises(ValidationError):
-        BatchState(watermark=10**20)
+        BatchState(watermarks={"orders": 10**20})
 
 
 # ============================================================================
@@ -220,20 +237,20 @@ def test_advance_to_should_set_start_to_previous_end():
     assert actual == expected
 
 
-def test_advance_to_should_carry_watermark_forward():
+def test_advance_to_should_carry_watermarks_forward():
     # Arrange
     previous = BatchState(
         start=PREVIOUS_START,
         end=PREVIOUS_END,
-        watermark=42,
+        watermarks={"orders": 42},
     )
 
     # Act
     result = previous.advance_to(NEW_END)
 
     # Assert
-    actual = result.watermark
-    expected = 42
+    actual = result.watermarks
+    expected = {"orders": 42}
     assert actual == expected
 
 

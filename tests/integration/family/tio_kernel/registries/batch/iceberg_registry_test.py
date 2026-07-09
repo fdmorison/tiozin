@@ -91,7 +91,7 @@ def test_register_should_raise_when_natural_key_already_exists(
 # ============================================================================
 # state
 # ============================================================================
-def test_register_should_persist_default_start_and_watermark_as_epoch(
+def test_register_should_persist_default_start_as_epoch_and_watermarks_as_empty(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -102,10 +102,10 @@ def test_register_should_persist_default_start_and_watermark_as_epoch(
 
     # Assert
     result = registry.get_latest(**fake_domain).state
-    actual = (result.start, result.watermark)
+    actual = (result.start, result.watermarks)
     expected = (
         datetime(1970, 1, 1, tzinfo=UTC),
-        datetime(1970, 1, 1, tzinfo=UTC),
+        {},
     )
     assert actual == expected
 
@@ -152,14 +152,14 @@ def test_register_should_persist_int_watermark(registry: IcebergBatchRegistry, f
     state = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
-        state=BatchState(watermark=42),
+        state=BatchState(watermarks={"orders": 42}),
     )
 
     # Act
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state.watermark
+    result = registry.get_latest(**fake_domain).state.watermarks["orders"]
     actual = (result, type(result))
     expected = (42, int)
     assert actual == expected
@@ -170,14 +170,14 @@ def test_register_should_persist_date_watermark(registry: IcebergBatchRegistry, 
     state = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
-        state=BatchState(watermark=date(2026, 1, 15)),
+        state=BatchState(watermarks={"orders": date(2026, 1, 15)}),
     )
 
     # Act
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state.watermark
+    result = registry.get_latest(**fake_domain).state.watermarks["orders"]
     actual = (result, type(result))
     expected = (date(2026, 1, 15), date)
     assert actual == expected
@@ -190,16 +190,64 @@ def test_register_should_persist_datetime_watermark(
     state = Batch(
         **fake_domain,
         nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
-        state=BatchState(watermark=datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC)),
+        state=BatchState(
+            watermarks={"orders": datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC)}
+        ),
     )
 
     # Act
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state.watermark
+    result = registry.get_latest(**fake_domain).state.watermarks["orders"]
     actual = (result, type(result))
     expected = (datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC), datetime)
+    assert actual == expected
+
+
+def test_register_should_persist_none_watermark(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(watermarks={"orders": None}),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    actual = registry.get_latest(**fake_domain).state.watermarks
+    expected = {"orders": None}
+    assert actual == expected
+
+
+def test_register_should_persist_one_watermark_per_source(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        state=BatchState(
+            watermarks={
+                "orders": 42,
+                "customers": date(2026, 1, 15),
+                "events": datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC),
+            }
+        ),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    actual = registry.get_latest(**fake_domain).state.watermarks
+    expected = {
+        "orders": 42,
+        "customers": date(2026, 1, 15),
+        "events": datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC),
+    }
     assert actual == expected
 
 
