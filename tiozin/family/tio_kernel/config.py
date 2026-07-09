@@ -1,7 +1,7 @@
 # ===============================================
 #           Iceberg Batch Registry
 # ===============================================
-iceberg_default_namespace = "default"
+iceberg_default_database = "default"
 iceberg_default_table = "tiozin_batches"
 
 iceberg_default_catalog = "tiozin"
