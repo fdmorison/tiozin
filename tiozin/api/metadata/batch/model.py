@@ -133,7 +133,6 @@ class Batch(Metadata):
 
     def fail(self, **attributes) -> Batch:
         self.attributes |= attributes
-        self.failure_count += 1
         self._registry().fail(self)
         return self
 
