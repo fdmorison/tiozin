@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from tiozin.api.loggable import Loggable
 from tiozin.compose import TioProxyMeta, classproperty
 from tiozin.compose.reflection import detect_family_name, detect_tiozin_role
-from tiozin.utils import slugify
+from tiozin.utils import current_context, slugify
 
 if TYPE_CHECKING:
     from .context import Context
@@ -103,9 +103,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         Raises:
             TiozinUnexpectedError if no execution scope is active.
         """
-        from .context import Context
-
-        return Context.current()
+        return current_context()
 
     def setup(self) -> None:
         """
