@@ -2,10 +2,12 @@ from datetime import datetime
 
 import wrapt
 from pyiceberg.catalog import load_catalog
-from pyiceberg.table.sorting import NullOrder, SortDirection, SortField, SortOrder
+from pyiceberg.table.sorting import NullOrder
+from pyiceberg.transforms import IdentityTransform
 from typing_extensions import Unpack
 
 from tiozin import Batch, BatchRegistry, BatchStatus
+from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.exceptions import BatchAlreadyExistsError, BatchNotFoundError
 from tiozin.utils import default
@@ -13,9 +15,9 @@ from tiozin.utils.io import mkdirs
 
 from .... import config
 from .dao import IcebergBatchDAO
-from .schema import CREATED_AT_INDEX, IcebergBatchPartitionSpec, IcebergBatchSchema
+from .schema import IcebergBatchSchema
 
-MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
+MILLIS_PER_DAY = 24 * 60 * 60 * 1000
 
 
 class IcebergBatchRegistry(BatchRegistry):
@@ -49,23 +51,22 @@ class IcebergBatchRegistry(BatchRegistry):
 
         table = catalog.create_table_if_not_exists(
             table_id,
-            schema=IcebergBatchSchema,
-            partition_spec=IcebergBatchPartitionSpec,
-            sort_order=SortOrder(
-                SortField(
-                    source_id=CREATED_AT_INDEX,
-                    direction=SortDirection.ASC,
-                    null_order=NullOrder.NULLS_LAST,
-                ),
-            ),
+            IcebergBatchSchema,
             properties={
-                "format-version": config.iceberg_table_format_version,
-                "history.expire.max-snapshot-age-ms": str(
-                    self.retention_days * MILLISECONDS_PER_DAY
-                ),
-                "history.expire.min-snapshots-to-keep": config.iceberg_table_min_snapshots_to_keep,
+                **config.iceberg_default_table_properties,
+                "history.expire.max-snapshot-age-ms": str(self.retention_days * MILLIS_PER_DAY),
             },
         )
+
+        if table.spec().is_unpartitioned():
+            with table.transaction() as txn:
+                with txn.update_schema() as schema:
+                    schema.set_identifier_fields("id")
+                with txn.update_spec() as spec:
+                    for field in RESOURCE_FIELDS:
+                        spec.add_identity(field)
+                with txn.update_sort_order() as sort:
+                    sort.asc("created_at", IdentityTransform(), NullOrder.NULLS_LAST)
 
         self._dao = IcebergBatchDAO(table)
 
