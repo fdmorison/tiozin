@@ -2,6 +2,9 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from pyiceberg.catalog import load_catalog
+from pyiceberg.table import Table
+from pyiceberg.table.sorting import NullOrder, SortDirection
 
 from tiozin import Batch, BatchStatus
 from tiozin.api.metadata.batch.state import BatchState
@@ -15,6 +18,110 @@ def registry(tmp_path: Path):
     registry.setup()
     yield registry
     registry.teardown()
+
+
+def load_batch_table(location: str) -> Table:
+    catalog = load_catalog(
+        "tiozin",
+        type="sql",
+        uri=f"sqlite:///{location}/catalog.db",
+        warehouse=f"file://{location}",
+    )
+    return catalog.load_table(("default", "tiozin_batches"))
+
+
+# ============================================================================
+# setup
+# ============================================================================
+def test_setup_should_set_id_as_identifier_field(tmp_path: Path):
+    # Arrange
+    registry = IcebergBatchRegistry(location=str(tmp_path))
+
+    # Act
+    registry.setup()
+
+    # Assert
+    table = load_batch_table(str(tmp_path))
+    actual = table.schema().identifier_field_names()
+    expected = {"id"}
+    assert actual == expected
+
+
+def test_setup_should_partition_by_resource_fields(tmp_path: Path):
+    # Arrange
+    registry = IcebergBatchRegistry(location=str(tmp_path))
+
+    # Act
+    registry.setup()
+
+    # Assert
+    table = load_batch_table(str(tmp_path))
+    actual = [field.name for field in table.spec().fields]
+    expected = ["org", "region", "domain", "subdomain", "layer", "product", "model"]
+    assert actual == expected
+
+
+def test_setup_should_sort_by_created_at_ascending(tmp_path: Path):
+    # Arrange
+    registry = IcebergBatchRegistry(location=str(tmp_path))
+
+    # Act
+    registry.setup()
+
+    # Assert
+    table = load_batch_table(str(tmp_path))
+    actual = [
+        (table.schema().find_column_name(field.source_id), field.direction, field.null_order)
+        for field in table.sort_order().fields
+    ]
+    expected = [("created_at", SortDirection.ASC, NullOrder.NULLS_LAST)]
+    assert actual == expected
+
+
+def test_setup_should_create_table_with_format_version_2(tmp_path: Path):
+    # Arrange
+    registry = IcebergBatchRegistry(location=str(tmp_path))
+
+    # Act
+    registry.setup()
+
+    # Assert
+    table = load_batch_table(str(tmp_path))
+    actual = table.metadata.format_version
+    expected = 2
+    assert actual == expected
+
+
+def test_setup_should_configure_table_properties(tmp_path: Path):
+    # Arrange
+    registry = IcebergBatchRegistry(location=str(tmp_path), retention_days=10)
+
+    # Act
+    registry.setup()
+
+    # Assert
+    table = load_batch_table(str(tmp_path))
+    actual = dict(table.properties)
+    expected = {
+        "history.expire.min-snapshots-to-keep": "7",
+        "history.expire.max-snapshot-age-ms": "864000000",
+    }
+    assert actual == expected
+
+
+def test_setup_should_not_duplicate_partition_fields_when_called_twice(tmp_path: Path):
+    # Arrange
+    registry = IcebergBatchRegistry(location=str(tmp_path))
+
+    # Act
+    registry.setup()
+    registry.setup()
+
+    # Assert
+    table = load_batch_table(str(tmp_path))
+    actual = [field.name for field in table.spec().fields]
+    expected = ["org", "region", "domain", "subdomain", "layer", "product", "model"]
+    assert actual == expected
 
 
 # ============================================================================
