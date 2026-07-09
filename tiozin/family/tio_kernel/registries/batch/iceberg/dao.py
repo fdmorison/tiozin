@@ -70,13 +70,13 @@ class IcebergBatchDAO:
     def _to_object(self, df: pa.Table) -> Batch | None:
         if not len(df):
             return None
-        row = df.to_pylist()[0]
+        row = df.to_pylist(maps_as_pydicts="strict")[0]
         row["attributes"] = json.loads(row["attributes"])
         return Batch(**row)
 
     def _to_objects(self, df: pa.Table) -> list[Batch]:
         batches = []
-        for row in df.to_pylist():
+        for row in df.to_pylist(maps_as_pydicts="strict"):
             row["attributes"] = json.loads(row["attributes"])
             batches.append(Batch(**row))
         return batches
@@ -88,6 +88,8 @@ class IcebergBatchDAO:
         with self._table.update_schema() as update:
             # Avoid Arrow inferring `null` types.
             sample = prune(record, dicts=True, lists=True)
+            # Arrow infers dicts as structs, so map fields must stay out of the sample.
+            sample.get("state", {}).pop("watermarks", None)
             # Infer newly inferred fields.
             inferred_schema = pa.Table.from_pylist([sample]).schema
             inferred_schema = inferred_schema.set(

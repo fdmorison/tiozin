@@ -31,13 +31,12 @@ class BatchState(BaseModel):
         end:
             Technical mark. UTC datetime where the execution window ends.
 
-        watermark:
-            Business mark. How far the data itself has progressed. Accepts an
-            int, date, or datetime, both on construction and on assignment,
-            and is read back as the same type. Serialized as a canonical,
-            lexicographically ordered string so that watermarks of the same
-            type compare correctly at rest. Canonical strings are parsed back
-            into their original type on construction.
+        watermarks:
+            Business marks. Named watermarks tracking how far the data has
+            progressed. Values are an int, date, datetime, or `None`,
+            serialized as canonical strings and read back as their original
+            type. The framework never initializes them; plugins decide how
+            each one starts.
     """
 
     model_config = ConfigDict(
@@ -48,7 +47,7 @@ class BatchState(BaseModel):
 
     start: NominalTime | None = Field(default_factory=epoch)
     end: NominalTime | None = Field(default_factory=utcnow)
-    watermark: Watermark | None = Field(default_factory=epoch)
+    watermarks: dict[str, Watermark | None] = Field(default_factory=dict)
 
     @field_validator("start", "end")
     @classmethod
@@ -57,9 +56,11 @@ class BatchState(BaseModel):
             return None
         return value.astimezone(UTC)
 
-    @field_serializer("watermark")
-    def _serialize_watermark(self, value: Watermark) -> RawWatermark:
-        return serialize_watermark(value)
+    @field_serializer("watermarks")
+    def _serialize_watermarks(
+        self, value: dict[str, Watermark | None]
+    ) -> dict[str, RawWatermark | None]:
+        return {name: serialize_watermark(mark) for name, mark in value.items()}
 
     def advance_to(self, end: datetime | None) -> BatchState:
         """
@@ -69,10 +70,10 @@ class BatchState(BaseModel):
             end: New end of the execution window, or `None` to leave the state unchanged.
 
         Returns:
-            A new state with the execution window advanced and the watermark
+            A new state with the execution window advanced and the watermarks
             preserved, or `self` if `end` is `None`.
         """
         if not end:
             return self
 
-        return BatchState(start=self.end, end=end, watermark=self.watermark)
+        return BatchState(start=self.end, end=end, watermarks=self.watermarks)

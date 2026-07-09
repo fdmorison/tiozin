@@ -76,7 +76,7 @@ class Batch(Metadata):
 
         state:
             Typed processing state of the batch (execution window and
-            watermark), replicated across executions. See `BatchState`.
+            watermarks), replicated across executions. See `BatchState`.
 
         attributes:
             Arbitrary job-specific metadata associated with the batch. Typical
