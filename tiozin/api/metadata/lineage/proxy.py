@@ -10,7 +10,7 @@ from tiozin.utils import human_join
 from .enums import EmitLevel
 
 if TYPE_CHECKING:
-    from .registry import LineageRegistry
+    from .base import LineageRegistry
 
 EVENT_METHODS = frozenset(
     {
