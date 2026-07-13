@@ -9,50 +9,68 @@ class BatchStatus(LowerEnum):
     """
     Lifecycle states of a batch, forming a state machine.
 
-    PENDING is the initial state. The batch advances through RUNNING and, on
+    PENDING is the initial status. The state advances through RUNNING and, on
     success, reaches SUCCEEDED. From there it can be replayed back to PENDING.
 
-    On failure, the batch enters FAILED and is automatically retried via
-    RUNNING. After exhausting retry attempts it is escalated to QUARANTINED.
-    Batches can also be abandoned at any point via CANCELED. Both QUARANTINED
-    and CANCELED support replay by returning to PENDING.
+    Every status is either terminal or runnable: parked until replayed, or
+    able to enter execution.
+
+    PENDING -> RUNNING -> SUCCEEDED
+        Happy path: a queued batch runs and completes successfully.
+
+    PENDING -> RUNNING -> FAILED * N -> QUARANTINED
+        A running batch that fails is retried via RUNNING. After exhausting
+        the retry limit, it is escalated to QUARANTINED instead of retried again.
+
+    RUNNING -> QUARANTINED
+        A running batch can also be quarantined directly, without exhausting
+        retries, e.g. by manual intervention.
+
+    PENDING|RUNNING -> CANCELED
+        A batch can be abandoned while queued or while running.
+
+    Any status -> PENDING (replay)
+        Every status can be replayed back to PENDING, including RUNNING (an
+        interrupted execution) and FAILED (restart retries from 0).
 
     Attributes:
         PENDING:
             Queued and awaiting the start of processing.
         RUNNING:
             Actively being processed.
+        FAILED:
+            Processing failed. Retried via RUNNING until retries are exhausted, then
+            escalated to QUARANTINED.
         SUCCEEDED:
             Processing completed successfully.
-        FAILED:
-            Processing failed. Eligible for retry via RUNNING, or escalated to
-            QUARANTINED after exhausting retry attempts.
-        CANCELED:
-            Abandoned by manual action or business logic. Can be replayed.
         QUARANTINED:
-            Definitively failed or isolated by business logic. Requires manual
-            intervention before replaying.
+            Definitively failed or isolated by business logic. Requires manual replay.
+        CANCELED:
+            Abandoned by manual action, whether queued or in progress.
     """
 
     PENDING = auto()
     RUNNING = auto()
-    SUCCEEDED = auto()
     FAILED = auto()
-    CANCELED = auto()
-    QUARANTINED = auto()
 
-    __transitions__: ClassVar[dict[Self, set[Self]]] = {
+    SUCCEEDED = auto()
+    QUARANTINED = auto()
+    CANCELED = auto()
+
+    __state_machine__: ClassVar[dict[Self, set[Self]]] = {
         PENDING: {RUNNING, CANCELED},
-        RUNNING: {SUCCEEDED, FAILED, QUARANTINED},
-        FAILED: {RUNNING, QUARANTINED},
+        RUNNING: {PENDING, SUCCEEDED, FAILED, CANCELED, QUARANTINED},
+        FAILED: {PENDING, RUNNING, QUARANTINED},
         SUCCEEDED: {PENDING},
         CANCELED: {PENDING},
         QUARANTINED: {PENDING},
     }
 
     def can_transition_to(self, target: Self) -> bool:
-        """Checks if the transition to the target state is valid."""
-        return target is self or target in self.__transitions__[self]
+        """
+        Checks if the transition to the target state is valid. Self-transitions always are.
+        """
+        return target is self or target in self.__state_machine__[self]
 
     def transition_to(self, target: Self, failfast: bool = True) -> Self:
         """
@@ -66,7 +84,7 @@ class BatchStatus(LowerEnum):
             Target state if allowed, otherwise current state (when failfast=False).
 
         Raises:
-            ValueError: If transition is invalid (when failfast=True).
+            BatchTransitionError: If transition is invalid (when failfast=True).
         """
         if self.can_transition_to(target):
             return target
@@ -77,12 +95,36 @@ class BatchStatus(LowerEnum):
         return self
 
     def is_terminal(self) -> bool:
-        """Returns True if the batch is no longer progressing and can only be replayed."""
-        return self.__transitions__[self] <= {self.PENDING}
+        """
+        Returns True if a batch in this status can no longer enter execution.
 
-    def is_retriable(self) -> bool:
-        """Returns True if this state can transition back to RUNNING for a retry."""
-        return self.RUNNING in self.__transitions__[self]
+        Terminal statuses are parked: nothing happens to them until they are
+        explicitly replayed back to PENDING. Always the negation of
+        `is_operational`.
+        """
+        return not self.can_transition_to(self.RUNNING)
+
+    def is_operational(self) -> bool:
+        """
+        Returns True if a batch in this status can enter or re-enter execution.
+
+        Covers every path into RUNNING: the first run of a pending batch, the
+        retry of a failed one, and the resumption of an interrupted one.
+        Always the negation of `is_terminal`.
+        """
+        return self.can_transition_to(self.RUNNING)
+
+    def is_replayable(self) -> bool:
+        """
+        Returns True if a batch in this status can be replayed back to PENDING.
+        """
+        return self.can_transition_to(self.PENDING)
+
+    def is_done(self) -> bool:
+        return not self.is_terminal()
+
+    def is_todo(self) -> bool:
+        return not self.is_operational()
 
     def is_pending(self) -> bool:
         return self is self.PENDING
