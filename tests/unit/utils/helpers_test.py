@@ -1,19 +1,22 @@
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
 from typing import Any
 
+import pendulum
 import pytest
 from pendulum import UTC
 
 from tiozin.utils import (
     as_flat_list,
     as_list,
+    as_utc,
     default,
     epoch,
     human_join,
+    isozformat,
     prune,
     slugify,
     utcnow,
@@ -687,6 +690,81 @@ def test_epoch_should_return_timezone_aware_datetime():
     # Assert
     actual = result.tzinfo
     expected = UTC
+    assert actual == expected
+
+
+# ============================================================================
+# Testing as_utc()
+# ============================================================================
+@pytest.mark.parametrize(
+    "dt",
+    [
+        datetime(2026, 7, 13, 9, 30, tzinfo=timezone(timedelta(hours=-3))),
+        pendulum.datetime(2026, 7, 13, 9, 30, tz="America/Sao_Paulo"),
+    ],
+)
+def test_as_utc_should_convert_to_same_instant_in_utc(dt: datetime):
+    # Act
+    result = as_utc(dt)
+
+    # Assert
+    actual = result
+    expected = datetime(2026, 7, 13, 12, 30, tzinfo=UTC)
+    assert actual == expected
+
+
+def test_as_utc_should_preserve_instant_when_already_utc():
+    # Arrange
+    dt = datetime(2026, 7, 13, 12, 30, tzinfo=UTC)
+
+    # Act
+    result = as_utc(dt)
+
+    # Assert
+    actual = result
+    expected = datetime(2026, 7, 13, 12, 30, tzinfo=UTC)
+    assert actual == expected
+
+
+def test_as_utc_should_assume_utc_when_datetime_is_naive():
+    # Arrange
+    dt = datetime(2026, 7, 13, 9, 30)
+
+    # Act
+    result = as_utc(dt)
+
+    # Assert
+    actual = result
+    expected = datetime(2026, 7, 13, 9, 30, tzinfo=UTC)
+    assert actual == expected
+
+
+# ============================================================================
+# Testing isozformat()
+# ============================================================================
+def test_isozformat_should_preserve_timezone_offset():
+    # Arrange
+    dt = datetime(2026, 7, 13, 9, 30, tzinfo=timezone(timedelta(hours=-3)))
+
+    # Act
+    result = isozformat(dt)
+
+    # Assert
+    actual = result
+    expected = "2026-07-13T09:30:00-03:00"
+    assert actual == expected
+
+
+def test_isozformat_should_format_utc_datetime_with_z_suffix():
+    # Arrange
+    dt = datetime(2026, 7, 13, 12, 30, tzinfo=UTC)
+
+    # Act
+    result = isozformat(dt)
+
+    # Assert
+    actual = result
+    expected = "2026-07-13T12:30:00Z"
     assert actual == expected
 
 
