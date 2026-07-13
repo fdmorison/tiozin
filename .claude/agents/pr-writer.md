@@ -6,16 +6,20 @@ effort: high
 tools:
   - Read
   - Grep
-  - Glob
   - AskUserQuestion
   - committing
   - Bash(git diff:-)
   - Bash(git log:-)
   - Bash(git status:-)
+  - Bash(git branch:-)
   - Bash(git checkout:-)
+  - Bash(git switch:-)
+  - Bash(git add:-)
+  - Bash(git commit:-)
   - Bash(git push:-)
   - Bash(gh pr create:-)
   - Bash(gh api:-)
+  - Bash(make format)
 ---
 
 ## Persona
