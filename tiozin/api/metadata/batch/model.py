@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-from pydantic import AwareDatetime, Field, field_validator
+from pydantic import Field
 
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import current_context, generate_id, utcnow
+from tiozin.utils import current_context, generate_id, isozformat, utcnow
 
-from ...types import NominalTime
+from ...types import NominalTime, TechnicalTime
 from ..model import Metadata
 from .state import BatchState
 from .status import BatchStatus
@@ -19,23 +18,25 @@ if TYPE_CHECKING:
 
 class Batch(Metadata):
     """
-    Represents the lifecycle of a logical batch of data.
+    Stateful physical batch of data.
 
-    A batch uniquely identifies a unit of work within a resource and tracks its
-    processing lifecycle. It may represent a partition, file, offset, snapshot,
-    or any other job-defined granularity.
+    A batch is a portion of data delimited by a nominal processing window. It
+    may represent either an increment or the full history; the window, not the
+    batch, determines which. Typical physical representations include
+    partitions, files, offset ranges, or snapshots.
+
+    A batch is not an execution. It remains the same batch regardless of how
+    many executions are required to process it.
 
     Batches are uniquely identified by `(resource, nominal_time)`. Their status
-    evolves over time as the batch progresses through processing, replay,
-    quarantine, or cancellation.
+    evolves over time as they are processed, replayed, quarantined, or canceled.
 
-    Collections of batches support higher-level concepts such as backlogs,
-    representing batches awaiting processing.
+    Collections of batches form backlogs representing data awaiting processing.
 
     Attributes:
         id:
-            Deterministic UUID derived from the natural key
-            (`resource + nominal_time`). Stable across updates to the same batch.
+            Unique identifier of the batch. Generated as a UUIDv7, so ids are
+            monotonically increasing and chronologically sortable.
 
         org:
             Organization that owns the resource.
@@ -59,15 +60,17 @@ class Batch(Metadata):
             Model associated with the resource.
 
         nominal_time:
-            UTC datetime identifying the technical execution increment. Analogous to Airflow's
-            logical_date. Truncated to minute precision (seconds and microseconds are zeroed).
+            UTC datetime that uniquely identifies the logical execution time of the run.
+            It represents the expected execution time rather than the actual execution time.
+            Truncated according to the run cadence (minute precision by default).
+            Equivalent to OpenLineage's nominal time concept, see
+            https://openlineage.io/docs/1.47.0/spec/facets/run-facets/nominal_time/
 
         status:
             Current lifecycle status of the batch.
 
         failure_count:
-            Number of failures since the batch was last replayed. Incremented
-            each time the batch fails and reset when the batch is replayed.
+            Number of failures since the batch was last replayed.
 
         state:
             Typed processing state of the batch (execution window and
@@ -97,6 +100,7 @@ class Batch(Metadata):
     layer: str = Field(frozen=True)
     product: str = Field(frozen=True)
     model: str = Field(frozen=True)
+
     nominal_time: NominalTime = Field(frozen=True)
 
     status: BatchStatus = BatchStatus.PENDING
@@ -104,13 +108,8 @@ class Batch(Metadata):
     state: BatchState = Field(default_factory=BatchState)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
-    created_at: AwareDatetime = Field(default_factory=utcnow, frozen=True)
-    updated_at: AwareDatetime = Field(default_factory=utcnow)
-
-    @field_validator("nominal_time", "created_at", "updated_at")
-    @classmethod
-    def _normalize_timezone(cls, value: datetime) -> datetime:
-        return value.astimezone(UTC)
+    created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
+    updated_at: TechnicalTime = Field(default_factory=utcnow)
 
     def _registry(self) -> BatchRegistry:
         return current_context().registries.batch
@@ -149,8 +148,7 @@ class Batch(Metadata):
 
     @property
     def qualified_natural_key(self) -> str:
-        nominal_time = self.nominal_time.isoformat().replace("+00:00", "Z")
-        return f"{self.qualified_resource}.{nominal_time}"
+        return f"{self.qualified_resource}.{isozformat(self.nominal_time)}"
 
     @classmethod
     def acquire(cls) -> Batch:

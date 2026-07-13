@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import StrEnum, auto
+from enum import StrEnum
 from typing import Self
+
+from pendulum import DateTime, Duration
+from pendulum import instance as PendulumDateTime
+
+from tiozin.utils import default
 
 
 class UpperEnum(StrEnum):
@@ -49,48 +54,120 @@ class LowerEnum(StrEnum):
 
 class Cadence(LowerEnum):
     """
-    Granularity at which a recurring datetime (e.g. a job's nominal time) advances.
+    Frequency at which a job runs, ordered from finest to coarsest.
 
-    Ordered from finest to coarsest. `truncate` zeroes out everything below
-    the given granularity.
+    Each cadence carries the calendar unit its slots are measured in and
+    provides slot arithmetic on top of it: truncation, advancement, and the
+    interval a slot covers.
     """
 
-    MINUTE = auto()
-    HOUR = auto()
-    DAY = auto()
-    MONTH = auto()
+    unit: str
 
-    def truncate(self, value: datetime) -> datetime:
+    MINUTELY = "minutely", "minute"
+    HOURLY = "hourly", "hour"
+    DAILY = "daily", "day"
+    WEEKLY = "weekly", "week"
+    MONTHLY = "monthly", "month"
+
+    def __new__(cls, value: str, unit: str) -> Self:
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.unit = unit
+        return member
+
+    @property
+    def step(self) -> dict[str, int]:
         """
-        Truncate a datetime down to the start of this cadence's slot.
+        The advance of one slot expressed as datetime keyword arguments, ready
+        to be splatted into arithmetic like ``dt.add(**cadence.step)``.
+
+        Examples:
+            >>> Cadence.MINUTELY.step
+            {'minutes': 1}
+            >>> Cadence.DAILY.step
+            {'days': 1}
+        """
+        return {f"{self.unit}s": 1}
+
+    @property
+    def duration(self) -> Duration:
+        """
+        The length of one slot of this cadence, as a ``Duration``
+        ready for datetime arithmetic and unit conversions.
+
+        Examples:
+            >>> Cadence.MINUTELY.duration
+            Duration(minutes=1)
+            >>> Cadence.DAILY.duration.in_hours()
+            24
+            >>> nominal_time + Cadence.HOURLY.duration
+            DateTime(2024, 3, 15, 11, 30, 0, tzinfo=Timezone('UTC'))
+        """
+        return Duration(**self.step)
+
+    def truncate(self, value: datetime) -> DateTime:
+        """
+        Truncate a datetime down to the start of its slot in this cadence.
 
         Args:
             value: The datetime to truncate.
 
         Examples:
-            >>> Cadence.MINUTE.truncate(datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC))
+            >>> Cadence.MINUTELY.truncate(datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC))
             datetime(2024, 3, 15, 10, 30, tzinfo=UTC)
-            >>> Cadence.MONTH.truncate(datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC))
+            >>> Cadence.MONTHLY.truncate(datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC))
             datetime(2024, 3, 1, 0, 0, tzinfo=UTC)
         """
-        fields = {
-            self.MINUTE: {"second": 0, "microsecond": 0},
-            self.HOUR: {"minute": 0, "second": 0, "microsecond": 0},
-            self.DAY: {"hour": 0, "minute": 0, "second": 0, "microsecond": 0},
-            self.MONTH: {"day": 1, "hour": 0, "minute": 0, "second": 0, "microsecond": 0},
-        }
-        return value.replace(**fields[self])
+        return PendulumDateTime(value).start_of(self.unit)
 
-    def truncate_iso(self, value: datetime) -> str:
+    def next(self, value: datetime) -> DateTime:
         """
-        Truncate a datetime down to the start of this cadence's slot and format it
-        as an ISO 8601 string, using `Z` instead of `+00:00` for UTC.
-
-        Args:
-            value: The datetime to truncate.
+        Return the start of the slot that follows the one containing the datetime.
 
         Examples:
-            >>> Cadence.MINUTE.truncate_iso(datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC))
-            '2024-03-15T10:30:00Z'
+            >>> Cadence.DAILY.next(datetime(2024, 3, 15, 10, 30, tzinfo=UTC))
+            datetime(2024, 3, 16, 0, 0, tzinfo=UTC)
         """
-        return self.truncate(value).isoformat().replace("+00:00", "Z")
+        return self.truncate(value).add(**self.step)
+
+    def previous(self, value: datetime) -> DateTime:
+        """
+        Return the start of the slot that precedes the one containing the datetime.
+
+        Examples:
+            >>> Cadence.DAILY.previous(datetime(2024, 3, 15, 10, 30, tzinfo=UTC))
+            datetime(2024, 3, 14, 0, 0, tzinfo=UTC)
+        """
+        return self.truncate(value).subtract(**self.step)
+
+    def interval(self, value: datetime, is_start: bool = None) -> tuple[DateTime, DateTime]:
+        """
+        Return the [start, end) interval of one slot anchored at the datetime's slot.
+
+        By default the datetime marks the end of the interval, which is the
+        convention for nominal times. Pass ``is_start=True`` when it marks
+        the beginning instead.
+
+        Examples:
+            >>> Cadence.DAILY.interval(datetime(2024, 3, 15, 10, 30, tzinfo=UTC))
+            (datetime(2024, 3, 14, 0, 0, tzinfo=UTC), datetime(2024, 3, 15, 0, 0, tzinfo=UTC))
+            >>> Cadence.DAILY.interval(datetime(2024, 3, 15, 10, 30, tzinfo=UTC), is_start=True)
+            (datetime(2024, 3, 15, 0, 0, tzinfo=UTC), datetime(2024, 3, 16, 0, 0, tzinfo=UTC))
+        """
+        is_start = default(is_start, False)
+        if is_start:
+            return self.truncate(value), self.next(value)
+        return self.previous(value), self.truncate(value)
+
+    def is_nominal(self, value: datetime) -> bool:
+        """
+        Whether the datetime is a valid nominal time for this cadence, i.e.
+        sits exactly on a slot boundary.
+
+        Examples:
+            >>> Cadence.HOURLY.is_nominal(datetime(2024, 3, 15, 10, 0, tzinfo=UTC))
+            True
+            >>> Cadence.HOURLY.is_nominal(datetime(2024, 3, 15, 10, 30, tzinfo=UTC))
+            False
+        """
+        return PendulumDateTime(value) == self.truncate(value)

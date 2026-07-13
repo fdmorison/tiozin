@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ..api import Batch
-from ..utils import human_join
+from ..utils import human_join, isozformat
 
 console = Console()
 
@@ -41,12 +41,12 @@ def render_batches(batches: list[Batch]) -> None:
     for batch in batches:
         table.add_row(
             batch.id,
-            batch.nominal_time.isoformat().replace("+00:00", "Z"),
+            isozformat(batch.nominal_time),
             batch.status.value,
             str(batch.failure_count),
             str(batch.state.model_dump(mode="json")),
             str(batch.attributes),
-            batch.created_at.isoformat().replace("+00:00", "Z"),
-            batch.updated_at.isoformat().replace("+00:00", "Z"),
+            isozformat(batch.created_at),
+            isozformat(batch.updated_at),
         )
     console.print(table)
