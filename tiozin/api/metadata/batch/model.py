@@ -18,23 +18,25 @@ if TYPE_CHECKING:
 
 class Batch(Metadata):
     """
-    Represents the lifecycle of a logical batch of data.
+    Stateful physical batch of data.
 
-    A batch uniquely identifies a unit of work within a resource and tracks its
-    processing lifecycle. It may represent a partition, file, offset, snapshot,
-    or any other job-defined granularity.
+    A batch is a portion of data delimited by a nominal processing window. It
+    may represent either an increment or the full history; the window, not the
+    batch, determines which. Typical physical representations include
+    partitions, files, offset ranges, or snapshots.
+
+    A batch is not an execution. It remains the same batch regardless of how
+    many executions are required to process it.
 
     Batches are uniquely identified by `(resource, nominal_time)`. Their status
-    evolves over time as the batch progresses through processing, replay,
-    quarantine, or cancellation.
+    evolves over time as they are processed, replayed, quarantined, or canceled.
 
-    Collections of batches support higher-level concepts such as backlogs,
-    representing batches awaiting processing.
+    Collections of batches form backlogs representing data awaiting processing.
 
     Attributes:
         id:
-            Deterministic UUID derived from the natural key
-            (`resource + nominal_time`). Stable across updates to the same batch.
+            Unique identifier of the batch. Generated as a UUIDv7, so ids are
+            monotonically increasing and chronologically sortable.
 
         org:
             Organization that owns the resource.
@@ -58,15 +60,17 @@ class Batch(Metadata):
             Model associated with the resource.
 
         nominal_time:
-            UTC datetime identifying the technical execution increment. Analogous to Airflow's
-            logical_date. Truncated to minute precision (seconds and microseconds are zeroed).
+            UTC datetime that uniquely identifies the logical execution time of the run.
+            It represents the expected execution time rather than the actual execution time.
+            Truncated according to the run cadence (minute precision by default).
+            Equivalent to OpenLineage's nominal time concept, see
+            https://openlineage.io/docs/1.47.0/spec/facets/run-facets/nominal_time/
 
         status:
             Current lifecycle status of the batch.
 
         failure_count:
-            Number of failures since the batch was last replayed. Incremented
-            each time the batch fails and reset when the batch is replayed.
+            Number of failures since the batch was last replayed.
 
         state:
             Typed processing state of the batch (execution window and
