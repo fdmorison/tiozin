@@ -7,10 +7,13 @@ VALID_TRANSITIONS = [
     (BatchStatus.PENDING, BatchStatus.RUNNING),
     (BatchStatus.PENDING, BatchStatus.CANCELED),
     (BatchStatus.PENDING, BatchStatus.PENDING),
+    (BatchStatus.RUNNING, BatchStatus.PENDING),
     (BatchStatus.RUNNING, BatchStatus.SUCCEEDED),
     (BatchStatus.RUNNING, BatchStatus.FAILED),
     (BatchStatus.RUNNING, BatchStatus.QUARANTINED),
+    (BatchStatus.RUNNING, BatchStatus.CANCELED),
     (BatchStatus.RUNNING, BatchStatus.RUNNING),
+    (BatchStatus.FAILED, BatchStatus.PENDING),
     (BatchStatus.FAILED, BatchStatus.RUNNING),
     (BatchStatus.FAILED, BatchStatus.QUARANTINED),
     (BatchStatus.FAILED, BatchStatus.FAILED),
@@ -26,13 +29,10 @@ INVALID_TRANSITIONS = [
     (BatchStatus.PENDING, BatchStatus.SUCCEEDED),
     (BatchStatus.PENDING, BatchStatus.FAILED),
     (BatchStatus.PENDING, BatchStatus.QUARANTINED),
-    (BatchStatus.RUNNING, BatchStatus.PENDING),
-    (BatchStatus.RUNNING, BatchStatus.CANCELED),
     (BatchStatus.SUCCEEDED, BatchStatus.RUNNING),
     (BatchStatus.SUCCEEDED, BatchStatus.FAILED),
     (BatchStatus.SUCCEEDED, BatchStatus.CANCELED),
     (BatchStatus.SUCCEEDED, BatchStatus.QUARANTINED),
-    (BatchStatus.FAILED, BatchStatus.PENDING),
     (BatchStatus.FAILED, BatchStatus.SUCCEEDED),
     (BatchStatus.FAILED, BatchStatus.CANCELED),
     (BatchStatus.CANCELED, BatchStatus.RUNNING),
@@ -48,13 +48,15 @@ INVALID_TRANSITIONS = [
 TERMINAL_STATUSES = [BatchStatus.SUCCEEDED, BatchStatus.CANCELED, BatchStatus.QUARANTINED]
 NON_TERMINAL_STATUSES = [BatchStatus.PENDING, BatchStatus.RUNNING, BatchStatus.FAILED]
 
-RETRIABLE_STATUSES = [BatchStatus.PENDING, BatchStatus.FAILED]
-NON_RETRIABLE_STATUSES = [
-    BatchStatus.RUNNING,
+OPERATIONAL_STATUSES = [BatchStatus.PENDING, BatchStatus.RUNNING, BatchStatus.FAILED]
+NON_OPERATIONAL_STATUSES = [
     BatchStatus.SUCCEEDED,
     BatchStatus.CANCELED,
     BatchStatus.QUARANTINED,
 ]
+
+# Every status can transition back to PENDING, so all statuses are replayable.
+REPLAYABLE_STATUSES = list(BatchStatus)
 
 STATUS_VALUES = [
     (BatchStatus.PENDING, "pending"),
@@ -154,28 +156,38 @@ def test_is_terminal_should_not_pass_when_status_can_still_progress(status: Batc
 
 
 # ============================================================================
-# is_retriable
+# is_operational
 # ============================================================================
-@pytest.mark.parametrize("status", RETRIABLE_STATUSES)
-def test_is_retriable_should_pass_when_status_can_transition_back_to_running(
-    status: BatchStatus,
-):
+@pytest.mark.parametrize("status", OPERATIONAL_STATUSES)
+def test_is_operational_should_pass_when_status_can_enter_execution(status: BatchStatus):
     # Act
-    actual = status.is_retriable()
+    actual = status.is_operational()
 
     # Assert
     assert actual is True
 
 
-@pytest.mark.parametrize("status", NON_RETRIABLE_STATUSES)
-def test_is_retriable_should_not_pass_when_status_cannot_transition_back_to_running(
-    status: BatchStatus,
-):
+@pytest.mark.parametrize("status", NON_OPERATIONAL_STATUSES)
+def test_is_operational_should_not_pass_when_status_cannot_enter_execution(status: BatchStatus):
     # Act
-    actual = status.is_retriable()
+    actual = status.is_operational()
 
     # Assert
     assert actual is False
+
+
+# ============================================================================
+# is_replayable
+# ============================================================================
+@pytest.mark.parametrize("status", REPLAYABLE_STATUSES)
+def test_is_replayable_should_pass_when_status_can_transition_back_to_pending(
+    status: BatchStatus,
+):
+    # Act
+    actual = status.is_replayable()
+
+    # Assert
+    assert actual is True
 
 
 # ============================================================================
@@ -318,10 +330,8 @@ def test_to_pending_should_return_pending_when_valid():
     assert actual == expected
 
 
-def test_to_pending_should_raise_transition_error_when_invalid():
-    # Act / Assert
-    with pytest.raises(BatchTransitionError):
-        BatchStatus.RUNNING.to_pending()
+# Every status can transition back to PENDING, so `to_pending` has no invalid
+# source and therefore no raise path to exercise.
 
 
 # ============================================================================
@@ -393,7 +403,7 @@ def test_to_canceled_should_return_canceled_when_valid():
 def test_to_canceled_should_raise_transition_error_when_invalid():
     # Act / Assert
     with pytest.raises(BatchTransitionError):
-        BatchStatus.RUNNING.to_canceled()
+        BatchStatus.FAILED.to_canceled()
 
 
 # ============================================================================

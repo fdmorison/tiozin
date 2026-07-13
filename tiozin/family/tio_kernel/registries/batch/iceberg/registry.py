@@ -94,32 +94,7 @@ class IcebergBatchRegistry(BatchRegistry):
             raise BatchAlreadyExistsError(batch=batch)
         return batch
 
-    def begin(self, batch: Batch) -> Batch:
-        if self._batch_dao.update(batch) == 0:
-            raise BatchNotFoundError(batch=batch)
-        return batch
-
-    def commit(self, batch: Batch) -> Batch:
-        if self._batch_dao.update(batch) == 0:
-            raise BatchNotFoundError(batch=batch)
-        return batch
-
-    def fail(self, batch: Batch) -> Batch:
-        if self._batch_dao.update(batch) == 0:
-            raise BatchNotFoundError(batch=batch)
-        return batch
-
-    def cancel(self, batch: Batch) -> Batch:
-        if self._batch_dao.update(batch) == 0:
-            raise BatchNotFoundError(batch=batch)
-        return batch
-
-    def quarantine(self, batch: Batch) -> Batch:
-        if self._batch_dao.update(batch) == 0:
-            raise BatchNotFoundError(batch=batch)
-        return batch
-
-    def replay(self, batch: Batch) -> Batch:
+    def register_transition(self, batch: Batch) -> Batch:
         if self._batch_dao.update(batch) == 0:
             raise BatchNotFoundError(batch=batch)
         return batch

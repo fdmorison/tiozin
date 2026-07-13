@@ -10,8 +10,8 @@ class NoOpBatchRegistry(BatchRegistry):
     """
     No-op batch registry.
 
-    Does nothing. Returns the received batch for all transitions, None for
-    `get_latest`, and an empty list for the backlog and history.
+    Does nothing. Returns the received batch for every write, `None` for
+    `get`/`get_latest`, and an empty list for the backlog and history.
     Useful for testing or when batch tracking is disabled.
     """
 
@@ -21,22 +21,7 @@ class NoOpBatchRegistry(BatchRegistry):
     def register(self, batch: Batch) -> Batch:
         return batch
 
-    def begin(self, batch: Batch) -> Batch:
-        return batch
-
-    def commit(self, batch: Batch) -> Batch:
-        return batch
-
-    def fail(self, batch: Batch) -> Batch:
-        return batch
-
-    def cancel(self, batch: Batch) -> Batch:
-        return batch
-
-    def quarantine(self, batch: Batch) -> Batch:
-        return batch
-
-    def replay(self, batch: Batch) -> Batch:
+    def register_transition(self, batch: Batch) -> Batch:
         return batch
 
     def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:

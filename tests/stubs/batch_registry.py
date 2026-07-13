@@ -7,28 +7,13 @@ from tiozin.api.typehint import ResourceKwargs
 
 
 class BatchRegistryStub(BatchRegistry):
-    def __init__(self):
-        super().__init__(location="stub://batch")
+    def __init__(self, retries: int = None, failfast: bool = None):
+        super().__init__(location="stub://batch", retries=retries, failfast=failfast)
 
     def register(self, batch: Batch) -> Batch:
         return batch
 
-    def begin(self, batch: Batch) -> Batch:
-        return batch
-
-    def commit(self, batch: Batch) -> Batch:
-        return batch
-
-    def fail(self, batch: Batch) -> Batch:
-        return batch
-
-    def cancel(self, batch: Batch) -> Batch:
-        return batch
-
-    def quarantine(self, batch: Batch) -> Batch:
-        return batch
-
-    def replay(self, batch: Batch) -> Batch:
+    def register_transition(self, batch: Batch) -> Batch:
         return batch
 
     def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:

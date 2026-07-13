@@ -17,84 +17,13 @@ if TYPE_CHECKING:
 
 class BatchRegistryProxy(wrapt.ObjectProxy):
     """
-    Proxy that enforces state machine transitions before delegating to the
-    wrapped registry.
+    Internal proxy that wraps BatchRegistry implementations with core-level batch handling.
 
-    Registry implementations receive a fully mutated Batch and are
-    responsible only for persistence. Transition validation happens here
-    regardless of whether the registry is called through Batch methods or
-    directly.
+    Resolves core defaults before delegating to the wrapped registry.
+
+    This is an internal implementation detail. Callers rely on `BatchRegistry`
+    and should not interact with this proxy directly.
     """
-
-    def register(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-        return registry.register(batch)
-
-    def begin(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-
-        if batch.status.is_running():
-            registry.warning("The batch was already RUNNING.")
-
-        batch.status = batch.status.to_running(failfast=registry.failfast)
-        batch.updated_at = utcnow()
-        return registry.begin(batch)
-
-    def commit(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-
-        if batch.status.is_succeeded():
-            registry.warning("The batch was already SUCCEEDED.")
-
-        batch.status = batch.status.to_succeeded(failfast=registry.failfast)
-        batch.updated_at = utcnow()
-        return registry.commit(batch)
-
-    def fail(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-
-        batch.failure_count += 1
-
-        if batch.failure_count > registry.retries:
-            return self.quarantine(batch)
-
-        if batch.status.is_failed():
-            registry.warning("The batch was already FAILED.")
-
-        batch.status = batch.status.to_failed(failfast=registry.failfast)
-        batch.updated_at = utcnow()
-        return registry.fail(batch)
-
-    def cancel(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-
-        if batch.status.is_canceled():
-            registry.warning("The batch was already CANCELED.")
-
-        batch.status = batch.status.to_canceled(failfast=registry.failfast)
-        batch.updated_at = utcnow()
-        return registry.cancel(batch)
-
-    def quarantine(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-
-        if batch.status.is_quarantined():
-            registry.warning("The batch was already QUARANTINED.")
-
-        batch.status = batch.status.to_quarantined(failfast=registry.failfast)
-        batch.updated_at = utcnow()
-        return registry.quarantine(batch)
-
-    def replay(self, batch: Batch) -> Batch:
-        registry: BatchRegistry = self.__wrapped__
-
-        if batch.status.is_pending():
-            registry.warning("The batch was already PENDING.")
-
-        batch.status = batch.status.to_pending(failfast=registry.failfast)
-        batch.failure_count = 0
-        batch.updated_at = utcnow()
-        return registry.replay(batch)
 
     def get_history(
         self, limit: int = None, since: datetime = None, **resource: Unpack[ResourceKwargs]
