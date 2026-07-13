@@ -24,6 +24,13 @@ CURRENT_START = datetime(2026, 1, 17, tzinfo=UTC)
 CURRENT_NOMINAL_TIME = datetime(2026, 1, 16, 8, 15, tzinfo=UTC)
 
 
+@pytest.fixture
+def registry() -> MagicMock:
+    mock = MagicMock()
+    with patch("tiozin.api.metadata.batch.model.Batch._registry", return_value=mock):
+        yield mock
+
+
 # ============================================================================
 # construction / validation
 # ============================================================================
@@ -146,7 +153,7 @@ def test_batch_should_reassign_when_mutable_field_is_set(field, value, fake_doma
 # ============================================================================
 # computed properties - keys
 # ============================================================================
-def test_domain_key_should_return_domain_fields():
+def test_qualified_resource_should_join_resource_fields_with_dots():
     # Arrange
     batch = Batch(
         org="acme",
@@ -160,14 +167,14 @@ def test_domain_key_should_return_domain_fields():
     )
 
     # Act
-    actual = batch.domain_key
+    actual = batch.qualified_resource
 
     # Assert
-    expected = ("acme", "us-east", "sales")
+    expected = "acme.us-east.sales.orders.bronze.catalog.products"
     assert actual == expected
 
 
-def test_subdomain_key_should_return_subdomain_fields():
+def test_qualified_natural_key_should_append_nominal_time_to_qualified_resource():
     # Arrange
     batch = Batch(
         org="acme",
@@ -181,93 +188,18 @@ def test_subdomain_key_should_return_subdomain_fields():
     )
 
     # Act
-    actual = batch.subdomain_key
+    actual = batch.qualified_natural_key
 
     # Assert
-    expected = ("acme", "us-east", "sales", "orders")
-    assert actual == expected
-
-
-def test_product_key_should_return_product_fields():
-    # Arrange
-    batch = Batch(
-        org="acme",
-        region="us-east",
-        domain="sales",
-        subdomain="orders",
-        layer="bronze",
-        product="catalog",
-        model="products",
-        nominal_time=NOMINAL_TIME,
-    )
-
-    # Act
-    actual = batch.product_key
-
-    # Assert
-    expected = ("bronze", "catalog", "products")
-    assert actual == expected
-
-
-def test_resource_key_should_return_domain_and_product_fields():
-    # Arrange
-    batch = Batch(
-        org="acme",
-        region="us-east",
-        domain="sales",
-        subdomain="orders",
-        layer="bronze",
-        product="catalog",
-        model="products",
-        nominal_time=NOMINAL_TIME,
-    )
-
-    # Act
-    actual = batch.resource_key
-
-    # Assert
-    expected = ("acme", "us-east", "sales", "orders", "bronze", "catalog", "products")
-    assert actual == expected
-
-
-def test_natural_key_should_return_resource_fields_and_nominal_time():
-    # Arrange
-    batch = Batch(
-        org="acme",
-        region="us-east",
-        domain="sales",
-        subdomain="orders",
-        layer="bronze",
-        product="catalog",
-        model="products",
-        nominal_time=NOMINAL_TIME,
-    )
-
-    # Act
-    actual = batch.natural_key
-
-    # Assert
-    expected = (
-        "acme",
-        "us-east",
-        "sales",
-        "orders",
-        "bronze",
-        "catalog",
-        "products",
-        NOMINAL_TIME.replace(second=0, microsecond=0).isoformat(),
-    )
+    expected = "acme.us-east.sales.orders.bronze.catalog.products.2026-01-15T00:00:00Z"
     assert actual == expected
 
 
 # ============================================================================
-# lifecycle - persist
+# lifecycle - register (delegation)
 # ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_register_should_delegate_to_registry(current, fake_domain):
+def test_register_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
-    registry = MagicMock()
-    current.return_value.registries.batch = registry
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
@@ -277,286 +209,263 @@ def test_register_should_delegate_to_registry(current, fake_domain):
     registry.register.assert_called_once_with(batch)
 
 
-@patch("tiozin.api.context.Context.current")
-def test_register_should_return_self(current, fake_domain):
+def test_register_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.register()
+    result = batch.register()
 
     # Assert
-    assert actual is batch
+    actual = result
+    expected = registry.register.return_value
+    assert actual is expected
 
 
-# ============================================================================
-# lifecycle - begin
-# ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_begin_should_delegate_to_registry(current, fake_domain):
+def test_register_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    registry = MagicMock()
-    current.return_value.registries.batch = registry
+    registry.register.return_value = None
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    result = batch.register()
+
+    # Assert
+    assert result is batch
+
+
+# ============================================================================
+# lifecycle - begin (delegation)
+# ============================================================================
+def test_begin_should_delegate_to_registry(registry: MagicMock, fake_domain):
+    # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
     batch.begin(extra1="value1")
 
     # Assert
-    registry.begin.assert_called_once_with(batch)
+    registry.begin.assert_called_once_with(batch, extra1="value1")
 
 
-@patch("tiozin.api.context.Context.current")
-def test_begin_should_merge_attributes_into_state(current, fake_domain):
+def test_begin_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.begin(extra1="value1")
+    result = batch.begin()
 
     # Assert
-    actual = batch.attributes
-    expected = {"extra1": "value1"}
-    assert actual == expected
+    actual = result
+    expected = registry.begin.return_value
+    assert actual is expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_begin_should_return_self(current, fake_domain):
+def test_begin_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
+    registry.begin.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.begin()
+    result = batch.begin()
 
     # Assert
-    assert actual is batch
+    assert result is batch
 
 
 # ============================================================================
-# lifecycle - commit
+# lifecycle - commit (delegation)
 # ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_commit_should_delegate_to_registry(current, fake_domain):
+def test_commit_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
-    registry = MagicMock()
-    current.return_value.registries.batch = registry
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
     batch.commit(extra1="value1")
 
     # Assert
-    registry.commit.assert_called_once_with(batch)
+    registry.commit.assert_called_once_with(batch, extra1="value1")
 
 
-@patch("tiozin.api.context.Context.current")
-def test_commit_should_merge_attributes_into_state(current, fake_domain):
+def test_commit_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.commit(extra1="value1")
+    result = batch.commit()
 
     # Assert
-    actual = batch.attributes
-    expected = {"extra1": "value1"}
-    assert actual == expected
+    actual = result
+    expected = registry.commit.return_value
+    assert actual is expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_commit_should_return_self(current, fake_domain):
+def test_commit_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
+    registry.commit.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.commit()
+    result = batch.commit()
 
     # Assert
-    assert actual is batch
+    assert result is batch
 
 
 # ============================================================================
-# lifecycle - fail
+# lifecycle - fail (delegation)
 # ============================================================================
-@patch("tiozin.api.metadata.batch.model.Batch._registry")
 def test_fail_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
-    registry.return_value.retries = 3
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
     batch.fail(extra1="value1")
 
     # Assert
-    registry.return_value.fail.assert_called_once_with(batch)
+    registry.fail.assert_called_once_with(batch, extra1="value1")
 
 
-@patch("tiozin.api.metadata.batch.model.Batch._registry")
-def test_fail_should_merge_attributes_into_batch(registry: MagicMock, fake_domain):
+def test_fail_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    registry.return_value.retries = 3
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.fail(extra1="value1")
+    result = batch.fail()
 
     # Assert
-    actual = batch.attributes
-    expected = {"extra1": "value1"}
-    assert actual == expected
+    actual = result
+    expected = registry.fail.return_value
+    assert actual is expected
 
 
-@patch("tiozin.api.metadata.batch.model.Batch._registry")
-def test_fail_should_return_self(registry: MagicMock, fake_domain):
+def test_fail_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    registry.return_value.retries = 3
+    registry.fail.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.fail()
+    result = batch.fail()
 
     # Assert
-    assert actual is batch
+    assert result is batch
 
 
 # ============================================================================
-# lifecycle - cancel
+# lifecycle - cancel (delegation)
 # ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_cancel_should_delegate_to_registry(current, fake_domain):
+def test_cancel_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
-    registry = MagicMock()
-    current.return_value.registries.batch = registry
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
     batch.cancel(extra1="value1")
 
     # Assert
-    registry.cancel.assert_called_once_with(batch)
+    registry.cancel.assert_called_once_with(batch, extra1="value1")
 
 
-@patch("tiozin.api.context.Context.current")
-def test_cancel_should_merge_attributes_into_state(current, fake_domain):
+def test_cancel_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.cancel(extra1="value1")
+    result = batch.cancel()
 
     # Assert
-    actual = batch.attributes
-    expected = {"extra1": "value1"}
-    assert actual == expected
+    actual = result
+    expected = registry.cancel.return_value
+    assert actual is expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_cancel_should_return_self(current, fake_domain):
+def test_cancel_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
+    registry.cancel.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.cancel()
+    result = batch.cancel()
 
     # Assert
-    assert actual is batch
+    assert result is batch
 
 
 # ============================================================================
-# lifecycle - quarantine
+# lifecycle - quarantine (delegation)
 # ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_quarantine_should_delegate_to_registry(current, fake_domain):
+def test_quarantine_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
-    registry = MagicMock()
-    current.return_value.registries.batch = registry
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
     batch.quarantine(extra1="value1")
 
     # Assert
-    registry.quarantine.assert_called_once_with(batch)
+    registry.quarantine.assert_called_once_with(batch, extra1="value1")
 
 
-@patch("tiozin.api.context.Context.current")
-def test_quarantine_should_merge_attributes_into_state(current, fake_domain):
+def test_quarantine_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.quarantine(extra1="value1")
+    result = batch.quarantine()
 
     # Assert
-    actual = batch.attributes
-    expected = {"extra1": "value1"}
-    assert actual == expected
+    actual = result
+    expected = registry.quarantine.return_value
+    assert actual is expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_quarantine_should_return_self(current, fake_domain):
+def test_quarantine_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
+    registry.quarantine.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.quarantine()
+    result = batch.quarantine()
 
     # Assert
-    assert actual is batch
+    assert result is batch
 
 
 # ============================================================================
-# lifecycle - replay
+# lifecycle - replay (delegation)
 # ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_replay_should_delegate_to_registry(current, fake_domain):
+def test_replay_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
-    registry = MagicMock()
-    current.return_value.registries.batch = registry
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
     batch.replay(extra1="value1")
 
     # Assert
-    registry.replay.assert_called_once_with(batch)
+    registry.replay.assert_called_once_with(batch, extra1="value1")
 
 
-@patch("tiozin.api.context.Context.current")
-def test_replay_should_merge_attributes_into_state(current, fake_domain):
+def test_replay_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.replay(extra1="value1")
+    result = batch.replay()
 
     # Assert
-    actual = batch.attributes
-    expected = {"extra1": "value1"}
-    assert actual == expected
+    actual = result
+    expected = registry.replay.return_value
+    assert actual is expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_replay_should_return_self(current, fake_domain):
+def test_replay_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
-    current.return_value.registries.batch = MagicMock()
+    registry.replay.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    actual = batch.replay()
+    result = batch.replay()
 
     # Assert
-    assert actual is batch
+    assert result is batch
 
 
 # ============================================================================
@@ -593,6 +502,7 @@ def test_acquire_should_register_new_batch_when_previous_is_terminal(current, fa
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = previous
+    current.return_value.registries.batch.register.side_effect = lambda batch: batch
 
     # Act
     actual = Batch.acquire().nominal_time
@@ -614,6 +524,7 @@ def test_acquire_should_carry_watermarks_forward_from_previous_state(current, fa
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = previous
+    current.return_value.registries.batch.register.side_effect = lambda batch: batch
 
     # Act
     actual = Batch.acquire().state.watermarks
@@ -638,6 +549,7 @@ def test_acquire_should_derive_window_from_previous_end(current, fake_domain):
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_NOMINAL_TIME
     current.return_value.registries.batch.get_latest.return_value = previous
+    current.return_value.registries.batch.register.side_effect = lambda batch: batch
 
     # Act
     result = Batch.acquire().state
@@ -657,6 +569,7 @@ def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(curren
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = None
+    current.return_value.registries.batch.register.side_effect = lambda batch: batch
 
     # Act
     actual = Batch.acquire().state.end
@@ -672,6 +585,7 @@ def test_acquire_should_start_from_epoch_when_no_previous_batch(current, fake_do
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = None
+    current.return_value.registries.batch.register.side_effect = lambda batch: batch
 
     # Act
     actual = Batch.acquire().state.start
@@ -687,6 +601,7 @@ def test_acquire_should_start_watermarks_empty_when_no_previous_batch(current, f
     current.return_value.configure_mock(**fake_domain)
     current.return_value.nominal_time = CURRENT_START
     current.return_value.registries.batch.get_latest.return_value = None
+    current.return_value.registries.batch.register.side_effect = lambda batch: batch
 
     # Act
     actual = Batch.acquire().state.watermarks

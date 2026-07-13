@@ -359,121 +359,69 @@ def test_register_should_persist_one_watermark_per_source(
 
 
 # ============================================================================
-# lifecycle transitions
+# register_transition
 # ============================================================================
-def test_begin_should_persist_batch_to_running(registry: IcebergBatchRegistry, fake_domain: dict):
-    # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
-    registry.register(state)
-
-    # Act
-    registry.begin(state)
-
-    # Assert
-    actual = registry.get_latest(**fake_domain).status
-    expected = BatchStatus.RUNNING
-    assert actual == expected
-
-
-def test_commit_should_persist_batch_to_succeeded(
-    registry: IcebergBatchRegistry, fake_domain: dict
-):
-    # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
-    registry.register(state)
-    registry.begin(state)
-
-    # Act
-    registry.commit(state)
-
-    # Assert
-    actual = registry.get_latest(**fake_domain).status
-    expected = BatchStatus.SUCCEEDED
-    assert actual == expected
-
-
-def test_fail_should_persist_batch_to_failed(registry: IcebergBatchRegistry, fake_domain: dict):
-    # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
-    registry.register(state)
-    registry.begin(state)
-
-    # Act
-    registry.fail(state)
-
-    # Assert
-    actual = registry.get_latest(**fake_domain).status
-    expected = BatchStatus.FAILED
-    assert actual == expected
-
-
-def test_cancel_should_persist_batch_to_canceled(registry: IcebergBatchRegistry, fake_domain: dict):
-    # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
-    registry.register(state)
-
-    # Act
-    registry.cancel(state)
-
-    # Assert
-    actual = registry.get_latest(**fake_domain).status
-    expected = BatchStatus.CANCELED
-    assert actual == expected
-
-
-def test_quarantine_should_persist_batch_to_quarantined(
-    registry: IcebergBatchRegistry, fake_domain: dict
-):
-    # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
-    registry.register(state)
-    registry.begin(state)
-
-    # Act
-    registry.quarantine(state)
-
-    # Assert
-    actual = registry.get_latest(**fake_domain).status
-    expected = BatchStatus.QUARANTINED
-    assert actual == expected
-
-
-def test_replay_should_persist_batch_to_pending(registry: IcebergBatchRegistry, fake_domain: dict):
-    # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
-    registry.register(state)
-    registry.begin(state)
-    registry.commit(state)
-
-    # Act
-    registry.replay(state)
-
-    # Assert
-    actual = registry.get_latest(**fake_domain).status
-    expected = BatchStatus.PENDING
-    assert actual == expected
-
-
 @pytest.mark.parametrize(
-    "status, transition",
+    "status",
     [
-        (BatchStatus.PENDING, lambda registry, state: registry.begin(state)),
-        (BatchStatus.RUNNING, lambda registry, state: registry.commit(state)),
-        (BatchStatus.RUNNING, lambda registry, state: registry.fail(state)),
-        (BatchStatus.PENDING, lambda registry, state: registry.cancel(state)),
-        (BatchStatus.RUNNING, lambda registry, state: registry.quarantine(state)),
-        (BatchStatus.SUCCEEDED, lambda registry, state: registry.replay(state)),
+        BatchStatus.RUNNING,
+        BatchStatus.SUCCEEDED,
+        BatchStatus.FAILED,
+        BatchStatus.CANCELED,
+        BatchStatus.QUARANTINED,
     ],
 )
-def test_lifecycle_transition_should_raise_not_found_when_batch_is_not_registered(
-    registry: IcebergBatchRegistry, fake_domain: dict, status: BatchStatus, transition
+def test_register_transition_should_persist_new_status(
+    registry: IcebergBatchRegistry, fake_domain: dict, status: BatchStatus
 ):
     # Arrange
-    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC), status=status)
+    state = Batch(**fake_domain, nominal_time=datetime(2026, 1, 15, tzinfo=UTC))
+    registry.register(state)
+    state.status = status
+
+    # Act
+    registry.register_transition(state)
+
+    # Assert
+    actual = registry.get_latest(**fake_domain).status
+    expected = status
+    assert actual == expected
+
+
+def test_register_transition_should_persist_updated_attributes(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        attributes={"existing1": "value1"},
+    )
+    registry.register(state)
+    state.attributes = {"existing1": "value1", "extra1": "value2"}
+
+    # Act
+    registry.register_transition(state)
+
+    # Assert
+    actual = registry.get_latest(**fake_domain).attributes
+    expected = {"existing1": "value1", "extra1": "value2"}
+    assert actual == expected
+
+
+def test_register_transition_should_raise_not_found_when_batch_is_not_registered(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        status=BatchStatus.RUNNING,
+    )
 
     # Act / Assert
     with pytest.raises(BatchNotFoundError):
-        transition(registry, state)
+        registry.register_transition(state)
 
 
 # ============================================================================
