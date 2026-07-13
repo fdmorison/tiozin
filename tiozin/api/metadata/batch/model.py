@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from pydantic import AwareDatetime, Field, field_validator
 
-from tiozin.api.conventions import (
-    DOMAIN_FIELDS,
-    PRODUCT_FIELDS,
-    RESOURCE_FIELDS,
-    SUBDOMAIN_FIELDS,
-)
+from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, generate_id, utcnow
 
 from ...types import NominalTime
@@ -90,6 +85,9 @@ class Batch(Metadata):
             UTC timestamp when the batch was last updated.
     """
 
+    resource_fields: ClassVar[tuple[str, ...]] = RESOURCE_FIELDS
+    natural_key_fields: ClassVar[tuple[str, ...]] = (*RESOURCE_FIELDS, "nominal_time")
+
     id: str = Field(default_factory=generate_id, frozen=True)
 
     org: str = Field(frozen=True)
@@ -117,59 +115,42 @@ class Batch(Metadata):
     def _registry(self) -> BatchRegistry:
         return current_context().registries.batch
 
-    def register(self) -> Batch:
-        self._registry().register(self)
-        return self
+    def register(self) -> Self:
+        batch = self._registry().register(self)
+        return batch or self
 
-    def begin(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().begin(self)
-        return self
+    def begin(self, **attributes) -> Self:
+        batch = self._registry().begin(self, **attributes)
+        return batch or self
 
-    def commit(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().commit(self)
-        return self
+    def commit(self, **attributes) -> Self:
+        batch = self._registry().commit(self, **attributes)
+        return batch or self
 
-    def fail(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().fail(self)
-        return self
+    def fail(self, **attributes) -> Self:
+        batch = self._registry().fail(self, **attributes)
+        return batch or self
 
-    def cancel(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().cancel(self)
-        return self
+    def cancel(self, **attributes) -> Self:
+        batch = self._registry().cancel(self, **attributes)
+        return batch or self
 
-    def quarantine(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().quarantine(self)
-        return self
+    def quarantine(self, **attributes) -> Self:
+        batch = self._registry().quarantine(self, **attributes)
+        return batch or self
 
-    def replay(self, **attributes) -> Batch:
-        self.attributes |= attributes
-        self._registry().replay(self)
-        return self
+    def replay(self, **attributes) -> Self:
+        batch = self._registry().replay(self, **attributes)
+        return batch or self
 
     @property
-    def domain_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in DOMAIN_FIELDS)
+    def qualified_resource(self) -> str:
+        return ".".join(getattr(self, field) for field in self.resource_fields)
 
     @property
-    def subdomain_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in SUBDOMAIN_FIELDS)
-
-    @property
-    def product_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in PRODUCT_FIELDS)
-
-    @property
-    def resource_key(self) -> tuple[str, ...]:
-        return tuple(getattr(self, field) for field in RESOURCE_FIELDS)
-
-    @property
-    def natural_key(self) -> tuple[str, ...]:
-        return (*self.resource_key, self.nominal_time.isoformat())
+    def qualified_natural_key(self) -> str:
+        nominal_time = self.nominal_time.isoformat().replace("+00:00", "Z")
+        return f"{self.qualified_resource}.{nominal_time}"
 
     @classmethod
     def acquire(cls) -> Batch:
@@ -191,4 +172,4 @@ class Batch(Metadata):
         ).register()
 
     def __str__(self) -> str:
-        return ".".join(self.natural_key)
+        return self.qualified_natural_key
