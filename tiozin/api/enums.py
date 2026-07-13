@@ -4,7 +4,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Self
 
-import pendulum
+from pendulum import DateTime, Duration
+from pendulum import instance as PendulumDateTime
 
 from tiozin.utils import default
 
@@ -89,9 +90,9 @@ class Cadence(LowerEnum):
         return {f"{self.unit}s": 1}
 
     @property
-    def duration(self) -> pendulum.Duration:
+    def duration(self) -> Duration:
         """
-        The length of one slot of this cadence, as a ``pendulum.Duration``
+        The length of one slot of this cadence, as a ``Duration``
         ready for datetime arithmetic and unit conversions.
 
         Examples:
@@ -102,9 +103,9 @@ class Cadence(LowerEnum):
             >>> nominal_time + Cadence.HOURLY.duration
             DateTime(2024, 3, 15, 11, 30, 0, tzinfo=Timezone('UTC'))
         """
-        return pendulum.Duration(**self.step)
+        return Duration(**self.step)
 
-    def truncate(self, value: datetime) -> pendulum.DateTime:
+    def truncate(self, value: datetime) -> DateTime:
         """
         Truncate a datetime down to the start of its slot in this cadence.
 
@@ -117,9 +118,9 @@ class Cadence(LowerEnum):
             >>> Cadence.MONTHLY.truncate(datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC))
             datetime(2024, 3, 1, 0, 0, tzinfo=UTC)
         """
-        return pendulum.instance(value).start_of(self.unit)
+        return PendulumDateTime(value).start_of(self.unit)
 
-    def next(self, value: datetime) -> pendulum.DateTime:
+    def next(self, value: datetime) -> DateTime:
         """
         Return the start of the slot that follows the one containing the datetime.
 
@@ -129,7 +130,7 @@ class Cadence(LowerEnum):
         """
         return self.truncate(value).add(**self.step)
 
-    def previous(self, value: datetime) -> pendulum.DateTime:
+    def previous(self, value: datetime) -> DateTime:
         """
         Return the start of the slot that precedes the one containing the datetime.
 
@@ -139,9 +140,7 @@ class Cadence(LowerEnum):
         """
         return self.truncate(value).subtract(**self.step)
 
-    def interval(
-        self, value: datetime, is_start: bool = None
-    ) -> tuple[pendulum.DateTime, pendulum.DateTime]:
+    def interval(self, value: datetime, is_start: bool = None) -> tuple[DateTime, DateTime]:
         """
         Return the [start, end) interval of one slot anchored at the datetime's slot.
 
@@ -171,4 +170,4 @@ class Cadence(LowerEnum):
             >>> Cadence.HOURLY.is_nominal(datetime(2024, 3, 15, 10, 30, tzinfo=UTC))
             False
         """
-        return pendulum.instance(value) == self.truncate(value)
+        return PendulumDateTime(value) == self.truncate(value)
