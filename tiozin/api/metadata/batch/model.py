@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-from pydantic import AwareDatetime, Field, field_validator
+from pydantic import Field
 
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import current_context, generate_id, utcnow
+from tiozin.utils import current_context, generate_id, isozformat, utcnow
 
-from ...types import NominalTime
+from ...types import NominalTime, TechnicalTime
 from ..model import Metadata
 from .state import BatchState
 from .status import BatchStatus
@@ -97,6 +96,7 @@ class Batch(Metadata):
     layer: str = Field(frozen=True)
     product: str = Field(frozen=True)
     model: str = Field(frozen=True)
+
     nominal_time: NominalTime = Field(frozen=True)
 
     status: BatchStatus = BatchStatus.PENDING
@@ -104,13 +104,8 @@ class Batch(Metadata):
     state: BatchState = Field(default_factory=BatchState)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
-    created_at: AwareDatetime = Field(default_factory=utcnow, frozen=True)
-    updated_at: AwareDatetime = Field(default_factory=utcnow)
-
-    @field_validator("nominal_time", "created_at", "updated_at")
-    @classmethod
-    def _normalize_timezone(cls, value: datetime) -> datetime:
-        return value.astimezone(UTC)
+    created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
+    updated_at: TechnicalTime = Field(default_factory=utcnow)
 
     def _registry(self) -> BatchRegistry:
         return current_context().registries.batch
@@ -149,8 +144,7 @@ class Batch(Metadata):
 
     @property
     def qualified_natural_key(self) -> str:
-        nominal_time = self.nominal_time.isoformat().replace("+00:00", "Z")
-        return f"{self.qualified_resource}.{nominal_time}"
+        return f"{self.qualified_resource}.{isozformat(self.nominal_time)}"
 
     @classmethod
     def acquire(cls) -> Batch:
