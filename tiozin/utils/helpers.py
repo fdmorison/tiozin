@@ -1,5 +1,6 @@
 from collections import deque
 from collections.abc import Iterable, Mapping
+from datetime import datetime
 from typing import TypeVar
 from uuid import uuid4
 
@@ -26,6 +27,23 @@ def epoch() -> pendulum.DateTime:
     Useful as a sentinel start date for open-ended time ranges.
     """
     return pendulum.datetime(1970, 1, 1, tz="UTC")
+
+
+def as_utc(dt: datetime) -> pendulum.DateTime:
+    """
+    Normalize an aware datetime to a Pendulum DateTime in UTC.
+    """
+    return pendulum.instance(dt).in_timezone(pendulum.UTC)
+
+
+def isozformat(dt: datetime) -> str:
+    """
+    Format a datetime as an ISO 8601 string, preserving its timezone offset.
+
+    A datetime in UTC is rendered with the ``Z`` suffix, never as ``+00:00``
+    (e.g. ``2026-07-13T12:30:00Z``).
+    """
+    return pendulum.instance(dt).to_iso8601_string()
 
 
 def trim(value: str | None) -> str | None:
