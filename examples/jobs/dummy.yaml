@@ -16,6 +16,8 @@ layer: refined
 product: users
 model: customers
 
+cadence: Daily
+
 unplanned_field: 12345
 
 runner:
@@ -24,6 +26,7 @@ runner:
   streaming: false
   log_level: "{{ ENV.LOG_LEVEL }}"
   db_url: postgres://user:{{ SECRET.FAKE_PASSWORD }}@host:5432/dbname
+  test: {{job.nominal_time}}
 
 inputs:
   - kind: NoOpInput
