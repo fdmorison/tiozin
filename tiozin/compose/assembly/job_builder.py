@@ -15,6 +15,7 @@ from tiozin import (
     TransformManifest,
     logs,
 )
+from tiozin.api import Cadence
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
 from tiozin.utils import trim
 
@@ -59,6 +60,9 @@ class JobBuilder:
         self._cost_center: str | None = None
         self._labels: dict[str, str] = {}
 
+        # Execution
+        self._cadence: Cadence | None = None
+
         # Runtime ETL
         self._runner: RunnerManifest | Runner | None = None
         self._inputs: list[InputManifest | Input] = []
@@ -90,6 +94,10 @@ class JobBuilder:
 
     def with_cost_center(self, cost_center: str) -> Self:
         self._cost_center = trim(cost_center)
+        return self
+
+    def with_cadence(self, cadence: Cadence) -> Self:
+        self._cadence = Cadence(cadence) if cadence else None
         return self
 
     def with_label(self, key: str, value: str) -> Self:
@@ -235,6 +243,8 @@ class JobBuilder:
             layer=self._layer,
             product=self._product,
             model=self._model,
+            # Execution
+            cadence=self._cadence,
             # Pipeline
             runner=tiozin_registry.load_manifest(self._runner),
             inputs=[self._build_step(m) for m in self._inputs],

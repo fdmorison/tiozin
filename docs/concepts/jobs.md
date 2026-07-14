@@ -50,6 +50,12 @@ These fields declare the organizational context and lineage of the data this job
 | `model` | yes | `str` | | Specific data representation within the product: a table, topic, file, collection, or any other structure. A product can expose one or more models |
 | `namespace` | no | `str` | `TIO_JOB_NAMESPACE_TEMPLATE` | Job namespace. Accepts a plain string or a Jinja template rendered with the domain fields. When omitted, the value is derived from `TIO_JOB_NAMESPACE_TEMPLATE` |
 
+### Execution
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `cadence` | no | `Cadence` | `minutely` | Rhythm at which the job runs. Determines the nominal time of each execution. One of `minutely`, `hourly`, `daily`, `weekly`, or `monthly` |
+
 ### Pipeline components
 
 | Property | Required | Type | Default | Description |
@@ -58,6 +64,19 @@ These fields declare the organizational context and lineage of the data this job
 | `inputs` | yes | `list[Input]` | | Sources that provide data. Must contain at least one element |
 | `transforms` | no | `list[Transform]` | `[]` | Steps that modify the data |
 | `outputs` | no | `list[Output]` | `[]` | Destinations where data is written |
+
+## Cadence
+
+Cadence is the rhythm at which a job runs. The available cadences are `minutely` (the default), `hourly`, `daily`, `weekly`, and `monthly`.
+
+For each job run, cadence determines its nominal time: the reference instant the run represents, not the moment it started. For instance, a daily job started at `2026-02-24T14:37:00` has a nominal time of `2026-02-24T00:00:00`, whereas an hourly job has a nominal time of `2026-02-24T14:00:00`.
+
+Every step in the same run shares the job's nominal time. It is available on the execution context as `nominal_time` and in templates as `{{ job.nominal_time }}`.
+
+Since batches are identified by nominal time, cadence also sets batch granularity: a daily job produces one batch per day, while an hourly job produces one batch per hour.
+
+This mechanism ensures that runs are idempotent within the same cadence slot. After a successful run, Tiozin prevents another execution from writing duplicate data for the same batch. After a failure, another execution retries the same batch. A batch that has already succeeded must be deliberately replayed before it can run again.
+
 
 ## Invariants
 

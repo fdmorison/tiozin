@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from tiozin.api.conventions import RESOURCE_FIELDS
+from tiozin.api.enums import Cadence
 
 from .. import docs
 from ..model import Manifest
@@ -156,6 +157,9 @@ class JobManifest(Manifest):
     layer: str = Field(description=docs.JOB_LAYER)
     product: str = Field(description=docs.JOB_PRODUCT)
     model: str = Field(description=docs.JOB_MODEL)
+
+    # Execution
+    cadence: Cadence | None = Field(None, description=docs.JOB_CADENCE)
 
     # Pipeline Components
     runner: RunnerManifest = Field(description=docs.JOB_RUNNER)

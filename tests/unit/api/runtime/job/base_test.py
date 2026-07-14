@@ -2,6 +2,7 @@ import pytest
 
 from tests.stubs import InputStub, JobStub, RunnerStub
 from tiozin import config
+from tiozin.api import Cadence
 
 # =============================================================================
 # Testing Job.namespace
@@ -95,6 +96,62 @@ def test_job_should_render_namespace_from_custom_config_template(
     # Assert
     actual = job.namespace
     expected = "acme.ecommerce"
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Job.cadence
+# =============================================================================
+
+
+def test_job_should_default_cadence_to_minutely_when_not_provided(
+    fake_domain: dict,
+    fake_governance: dict,
+    runner_stub: RunnerStub,
+    input_stub: InputStub,
+):
+    # Act
+    job = JobStub(
+        name="test_job",
+        runner=runner_stub,
+        inputs=[input_stub],
+        **fake_domain,
+        **fake_governance,
+    )
+
+    # Assert
+    actual = job.cadence
+    expected = Cadence.MINUTELY
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "cadence,expected",
+    [
+        ("daily", Cadence.DAILY),
+        (Cadence.HOURLY, Cadence.HOURLY),
+    ],
+)
+def test_job_should_coerce_cadence_to_enum_member(
+    cadence: Cadence | str,
+    expected: Cadence,
+    fake_domain: dict,
+    fake_governance: dict,
+    runner_stub: RunnerStub,
+    input_stub: InputStub,
+):
+    # Act
+    job = JobStub(
+        name="test_job",
+        cadence=cadence,
+        runner=runner_stub,
+        inputs=[input_stub],
+        **fake_domain,
+        **fake_governance,
+    )
+
+    # Assert
+    actual = job.cadence
     assert actual == expected
 
 

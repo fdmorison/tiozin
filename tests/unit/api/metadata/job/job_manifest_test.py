@@ -10,6 +10,7 @@ from tiozin import (
     RunnerManifest,
     TransformManifest,
 )
+from tiozin.api import Cadence
 from tiozin.exceptions import ModelError
 
 # ============================================================================
@@ -290,6 +291,84 @@ def test_manifest_should_reject_job_with_invalid_field_types(field_name, invalid
         outputs=[{"kind": "TestOutput", "name": "write_something"}],
     )
     data[field_name] = invalid_value
+
+    # Act
+    with pytest.raises(ModelError):
+        JobManifest(**data)
+
+
+# ============================================================================
+# JobManifest.cadence tests
+# ============================================================================
+
+
+def test_manifest_should_default_cadence_to_none_when_not_provided():
+    # Arrange
+    data = dict(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+
+    # Act
+    manifest = JobManifest(**data)
+
+    # Assert
+    actual = manifest.cadence
+    expected = None
+    assert actual == expected
+
+
+def test_manifest_should_coerce_cadence_from_string():
+    # Arrange
+    data = dict(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        cadence="daily",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
+
+    # Act
+    manifest = JobManifest(**data)
+
+    # Assert
+    actual = manifest.cadence
+    expected = Cadence.DAILY
+    assert actual == expected
+
+
+def test_manifest_should_reject_invalid_cadence():
+    # Arrange
+    data = dict(
+        kind="Job",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        cadence="xxxx",
+        runner={"kind": "TestRunner"},
+        inputs=[{"kind": "TestInput", "name": "reader"}],
+    )
 
     # Act
     with pytest.raises(ModelError):

@@ -1,8 +1,8 @@
 kind: LinearJob
 name: example_job
+cadence: minutely
 description: |
-  Minimal example job demonstrating a basic ETL pipeline
-  using no-op operators.
+  Minimal example job demonstrating a basic job using no-op operators.
 
 owner: tiozin@tiozin.com
 maintainer: tiozin
