@@ -5,9 +5,9 @@ from typing import Annotated
 
 from pydantic import AfterValidator, AwareDatetime, BeforeValidator
 
-from tiozin.api.enums import Cadence
 from tiozin.utils import as_utc
 
+from .enums import Cadence
 from .metadata.batch.watermark import check_watermark, parse_watermark
 
 TechnicalTime = Annotated[
@@ -17,9 +17,7 @@ TechnicalTime = Annotated[
 
 NominalTime = Annotated[
     TechnicalTime,
-    AfterValidator(
-        lambda dt: Cadence.MINUTELY.truncate(dt)
-    ),  # NOTE: Hardcoded for now; minute truncation will become the default.
+    AfterValidator(lambda dt: Cadence.current().truncate(dt)),
 ]
 
 Watermark = Annotated[

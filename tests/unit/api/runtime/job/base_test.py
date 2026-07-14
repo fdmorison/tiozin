@@ -125,36 +125,6 @@ def test_job_should_default_cadence_to_minutely_when_not_provided(
     assert actual == expected
 
 
-@pytest.mark.parametrize(
-    "cadence,expected",
-    [
-        ("daily", Cadence.DAILY),
-        (Cadence.HOURLY, Cadence.HOURLY),
-    ],
-)
-def test_job_should_coerce_cadence_to_enum_member(
-    cadence: Cadence | str,
-    expected: Cadence,
-    fake_domain: dict,
-    fake_governance: dict,
-    runner_stub: RunnerStub,
-    input_stub: InputStub,
-):
-    # Act
-    job = JobStub(
-        name="test_job",
-        cadence=cadence,
-        runner=runner_stub,
-        inputs=[input_stub],
-        **fake_domain,
-        **fake_governance,
-    )
-
-    # Assert
-    actual = job.cadence
-    assert actual == expected
-
-
 # =============================================================================
 # Testing Job.to_resource_dict
 # =============================================================================

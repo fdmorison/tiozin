@@ -51,6 +51,7 @@ def test_for_job_should_create_job_context(
             # Runtime Identity
             "run_id": ANY,
             "run_attempt": 1,
+            "cadence": job.cadence,
             "nominal_time": FROZEN_TIME_OBJ,
             # Runtime Lifecycle
             "runner": job.runner,
@@ -103,6 +104,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         # Runtime Identity
         "run_id": ANY,
         "run_attempt": 1,
+        "cadence": Cadence.MINUTELY,
         "nominal_time": FROZEN_TIME_OBJ,
         # Runtime Lifecycle
         "runner": None,
@@ -162,6 +164,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         # Runtime Identity
         "run_id": ANY,
         "run_attempt": 1,
+        "cadence": job_context.cadence,
         "nominal_time": job_context.nominal_time,
         # Runtime Lifecycle
         "runner": job_context.runner,
