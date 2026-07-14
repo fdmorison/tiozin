@@ -300,6 +300,25 @@ TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{domain}}"
 # → acme.ecommerce
 ```
 
+## Cadence
+
+Cadence sets how often a job runs. Declare it as a string alongside the job's other top-level fields:
+
+```yaml
+name: orders_daily_summary
+cadence: daily
+```
+
+The value is case-insensitive, so `daily`, `Daily`, and `DAILY` all resolve to the same cadence. An
+unrecognized value is rejected when the job is built.
+
+The available cadences are `minutely`, `hourly`, `daily`, `weekly`, and `monthly`. When `cadence` is
+omitted, the job runs minutely.
+
+Cadence determines the job's nominal time, the reference instant each run represents. A daily job
+started at 14:37 UTC reports a nominal time of 00:00 UTC that day. See [Jobs](concepts/jobs.md#cadence)
+for how nominal time flows to steps and shapes batch identity.
+
 ## Templating
 
 All string properties in job YAML are Jinja2 templates rendered at execution time. Referencing an

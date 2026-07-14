@@ -50,6 +50,12 @@ These fields declare the organizational context and lineage of the data this job
 | `model` | yes | `str` | | Specific data representation within the product: a table, topic, file, collection, or any other structure. A product can expose one or more models |
 | `namespace` | no | `str` | `TIO_JOB_NAMESPACE_TEMPLATE` | Job namespace. Accepts a plain string or a Jinja template rendered with the domain fields. When omitted, the value is derived from `TIO_JOB_NAMESPACE_TEMPLATE` |
 
+### Execution
+
+| Property | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `cadence` | no | `Cadence` | `minutely` | Rhythm at which the job runs. Determines the nominal time of each execution. One of `minutely`, `hourly`, `daily`, `weekly`, or `monthly` |
+
 ### Pipeline components
 
 | Property | Required | Type | Default | Description |
@@ -58,6 +64,18 @@ These fields declare the organizational context and lineage of the data this job
 | `inputs` | yes | `list[Input]` | | Sources that provide data. Must contain at least one element |
 | `transforms` | no | `list[Transform]` | `[]` | Steps that modify the data |
 | `outputs` | no | `list[Output]` | `[]` | Destinations where data is written |
+
+## Cadence
+
+Cadence is the rhythm at which a job runs. It divides the timeline into equal slots, one per calendar unit, and each execution aligns to the slot it falls in. That slot determines the job's nominal time: the reference instant a run represents rather than the arbitrary moment it started.
+
+Five cadences are available, from finest to coarsest: `minutely`, `hourly`, `daily`, `weekly`, and `monthly`. A job runs minutely when `cadence` is omitted.
+
+A daily job started at 14:37 UTC on 2026-02-24 carries a nominal time of 00:00 UTC on 2026-02-24. Switch the cadence to hourly and the same run reports 14:00 UTC instead.
+
+Every step inherits the job's nominal time, so inputs, transforms, and outputs share one reference instant for a given run. The nominal time is available on the execution context as `nominal_time` and in templates as `{{ job.nominal_time }}`.
+
+Cadence also sets the granularity of batch identity. Batches are identified by their resource and nominal time, so a daily job produces one batch per day and an hourly job produces one per hour. See [IcebergBatchRegistry](../tio_kernel/iceberg-batch-registry.md) for how batches are persisted.
 
 ## Invariants
 
