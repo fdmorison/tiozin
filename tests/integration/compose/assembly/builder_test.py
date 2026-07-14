@@ -7,6 +7,7 @@ from tiozin import (
     RunnerManifest,
     TransformManifest,
 )
+from tiozin.api import Cadence
 from tiozin.compose import JobBuilder
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
@@ -352,6 +353,62 @@ def test_builder_should_set_optional_fields():
     # Assert
     actual = (job.description, job.owner, job.maintainer, job.cost_center)
     expected = ("A test job", "team-data", "team-platform", "engineering")
+    assert actual == expected
+
+
+def test_builder_should_set_cadence():
+    # Arrange
+    builder = JobBuilder()
+
+    # Act
+    job = (
+        builder.with_kind("LinearJob")
+        .with_name("test_job")
+        .with_org("tiozin")
+        .with_region("latam")
+        .with_domain("quality")
+        .with_subdomain("pipeline")
+        .with_layer("test")
+        .with_product("test_cases")
+        .with_model("some_case")
+        .with_cadence("daily")
+        .with_runner({"kind": "NoOpRunner"})
+        .with_inputs({"kind": "NoOpInput", "name": "read_something"})
+        .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
+        .build()
+    )
+
+    # Assert
+    actual = job.cadence
+    expected = Cadence.DAILY
+    assert actual == expected
+
+
+def test_builder_should_set_cadence_from_manifest():
+    # Arrange
+    manifest = JobManifest(
+        kind="LinearJob",
+        name="test_job",
+        org="tiozin",
+        region="latam",
+        domain="quality",
+        subdomain="pipeline",
+        layer="test",
+        product="test_cases",
+        model="some_case",
+        cadence="daily",
+        runner=RunnerManifest(kind="NoOpRunner"),
+        inputs=[InputManifest(kind="NoOpInput", name="read_something")],
+        outputs=[OutputManifest(kind="NoOpOutput", name="write_something")],
+    )
+    builder = JobBuilder()
+
+    # Act
+    job = builder.from_manifest(manifest).build()
+
+    # Assert
+    actual = job.cadence
+    expected = Cadence.DAILY
     assert actual == expected
 
 

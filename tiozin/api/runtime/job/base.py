@@ -4,10 +4,12 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin import config
+from tiozin.api.enums import Cadence
 from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
+from tiozin.utils import default
 
 from ...tiozin import Tiozin
 from ..input.base import Input
@@ -59,6 +61,8 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         model: Data model being produced (e.g., table, topic, collection).
         namespace: Job namespace. Defaults to `org.region.domain.subdomain`
             when not provided. Can be customized via `TIO_JOB_NAMESPACE_TEMPLATE`.
+        cadence: Frequency at which the job runs. Influences the nominal time
+            of each execution. Defaults to minutely.
         runner: Runtime environment where the job runs.
         inputs: Sources that provide data to the job.
         transforms: Steps that modify the data.
@@ -81,6 +85,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         product: str = None,
         model: str = None,
         namespace: str = None,
+        cadence: Cadence = None,
         runner: Runner = None,
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
@@ -128,6 +133,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
             model=model,
         )
 
+        self.cadence = Cadence(default(cadence, Cadence.MINUTELY))
         self.runner = runner
         self.inputs = inputs or []
         self.transforms = transforms or []

@@ -14,6 +14,7 @@ from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, generate_id, utcnow
 
+from .enums import Cadence
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
 from .runtime.catalog import RunCatalog
@@ -191,7 +192,7 @@ class Context:
         ctx.job = ctx
         ctx.runner = job.runner
         ctx.run_id = generate_id()
-        ctx.nominal_time = utcnow()
+        ctx.nominal_time = job.cadence.truncate(utcnow())
         ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
         ctx._build_template_vars()
         return ctx
@@ -234,7 +235,7 @@ class Context:
         ctx.job = None
         ctx.runner = None
         ctx.run_id = generate_id()
-        ctx.nominal_time = utcnow()
+        ctx.nominal_time = Cadence.MINUTELY.truncate(utcnow())
         ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
         ctx._build_template_vars()
         return ctx

@@ -6,8 +6,9 @@ import pendulum
 import pytest
 from freezegun import freeze_time
 
-from tests.stubs import InputStub, JobStub
+from tests.stubs import InputStub, JobStub, RunnerStub
 from tiozin import Context
+from tiozin.api import Cadence
 from tiozin.compose import TemplateDate
 
 FAKE_UUID = "01968e6a-0000-7000-8000-000000000001"
@@ -177,6 +178,48 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "template_vars": ANY,
         "shared": job_context.shared,
     }
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Context.for_job - nominal time truncation
+# =============================================================================
+
+
+@freeze_time("2026-06-15T12:30:45.123456+00:00")
+def test_for_job_should_truncate_nominal_time_to_current_minute_by_default(job_stub: JobStub):
+    # Act
+    result = Context.for_job(job_stub)
+
+    # Assert
+    actual = result.nominal_time
+    expected = pendulum.parse("2026-06-15T12:30:00+00:00")
+    assert actual == expected
+
+
+@freeze_time("2026-06-15T12:30:45.123456+00:00")
+def test_for_job_should_truncate_nominal_time_to_cadence_slot(
+    fake_domain: dict,
+    fake_governance: dict,
+    runner_stub: RunnerStub,
+    input_stub: InputStub,
+):
+    # Arrange
+    job = JobStub(
+        name="test_job",
+        cadence=Cadence.DAILY,
+        runner=runner_stub,
+        inputs=[input_stub],
+        **fake_domain,
+        **fake_governance,
+    )
+
+    # Act
+    result = Context.for_job(job)
+
+    # Assert
+    actual = result.nominal_time
+    expected = pendulum.parse("2026-06-15T00:00:00+00:00")
     assert actual == expected
 
 
