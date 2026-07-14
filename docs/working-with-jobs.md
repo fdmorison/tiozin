@@ -302,25 +302,68 @@ TIO_JOB_NAMESPACE_TEMPLATE="{{org}}.{{domain}}"
 
 ## Cadence
 
-Cadence sets how often a job runs. Declare it as a string alongside the job's other top-level fields:
+The `cadence` field sets how often a job runs. Declare it alongside the job's other top-level fields:
 
 ```yaml
 name: orders_daily_summary
 cadence: daily
 ```
 
-The value is case-insensitive, so `daily`, `Daily`, and `DAILY` all resolve to the same cadence. An
-unrecognized value is rejected when the job is built.
+The value is case-insensitive and defaults to `minutely` when omitted. An unrecognized value fails
+with an error when the job is built.
 
-The available cadences are `minutely`, `hourly`, `daily`, `weekly`, and `monthly`. When `cadence` is
-omitted, the job runs minutely.
+Cadence determines the run's nominal time: the reference instant the run stands for, not the clock
+time it started. A daily run on `2026-02-24` has a nominal time of `2026-02-24T00:00:00`. In
+practice, a daily job writes one batch per day and an hourly job writes one per hour.
 
-Cadence determines the job's nominal time, the reference instant each run represents. A daily job
-started at 14:37 UTC reports a nominal time of 00:00 UTC that day. See [Jobs](concepts/jobs.md#cadence)
-for how nominal time flows to steps and shapes batch identity.
+Running the same daily job again on the same day is safe. Tiozin writes no duplicate data for a batch
+that already succeeded, and after a failure the next run retries that batch.
 
-The nominal time also identifies each run. Running the same job twice within one slot does not
-duplicate data: a rerun after success is rejected, and a rerun after a failure is treated as a retry.
+See [Jobs](concepts/jobs.md#cadence) for how nominal time works.
+
+## Managing Batches
+
+A batch is the slice of data a job processes for a given nominal time. The `tiozin batch` commands inspect and manage
+those batches. Every command takes a job identifier, the same file path or registry identifier passed
+to `tiozin run`.
+
+Start by looking at what a job has produced. The backlog lists batches still awaiting processing, and
+`latest` shows the most recently registered one:
+
+```bash
+tiozin batch backlog jobs/orders_daily_summary.yaml
+tiozin batch latest jobs/orders_daily_summary.yaml
+```
+
+`history` lists every batch from newest to oldest. Narrow it with `--limit` and `--since`:
+
+```bash
+tiozin batch history jobs/orders_daily_summary.yaml --limit 20 --since 2026-02-01
+```
+
+Each command prints a table that includes the batch `id`. Pass that id to the commands that change a
+batch's state.
+
+To reprocess a batch that already succeeded, or one that was canceled or quarantined, replay it. This
+returns the batch to the pending state so the next run picks it up again:
+
+```bash
+tiozin batch replay jobs/orders_daily_summary.yaml 018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90
+```
+
+Cancel removes a batch from the backlog so runs stop picking it up, and quarantine sets a batch aside
+until it is explicitly replayed. Attach a note to any state change with `--attribute` (or `-a`) as
+`key=value`:
+
+```bash
+tiozin batch cancel jobs/orders_daily_summary.yaml 018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90 -a reason=bad-source
+```
+
+To create a batch for a nominal time by hand, register it. The new batch starts in the pending state:
+
+```bash
+tiozin batch register jobs/orders_daily_summary.yaml 2026-02-24T00:00:00
+```
 
 ## Templating
 
