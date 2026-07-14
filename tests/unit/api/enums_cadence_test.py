@@ -1,8 +1,11 @@
 from datetime import UTC, datetime
+from unittest.mock import patch
 
 import pendulum
 import pytest
 
+from tests.stubs import InputStub, JobStub, RunnerStub
+from tiozin import Context
 from tiozin.api.enums import Cadence
 
 # =============================================================================
@@ -222,3 +225,60 @@ def test_is_nominal_should_not_pass_when_off_slot_boundary():
 
     # Assert
     assert not result
+
+
+# =============================================================================
+# Cadence.default — resolves an optional cadence, falling back to MINUTELY
+# =============================================================================
+
+
+def test_default_should_fall_back_to_minutely_when_absent():
+    # Act
+    result = Cadence.default()
+
+    # Assert
+    actual = result
+    expected = Cadence.MINUTELY
+    assert actual == expected
+
+
+# =============================================================================
+# Cadence.current — cadence of the active execution context, else MINUTELY
+# =============================================================================
+
+
+def test_current_should_return_active_context_cadence(
+    fake_domain: dict,
+    fake_governance: dict,
+    runner_stub: RunnerStub,
+    input_stub: InputStub,
+):
+    # Arrange
+    job = JobStub(
+        name="test_job",
+        cadence=Cadence.DAILY,
+        runner=runner_stub,
+        inputs=[input_stub],
+        **fake_domain,
+        **fake_governance,
+    )
+
+    # Act
+    with Context.for_job(job):
+        result = Cadence.current()
+
+    # Assert
+    actual = result
+    expected = Cadence.DAILY
+    assert actual == expected
+
+
+@patch("tiozin.api.enums.try_current_context", return_value=None)
+def test_current_should_return_minutely_when_no_context_active(_try_current_context):
+    # Act
+    result = Cadence.current()
+
+    # Assert
+    actual = result
+    expected = Cadence.MINUTELY
+    assert actual == expected

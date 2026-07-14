@@ -9,7 +9,6 @@ from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
-from tiozin.utils import default
 
 from ...tiozin import Tiozin
 from ..input.base import Input
@@ -133,7 +132,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
             model=model,
         )
 
-        self.cadence = Cadence(default(cadence, Cadence.MINUTELY))
+        self.cadence = Cadence.default(cadence)
         self.runner = runner
         self.inputs = inputs or []
         self.transforms = transforms or []

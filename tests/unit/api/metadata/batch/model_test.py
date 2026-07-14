@@ -5,6 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from tiozin import Batch, BatchStatus
+from tiozin.api import Cadence
 from tiozin.api.metadata.batch.state import BatchState
 from tiozin.exceptions.misc import ModelError
 
@@ -25,10 +26,22 @@ CURRENT_NOMINAL_TIME = datetime(2026, 1, 16, 8, 15, tzinfo=UTC)
 
 
 @pytest.fixture
-def registry() -> MagicMock:
+def registry():
     mock = MagicMock()
     with patch("tiozin.api.metadata.batch.model.Batch._registry", return_value=mock):
         yield mock
+
+
+@pytest.fixture
+def context(fake_domain):
+    context = MagicMock(
+        **fake_domain,
+        cadence=Cadence.MINUTELY,
+        nominal_time=CURRENT_START,
+    )
+    context.registries.batch.register.side_effect = lambda batch: batch
+    with patch("tiozin.api.context.Context.current", return_value=context):
+        yield context
 
 
 # ============================================================================
@@ -471,17 +484,14 @@ def test_replay_should_return_self_when_registry_returns_none(registry: MagicMoc
 # ============================================================================
 # acquire
 # ============================================================================
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_reuse_previous_batch_when_not_terminal(current, fake_domain):
+def test_acquire_should_reuse_previous_batch_when_not_terminal(context, fake_domain):
     # Arrange
     previous = Batch(
         **fake_domain,
         nominal_time=PREVIOUS_START,
         status=BatchStatus.RUNNING,
     )
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = previous
+    context.registries.batch.get_latest.return_value = previous
 
     # Act
     actual = Batch.acquire()
@@ -491,18 +501,14 @@ def test_acquire_should_reuse_previous_batch_when_not_terminal(current, fake_dom
     assert actual is expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_register_new_batch_when_previous_is_terminal(current, fake_domain):
+def test_acquire_should_register_new_batch_when_previous_is_terminal(context, fake_domain):
     # Arrange
     previous = Batch(
         **fake_domain,
         nominal_time=PREVIOUS_START,
         status=BatchStatus.SUCCEEDED,
     )
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = previous
-    current.return_value.registries.batch.register.side_effect = lambda batch: batch
+    context.registries.batch.get_latest.return_value = previous
 
     # Act
     actual = Batch.acquire().nominal_time
@@ -512,8 +518,7 @@ def test_acquire_should_register_new_batch_when_previous_is_terminal(current, fa
     assert actual == expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_carry_watermarks_forward_from_previous_state(current, fake_domain):
+def test_acquire_should_carry_watermarks_forward_from_previous_state(context, fake_domain):
     # Arrange
     previous = Batch(
         **fake_domain,
@@ -521,10 +526,7 @@ def test_acquire_should_carry_watermarks_forward_from_previous_state(current, fa
         status=BatchStatus.SUCCEEDED,
         state=BatchState(watermarks={"orders": 42}),
     )
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = previous
-    current.return_value.registries.batch.register.side_effect = lambda batch: batch
+    context.registries.batch.get_latest.return_value = previous
 
     # Act
     actual = Batch.acquire().state.watermarks
@@ -534,9 +536,10 @@ def test_acquire_should_carry_watermarks_forward_from_previous_state(current, fa
     assert actual == expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_derive_window_from_previous_end(current, fake_domain):
+def test_acquire_should_derive_window_from_previous_end(context, fake_domain):
     # Arrange
+    context.nominal_time = CURRENT_NOMINAL_TIME
+
     previous = Batch(
         **fake_domain,
         nominal_time=PREVIOUS_START,
@@ -546,10 +549,7 @@ def test_acquire_should_derive_window_from_previous_end(current, fake_domain):
             end=PREVIOUS_END,
         ),
     )
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_NOMINAL_TIME
-    current.return_value.registries.batch.get_latest.return_value = previous
-    current.return_value.registries.batch.register.side_effect = lambda batch: batch
+    context.registries.batch.get_latest.return_value = previous
 
     # Act
     result = Batch.acquire().state
@@ -563,13 +563,9 @@ def test_acquire_should_derive_window_from_previous_end(current, fake_domain):
     assert actual == expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(current, fake_domain):
+def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(context):
     # Arrange
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = None
-    current.return_value.registries.batch.register.side_effect = lambda batch: batch
+    context.registries.batch.get_latest.return_value = None
 
     # Act
     actual = Batch.acquire().state.end
@@ -579,13 +575,9 @@ def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(curren
     assert actual == expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_start_from_epoch_when_no_previous_batch(current, fake_domain):
+def test_acquire_should_start_from_epoch_when_no_previous_batch(context):
     # Arrange
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = None
-    current.return_value.registries.batch.register.side_effect = lambda batch: batch
+    context.registries.batch.get_latest.return_value = None
 
     # Act
     actual = Batch.acquire().state.start
@@ -595,13 +587,9 @@ def test_acquire_should_start_from_epoch_when_no_previous_batch(current, fake_do
     assert actual == expected
 
 
-@patch("tiozin.api.context.Context.current")
-def test_acquire_should_start_watermarks_empty_when_no_previous_batch(current, fake_domain):
+def test_acquire_should_start_watermarks_empty_when_no_previous_batch(context):
     # Arrange
-    current.return_value.configure_mock(**fake_domain)
-    current.return_value.nominal_time = CURRENT_START
-    current.return_value.registries.batch.get_latest.return_value = None
-    current.return_value.registries.batch.register.side_effect = lambda batch: batch
+    context.registries.batch.get_latest.return_value = None
 
     # Act
     actual = Batch.acquire().state.watermarks

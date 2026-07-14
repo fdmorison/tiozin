@@ -7,7 +7,7 @@ from typing import Self
 from pendulum import DateTime, Duration
 from pendulum import instance as PendulumDateTime
 
-from tiozin.utils import default
+from tiozin.utils import default, try_current_context
 
 
 class UpperEnum(StrEnum):
@@ -109,6 +109,22 @@ class Cadence(LowerEnum):
             DateTime(2024, 3, 15, 11, 30, 0, tzinfo=Timezone('UTC'))
         """
         return Duration(**self.step)
+
+    @classmethod
+    def default(cls, cadence: Self = None) -> Self:
+        """
+        Resolves an optional cadence, falling back to MINUTELY when absent.
+        """
+        return cls(default(cadence, cls.MINUTELY))
+
+    @classmethod
+    def current(cls) -> Self:
+        """
+        Returns the cadence of the active execution context, or MINUTELY
+        when no context is active.
+        """
+        context = try_current_context()
+        return context.cadence if context else cls.MINUTELY
 
     def truncate(self, value: datetime) -> DateTime:
         """

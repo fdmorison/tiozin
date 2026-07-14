@@ -102,6 +102,7 @@ class Context:
     # ==================================================
     run_id: str = field(init=False)
     run_attempt: int = field(default=1)
+    cadence: Cadence = field(init=False)
     nominal_time: DateTime = field(init=False)
 
     # ==================================================
@@ -192,7 +193,8 @@ class Context:
         ctx.job = ctx
         ctx.runner = job.runner
         ctx.run_id = generate_id()
-        ctx.nominal_time = job.cadence.truncate(utcnow())
+        ctx.cadence = job.cadence
+        ctx.nominal_time = ctx.cadence.truncate(utcnow())
         ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
         ctx._build_template_vars()
         return ctx
@@ -235,7 +237,8 @@ class Context:
         ctx.job = None
         ctx.runner = None
         ctx.run_id = generate_id()
-        ctx.nominal_time = Cadence.MINUTELY.truncate(utcnow())
+        ctx.cadence = Cadence.MINUTELY
+        ctx.nominal_time = ctx.cadence.truncate(utcnow())
         ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
         ctx._build_template_vars()
         return ctx
@@ -272,6 +275,7 @@ class Context:
         ctx.job = self.job
         ctx.runner = self.job.runner
         ctx.run_id = generate_id()
+        ctx.cadence = self.job.cadence
         ctx.nominal_time = self.job.nominal_time
         ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
         ctx._build_template_vars(base=self.template_vars)
