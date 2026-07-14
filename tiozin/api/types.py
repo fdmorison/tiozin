@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field
 
@@ -30,6 +30,19 @@ NominalTime = Annotated[
     TechnicalTime,
     Field(validate_default=True),
     AfterValidator(lambda dt: Cadence.current().truncate(dt)),
+]
+
+# A non-negative integer counter defaulting to zero.
+Counter = Annotated[
+    int,
+    Field(default=0, ge=0, validate_default=True),
+]
+
+# An open mapping of arbitrary key-value metadata.
+Attributes = Annotated[
+    dict[str, Any],
+    Field(default=None, validate_default=True),
+    BeforeValidator(lambda value: dict(value) if value else {}),
 ]
 
 # A validated batch watermark represented as an integer, date, or datetime.

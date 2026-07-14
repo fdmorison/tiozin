@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, ClassVar, Self
 
 from pydantic import ConfigDict, Field
 
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, isozformat, utcnow
 
-from ...types import NominalTime, TechnicalTime, TimeOrderedId
+from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
 from .state import BatchState
 from .status import BatchStatus
@@ -110,9 +110,9 @@ class Batch(Metadata):
     nominal_time: NominalTime = Field(frozen=True)
 
     status: BatchStatus = BatchStatus.PENDING
-    failure_count: int = Field(0, ge=0)
+    failure_count: Counter
     state: BatchState = Field(default_factory=BatchState)
-    attributes: dict[str, Any] = Field(default_factory=dict)
+    attributes: Attributes
 
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)

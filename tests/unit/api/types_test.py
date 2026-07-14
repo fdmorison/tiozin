@@ -6,7 +6,14 @@ import pytest
 import uuid_utils
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from tiozin.api.types import NominalTime, TechnicalTime, TimeOrderedId, Watermark
+from tiozin.api.types import (
+    Attributes,
+    Counter,
+    NominalTime,
+    TechnicalTime,
+    TimeOrderedId,
+    Watermark,
+)
 
 GENERATED_ID = "01920000-0000-7000-8000-000000000001"
 PROVIDED_ID = "01920000-0000-7000-8000-000000000000"
@@ -25,6 +32,14 @@ class TimeOrderedIdModelWithDefault(BaseModel):
 
 class OptionalTimeOrderedIdModel(BaseModel):
     id: TimeOrderedId | None = None
+
+
+class CounterModel(BaseModel):
+    count: Counter
+
+
+class AttributesModel(BaseModel):
+    attributes: Attributes
 
 
 # =============================================================================
@@ -274,3 +289,97 @@ def test_watermark_should_raise_validation_error_when_value_is_invalid(value):
     # Act / Assert
     with pytest.raises(ValidationError):
         WATERMARK.validate_python(value)
+
+
+# =============================================================================
+# Counter
+# =============================================================================
+
+
+def test_counter_should_default_to_zero_when_omitted():
+    # Act
+    result = CounterModel()
+
+    # Assert
+    actual = result.count
+    expected = 0
+    assert actual == expected
+
+
+def test_counter_should_preserve_provided_non_negative_value():
+    # Act
+    result = CounterModel(count=5)
+
+    # Assert
+    actual = result.count
+    expected = 5
+    assert actual == expected
+
+
+def test_counter_should_raise_validation_error_when_value_is_negative():
+    # Act / Assert
+    with pytest.raises(ValidationError):
+        CounterModel(count=-1)
+
+
+# =============================================================================
+# Attributes
+# =============================================================================
+
+
+def test_attributes_should_default_to_empty_dict_when_omitted():
+    # Act
+    result = AttributesModel()
+
+    # Assert
+    actual = result.attributes
+    expected = {}
+    assert actual == expected
+
+
+def test_attributes_should_default_to_empty_dict_when_none():
+    # Act
+    result = AttributesModel(attributes=None)
+
+    # Assert
+    actual = result.attributes
+    expected = {}
+    assert actual == expected
+
+
+def test_attributes_should_preserve_provided_mapping():
+    # Act
+    result = AttributesModel(attributes={"k": "v", "n": 1})
+
+    # Assert
+    actual = result.attributes
+    expected = {"k": "v", "n": 1}
+    assert actual == expected
+
+
+def test_attributes_should_not_mutate_provided_mapping():
+    # Arrange
+    source = {"k": "v"}
+    model = AttributesModel(attributes=source)
+
+    # Act
+    model.attributes["k2"] = "v2"
+
+    # Assert
+    actual = source
+    expected = {"k": "v"}
+    assert actual == expected
+
+
+def test_attributes_should_not_share_default_between_instances():
+    # Arrange
+    first = AttributesModel()
+    second = AttributesModel()
+
+    # Act
+    first.attributes["k"] = "v"
+
+    # Assert
+    actual = second.attributes
+    expected = {}
+    assert actual == expected
