@@ -79,6 +79,13 @@ def trim_lower(value: str | None) -> str | None:
     return value.strip().lower()
 
 
+def generate_id(prefix: str = None, suffix: str = None) -> str:
+    """
+    Alias to generate_time_ordered_id.
+    """
+    return generate_time_ordered_id(prefix, suffix)
+
+
 def generate_time_ordered_id(prefix: str = None, suffix: str = None) -> str:
     """
     Generate a unique identifier.
