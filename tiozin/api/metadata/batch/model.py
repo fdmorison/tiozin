@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import current_context, generate_id, isozformat, utcnow
+from tiozin.utils import current_context, isozformat, utcnow
 
-from ...types import NominalTime, TechnicalTime
+from ...types import NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
 from .state import BatchState
 from .status import BatchStatus
@@ -88,10 +88,16 @@ class Batch(Metadata):
             UTC timestamp when the batch was last updated.
     """
 
+    model_config = ConfigDict(
+        extra="ignore",
+        validate_assignment=True,
+        validate_default=True,
+    )
+
     resource_fields: ClassVar[tuple[str, ...]] = RESOURCE_FIELDS
     natural_key_fields: ClassVar[tuple[str, ...]] = (*RESOURCE_FIELDS, "nominal_time")
 
-    id: str = Field(default_factory=generate_id, frozen=True)
+    id: TimeOrderedId = Field(frozen=True)
 
     org: str = Field(frozen=True)
     region: str = Field(frozen=True)

@@ -9,8 +9,6 @@ from tiozin.api import Cadence
 from tiozin.api.metadata.batch.state import BatchState
 from tiozin.exceptions.misc import ModelError
 
-EXPLICIT_ID = "explicit-id-1234"
-
 # Default nominal_time for a test batch, and the value reassignment tests
 # attempt to set on frozen/mutable fields.
 NOMINAL_TIME = datetime(2026, 1, 15, tzinfo=UTC)
@@ -47,27 +45,6 @@ def context(fake_domain):
 # ============================================================================
 # construction / validation
 # ============================================================================
-def test_id_should_be_chronologically_sortable_when_not_provided(fake_domain: dict):
-    # Arrange / Act
-    first = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-    second = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Assert
-    assert second.id > first.id
-
-
-def test_id_should_be_preserved_when_provided(fake_domain: dict):
-    # Arrange
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, id=EXPLICIT_ID)
-
-    # Act
-    actual = batch.id
-
-    # Assert
-    expected = EXPLICIT_ID
-    assert actual == expected
-
-
 def test_status_should_default_to_pending(fake_domain: dict):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)

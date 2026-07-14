@@ -12,7 +12,7 @@ from pendulum import DateTime
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
-from tiozin.utils import create_local_temp_dir, generate_id, utcnow
+from tiozin.utils import create_local_temp_dir, generate_time_ordered_id, utcnow
 
 from .enums import Cadence
 from .metadata.bundle import Registries
@@ -192,7 +192,7 @@ class Context:
         )
         ctx.job = ctx
         ctx.runner = job.runner
-        ctx.run_id = generate_id()
+        ctx.run_id = generate_time_ordered_id()
         ctx.cadence = job.cadence
         ctx.nominal_time = ctx.cadence.truncate(utcnow())
         ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
@@ -236,7 +236,7 @@ class Context:
         )
         ctx.job = None
         ctx.runner = None
-        ctx.run_id = generate_id()
+        ctx.run_id = generate_time_ordered_id()
         ctx.cadence = Cadence.MINUTELY
         ctx.nominal_time = ctx.cadence.truncate(utcnow())
         ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
@@ -274,7 +274,7 @@ class Context:
         )
         ctx.job = self.job
         ctx.runner = self.job.runner
-        ctx.run_id = generate_id()
+        ctx.run_id = generate_time_ordered_id()
         ctx.cadence = self.job.cadence
         ctx.nominal_time = self.job.nominal_time
         ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
