@@ -54,11 +54,16 @@ class LowerEnum(StrEnum):
 
 class Cadence(LowerEnum):
     """
-    Frequency at which a job runs, ordered from finest to coarsest.
+    Rhythm at which a job runs.
 
-    Each cadence carries the calendar unit its slots are measured in and
-    provides slot arithmetic on top of it: truncation, advancement, and the
-    interval a slot covers.
+    A cadence is a regular beat distributed along time: it divides the
+    timeline into equal slots, one per calendar unit, ordered from finest to
+    coarsest. Executions align to the slot they fall in rather than to the
+    arbitrary instant at which they happen to start.
+
+    Each cadence carries the calendar unit of its slots and provides slot
+    arithmetic on top of it: truncation, advancement, and the interval a
+    slot covers.
     """
 
     unit: str
