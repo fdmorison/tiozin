@@ -75,7 +75,13 @@ A daily job started at 14:37 UTC on 2026-02-24 carries a nominal time of 00:00 U
 
 Every step inherits the job's nominal time, so inputs, transforms, and outputs share one reference instant for a given run. The nominal time is available on the execution context as `nominal_time` and in templates as `{{ job.nominal_time }}`.
 
-Cadence also sets the granularity of batch identity. Batches are identified by their resource and nominal time, so a daily job produces one batch per day and an hourly job produces one per hour. See [IcebergBatchRegistry](../tio_kernel/iceberg-batch-registry.md) for how batches are persisted.
+Cadence also sets the granularity of batch identity. Batches are identified by their resource and nominal time, so a daily job produces one batch per day and an hourly job produces one per hour.
+
+Because nominal time is part of a run's identity, cadence also decides when two runs count as the same run. Every execution that lands in the same slot shares one identity.
+
+This governs what happens when a job runs twice in the same slot. If the first run already succeeded, the second run fails on purpose. The slot is taken, and Tiozin refuses to write the same data twice. If the first run failed or was interrupted, the second run proceeds. It is treated as a retry of the same slot, resuming the same batch under the same nominal time.
+
+The result is that runs are idempotent per slot. Rerunning a healthy daily job within the same day is safe, because it will not duplicate data, and rerunning after a failure is the normal retry path. To deliberately reprocess a slot that already succeeded, replay its batch with the `tiozin batch replay` command.
 
 ## Invariants
 

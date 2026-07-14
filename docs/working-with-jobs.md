@@ -319,6 +319,9 @@ Cadence determines the job's nominal time, the reference instant each run repres
 started at 14:37 UTC reports a nominal time of 00:00 UTC that day. See [Jobs](concepts/jobs.md#cadence)
 for how nominal time flows to steps and shapes batch identity.
 
+The nominal time also identifies each run. Running the same job twice within one slot does not
+duplicate data: a rerun after success is rejected, and a rerun after a failure is treated as a retry.
+
 ## Templating
 
 All string properties in job YAML are Jinja2 templates rendered at execution time. Referencing an
