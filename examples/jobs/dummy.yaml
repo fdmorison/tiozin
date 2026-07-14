@@ -1,8 +1,8 @@
 kind: LinearJob
 name: example_job
+cadence: minutely
 description: |
-  Minimal example job demonstrating a basic ETL pipeline
-  using no-op operators.
+  Minimal example job demonstrating a basic job using no-op operators.
 
 owner: tiozin@tiozin.com
 maintainer: tiozin
@@ -16,8 +16,6 @@ layer: refined
 product: users
 model: customers
 
-cadence: Daily
-
 unplanned_field: 12345
 
 runner:
@@ -26,7 +24,6 @@ runner:
   streaming: false
   log_level: "{{ ENV.LOG_LEVEL }}"
   db_url: postgres://user:{{ SECRET.FAKE_PASSWORD }}@host:5432/dbname
-  test: {{job.nominal_time}}
 
 inputs:
   - kind: NoOpInput
