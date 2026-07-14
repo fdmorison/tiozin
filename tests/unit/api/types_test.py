@@ -1,25 +1,116 @@
-import warnings
 from datetime import UTC, date, datetime, timedelta, timezone
+from unittest.mock import patch
 
 import pendulum
 import pytest
-from pydantic import TypeAdapter, ValidationError
+import uuid_utils
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from tiozin.api.types import NominalTime, TechnicalTime, Watermark
+from tiozin.api.types import NominalTime, TechnicalTime, TimeOrderedId, Watermark
 
-# The TechnicalTime pipeline carries an inert Field(default_factory=utcnow) that
-# emits UnsupportedFieldAttributeWarning when a TypeAdapter builds its schema. It
-# has no effect on validation, so the adapters are built with the warning silenced.
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    TECHNICAL_TIME = TypeAdapter(TechnicalTime)
-    NOMINAL_TIME = TypeAdapter(NominalTime)
-
+GENERATED_ID = "01920000-0000-7000-8000-000000000001"
+PROVIDED_ID = "01920000-0000-7000-8000-000000000000"
 WATERMARK = TypeAdapter(Watermark)
+TECHNICAL_TIME = TypeAdapter(TechnicalTime)
+NOMINAL_TIME = TypeAdapter(NominalTime)
+
+
+class TimeOrderedIdModel(BaseModel):
+    id: TimeOrderedId
+
+
+class TimeOrderedIdModelWithDefault(BaseModel):
+    id: TimeOrderedId = None
+
+
+class OptionalTimeOrderedIdModel(BaseModel):
+    id: TimeOrderedId | None = None
 
 
 # =============================================================================
-# TechnicalTime — an aware datetime normalized to UTC, keeping the full instant
+# TimeOrderedId
+# =============================================================================
+
+
+@pytest.mark.parametrize("model_cls", [TimeOrderedIdModel, TimeOrderedIdModelWithDefault])
+@patch("tiozin.api.types.generate_time_ordered_id", return_value=GENERATED_ID)
+def test_time_ordered_id_should_generate_id_when_id_is_null(_generate, model_cls):
+    # Act
+    result = model_cls(id=None)
+
+    # Assert
+    actual = result.id
+    expected = GENERATED_ID
+    assert actual == expected
+
+
+@pytest.mark.parametrize("model_cls", [TimeOrderedIdModel, TimeOrderedIdModelWithDefault])
+@patch("tiozin.api.types.generate_time_ordered_id", return_value=GENERATED_ID)
+def test_time_ordered_id_should_generate_id_when_id_is_absent(_generate, model_cls):
+    # Act
+    result = model_cls()
+
+    # Assert
+    actual = result.id
+    expected = GENERATED_ID
+    assert actual == expected
+
+
+@patch("tiozin.api.types.generate_time_ordered_id", return_value=GENERATED_ID)
+def test_time_ordered_id_should_keep_none_when_id_is_null(_generate):
+    # Act
+    result = OptionalTimeOrderedIdModel(id=None)
+
+    # Assert
+    actual = result.id
+    expected = None
+    assert actual == expected
+
+
+@patch("tiozin.api.types.generate_time_ordered_id", return_value=GENERATED_ID)
+def test_time_ordered_id_should_keep_none_when_id_is_absent(_generate):
+    # Act
+    result = OptionalTimeOrderedIdModel()
+
+    # Assert
+    actual = result.id
+    expected = None
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "model_cls", [TimeOrderedIdModel, TimeOrderedIdModelWithDefault, OptionalTimeOrderedIdModel]
+)
+@patch("tiozin.api.types.generate_time_ordered_id", return_value=GENERATED_ID)
+def test_time_ordered_id_should_preserve_provided_value(_generate, model_cls):
+    # Act
+    result = model_cls(id=PROVIDED_ID)
+
+    # Assert
+    actual = result.id
+    expected = PROVIDED_ID
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "model_cls", [TimeOrderedIdModel, TimeOrderedIdModelWithDefault, OptionalTimeOrderedIdModel]
+)
+@patch("tiozin.api.types.generate_time_ordered_id", return_value=GENERATED_ID)
+def test_time_ordered_id_should_stringify_provided_value(_generate, model_cls):
+    # Arrange
+    value = uuid_utils.UUID(PROVIDED_ID)
+
+    # Act
+    result = model_cls(id=value)
+
+    # Assert
+    actual = (type(result.id), result.id)
+    expected = (str, PROVIDED_ID)
+    assert actual == expected
+
+
+# =============================================================================
+# TechnicalTime
 # =============================================================================
 
 
@@ -74,7 +165,7 @@ def test_technical_time_should_raise_validation_error_when_datetime_is_naive():
 
 
 # =============================================================================
-# NominalTime — a TechnicalTime truncated down to minute precision
+# NominalTime
 # =============================================================================
 
 
@@ -125,7 +216,7 @@ def test_nominal_time_should_raise_validation_error_when_datetime_is_naive():
 
 
 # =============================================================================
-# Watermark — int, date, or datetime passed through the parse/check pipeline
+# Watermark
 # =============================================================================
 
 

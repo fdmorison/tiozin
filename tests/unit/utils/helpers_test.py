@@ -4,6 +4,8 @@ from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
 from typing import Any
+from unittest.mock import patch
+from uuid import UUID
 
 import pendulum
 import pytest
@@ -13,8 +15,10 @@ from tiozin.utils import (
     as_flat_list,
     as_list,
     as_utc,
+    check_time_ordered_id,
     default,
     epoch,
+    generate_time_ordered_id,
     human_join,
     isozformat,
     prune,
@@ -864,4 +868,109 @@ def test_slugify_should_be_idempotent():
     # Assert
     actual = result
     expected = slugify(name)
+    assert actual == expected
+
+
+# ============================================================================
+# Testing check_time_ordered_id()
+# ============================================================================
+def test_check_time_ordered_id_should_return_value():
+    # Act
+    result = check_time_ordered_id("01920000-0000-7000-8000-000000000000")
+
+    # Assert
+    actual = result
+    expected = "01920000-0000-7000-8000-000000000000"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["00000000-0000-4000-8000-000000000000", "not-a-uuid"],
+)
+def test_check_time_ordered_id_should_raise_when_not_uuidv7(value: str):
+    # Act / Assert
+    with pytest.raises(ValueError):
+        check_time_ordered_id(value)
+
+
+# ============================================================================
+# Testing generate_time_ordered_id()
+# ============================================================================
+def test_generate_time_ordered_id_should_return_uuidv7():
+    # Act
+    result = generate_time_ordered_id()
+
+    # Assert
+    actual = UUID(result).version
+    expected = 7
+    assert actual == expected
+
+
+def test_generate_time_ordered_id_should_return_chronologically_ordered_ids():
+    # Act
+    result = [generate_time_ordered_id(), generate_time_ordered_id()]
+
+    # Assert
+    earlier, later = result
+    assert earlier < later
+
+
+@patch("tiozin.utils.helpers.uuid7")
+def test_generate_time_ordered_id_should_prepend_prefix(mock_uuid7):
+    # Arrange
+    mock_uuid7.return_value = "01920000-0000-7000-8000-000000000000"
+
+    # Act
+    result = generate_time_ordered_id(prefix="orders")
+
+    # Assert
+    actual = result
+    expected = "orders_01920000-0000-7000-8000-000000000000"
+    assert actual == expected
+
+
+@patch("tiozin.utils.helpers.uuid7")
+def test_generate_time_ordered_id_should_append_suffix(mock_uuid7):
+    # Arrange
+    mock_uuid7.return_value = "01920000-0000-7000-8000-000000000000"
+
+    # Act
+    result = generate_time_ordered_id(suffix="v2")
+
+    # Assert
+    actual = result
+    expected = "01920000-0000-7000-8000-000000000000_v2"
+    assert actual == expected
+
+
+@patch("tiozin.utils.helpers.uuid7")
+def test_generate_time_ordered_id_should_wrap_with_prefix_and_suffix(mock_uuid7):
+    # Arrange
+    mock_uuid7.return_value = "01920000-0000-7000-8000-000000000000"
+
+    # Act
+    result = generate_time_ordered_id(prefix="orders", suffix="v2")
+
+    # Assert
+    actual = result
+    expected = "orders_01920000-0000-7000-8000-000000000000_v2"
+    assert actual == expected
+
+
+@patch("tiozin.utils.helpers.uuid7")
+@pytest.mark.parametrize(
+    "kwargs",
+    [{"prefix": ""}, {"suffix": ""}],
+)
+def test_generate_time_ordered_id_should_ignore_affix_when_empty(mock_uuid7, kwargs):
+    # Arrange
+    mock_uuid7.return_value = "01920000-0000-7000-8000-000000000000"
+
+    # Act
+    result = generate_time_ordered_id(**kwargs)
+
+    # Assert
+    actual = result
+    expected = "01920000-0000-7000-8000-000000000000"
     assert actual == expected

@@ -2,7 +2,7 @@ from collections import deque
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from typing import TypeVar
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pendulum
 from slugify import slugify as _slugify
@@ -79,7 +79,7 @@ def trim_lower(value: str | None) -> str | None:
     return value.strip().lower()
 
 
-def generate_id(prefix: str = None, suffix: str = None) -> str:
+def generate_time_ordered_id(prefix: str = None, suffix: str = None) -> str:
     """
     Generate a unique identifier.
 
@@ -96,6 +96,22 @@ def generate_id(prefix: str = None, suffix: str = None) -> str:
         identifier = f"{identifier}_{suffix}"
 
     return identifier
+
+
+def check_time_ordered_id(value: str | None) -> str | None:
+    """
+    Validate that a string is a UUIDv7.
+
+    Raises ``ValueError`` when the value does not parse as a UUID or is a UUID
+    of a different version. ``None`` is passed through unchecked.
+    """
+    if value is None:
+        return None
+
+    if UUID(value).version != 7:
+        raise ValueError(f"{value!r} is not a valid UUIDv7")
+
+    return value
 
 
 def default(value: T | None, default_: T = None) -> T:
