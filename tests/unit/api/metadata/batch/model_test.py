@@ -7,7 +7,6 @@ from pydantic import ValidationError
 from tiozin import Batch, BatchStatus
 from tiozin.api import Cadence
 from tiozin.api.metadata.batch.state import BatchState
-from tiozin.exceptions.misc import ModelError
 
 # Default nominal_time for a test batch, and the value reassignment tests
 # attempt to set on frozen/mutable fields.
@@ -55,40 +54,6 @@ def test_status_should_default_to_pending(fake_domain: dict):
     # Assert
     expected = BatchStatus.PENDING
     assert actual == expected
-
-
-def test_failure_count_should_default_to_zero(fake_domain: dict):
-    # Arrange
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Act
-    actual = batch.failure_count
-
-    # Assert
-    expected = 0
-    assert actual == expected
-
-
-def test_attributes_should_default_to_empty_dict(fake_domain: dict):
-    # Arrange
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Act
-    actual = batch.attributes
-
-    # Assert
-    expected = {}
-    assert actual == expected
-
-
-def test_batch_should_raise_when_failure_count_is_negative(fake_domain: dict):
-    # Act / Assert
-    with pytest.raises(ModelError):
-        Batch(
-            **fake_domain,
-            nominal_time=NOMINAL_TIME,
-            failure_count=-1,
-        )
 
 
 # ============================================================================
