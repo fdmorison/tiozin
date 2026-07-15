@@ -1,4 +1,3 @@
-from dataclasses import fields
 from pathlib import Path
 from unittest.mock import ANY
 
@@ -31,9 +30,7 @@ def test_for_job_should_create_job_context(
     # Act
     with Context.for_job(job_stub) as context:
         # Assert
-        actual = {
-            f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
-        }
+        actual = {name: getattr(context, name) for name in Context.model_fields}
         expected = {
             # Root reference
             "job": context,
@@ -80,9 +77,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
     context = Context.for_step(input_stub)
 
     # Assert
-    actual = {
-        f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
-    }
+    actual = {name: getattr(context, name) for name in Context.model_fields}
     expected = {
         # Root reference
         "job": None,
@@ -134,9 +129,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
     context = job_context.for_child_step(input_stub)
 
     # Assert
-    actual = {
-        f.name: getattr(context, f.name) for f in fields(context) if not f.name.startswith("_")
-    }
+    actual = {name: getattr(context, name) for name in Context.model_fields}
     expected = {
         # Root reference
         "job": job_context,
@@ -279,14 +272,11 @@ def test_context_should_calculate_lifecycle_delays(job_context: Context):
 
 
 # =============================================================================
-# Testing Context._build_template_vars
+# Testing Context._init_template_vars
 # =============================================================================
 
 
-def test_build_template_vars_should_exclude_fields_with_template_false(job_context: Context):
-    # Act
-    job_context._build_template_vars()
-
+def test_init_template_vars_should_exclude_fields_with_skip_template(job_context: Context):
     # Assert
     excluded = {
         "runner",
@@ -304,12 +294,7 @@ def test_build_template_vars_should_exclude_fields_with_template_false(job_conte
     assert actual == expected
 
 
-def test_build_template_vars_should_include_day(
-    job_context: Context,
-):
-    # Act
-    job_context._build_template_vars()
-
+def test_init_template_vars_should_include_day(job_context: Context):
     # Assert
     actual = isinstance(job_context.template_vars["DAY"], TemplateDate)
     expected = True
@@ -317,19 +302,23 @@ def test_build_template_vars_should_include_day(
 
 
 @freeze_time(FROZEN_TIME)
-def test_build_template_vars_should_expose_day_values(
-    job_context: Context,
-):
+def test_init_template_vars_should_expose_day_values(fake_domain: dict):
     # Act
-    job_context._build_template_vars()
+    result = Context(
+        name="test_job",
+        slug="test_job",
+        kind="job",
+        tiozin_role="Job",
+        **fake_domain,
+    )
 
     # Assert
     actual = {
-        "ds": str(job_context.template_vars["ds"]),
-        "iso": str(job_context.template_vars["iso"]),
-        "YYYY": str(job_context.template_vars["YYYY"]),
-        "MM": str(job_context.template_vars["MM"]),
-        "DD": str(job_context.template_vars["DD"]),
+        "ds": str(result.template_vars["ds"]),
+        "iso": str(result.template_vars["iso"]),
+        "YYYY": str(result.template_vars["YYYY"]),
+        "MM": str(result.template_vars["MM"]),
+        "DD": str(result.template_vars["DD"]),
     }
     expected = {
         "ds": FROZEN_TIME_OBJ.format("YYYY-MM-DD"),
@@ -341,7 +330,7 @@ def test_build_template_vars_should_expose_day_values(
     assert actual == expected
 
 
-def test_build_template_vars_should_override_base_with_context_fields(job_context: Context):
+def test_init_template_vars_should_override_base_with_context_fields(fake_domain: dict):
     # Arrange
     base = {
         "name": "overridden_name",
@@ -349,24 +338,29 @@ def test_build_template_vars_should_override_base_with_context_fields(job_contex
     }
 
     # Act
-    job_context._build_template_vars(base=base)
+    result = Context(
+        name="test_job",
+        slug="test_job",
+        kind="job",
+        tiozin_role="Job",
+        template_vars=base,
+        **fake_domain,
+    )
 
     # Assert
     actual = (
-        job_context.template_vars["name"],
-        job_context.template_vars["custom_key"],
+        result.template_vars["name"],
+        result.template_vars["custom_key"],
     )
     expected = (
-        job_context.name,
+        "test_job",
         "custom_value",
     )
     assert actual == expected
 
 
 @freeze_time(FROZEN_TIME)
-def test_build_template_vars_should_override_base_with_day(
-    job_context: Context,
-):
+def test_init_template_vars_should_override_base_with_day(fake_domain: dict):
     # Arrange
     base = {
         "ds": "base_value",
@@ -374,12 +368,19 @@ def test_build_template_vars_should_override_base_with_day(
     }
 
     # Act
-    job_context._build_template_vars(base=base)
+    result = Context(
+        name="test_job",
+        slug="test_job",
+        kind="job",
+        tiozin_role="Job",
+        template_vars=base,
+        **fake_domain,
+    )
 
     # Assert
     actual = {
-        "ds": str(job_context.template_vars["ds"]),
-        "YYYY": str(job_context.template_vars["YYYY"]),
+        "ds": str(result.template_vars["ds"]),
+        "YYYY": str(result.template_vars["YYYY"]),
     }
     expected = {
         "ds": FROZEN_TIME_OBJ.format("YYYY-MM-DD"),
@@ -388,29 +389,23 @@ def test_build_template_vars_should_override_base_with_day(
     assert actual == expected
 
 
-def test_build_template_vars_should_store_immutable_result(job_context: Context):
-    # Act
-    job_context._build_template_vars()
-
+def test_init_template_vars_should_store_immutable_result(job_context: Context):
     # Assert
     with pytest.raises(TypeError):
         job_context.template_vars["new_key"] = "value"
 
 
 # =============================================================================
-# Testing Context._build_template_vars - ENV Namespace
+# Testing Context._init_template_vars - ENV Namespace
 # =============================================================================
 
 
-def test_build_template_vars_should_include_env_from_os(
+def test_init_template_vars_should_include_env_from_os(
     monkeypatch: pytest.MonkeyPatch,
     job_context: Context,
 ):
     # Arrange
     monkeypatch.setenv("TIOZIN_BUILD_TEST", "hello")
-
-    # Act
-    job_context._build_template_vars()
 
     # Assert
     actual = job_context.template_vars["ENV"]["TIOZIN_BUILD_TEST"]
@@ -418,15 +413,12 @@ def test_build_template_vars_should_include_env_from_os(
     assert actual == expected
 
 
-def test_build_template_vars_should_isolate_env_from_context_fields(
+def test_init_template_vars_should_isolate_env_from_context_fields(
     monkeypatch: pytest.MonkeyPatch,
     job_context: Context,
 ):
     # Arrange
     monkeypatch.setenv("name", "from_os")
-
-    # Act
-    job_context._build_template_vars()
 
     # Assert
     actual = (

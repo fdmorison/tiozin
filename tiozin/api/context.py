@@ -2,35 +2,54 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from contextvars import ContextVar, Token
-from dataclasses import dataclass, field, fields
 from pathlib import Path
 from types import MappingProxyType as FrozenMapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from pendulum import DateTime
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    SkipValidation,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
-from tiozin.utils import create_local_temp_dir, generate_time_ordered_id, utcnow
+from tiozin.utils import create_local_temp_dir, utcnow
 
 from .enums import Cadence
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
 from .runtime.catalog import RunCatalog
+from .types import Attributes, Counter, NominalTime, Slug, TechnicalTime, TimeOrderedId
 
 if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner, Tiozin
 
+    from .metadata.batch.base import BatchRegistry
+    from .metadata.job.base import JobRegistry
+    from .metadata.lineage.base import LineageRegistry
+    from .metadata.metric.base import MetricRegistry
+    from .metadata.schema.base import SchemaRegistry
+    from .metadata.secret.base import SecretRegistry
+    from .metadata.setting.base import SettingRegistry
+
+SKIP_TEMPLATE = {"skip_template": True}
+
 
 _current_context: ContextVar[Context | None] = ContextVar(
-    "tiozin_current_context",
+    "tiozin_current_Context",
     default=None,
 )
 
 
-@dataclass(slots=True, kw_only=True)
-class Context:
+class Context(BaseModel):
     """
     Represents the execution scope of a job or step.
 
@@ -59,105 +78,185 @@ class Context:
         ctx = Context.current(required=False)  # returns None if not active
     """
 
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_default=True,
+        validate_assignment=True,
+        arbitrary_types_allowed=True,
+    )
+
+    _tokens: list[Token] = PrivateAttr(default_factory=list)
+
     # ==================================================
     # Root reference (set by factory methods)
     # ==================================================
-    job: Context = field(init=False, repr=False)
+    job: Context | None = Field(None, repr=False, frozen=True)
 
     # ==================================================
     # Identity
     # ==================================================
-    name: str
-    slug: str
-    kind: str
-    tiozin_role: str
+    name: str = Field(frozen=True)
+    slug: Slug = Field(frozen=True)
+    kind: str = Field(frozen=True)
+    tiozin_role: str = Field(frozen=True)
+    namespace: str | None = Field(default=None, frozen=True)
 
     # ==================================================
-    # Domain
+    # Domain / Product
     # ==================================================
-    org: str
-    region: str
-    domain: str
-    subdomain: str
-    layer: str
-    product: str
-    model: str
-    namespace: str | None
+    org: str = Field(frozen=True)
+    region: str = Field(frozen=True)
+    domain: str = Field(frozen=True)
+    subdomain: str = Field(frozen=True)
+    layer: str = Field(frozen=True)
+    product: str = Field(frozen=True)
+    model: str = Field(frozen=True)
 
     # ==================================================
     # Ownership
     # ==================================================
-    maintainer: str | None = None
-    cost_center: str | None = None
-    owner: str | None = None
-    labels: dict[str, str] = field(default_factory=dict)
+    maintainer: str | None = Field(default=None, frozen=True)
+    cost_center: str | None = Field(default=None, frozen=True)
+    owner: str | None = Field(default=None, frozen=True)
+    labels: dict[str, str] = Field(default_factory=dict, frozen=True)
 
     # ==================================================
-    # Tiozin arguments
+    # Extra Tiozin arguments
     # ==================================================
-    options: dict[str, Any]
+    options: Attributes = Field(frozen=True)
 
     # ==================================================
     # Runtime Identity
     # ==================================================
-    run_id: str = field(init=False)
-    run_attempt: int = field(default=1)
-    cadence: Cadence = field(init=False)
-    nominal_time: DateTime = field(init=False)
+    run_id: TimeOrderedId = Field(frozen=True)
+    run_attempt: Counter = 1
+    cadence: Cadence = Field(default_factory=Cadence.current, frozen=True)
+    nominal_time: NominalTime = Field(default_factory=utcnow, frozen=True)
 
     # ==================================================
     # Runtime Lifecycle
     # ==================================================
-    runner: Runner = field(default=None, metadata={"template": False})
-    setup_at: DateTime | None = field(default=None, metadata={"template": False})
-    executed_at: DateTime | None = field(default=None, metadata={"template": False})
-    teardown_at: DateTime | None = field(default=None, metadata={"template": False})
-    finished_at: DateTime | None = field(default=None, metadata={"template": False})
+    runner: Runner | None = Field(None, frozen=True, json_schema_extra=SKIP_TEMPLATE)
+    setup_at: TechnicalTime | None = Field(None, json_schema_extra=SKIP_TEMPLATE)
+    executed_at: TechnicalTime | None = Field(None, json_schema_extra=SKIP_TEMPLATE)
+    teardown_at: TechnicalTime | None = Field(None, json_schema_extra=SKIP_TEMPLATE)
+    finished_at: TechnicalTime | None = Field(None, json_schema_extra=SKIP_TEMPLATE)
 
     # ==================================================
     # Metadata
     # ==================================================
-    registries: Registries = field(
-        default_factory=Registries, repr=False, metadata={"template": False}
+    registries: Registries = Field(
+        default_factory=Registries,
+        frozen=True,
+        repr=False,
+        json_schema_extra=SKIP_TEMPLATE,
     )
 
-    output_schema: Schema | None = field(
-        init=False,
-        repr=False,
+    output_schema: Schema | None = Field(
         default=None,
-        metadata={"template": False},
+        repr=False,
+        json_schema_extra=SKIP_TEMPLATE,
     )
 
     # ==================================================
     # Infra
     # ==================================================
-    temp_workdir: Path = field(init=False)
+    temp_workdir: Path | None = Field(default=None, frozen=True)
 
-    shared: dict[str, Any] = field(
-        repr=False,
+    shared: SkipValidation[dict[str, Any]] = Field(
         default_factory=dict,
-        metadata={"template": False},
+        frozen=True,
+        repr=False,
+        json_schema_extra=SKIP_TEMPLATE,
     )
 
-    catalog: RunCatalog = field(
-        repr=False,
+    catalog: RunCatalog = Field(
         default_factory=RunCatalog,
-        metadata={"template": False},
+        frozen=True,
+        repr=False,
+        json_schema_extra=SKIP_TEMPLATE,
     )
 
-    template_vars: Mapping[str, Any] = field(
-        init=False,
-        repr=False,
+    template_vars: SkipValidation[Mapping[str, Any]] = Field(
         default_factory=dict,
-        metadata={"template": False},
+        repr=False,
+        json_schema_extra=SKIP_TEMPLATE,
     )
 
-    _tokens: list[Token] = field(
-        init=False,
-        repr=False,
-        default_factory=list,
-        metadata={"template": False},
-    )
+    # ==================================================
+    # Initializers
+    # ==================================================
+    @field_validator("nominal_time", mode="after")
+    def _init_nominal_time(cls, value: DateTime, info: ValidationInfo) -> DateTime:
+        cadence: Cadence = info.data.get("cadence")
+        return cadence.truncate(value)
+
+    @model_validator(mode="after")
+    def _init_job(self) -> Self:
+        if self.is_job:
+            self.__dict__["job"] = self
+        return self
+
+    @model_validator(mode="after")
+    def _init_temp_workdir(self) -> Self:
+        if self.temp_workdir:
+            return self
+
+        self.__dict__["temp_workdir"] = (
+            create_local_temp_dir(self.qualified_slug, self.run_id)
+            if self.is_root
+            else create_local_temp_dir(self.job.temp_workdir, self.slug)
+        )
+
+        return self
+
+    @model_validator(mode="after")
+    def _init_template_vars(self) -> Self:
+        result = dict(self.template_vars)
+
+        # context fields
+        context_data = {
+            name: getattr(self, name)
+            for name, info in type(self).model_fields.items()
+            if not (info.json_schema_extra or {}).get("skip_template", False)
+        }
+        result |= context_data
+
+        # Template Acessors
+        now = TemplateDate()
+        result |= now.to_dict()
+        result["DAY"] = now
+        result["ENV"] = TemplateEnv()
+        result["SECRET"] = TemplateSecret(self.registries.secret) if self.registries.secret else {}
+        self.__dict__["template_vars"] = FrozenMapping(result)
+        return self
+
+    # ==================================================
+    # Context Management
+    # ==================================================
+
+    def __enter__(self) -> Context:
+        """
+        Activate this Context as the current execution scope.
+
+        Context is reentrant and supports nested activation. Each
+        __enter__ call pushes a new ContextVar token onto an internal
+        stack, and __exit__ restores the previous scope accordingly.
+        """
+        token = _current_context.set(self)
+        self._tokens.append(token)
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        """
+        Deactivate the current execution scope and restore the previous one.
+
+        Supports nested scopes by popping the most recent activation token.
+        """
+        if not self._tokens:
+            return
+        token = self._tokens.pop()
+        _current_context.reset(token)
 
     # ==================================================
     # Factories
@@ -187,16 +286,11 @@ class Context:
             labels=job.labels,
             # Arguments — always from job
             options=job.options,
-            # Runtime — injected externally (eg: from TiozinApp, tests, etc)
+            # Runtime — run_id and nominal_time resolved by the types
+            runner=job.runner,
+            cadence=job.cadence,
             registries=registries or Registries(),
         )
-        ctx.job = ctx
-        ctx.runner = job.runner
-        ctx.run_id = generate_time_ordered_id()
-        ctx.cadence = job.cadence
-        ctx.nominal_time = ctx.cadence.truncate(utcnow())
-        ctx.temp_workdir = create_local_temp_dir(job.slug, ctx.run_id)
-        ctx._build_template_vars()
         return ctx
 
     @classmethod
@@ -222,25 +316,11 @@ class Context:
             layer=step.layer,
             product=step.product,
             model=step.model,
-            # Namespace — not available at step level
-            namespace=None,
-            # Ownership — not available at step level
-            maintainer=None,
-            cost_center=None,
-            owner=None,
-            labels={},
             # Arguments — always from step
             options=step.options,
-            # Runtime — injected externally  (eg: tests, etc)
+            # Runtime — cadence, run_id, and nominal_time fall back to defaults
             registries=registries or Registries(),
         )
-        ctx.job = None
-        ctx.runner = None
-        ctx.run_id = generate_time_ordered_id()
-        ctx.cadence = Cadence.MINUTELY
-        ctx.nominal_time = ctx.cadence.truncate(utcnow())
-        ctx.temp_workdir = create_local_temp_dir(step.slug, ctx.run_id)
-        ctx._build_template_vars()
         return ctx
 
     def for_child_step(self, step: EtlStep) -> Context:
@@ -268,45 +348,16 @@ class Context:
             owner=self.owner,
             labels=self.labels,
             # Runtime — always inherited from parent
+            job=self.job,
+            runner=self.job.runner,
+            cadence=self.job.cadence,
+            nominal_time=self.job.nominal_time,
             shared=self.shared,
             catalog=self.catalog,
             registries=self.registries,
+            template_vars=self.template_vars,
         )
-        ctx.job = self.job
-        ctx.runner = self.job.runner
-        ctx.run_id = generate_time_ordered_id()
-        ctx.cadence = self.job.cadence
-        ctx.nominal_time = self.job.nominal_time
-        ctx.temp_workdir = create_local_temp_dir(self.job.temp_workdir, step.slug)
-        ctx._build_template_vars(base=self.template_vars)
         return ctx
-
-    # ==================================================
-    # Context Management
-    # ==================================================
-
-    def __enter__(self) -> Context:
-        """
-        Activate this Context as the current execution scope.
-
-        Context is reentrant and supports nested activation. Each
-        __enter__ call pushes a new ContextVar token onto an internal
-        stack, and __exit__ restores the previous scope accordingly.
-        """
-        token = _current_context.set(self)
-        self._tokens.append(token)
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> None:
-        """
-        Deactivate the current execution scope and restore the previous one.
-
-        Supports nested scopes by popping the most recent activation token.
-        """
-        if not self._tokens:
-            return
-        token = self._tokens.pop()
-        _current_context.reset(token)
 
     # ==================================================
     # Utilities
@@ -346,6 +397,34 @@ class Context:
         return f"{self.job.slug}.{self.slug}"
 
     @property
+    def setting_registry(self) -> SettingRegistry:
+        return self.registries.setting
+
+    @property
+    def secret_registry(self) -> SecretRegistry:
+        return self.registries.secret
+
+    @property
+    def schema_registry(self) -> SchemaRegistry:
+        return self.registries.schema
+
+    @property
+    def batch_registry(self) -> BatchRegistry:
+        return self.registries.batch
+
+    @property
+    def job_registry(self) -> JobRegistry:
+        return self.registries.job
+
+    @property
+    def metric_registry(self) -> MetricRegistry:
+        return self.registries.metric
+
+    @property
+    def lineage_registry(self) -> LineageRegistry:
+        return self.registries.lineage
+
+    @property
     def delay(self) -> float:
         now = utcnow()
         begin = self.setup_at or now
@@ -373,28 +452,11 @@ class Context:
         end = self.finished_at or now
         return (end - begin).total_seconds()
 
-    # ==================================================
-    # Private Utilities
-    # ==================================================
-    def _build_template_vars(self, base: Mapping[str, Any] | None = None) -> None:
-        result = dict(self.template_vars)
 
-        # defaults
-        if base:
-            result |= base
+def _rebuild() -> None:
+    from tiozin.api.runtime.runner.base import Runner
 
-        # context fields
-        context_data = {
-            field.name: getattr(self, field.name)
-            for field in fields(self)
-            if field.metadata.get("template", True)
-        }
-        result |= context_data
+    Context.model_rebuild(_types_namespace={"Runner": Runner})
 
-        # Template Acessors
-        now = TemplateDate()
-        result |= now.to_dict()
-        result["DAY"] = now
-        result["ENV"] = TemplateEnv()
-        result["SECRET"] = TemplateSecret(self.registries.secret) if self.registries.secret else {}
-        self.template_vars = FrozenMapping(result)
+
+_rebuild()

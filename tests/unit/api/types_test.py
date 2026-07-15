@@ -10,6 +10,7 @@ from tiozin.api.types import (
     Attributes,
     Counter,
     NominalTime,
+    Slug,
     TechnicalTime,
     TimeOrderedId,
     Watermark,
@@ -20,6 +21,7 @@ PROVIDED_ID = "01920000-0000-7000-8000-000000000000"
 WATERMARK = TypeAdapter(Watermark)
 TECHNICAL_TIME = TypeAdapter(TechnicalTime)
 NOMINAL_TIME = TypeAdapter(NominalTime)
+SLUG = TypeAdapter(Slug)
 
 
 class TestModel(BaseModel):
@@ -388,4 +390,29 @@ def test_attributes_should_not_share_default_between_instances():
     # Assert
     actual = second.attributes
     expected = {}
+    assert actual == expected
+
+
+# =============================================================================
+# Slug
+# =============================================================================
+
+
+def test_slug_should_normalize_non_slug_value():
+    # Act
+    result = SLUG.validate_python("My Job Name")
+
+    # Assert
+    actual = result
+    expected = "my_job_name"
+    assert actual == expected
+
+
+def test_slug_should_preserve_already_safe_value():
+    # Act
+    result = SLUG.validate_python("my_job_name")
+
+    # Assert
+    actual = result
+    expected = "my_job_name"
     assert actual == expected

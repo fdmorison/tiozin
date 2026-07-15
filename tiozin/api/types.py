@@ -5,7 +5,7 @@ from typing import Annotated, Any
 
 from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field
 
-from tiozin.utils import as_utc, check_time_ordered_id, generate_time_ordered_id
+from tiozin.utils import as_utc, check_time_ordered_id, generate_time_ordered_id, slugify
 
 from .enums import Cadence
 from .metadata.batch.watermark import check_watermark, parse_watermark
@@ -48,4 +48,10 @@ Watermark = Annotated[
     int | date | datetime,
     BeforeValidator(lambda value: parse_watermark(value)),
     AfterValidator(lambda value: check_watermark(value)),
+]
+
+# A string normalized into a safe SQL and filesystem identifier.
+Slug = Annotated[
+    str,
+    AfterValidator(slugify),
 ]

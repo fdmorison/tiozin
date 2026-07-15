@@ -36,6 +36,5 @@ def spark_job(job_stub: JobStub, spark_runner: RunnerStub) -> JobStub:
 
 
 @pytest.fixture(autouse=True)
-def spark_job_context(job_context: Context, spark_runner: RunnerStub) -> None:
-    job_context.runner = spark_runner
+def spark_job_context(spark_job: JobStub, job_context: Context) -> Context:
     return job_context
