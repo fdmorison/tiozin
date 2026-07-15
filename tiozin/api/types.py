@@ -13,7 +13,7 @@ from .metadata.batch.watermark import check_watermark, parse_watermark
 # Generates a time-ordered ID when the value is missing or None.
 TimeOrderedId = Annotated[
     str,
-    Field(default=None, validate_default=True),
+    Field(default=None),
     BeforeValidator(lambda value: generate_time_ordered_id() if value is None else str(value)),
     AfterValidator(check_time_ordered_id),
 ]
@@ -21,27 +21,25 @@ TimeOrderedId = Annotated[
 # An aware datetime normalized to UTC.
 TechnicalTime = Annotated[
     AwareDatetime,
-    Field(validate_default=True),
     AfterValidator(as_utc),
 ]
 
 # A technical time truncated to the current cadence.
 NominalTime = Annotated[
     TechnicalTime,
-    Field(validate_default=True),
     AfterValidator(lambda dt: Cadence.current().truncate(dt)),
 ]
 
 # A non-negative integer counter defaulting to zero.
 Counter = Annotated[
     int,
-    Field(default=0, ge=0, validate_default=True),
+    Field(default=0, ge=0),
 ]
 
 # An open mapping of arbitrary key-value metadata.
 Attributes = Annotated[
     dict[str, Any],
-    Field(default=None, validate_default=True),
+    Field(default=None),
     BeforeValidator(lambda value: dict(value) if value else {}),
 ]
 

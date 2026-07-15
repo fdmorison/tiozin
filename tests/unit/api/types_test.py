@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pendulum
 import pytest
 import uuid_utils
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from tiozin.api.types import (
     Attributes,
@@ -22,23 +22,29 @@ TECHNICAL_TIME = TypeAdapter(TechnicalTime)
 NOMINAL_TIME = TypeAdapter(NominalTime)
 
 
-class TimeOrderedIdModel(BaseModel):
+class TestModel(BaseModel):
+    model_config = ConfigDict(
+        validate_default=True,
+    )
+
+
+class TimeOrderedIdModel(TestModel):
     id: TimeOrderedId
 
 
-class TimeOrderedIdModelWithDefault(BaseModel):
+class TimeOrderedIdModelWithDefault(TestModel):
     id: TimeOrderedId = None
 
 
-class OptionalTimeOrderedIdModel(BaseModel):
+class OptionalTimeOrderedIdModel(TestModel):
     id: TimeOrderedId | None = None
 
 
-class CounterModel(BaseModel):
+class CounterModel(TestModel):
     count: Counter
 
 
-class AttributesModel(BaseModel):
+class AttributesModel(TestModel):
     attributes: Attributes
 
 
