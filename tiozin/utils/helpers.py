@@ -1,6 +1,7 @@
 from collections import deque
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import datetime
+from itertools import islice
 from typing import TypeVar
 from uuid import UUID, uuid4
 
@@ -201,6 +202,36 @@ def prune(value: T, dicts: bool = False, lists: bool = False) -> T:
         return [pruned for item in value if not should_remove(pruned := prune(item, dicts, lists))]
 
     return value
+
+
+def batched(iterable: Iterable[T], n: int) -> Iterator[tuple[T, ...]]:
+    """
+    Batch an iterable into tuples of length `n`. The last batch may be shorter.
+
+    Backports `itertools.batched`, available only on Python 3.12+.
+
+    Args:
+        iterable: The iterable to split into batches.
+        n: The size of each batch. Must be at least one.
+
+    Yields:
+        Successive tuples of up to `n` items from the iterable.
+
+    Raises:
+        ValueError: If `n` is less than one.
+
+    Examples:
+        >>> list(batched("ABCDEFG", 3))
+        [('A', 'B', 'C'), ('D', 'E', 'F'), ('G',)]
+        >>> list(batched([1, 2, 3, 4], 2))
+        [(1, 2), (3, 4)]
+    """
+    if n < 1:
+        raise ValueError("n must be at least one")
+
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        yield batch
 
 
 def as_list(
