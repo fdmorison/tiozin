@@ -98,9 +98,9 @@ def test_from_context_should_map_governance_tags(job_context: Context):
 
 def test_from_context_should_exclude_governance_tags_when_none(job_context: Context):
     # Arrange
-    job_context.owner = None
-    job_context.maintainer = None
-    job_context.cost_center = None
+    job_context = job_context.model_copy(
+        update={"owner": None, "maintainer": None, "cost_center": None}
+    )
 
     # Act
     result = LineageRunEvent.from_context(job_context, LineageRunEvent.START)
