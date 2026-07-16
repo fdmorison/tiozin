@@ -1,6 +1,12 @@
-from tiozin import Dataset
+from datetime import UTC, datetime
+
+from tests.stubs import JobStub
+from tiozin import Batch, Dataset
 from tiozin.api.runtime.catalog import RunCatalog, RunRecord
 from tiozin.family.tio_kernel import NoOpInput
+
+_2026_01_15T01_00_00 = datetime(2026, 1, 15, 1, tzinfo=UTC)
+_2026_01_15T02_00_00 = datetime(2026, 1, 15, 2, tzinfo=UTC)
 
 
 def mock_step(name: str = "test") -> NoOpInput:
@@ -129,6 +135,43 @@ def test_register_should_merge_output_on_repeated_calls():
         catalog.get(step).output.tiozin_name,
     )
     expected = ("s3://bucket", "summary")
+    assert actual == expected
+
+
+def test_register_should_store_backlog(job_stub: JobStub, fake_domain: dict):
+    # Arrange
+    catalog = RunCatalog()
+    backlog = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T01_00_00),
+        Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00),
+    ]
+
+    # Act
+    catalog.register(job_stub, backlog=backlog)
+
+    # Assert
+    actual = catalog.get(job_stub).backlog
+    expected = backlog
+    assert actual == expected
+
+
+def test_register_should_preserve_the_existing_backlog_when_backlog_is_not_provided(
+    job_stub: JobStub, fake_domain: dict
+):
+    # Arrange
+    catalog = RunCatalog()
+    backlog = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T01_00_00),
+        Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00),
+    ]
+    catalog.register(job_stub, backlog=backlog)
+
+    # Act
+    catalog.register(job_stub, inputs=[mock_dataset("orders")])
+
+    # Assert
+    actual = catalog.get(job_stub).backlog
+    expected = backlog
     assert actual == expected
 
 
@@ -337,4 +380,54 @@ def test_get_outputs_should_skip_runtimes_without_output():
     # Assert
     actual = [d.tiozin_name for d in result]
     expected = ["summary"]
+    assert actual == expected
+
+
+# ============================================================================
+# RunCatalog.get_backlog
+# ============================================================================
+
+
+def test_get_backlog_should_return_registered_backlog(job_stub: JobStub, fake_domain: dict):
+    # Arrange
+    catalog = RunCatalog()
+    backlog = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T01_00_00),
+        Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00),
+    ]
+    catalog.register(job_stub, backlog=backlog)
+
+    # Act
+    result = catalog.get_backlog(job_stub)
+
+    # Assert
+    actual = result
+    expected = backlog
+    assert actual == expected
+
+
+def test_get_backlog_should_return_empty_when_no_backlog_registered(job_stub: JobStub):
+    # Arrange
+    catalog = RunCatalog()
+    catalog.register(job_stub)
+
+    # Act
+    result = catalog.get_backlog(job_stub)
+
+    # Assert
+    actual = result
+    expected = []
+    assert actual == expected
+
+
+def test_get_backlog_should_return_empty_when_runtime_is_not_registered(job_stub: JobStub):
+    # Arrange
+    catalog = RunCatalog()
+
+    # Act
+    result = catalog.get_backlog(job_stub)
+
+    # Assert
+    actual = result
+    expected = []
     assert actual == expected

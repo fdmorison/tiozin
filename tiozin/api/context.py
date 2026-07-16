@@ -23,6 +23,7 @@ from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
 from tiozin.utils import create_local_temp_dir, utcnow
 
+from .conventions import RESOURCE_FIELDS
 from .enums import Cadence
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
     from tiozin import EtlStep, Job, Runner, Tiozin
 
     from .metadata.batch.base import BatchRegistry
+    from .metadata.batch.model import Batch
     from .metadata.job.base import JobRegistry
     from .metadata.lineage.base import LineageRegistry
     from .metadata.metric.base import MetricRegistry
@@ -377,6 +379,14 @@ class Context(BaseModel):
 
     def render(self, value: str) -> str:
         return JINJA.from_string(value).render(self.template_vars)
+
+    def get_job_backlog(self) -> list[Batch]:
+        backlog = self.catalog.get_backlog(self.job)
+        if not backlog:
+            resource = {field: getattr(self.job, field) for field in RESOURCE_FIELDS}
+            backlog = self.batch_registry.get_backlog(**resource)
+            self.catalog.register(self.job, backlog=backlog)
+        return backlog
 
     @property
     def is_job(self) -> bool:

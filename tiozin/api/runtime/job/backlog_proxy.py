@@ -29,11 +29,10 @@ class JobBacklogProxy(wrapt.ObjectProxy):
 
     def submit(self) -> Any:
         job: Job = self.__wrapped__
-        registry = Context.current().batch_registry
         runs = [()]
 
         job.info(f"📚 Loading backlog for `{job.qualified_resource}`")
-        backlog = registry.get_backlog(**job.to_resource_dict())
+        backlog = Context.current().batch_registry.get_backlog(**job.to_resource_dict())
         job.info(f"📚 Found {len(backlog)} batches in backlog")
 
         if not backlog and not job.batch_source.runs_on_empty_backlog:
@@ -54,10 +53,11 @@ class JobBacklogProxy(wrapt.ObjectProxy):
             batch.begin()
 
         try:
+            Context.current().catalog.register(job, backlog=list(batches))
             result = job.submit()
         except Exception as error:
             for batch in batches:
-                batch.fail(__error=error)
+                batch.fail(error=error)
             raise
         else:
             for batch in batches:

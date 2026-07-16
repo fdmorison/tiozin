@@ -202,6 +202,44 @@ class AuditOutput(Output):
         return data
 ```
 
+### Accessing Pending Batches
+
+The `get_job_backlog()` method returns the pending batches to be processed by the current job execution.
+
+The number of batches is limited by the job's `max_batches_per_run`. For example, if `max_batches_per_run: 10`, each execution processes at most ten batches, and `get_job_backlog()` returns at most ten batches. See [Jobs](concepts/jobs.md#max-batches-per-run).
+
+Each batch has an `attributes` dictionary for custom batch properties. These properties travel with the batch as it propagates across pipeline layers. Changes to `attributes` are transactional: they are committed only if the job completes successfully. If the job fails, all changes to `attributes` are rolled back.
+
+For example, an output may record the location where it wrote the data:
+
+```python
+class FileOutput(Output):
+    def write(self, df: DataFrame) -> DataFrame:
+        path = "s3://bucket/prefix/table/dt=2026-07-16"
+
+        df.write.mode("overwrite").parquet(path)
+
+        for batch in self.context.get_job_backlog():
+            batch.attributes["path"] = path
+
+        return df
+```
+
+A downstream input can then consume the paths recorded on those batches:
+
+```python
+class FileInput(Input):
+    def read(self) -> DataFrame:
+        paths = set()
+
+        for batch in self.context.get_job_backlog():
+            path = batch.attributes["path"]
+            paths.add(path)
+            self.info(f"Reading {path}")
+
+        return self.spark.read.parquet(*paths)
+```
+
 ## JobManifest
 
 Pydantic model representing a parsed YAML job definition.
