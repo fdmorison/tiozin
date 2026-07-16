@@ -15,6 +15,7 @@ from tiozin.utils import (
     as_flat_list,
     as_list,
     as_utc,
+    batched,
     check_time_ordered_id,
     default,
     epoch,
@@ -974,3 +975,94 @@ def test_generate_time_ordered_id_should_ignore_affix_when_empty(mock_uuid7, kwa
     actual = result
     expected = "01920000-0000-7000-8000-000000000000"
     assert actual == expected
+
+
+# ============================================================================
+# Testing batched()
+# ============================================================================
+def test_batched_should_split_into_even_batches():
+    # Act
+    result = batched([1, 2, 3, 4], 2)
+
+    # Assert
+    actual = list(result)
+    expected = [(1, 2), (3, 4)]
+    assert actual == expected
+
+
+def test_batched_should_shorten_last_batch_when_not_divisible():
+    # Act
+    result = batched("ABCDEFG", 3)
+
+    # Assert
+    actual = list(result)
+    expected = [("A", "B", "C"), ("D", "E", "F"), ("G",)]
+    assert actual == expected
+
+
+def test_batched_should_yield_single_batch_when_n_exceeds_length():
+    # Act
+    result = batched([1, 2, 3], 10)
+
+    # Assert
+    actual = list(result)
+    expected = [(1, 2, 3)]
+    assert actual == expected
+
+
+def test_batched_should_yield_nothing_when_iterable_is_empty():
+    # Act
+    result = batched([], 3)
+
+    # Assert
+    actual = list(result)
+    expected = []
+    assert actual == expected
+
+
+def test_batched_should_consume_a_generator_input():
+    # Arrange
+    source = (char for char in "ABCDE")
+
+    # Act
+    result = batched(source, 2)
+
+    # Assert
+    actual = list(result)
+    expected = [("A", "B"), ("C", "D"), ("E",)]
+    assert actual == expected
+
+
+def test_batched_should_not_consume_source_until_iterated():
+    # Arrange
+    consumed = []
+
+    def source():
+        for value in [1, 2, 3]:
+            consumed.append(value)
+            yield value
+
+    # Act
+    batched(source(), 2)
+
+    # Assert
+    actual = consumed
+    expected = []
+    assert actual == expected
+
+
+def test_batched_should_yield_first_batch_on_first_iteration():
+    # Act
+    result = batched([1, 2, 3, 4], 2)
+
+    # Assert
+    actual = next(result)
+    expected = (1, 2)
+    assert actual == expected
+
+
+@pytest.mark.parametrize("n", [0, -1])
+def test_batched_should_raise_value_error_when_n_is_less_than_one(n: int):
+    # Act / Assert
+    with pytest.raises(ValueError):
+        list(batched([1, 2, 3], n))
