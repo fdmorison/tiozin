@@ -31,6 +31,7 @@ from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
 from .metadata.schema.model import Schema
 from .metadata.batch.model import Batch
+from .metadata.batch.policy import BatchSourcePolicy
 from .metadata.batch.status import BatchStatus
 
 # Registries
@@ -59,6 +60,7 @@ __all__ = [
     "Registry",
     "Tiozin",
     # Enums
+    "BatchSourcePolicy",
     "Cadence",
     "LowerEnum",
     "UpperEnum",
