@@ -35,12 +35,19 @@ log_json = env.TIO_LOG_JSON
 log_json_ensure_ascii = env.TIO_LOG_JSON_ENSURE_ASCII
 log_show_locals = env.TIO_LOG_SHOW_LOCALS
 log_redact_min_length = env.TIO_LOG_REDACT_MIN_LENGTH
+
 # ===============================================
 #           Tiozin Plugins
 # ===============================================
 tiozin_family_group = "tiozin.family"
 tiozin_family_prefixes = ["tio_", "tia_"]
 tiozin_family_unknown = "tio_unknown"
+
+# ===============================================
+#           Framework Defaults
+# ===============================================
+default_batch_source = "none"
+default_max_batches_per_run = 1
 
 # ===============================================
 #           Registry Defaults

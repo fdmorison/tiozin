@@ -1,6 +1,5 @@
 kind: LinearJob
 name: example_job
-cadence: minutely
 description: |
   Minimal example job demonstrating a basic job using no-op operators.
 
@@ -15,6 +14,9 @@ subdomain: campaigns
 layer: refined
 product: users
 model: customers
+
+cadence: minutely
+batch_source: none
 
 unplanned_field: 12345
 

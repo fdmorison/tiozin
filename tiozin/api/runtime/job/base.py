@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin import config
 from tiozin.api.enums import Cadence
+from tiozin.api.metadata.batch.policy import BatchSourcePolicy
 from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
+from tiozin.utils import default
 
 from ...tiozin import Tiozin
 from ..input.base import Input
@@ -62,6 +64,12 @@ class Job(Resourceful, Tiozin, Generic[TData]):
             when not provided. Can be customized via `TIO_JOB_NAMESPACE_TEMPLATE`.
         cadence: Frequency at which the job runs. Influences the nominal time
             of each execution. Defaults to minutely.
+        max_batches_per_run: Maximum number of batches processed at once while
+            the job is consuming the backlog. Defaults to 1, so batches are
+            processed one at a time.
+        batch_source: Where batches come from. NONE runs without batches, SELF
+            produces batches from the job's own cursor, and UPSTREAM consumes
+            batches produced upstream. Defaults to NONE.
         runner: Runtime environment where the job runs.
         inputs: Sources that provide data to the job.
         transforms: Steps that modify the data.
@@ -85,6 +93,8 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         model: str = None,
         namespace: str = None,
         cadence: Cadence = None,
+        max_batches_per_run: int = None,
+        batch_source: BatchSourcePolicy = None,
         runner: Runner = None,
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
@@ -133,6 +143,8 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         )
 
         self.cadence = Cadence.default(cadence)
+        self.max_batches_per_run = default(max_batches_per_run, config.default_max_batches_per_run)
+        self.batch_source = BatchSourcePolicy.default(batch_source)
         self.runner = runner
         self.inputs = inputs or []
         self.transforms = transforms or []

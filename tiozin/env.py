@@ -50,7 +50,7 @@ TIO_LOG_SHOW_LOCALS = _env.bool("TIO_LOG_SHOW_LOCALS", False)
 TIO_LOG_REDACT_MIN_LENGTH = _env.int("TIO_LOG_REDACT_MIN_LENGTH", 3)
 
 # ===============================================
-#           Tiozin Customizations
+#           Framework Settings
 # ===============================================
 # TIO_NAMESPACE_TEMPLATE - Jinja template for the job namespace.
 # Available variables: org, region, domain, subdomain, layer, product, model.
@@ -58,3 +58,11 @@ TIO_NAMESPACE_TEMPLATE = _env.str(
     "TIO_JOB_NAMESPACE_TEMPLATE",
     "{{org}}.{{region}}.{{domain}}.{{subdomain}}",
 )
+
+# TIO_DEFAULT_MAX_BATCHES_PER_RUN - Default cap on batches consumed per job execution.
+# Defaults to 1, so each batch is consumed in its own execution.
+TIO_DEFAULT_MAX_BATCHES_PER_RUN = _env.int("TIO_DEFAULT_MAX_BATCHES_PER_RUN", 1)
+
+# TIO_DEFAULT_BATCH_SOURCE - Where a job gets its batches: `none`, `self`, or `upstream`.
+# Defaults to `none`, so a job runs without batches.
+TIO_DEFAULT_BATCH_SOURCE = _env.str("TIO_DEFAULT_BATCH_SOURCE", "none")
