@@ -188,12 +188,12 @@ def lineage_registry_stub() -> LineageRegistryStub:
 
 
 @pytest.fixture()
-def job_context(job_stub: JobStub):
+def job_context(job_stub: JobStub, batch_registry_stub: BatchRegistryStub):
     registries = Registries(
         setting=SettingRegistryStub(),
         secret=SecretRegistryStub(),
         schema=SchemaRegistryStub(),
-        batch=BatchRegistryStub(),
+        batch=batch_registry_stub,
         job=JobRegistryStub(),
         metric=MetricRegistryStub(),
         lineage=LineageRegistryStub(),

@@ -7,8 +7,9 @@ from tiozin.api.typehint import ResourceKwargs
 
 
 class BatchRegistryStub(BatchRegistry):
-    def __init__(self, retries: int = None, failfast: bool = None):
+    def __init__(self, retries: int = None, failfast: bool = None, backlog: list[Batch] = None):
         super().__init__(location="stub://batch", retries=retries, failfast=failfast)
+        self.backlog = backlog or []
 
     def register(self, batch: Batch) -> Batch:
         return batch
@@ -23,7 +24,7 @@ class BatchRegistryStub(BatchRegistry):
         return None
 
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
-        return []
+        return self.backlog
 
     def get_history(
         self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
