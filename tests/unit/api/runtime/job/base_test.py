@@ -2,7 +2,7 @@ import pytest
 
 from tests.stubs import InputStub, JobStub, RunnerStub
 from tiozin import config
-from tiozin.api import Cadence
+from tiozin.api import BatchSourcePolicy, Cadence
 
 # =============================================================================
 # Testing Job.namespace
@@ -122,6 +122,59 @@ def test_job_should_default_cadence_to_minutely_when_not_provided(
     # Assert
     actual = job.cadence
     expected = Cadence.MINUTELY
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Job.batch_source
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "batch_source",
+    [BatchSourcePolicy.SELF, "self"],
+)
+def test_job_should_resolve_batch_source(
+    batch_source,
+    fake_domain: dict,
+    fake_governance: dict,
+    runner_stub: RunnerStub,
+    input_stub: InputStub,
+):
+    # Act
+    job = JobStub(
+        name="test_job",
+        runner=runner_stub,
+        inputs=[input_stub],
+        batch_source=batch_source,
+        **fake_domain,
+        **fake_governance,
+    )
+
+    # Assert
+    actual = job.batch_source
+    expected = BatchSourcePolicy.SELF
+    assert actual == expected
+
+
+def test_job_should_have_default_batch_source(
+    fake_domain: dict,
+    fake_governance: dict,
+    runner_stub: RunnerStub,
+    input_stub: InputStub,
+):
+    # Act
+    job = JobStub(
+        name="test_job",
+        runner=runner_stub,
+        inputs=[input_stub],
+        **fake_domain,
+        **fake_governance,
+    )
+
+    # Assert
+    actual = job.batch_source
+    expected = BatchSourcePolicy.NONE
     assert actual == expected
 
 
