@@ -30,9 +30,8 @@ from .metadata.lineage.model import LineageDataset, LineageEvent, LineageRunEven
 from .metadata.secret.model import Secret
 from .metadata.setting.model import SettingsManifest
 from .metadata.schema.model import Schema
+from .metadata.batch.enums import BacklogPolicy, BatchStatus
 from .metadata.batch.model import Batch
-from .metadata.batch.policy import BatchSourcePolicy
-from .metadata.batch.status import BatchStatus
 
 # Registries
 from .metadata.job.base import JobRegistry
@@ -60,7 +59,7 @@ __all__ = [
     "Registry",
     "Tiozin",
     # Enums
-    "BatchSourcePolicy",
+    "BacklogPolicy",
     "Cadence",
     "LowerEnum",
     "UpperEnum",
