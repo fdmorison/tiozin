@@ -27,7 +27,7 @@ from .conventions import RESOURCE_FIELDS
 from .enums import Cadence
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
-from .runtime.catalog import RunCatalog
+from .runtime.catalog import RuntimeCatalog
 from .types import Attributes, Counter, NominalTime, Slug, TechnicalTime, TimeOrderedId
 
 if TYPE_CHECKING:
@@ -172,8 +172,8 @@ class Context(BaseModel):
         json_schema_extra=SKIP_TEMPLATE,
     )
 
-    catalog: RunCatalog = Field(
-        default_factory=RunCatalog,
+    catalog: RuntimeCatalog = Field(
+        default_factory=RuntimeCatalog,
         frozen=True,
         repr=False,
         json_schema_extra=SKIP_TEMPLATE,

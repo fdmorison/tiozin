@@ -1,52 +1,49 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from tiozin.utils import slugify
 
 from .dataset import Dataset
 
 if TYPE_CHECKING:
-    from ..metadata.batch.model import Batch
-    from .input.base import Input
-    from .job.base import Job
-    from .output.base import Output
-    from .transform.base import Transform
+    from .. import Batch, Input, Job, Output, Transform
 
-    JobOrStep = Job | Transform | Input | Output
-    JobOrStepOrStr = JobOrStep | str
+    JobOrStepOrSlug: TypeAlias = Job | Transform | Input | Output | str
 
 
-class RunRecord:
-    def __init__(self, slug: str) -> None:
-        self.slug: str = slug
+class RuntimeRecord:
+    def __init__(self, key: str) -> None:
+        self.key: str = key
         self.inputs: list[Dataset] = []
         self.output: Dataset | None = None
         self.backlog: list[Batch] = []
 
 
-class RunCatalog:
+class RuntimeCatalog:
     """
-    Tracks datasets produced and consumed by runtimes during a job execution.
+    Registers runtime objects for jobs and steps.
 
-    Born with the job context and shared across all child step contexts, so every
-    step's inputs and outputs are visible to the job when emitting lineage events.
+    Each job or step has a record keyed by its slug. Records store objects such
+    as input datasets, output datasets, and pending batches for later access
+    during the execution.
     """
 
     def __init__(self) -> None:
-        self._records: dict[str, RunRecord] = {}
+        self._records: dict[str, RuntimeRecord] = {}
 
     def __repr__(self) -> str:
-        return f"RunCatalog(records={list(self._records.keys())})"
+        return f"RuntimeCatalog(records={list(self._records.keys())})"
 
     def register(
         self,
-        runtime: JobOrStep,
+        object: JobOrStepOrSlug,
         inputs: list[Dataset] = None,
         output: Dataset = None,
         backlog: list[Batch] = None,
-    ) -> RunRecord:
-        record = self._records.setdefault(runtime.slug, RunRecord(runtime.slug))
+    ) -> RuntimeRecord:
+        key = slugify(object) if isinstance(object, str) else object.slug
+        record = self._records.setdefault(key, RuntimeRecord(key))
         inputs = inputs or []
 
         if inputs:
@@ -61,30 +58,30 @@ class RunCatalog:
 
         return record
 
-    def get(self, runtime: JobOrStepOrStr) -> RunRecord | None:
-        key = slugify(runtime) if isinstance(runtime, str) else runtime.slug
+    def get(self, object: JobOrStepOrSlug) -> RuntimeRecord | None:
+        key = slugify(object) if isinstance(object, str) else object.slug
         return self._records.get(key)
 
-    def get_records(self, runtimes: JobOrStepOrStr | list[JobOrStepOrStr]) -> list[RunRecord]:
-        runtimes = runtimes if isinstance(runtimes, list) else [runtimes]
-        return [record for runtime in runtimes if (record := self.get(runtime))]
+    def get_records(self, objects: JobOrStepOrSlug | list[JobOrStepOrSlug]) -> list[RuntimeRecord]:
+        objects = objects if isinstance(objects, list) else [objects]
+        return [record for object in objects if (record := self.get(object))]
 
-    def get_inputs(self, runtimes: JobOrStepOrStr | list[JobOrStepOrStr]) -> list[Dataset]:
+    def get_inputs(self, objects: JobOrStepOrSlug | list[JobOrStepOrSlug]) -> list[Dataset]:
         result = []
-        for record in self.get_records(runtimes):
+        for record in self.get_records(objects):
             result.extend(record.inputs)
         return result
 
-    def get_outputs(self, runtimes: JobOrStepOrStr | list[JobOrStepOrStr]) -> list[Dataset]:
+    def get_outputs(self, objects: JobOrStepOrSlug | list[JobOrStepOrSlug]) -> list[Dataset]:
         result = []
-        for record in self.get_records(runtimes):
+        for record in self.get_records(objects):
             if record.output is not None:
                 result.append(record.output)
         return result
 
-    def get_backlog(self, runtime: JobOrStepOrStr) -> list[Batch]:
+    def get_backlog(self, object: JobOrStepOrSlug) -> list[Batch]:
         """
-        Returns the memoized backlog of a runtime, or an empty list if none was registered.
+        Returns the memoized backlog of an object, or an empty list if none was registered.
         """
-        record = self.get(runtime)
+        record = self.get(object)
         return record.backlog if record else []
