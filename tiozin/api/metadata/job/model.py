@@ -4,7 +4,7 @@ from pydantic import Field
 
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.api.enums import Cadence
-from tiozin.api.metadata.batch.policy import BatchSourcePolicy
+from tiozin.api.metadata.batch.enums import BacklogPolicy
 
 from .. import docs
 from ..model import Manifest
@@ -162,7 +162,7 @@ class JobManifest(Manifest):
     # Execution
     cadence: Cadence | None = Field(None, description=docs.JOB_CADENCE)
     max_batches_per_run: int | None = Field(None, description=docs.JOB_MAX_BATCHES_PER_RUN)
-    batch_source: BatchSourcePolicy | None = Field(None, description=docs.JOB_BATCH_SOURCE)
+    backlog: BacklogPolicy | None = Field(None, description=docs.JOB_BACKLOG)
 
     # Pipeline Components
     runner: RunnerManifest = Field(description=docs.JOB_RUNNER)

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tiozin import config
 from tiozin.api.enums import Cadence
-from tiozin.api.metadata.batch.policy import BatchSourcePolicy
+from tiozin.api.metadata.batch.enums import BacklogPolicy
 from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
@@ -71,9 +71,9 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         max_batches_per_run: Maximum number of batches processed at once while
             the job is consuming the backlog. Defaults to 1, so batches are
             processed one at a time.
-        batch_source: Where batches come from. NONE runs without batches, SELF
-            produces batches from the job's own cursor, and UPSTREAM consumes
-            batches produced upstream. Defaults to NONE.
+        backlog: Where batches come from. NONE runs without batches,
+            MONOTONIC produces batches from the job's own cursor, and UPSTREAM
+            consumes batches produced upstream. Defaults to NONE.
         runner: Runtime environment where the job runs.
         inputs: Sources that provide data to the job.
         transforms: Steps that modify the data.
@@ -98,7 +98,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         namespace: str = None,
         cadence: Cadence = None,
         max_batches_per_run: int = None,
-        batch_source: BatchSourcePolicy = None,
+        backlog: BacklogPolicy = None,
         runner: Runner = None,
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
@@ -148,7 +148,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
 
         self.cadence = Cadence.default(cadence)
         self.max_batches_per_run = default(max_batches_per_run, config.default_max_batches_per_run)
-        self.batch_source = BatchSourcePolicy.default(batch_source)
+        self.backlog = BacklogPolicy.default(backlog)
         self.runner = runner
         self.inputs = inputs or []
         self.transforms = transforms or []

@@ -15,16 +15,13 @@ if TYPE_CHECKING:
 
 class JobBacklogProxy(wrapt.ObjectProxy):
     """
-    Internal proxy that consumes a Job backlog transactionally.
+    Internal proxy that executes jobs over pending backlogs.
 
-    Splits the backlog into chunks of at most `max_batches_per_run` batches and
-    runs once per chunk, where all batches succeed or fail together.
+    It extends the Job execution model with backlog consumption, allowing a single
+    job to process one or more pending batches transactionally across multiple runs.
 
-    When the backlog is empty, the job runs once unless its `batch_source`
-    skips on an empty backlog (UPSTREAM), in which case execution is skipped.
-
-    This is an internal implementation detail. Tiozin developers should
-    refer to the Job base class for the public API contract.
+    This is an internal implementation detail. Tiozin developers should refer to
+    the Job base class for the public API contract.
     """
 
     def submit(self) -> Any:
@@ -35,7 +32,7 @@ class JobBacklogProxy(wrapt.ObjectProxy):
         backlog = Context.current().batch_registry.get_backlog(**job.to_resource_dict())
         job.info(f"📚 Found {len(backlog)} batches in backlog")
 
-        if not backlog and not job.batch_source.runs_on_empty_backlog:
+        if not backlog and not job.backlog.runs_on_empty_backlog:
             job.warning("📚 Skipping execution: no batches to process")
             return []
 

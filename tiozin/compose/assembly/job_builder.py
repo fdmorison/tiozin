@@ -15,7 +15,7 @@ from tiozin import (
     TransformManifest,
     logs,
 )
-from tiozin.api import BatchSourcePolicy, Cadence
+from tiozin.api import BacklogPolicy, Cadence
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
 from tiozin.utils import trim
 
@@ -62,7 +62,7 @@ class JobBuilder:
 
         # Execution
         self._cadence: Cadence | None = None
-        self._batch_source: BatchSourcePolicy | None = None
+        self._backlog: BacklogPolicy | None = None
         self._max_batches_per_run: int | None = None
 
         # Runtime ETL
@@ -102,8 +102,8 @@ class JobBuilder:
         self._cadence = Cadence(cadence) if cadence else None
         return self
 
-    def with_batch_source(self, batch_source: BatchSourcePolicy) -> Self:
-        self._batch_source = BatchSourcePolicy(batch_source) if batch_source else None
+    def with_backlog(self, backlog: BacklogPolicy) -> Self:
+        self._backlog = BacklogPolicy(backlog) if backlog else None
         return self
 
     def with_max_batches_per_run(self, max_batches_per_run: int) -> Self:
@@ -255,7 +255,7 @@ class JobBuilder:
             model=self._model,
             # Execution
             cadence=self._cadence,
-            batch_source=self._batch_source,
+            backlog=self._backlog,
             max_batches_per_run=self._max_batches_per_run,
             # Pipeline
             runner=tiozin_registry.load_manifest(self._runner),
