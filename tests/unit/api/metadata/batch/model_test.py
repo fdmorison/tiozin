@@ -428,22 +428,50 @@ def test_replay_should_return_self_when_registry_returns_none(registry: MagicMoc
 # ============================================================================
 def test_commit_should_keep_attribute_mutations(job_context, fake_domain):
     # Arrange
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, attributes={"meta": {"stage": "raw"}})
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        attributes={"watermark": 10},
+    )
     batch.begin()
-    batch.attributes["scanned"] = 100
+    batch.attributes["watermark"] = 11
+    batch.attributes["extra"] = 123456
 
     # Act
     batch.commit()
 
     # Assert
     actual = batch.attributes
-    expected = {"meta": {"stage": "raw"}, "scanned": 100}
+    expected = {"watermark": 11, "extra": 123456}
+    assert actual == expected
+
+
+def test_fail_should_roll_back_attribute_mutations_when_batch_began(job_context, fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        attributes={"watermark": 10},
+    )
+    batch.begin()
+    batch.attributes["watermark"] = 11
+    batch.attributes["extra"] = 123456
+
+    # Act
+    batch.fail()
+
+    # Assert
+    actual = batch.attributes
+    expected = {"watermark": 10}
     assert actual == expected
 
 
 def test_fail_should_record_error_message_in_attributes(job_context, fake_domain):
     # Arrange
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+    )
     batch.begin()
 
     # Act
@@ -452,22 +480,6 @@ def test_fail_should_record_error_message_in_attributes(job_context, fake_domain
     # Assert
     actual = batch.attributes["__error"]
     expected = "boom"
-    assert actual == expected
-
-
-def test_fail_should_roll_back_attribute_mutations_when_batch_began(job_context, fake_domain):
-    # Arrange
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, attributes={"meta": {"stage": "raw"}})
-    batch.begin()
-    batch.attributes["scanned"] = 100
-    batch.attributes["meta"]["stage"] = "curated"
-
-    # Act
-    batch.fail(error=RuntimeError("boom"))
-
-    # Assert
-    actual = {key: value for key, value in batch.attributes.items() if key != "__error"}
-    expected = {"meta": {"stage": "raw"}}
     assert actual == expected
 
 

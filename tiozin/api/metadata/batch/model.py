@@ -140,7 +140,10 @@ class Batch(Metadata):
     def fail(self, error: Exception = None, **attributes) -> Self:
         if self._attributes_snapshot is not None:
             self.attributes = deepcopy(self._attributes_snapshot)
-        self.attributes["__error"] = str(error)
+
+        if error:
+            self.attributes["__error"] = str(error)
+
         batch = self._registry().fail(self, **attributes)
         return batch or self
 
