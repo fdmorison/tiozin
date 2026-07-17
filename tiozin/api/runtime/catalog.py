@@ -7,6 +7,7 @@ from tiozin.utils import slugify
 from .dataset import Dataset
 
 if TYPE_CHECKING:
+    from ..metadata.batch.model import Batch
     from .input.base import Input
     from .job.base import Job
     from .output.base import Output
@@ -21,6 +22,7 @@ class RunRecord:
         self.slug: str = slug
         self.inputs: list[Dataset] = []
         self.output: Dataset | None = None
+        self.backlog: list[Batch] = []
 
 
 class RunCatalog:
@@ -42,6 +44,7 @@ class RunCatalog:
         runtime: JobOrStep,
         inputs: list[Dataset] = None,
         output: Dataset = None,
+        backlog: list[Batch] = None,
     ) -> RunRecord:
         record = self._records.setdefault(runtime.slug, RunRecord(runtime.slug))
         inputs = inputs or []
@@ -52,6 +55,9 @@ class RunCatalog:
         if output is not None:
             dataset = Dataset.wrap(output)
             record.output = dataset if record.output is None else record.output.merge(dataset)
+
+        if backlog is not None:
+            record.backlog = backlog
 
         return record
 
@@ -75,3 +81,10 @@ class RunCatalog:
             if record.output is not None:
                 result.append(record.output)
         return result
+
+    def get_backlog(self, runtime: JobOrStepOrStr) -> list[Batch]:
+        """
+        Returns the memoized backlog of a runtime, or an empty list if none was registered.
+        """
+        record = self.get(runtime)
+        return record.backlog if record else []

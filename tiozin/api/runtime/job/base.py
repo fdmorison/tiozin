@@ -17,6 +17,7 @@ from ..input.base import Input
 from ..output.base import Output
 from ..runner.base import Runner
 from ..transform.base import Transform
+from .backlog_proxy import JobBacklogProxy
 from .proxy import JobProxy
 
 if TYPE_CHECKING:
@@ -25,7 +26,10 @@ if TYPE_CHECKING:
 TData = TypeVar("TData")
 
 
-@tioproxy(JobProxy)
+@tioproxy(
+    JobProxy,
+    JobBacklogProxy,
+)
 class Job(Resourceful, Tiozin, Generic[TData]):
     """
     Defines a complete data pipeline.

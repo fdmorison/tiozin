@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import ANY
 
@@ -5,14 +6,18 @@ import pendulum
 import pytest
 from freezegun import freeze_time
 
-from tests.stubs import InputStub, JobStub, RunnerStub
-from tiozin import Context
+from tests.stubs import BatchRegistryStub, InputStub, JobStub, RunnerStub
+from tiozin import Batch, Context
 from tiozin.api import Cadence
 from tiozin.compose import TemplateDate
 
 FAKE_UUID = "01968e6a-0000-7000-8000-000000000001"
 FROZEN_TIME = "2026-06-15T12:00:00+00:00"
 FROZEN_TIME_OBJ = pendulum.parse(FROZEN_TIME)
+
+_2026_01_15T01_00_00 = datetime(2026, 1, 15, 1, tzinfo=UTC)
+_2026_01_15T07_00_00 = datetime(2026, 1, 15, 7, tzinfo=UTC)
+_2026_01_15T09_00_00 = datetime(2026, 1, 15, 9, tzinfo=UTC)
 
 
 # =============================================================================
@@ -237,6 +242,67 @@ def test_qualified_slug_should_return_job_slug_and_step_slug_when_context_is_chi
     # Assert
     actual = input_context.qualified_slug
     expected = f"{job_context.slug}.{input_context.slug}"
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Context.get_job_backlog
+# =============================================================================
+
+
+def test_get_job_backlog_should_load_backlog_from_batch_registry(
+    job_context: Context, batch_registry_stub: BatchRegistryStub, fake_domain: dict
+):
+    # Arrange
+    backlog = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T01_00_00),
+    ]
+    batch_registry_stub.backlog = backlog
+
+    # Act
+    result = job_context.get_job_backlog()
+
+    # Assert
+    actual = result
+    expected = backlog
+    assert actual == expected
+
+
+def test_get_job_backlog_should_return_cached_backlog_without_querying_the_registry(
+    job_context: Context, batch_registry_stub: BatchRegistryStub, fake_domain: dict
+):
+    # Arrange
+    backlog = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T01_00_00),
+    ]
+    batch_registry_stub.backlog = backlog
+    cached = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T09_00_00),
+    ]
+    job_context.catalog.register(job_context.job, backlog=cached)
+
+    # Act
+    result = job_context.get_job_backlog()
+
+    # Assert
+    actual = result
+    expected = cached
+    assert actual == expected
+
+
+def test_get_job_backlog_should_return_the_job_backlog_from_a_step_context(
+    job_context: Context, input_context: Context, fake_domain: dict
+):
+    # Arrange
+    backlog = [Batch(**fake_domain, nominal_time=_2026_01_15T07_00_00)]
+    job_context.catalog.register(job_context.job, backlog=backlog)
+
+    # Act
+    result = input_context.get_job_backlog()
+
+    # Assert
+    actual = result
+    expected = backlog
     assert actual == expected
 
 
