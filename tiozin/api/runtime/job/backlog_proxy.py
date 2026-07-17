@@ -57,7 +57,7 @@ class JobBacklogProxy(wrapt.ObjectProxy):
             result = job.submit()
         except Exception as error:
             for batch in batches:
-                batch.fail(error=error)
+                batch.rollback(error=error)
             raise
         else:
             for batch in batches:
