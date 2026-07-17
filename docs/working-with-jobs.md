@@ -321,27 +321,27 @@ that already succeeded, and after a failure the next run retries that batch.
 
 See [Jobs](concepts/jobs.md#cadence) for how nominal time works.
 
-## Batch Source
+## Backlog Policy
 
-The `batch_source` field says where a job's batches come from. Declare it alongside the job's other top-level fields:
+The `backlog` field says how a job participates in batch backlogs. Declare it alongside the job's other top-level fields:
 
 ```yaml
 name: orders_daily_summary
-batch_source: upstream
+backlog: upstream
 max_batches_per_run: 10
 ```
 
-The `batch_source` defaults to `none` when omitted. The three values are:
+The `backlog` defaults to `none` when omitted. The three values are:
 
 - `none` runs the job without batches. The job runs on every submission, regardless of whether there is pending work.
-- `self` produces batches by advancing the job's own cursor. This mode is suitable for incremental processing, such as watermark-based jobs.
-- `upstream` consumes batches produced by another upstream job.
+- `monotonic` produces and consumes the job's own monotonic batches. This mode is suitable for incremental processing, such as watermark-based jobs.
+- `upstream` consumes batches produced by an upstream monotonic job.
 
-A `self` or `upstream` job is backlog-driven. It runs only when the backlog has batches to process and skips when the backlog is empty.
+A `monotonic` or `upstream` job is backlog-driven. It runs only when the backlog has batches to process and skips when the backlog is empty.
 
 `max_batches_per_run` caps how many batches one execution consumes. It defaults to 1, so each batch runs on its own. Raise it to drain a larger backlog in a single submit: Tiozin groups the pending batches into runs of at most this size and runs the job once per group. The batches in a group succeed or fail together.
 
-Framework-wide defaults come from `TIO_DEFAULT_BATCH_SOURCE` and `TIO_DEFAULT_MAX_BATCHES_PER_RUN`. A job overrides either one in its manifest. See [Jobs](concepts/jobs.md#batch-source) for the full behavior.
+Framework-wide defaults come from `TIO_DEFAULT_BACKLOG_POLICY` and `TIO_DEFAULT_MAX_BATCHES_PER_RUN`. A job overrides either one in its manifest. See [Jobs](concepts/jobs.md#backlog-policy) for the full behavior.
 
 The backlog commands below show what a backlog-driven job has waiting.
 
