@@ -46,7 +46,7 @@ tiozin_family_unknown = "tio_unknown"
 # ===============================================
 #           Framework Defaults
 # ===============================================
-default_batch_source = "none"
+default_backlog_policy = "none"
 default_max_batches_per_run = 1
 
 # ===============================================
