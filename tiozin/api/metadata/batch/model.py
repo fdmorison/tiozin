@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING, ClassVar, Self
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, PrivateAttr
 
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, isozformat, utcnow
@@ -117,6 +118,9 @@ class Batch(Metadata):
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
+    # Attributes captured at begin, restored on rollback (fail). None until the batch begins.
+    _attributes_snapshot: Attributes | None = PrivateAttr(default=None)
+
     def _registry(self) -> BatchRegistry:
         return current_context().registries.batch
 
@@ -126,13 +130,17 @@ class Batch(Metadata):
 
     def begin(self, **attributes) -> Self:
         batch = self._registry().begin(self, **attributes)
+        self._attributes_snapshot = deepcopy(self.attributes)
         return batch or self
 
     def commit(self, **attributes) -> Self:
         batch = self._registry().commit(self, **attributes)
         return batch or self
 
-    def fail(self, **attributes) -> Self:
+    def fail(self, error: Exception = None, **attributes) -> Self:
+        if self._attributes_snapshot is not None:
+            self.attributes = deepcopy(self._attributes_snapshot)
+        self.attributes["__error"] = str(error)
         batch = self._registry().fail(self, **attributes)
         return batch or self
 
