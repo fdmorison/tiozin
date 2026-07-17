@@ -270,23 +270,23 @@ def test_commit_should_return_self_when_registry_returns_none(registry: MagicMoc
 # ============================================================================
 # lifecycle - fail (delegation)
 # ============================================================================
-def test_fail_should_delegate_to_registry(registry: MagicMock, fake_domain):
+def test_rollback_should_delegate_to_registry(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    batch.fail(extra1="value1")
+    batch.rollback(extra="value1")
 
     # Assert
-    registry.fail.assert_called_once_with(batch, extra1="value1")
+    registry.fail.assert_called_once_with(batch, extra="value1")
 
 
-def test_fail_should_return_registry_result(registry: MagicMock, fake_domain):
+def test_rollback_should_return_registry_result(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    result = batch.fail()
+    result = batch.rollback()
 
     # Assert
     actual = result
@@ -294,13 +294,13 @@ def test_fail_should_return_registry_result(registry: MagicMock, fake_domain):
     assert actual is expected
 
 
-def test_fail_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
+def test_rollback_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
     # Arrange
     registry.fail.return_value = None
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
 
     # Act
-    result = batch.fail()
+    result = batch.rollback()
 
     # Assert
     assert result is batch
@@ -446,7 +446,7 @@ def test_commit_should_keep_attribute_mutations(job_context, fake_domain):
     assert actual == expected
 
 
-def test_fail_should_roll_back_attribute_mutations_when_batch_began(job_context, fake_domain):
+def test_rollback_should_discard_attribute_mutations(job_context, fake_domain):
     # Arrange
     batch = Batch(
         **fake_domain,
@@ -458,7 +458,7 @@ def test_fail_should_roll_back_attribute_mutations_when_batch_began(job_context,
     batch.attributes["extra"] = 123456
 
     # Act
-    batch.fail()
+    batch.rollback()
 
     # Assert
     actual = batch.attributes
@@ -466,7 +466,7 @@ def test_fail_should_roll_back_attribute_mutations_when_batch_began(job_context,
     assert actual == expected
 
 
-def test_fail_should_record_error_message_in_attributes(job_context, fake_domain):
+def test_rollback_should_set_error_message_in_attributes(job_context, fake_domain):
     # Arrange
     batch = Batch(
         **fake_domain,
@@ -475,7 +475,7 @@ def test_fail_should_record_error_message_in_attributes(job_context, fake_domain
     batch.begin()
 
     # Act
-    batch.fail(error=RuntimeError("boom"))
+    batch.rollback(error=RuntimeError("boom"))
 
     # Assert
     actual = batch.attributes["__error"]

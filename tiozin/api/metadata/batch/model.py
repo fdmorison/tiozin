@@ -118,7 +118,6 @@ class Batch(Metadata):
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
-    # Attributes captured at begin, restored on rollback (fail). None until the batch begins.
     _attributes_snapshot: Attributes | None = PrivateAttr(default=None)
 
     def _registry(self) -> BatchRegistry:
@@ -137,7 +136,7 @@ class Batch(Metadata):
         batch = self._registry().commit(self, **attributes)
         return batch or self
 
-    def fail(self, error: Exception = None, **attributes) -> Self:
+    def rollback(self, error: Exception = None, **attributes) -> Self:
         if self._attributes_snapshot is not None:
             self.attributes = deepcopy(self._attributes_snapshot)
 
