@@ -7,7 +7,7 @@ from tiozin import (
     RunnerManifest,
     TransformManifest,
 )
-from tiozin.api import BatchSourcePolicy, Cadence
+from tiozin.api import BacklogPolicy, Cadence
 from tiozin.compose import JobBuilder
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError, TiozinInternalError
 from tiozin.family.tio_kernel import LinearJob, NoOpInput, NoOpOutput, NoOpRunner, NoOpTransform
@@ -384,7 +384,7 @@ def test_builder_should_set_cadence():
     assert actual == expected
 
 
-def test_builder_should_set_batch_source():
+def test_builder_should_set_backlog():
     # Arrange
     builder = JobBuilder()
 
@@ -399,7 +399,7 @@ def test_builder_should_set_batch_source():
         .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_batch_source("upstream")
+        .with_backlog("upstream")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
@@ -407,8 +407,8 @@ def test_builder_should_set_batch_source():
     )
 
     # Assert
-    actual = job.batch_source
-    expected = BatchSourcePolicy.UPSTREAM
+    actual = job.backlog
+    expected = BacklogPolicy.UPSTREAM
     assert actual == expected
 
 

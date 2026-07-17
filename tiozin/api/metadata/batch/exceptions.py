@@ -6,8 +6,8 @@ from tiozin.exceptions.base import TiozinUsageError
 from tiozin.exceptions.categories import TiozinConflictError, TiozinNotFoundError
 
 if TYPE_CHECKING:
+    from .enums import BatchStatus
     from .model import Batch
-    from .status import BatchStatus
 
 
 class BatchError(TiozinUsageError):

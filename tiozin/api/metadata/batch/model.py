@@ -10,8 +10,8 @@ from tiozin.utils import current_context, isozformat, utcnow
 
 from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
+from .enums import BatchStatus
 from .state import BatchState
-from .status import BatchStatus
 
 if TYPE_CHECKING:
     from tiozin import BatchRegistry

@@ -25,7 +25,7 @@ from tiozin.api import (
     Schema,
     Batch,
     BatchStatus,
-    BatchSourcePolicy,
+    BacklogPolicy,
 )
 
 # Registries
@@ -68,7 +68,7 @@ __all__ = [
     "Schema",
     "Batch",
     "BatchStatus",
-    "BatchSourcePolicy",
+    "BacklogPolicy",
     # Registries
     "JobRegistry",
     "LineageRegistry",

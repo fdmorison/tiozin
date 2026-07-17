@@ -11,11 +11,11 @@ Tiozin reads configuration from environment variables at startup. Set them in a 
 | `HOSTNAME` | Application hostname, also used as the pod name in Kubernetes | system hostname |
 | `TIO_JOB_NAMESPACE_TEMPLATE` | Jinja template used to derive `namespace` when not set on the job | `{{org}}.{{region}}.{{domain}}.{{subdomain}}` |
 | `TIO_DEFAULT_MAX_BATCHES_PER_RUN` | Maximum number of batches consumed per job execution. The backlog is split into chunks of at most this size, each run as one job execution | `1` |
-| `TIO_DEFAULT_BATCH_SOURCE` | Where a job gets its batches. `none` runs the job without batches, so it runs even on an empty backlog. `self` produces batches from the job's own cursor. `upstream` consumes batches produced by an upstream layer. `self` and `upstream` are backlog-driven and skip when the backlog is empty | `none` |
+| `TIO_DEFAULT_BACKLOG_POLICY` | How a job participates in batch backlogs. `none` runs the job without batches, so it runs even on an empty backlog. `monotonic` produces and consumes the job's own monotonic batches. `upstream` consumes batches produced by an upstream monotonic job. `monotonic` and `upstream` are backlog-driven and skip when the backlog is empty | `none` |
 
 Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`.
 
-`TIO_DEFAULT_MAX_BATCHES_PER_RUN` and `TIO_DEFAULT_BATCH_SOURCE` set framework-wide defaults. A job can override either one in its manifest with the `max_batches_per_run` and `batch_source` fields.
+`TIO_DEFAULT_MAX_BATCHES_PER_RUN` and `TIO_DEFAULT_BACKLOG_POLICY` set framework-wide defaults. A job can override either one in its manifest with the `max_batches_per_run` and `backlog` fields.
 
 ## Logging
 

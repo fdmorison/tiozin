@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 
 from tests.stubs import BatchRegistryStub, JobStub
-from tiozin import Batch, BatchSourcePolicy, BatchStatus, Context
+from tiozin import BacklogPolicy, Batch, BatchStatus, Context
 
 _2026_01_15T01_00_00 = datetime(2026, 1, 15, 1, tzinfo=UTC)
 _2026_01_15T02_00_00 = datetime(2026, 1, 15, 2, tzinfo=UTC)
@@ -18,11 +18,11 @@ def active_job_context(job_context: Context) -> Context:
 
 
 # ============================================================================
-# BatchSourcePolicy.NONE
+# BacklogPolicy.NONE
 # ============================================================================
 def test_submit_should_run_the_job_once_when_policy_is_none(job_stub: JobStub):
     # Arrange
-    job_stub.batch_source = BatchSourcePolicy.NONE
+    job_stub.backlog = BacklogPolicy.NONE
 
     # Act
     result = job_stub.submit()
@@ -34,11 +34,11 @@ def test_submit_should_run_the_job_once_when_policy_is_none(job_stub: JobStub):
 
 
 # ============================================================================
-# BatchSourcePolicy.UPSTREAM and BatchSourcePolicy.SELF
+# BacklogPolicy.UPSTREAM and BacklogPolicy.MONOTONIC
 # ============================================================================
-@pytest.mark.parametrize("batch_source", [BatchSourcePolicy.UPSTREAM, BatchSourcePolicy.SELF])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
 def test_submit_should_process_the_entire_backlog(
-    batch_source,
+    backlog,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -52,7 +52,7 @@ def test_submit_should_process_the_entire_backlog(
         Batch(**fake_domain, nominal_time=_2026_01_15T05_00_00),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.batch_source = batch_source
+    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
 
     # Act
@@ -70,9 +70,9 @@ def test_submit_should_process_the_entire_backlog(
     assert actual == expected
 
 
-@pytest.mark.parametrize("batch_source", [BatchSourcePolicy.UPSTREAM, BatchSourcePolicy.SELF])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
 def test_submit_should_expose_only_the_current_chunk_to_each_run(
-    batch_source,
+    backlog,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -86,7 +86,7 @@ def test_submit_should_expose_only_the_current_chunk_to_each_run(
         batch_5 := Batch(**fake_domain, nominal_time=_2026_01_15T05_00_00),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.batch_source = batch_source
+    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
 
     # Act
@@ -102,13 +102,13 @@ def test_submit_should_expose_only_the_current_chunk_to_each_run(
     assert actual == expected
 
 
-@pytest.mark.parametrize("batch_source", [BatchSourcePolicy.UPSTREAM, BatchSourcePolicy.SELF])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
 def test_submit_should_skip_when_backlog_is_empty(
-    batch_source,
+    backlog,
     job_stub: JobStub,
 ):
     # Arrange
-    job_stub.batch_source = batch_source
+    job_stub.backlog = backlog
 
     # Act
     result = job_stub.submit()
@@ -119,9 +119,9 @@ def test_submit_should_skip_when_backlog_is_empty(
     assert actual == expected
 
 
-@pytest.mark.parametrize("batch_source", [BatchSourcePolicy.UPSTREAM, BatchSourcePolicy.SELF])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
 def test_submit_should_mark_the_backlog_as_failed_when_execution_fails(
-    batch_source,
+    backlog,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -132,7 +132,7 @@ def test_submit_should_mark_the_backlog_as_failed_when_execution_fails(
         Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.batch_source = batch_source
+    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
     job_stub.failure = RuntimeError("boom")
 

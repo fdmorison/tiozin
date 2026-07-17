@@ -63,6 +63,6 @@ TIO_NAMESPACE_TEMPLATE = _env.str(
 # Defaults to 1, so each batch is consumed in its own execution.
 TIO_DEFAULT_MAX_BATCHES_PER_RUN = _env.int("TIO_DEFAULT_MAX_BATCHES_PER_RUN", 1)
 
-# TIO_DEFAULT_BATCH_SOURCE - Where a job gets its batches: `none`, `self`, or `upstream`.
+# TIO_DEFAULT_BACKLOG_POLICY - Where a job gets its batches: `none`, `monotonic`, or `upstream`.
 # Defaults to `none`, so a job runs without batches.
-TIO_DEFAULT_BATCH_SOURCE = _env.str("TIO_DEFAULT_BATCH_SOURCE", "none")
+TIO_DEFAULT_BACKLOG_POLICY = _env.str("TIO_DEFAULT_BACKLOG_POLICY", "none")
