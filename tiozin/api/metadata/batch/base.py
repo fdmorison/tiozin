@@ -128,17 +128,16 @@ class BatchRegistry(Registry[Batch]):
         """
         Transitions the batch to FAILED, or skips if it already is.
 
-        The failure count is incremented on every failure. Once it exceeds the
-        retry limit, the batch is quarantined instead of failed.
+        Once the number of attempts exceeds the retry limit, the batch is
+        quarantined instead of failed.
         """
         if batch.status.is_failed():
             self.warning("Batch %s has already failed, so there is nothing to fail.", batch)
             return batch
 
-        batch.failure_count += 1
         batch.status = batch.status.to_failed(failfast=self.failfast)
 
-        if batch.failure_count > self.retries:
+        if batch.attempts > self.retries:
             return self.quarantine(batch, **attributes)
 
         batch.attributes |= attributes
@@ -177,7 +176,7 @@ class BatchRegistry(Registry[Batch]):
         """
         Transitions the batch back to PENDING, or skips if it already is.
 
-        The failure count is reset so the batch becomes eligible for a fresh round of retries.
+        The attempt count is reset so the batch becomes eligible for a fresh round of retries.
         """
         if batch.status.is_pending():
             self.warning("Batch %s is already pending, so there is nothing to replay.", batch)
@@ -185,6 +184,6 @@ class BatchRegistry(Registry[Batch]):
 
         batch.status = batch.status.to_pending(failfast=self.failfast)
         batch.attributes |= attributes
-        batch.failure_count = 0
+        batch.attempts = 0
         batch.updated_at = utcnow()
         return self.register_transition(batch)

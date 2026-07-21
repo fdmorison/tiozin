@@ -70,8 +70,9 @@ class Batch(Metadata):
         status:
             Current lifecycle status of the batch.
 
-        failure_count:
-            Number of failures since the batch was last replayed.
+        attempts:
+            Number of attempts to execute the batch since it was started for
+            first time or replayed. Incremented on every begin.
 
         state:
             Typed processing state of the batch (execution window and
@@ -111,7 +112,7 @@ class Batch(Metadata):
     nominal_time: NominalTime = Field(frozen=True)
 
     status: BatchStatus = BatchStatus.PENDING
-    failure_count: Counter
+    attempts: Counter
     state: BatchState = Field(default_factory=BatchState)
     attributes: Attributes
 
@@ -128,6 +129,7 @@ class Batch(Metadata):
         return batch or self
 
     def begin(self, **attributes) -> Self:
+        self.attempts += 1
         batch = self._registry().begin(self, **attributes)
         self._attributes_snapshot = deepcopy(self.attributes)
         return batch or self
@@ -155,6 +157,7 @@ class Batch(Metadata):
         return batch or self
 
     def replay(self, **attributes) -> Self:
+        self.attempts = 0
         batch = self._registry().replay(self, **attributes)
         return batch or self
 

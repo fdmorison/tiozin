@@ -87,7 +87,7 @@ def test_batch_should_raise_when_frozen_field_is_reassigned(field, value, fake_d
     "field, value",
     [
         ("status", BatchStatus.SUCCEEDED),
-        ("failure_count", 3),
+        ("attempts", 3),
         ("attributes", {"extra1": "value1"}),
         ("updated_at", REASSIGNED_TIME),
     ],
@@ -226,6 +226,19 @@ def test_begin_should_return_self_when_registry_returns_none(registry: MagicMock
 
     # Assert
     assert result is batch
+
+
+def test_begin_should_increment_attempts(registry: MagicMock, fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, attempts=2)
+
+    # Act
+    batch.begin()
+
+    # Assert
+    actual = batch.attempts
+    expected = 3
+    assert actual == expected
 
 
 # ============================================================================
@@ -421,6 +434,19 @@ def test_replay_should_return_self_when_registry_returns_none(registry: MagicMoc
 
     # Assert
     assert result is batch
+
+
+def test_replay_should_reset_attempts(registry: MagicMock, fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, attempts=3)
+
+    # Act
+    batch.replay()
+
+    # Assert
+    actual = batch.attempts
+    expected = 0
+    assert actual == expected
 
 
 # ============================================================================

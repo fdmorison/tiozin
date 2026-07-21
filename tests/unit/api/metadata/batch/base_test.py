@@ -287,23 +287,6 @@ def test_fail_should_transition_status_to_failed(batch_registry_stub, fake_domai
     assert actual == expected
 
 
-def test_fail_should_increment_failure_count(batch_registry_stub, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=any_source_of(BatchStatus.FAILED),
-    )
-
-    # Act
-    batch_registry_stub.fail(batch)
-
-    # Assert
-    actual = batch.failure_count
-    expected = 1
-    assert actual == expected
-
-
 def test_fail_should_merge_attributes(batch_registry_stub, fake_domain):
     # Arrange
     batch = Batch(
@@ -357,22 +340,22 @@ def test_fail_should_not_record_transition_when_already_failed(
 
 
 @pytest.mark.parametrize(
-    "failure_count, expected_status",
+    "attempts, expected_status",
     [
         (0, BatchStatus.FAILED),
-        (2, BatchStatus.FAILED),
-        (3, BatchStatus.QUARANTINED),
+        (3, BatchStatus.FAILED),
+        (4, BatchStatus.QUARANTINED),
     ],
 )
-def test_fail_should_escalate_to_quarantine_when_failure_count_exceeds_retries(
-    failure_count, expected_status, batch_registry_stub, fake_domain
+def test_fail_should_escalate_to_quarantine_when_attempts_exceeds_retries(
+    attempts, expected_status, batch_registry_stub, fake_domain
 ):
     # Arrange
     batch = Batch(
         **fake_domain,
         nominal_time=NOMINAL_TIME,
         status=any_source_of(BatchStatus.FAILED),
-        failure_count=failure_count,
+        attempts=attempts,
     )
 
     # Act
@@ -391,7 +374,7 @@ def test_fail_should_escalate_to_quarantine_when_retries_is_exhausted(fake_domai
         **fake_domain,
         nominal_time=NOMINAL_TIME,
         status=any_source_of(BatchStatus.FAILED),
-        failure_count=1,
+        attempts=2,
     )
 
     # Act
@@ -567,20 +550,20 @@ def test_replay_should_transition_status_to_pending(batch_registry_stub, fake_do
     assert actual == expected
 
 
-def test_replay_should_reset_failure_count(batch_registry_stub, fake_domain):
+def test_replay_should_reset_attempts(batch_registry_stub, fake_domain):
     # Arrange
     batch = Batch(
         **fake_domain,
         nominal_time=NOMINAL_TIME,
         status=BatchStatus.QUARANTINED,
-        failure_count=3,
+        attempts=3,
     )
 
     # Act
     batch_registry_stub.replay(batch)
 
     # Assert
-    actual = batch.failure_count
+    actual = batch.attempts
     expected = 0
     assert actual == expected
 
