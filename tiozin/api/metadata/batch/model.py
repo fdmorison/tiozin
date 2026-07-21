@@ -5,16 +5,20 @@ from typing import TYPE_CHECKING, ClassVar, Self
 
 from pydantic import ConfigDict, Field, PrivateAttr
 
+from tiozin import logs
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, isozformat, utcnow
 
 from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
 from .enums import BatchStatus
+from .exceptions import BatchTransitionError
 from .state import BatchState
 
 if TYPE_CHECKING:
     from tiozin import BatchRegistry
+
+logger = logs.get_logger("Batch")
 
 
 class Batch(Metadata):
@@ -119,7 +123,10 @@ class Batch(Metadata):
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
-    _attributes_snapshot: Attributes | None = PrivateAttr(default=None)
+    _attributes_snapshot: Attributes = PrivateAttr(default=None)
+
+    def model_post_init(self, __context) -> None:
+        self._attributes_snapshot = deepcopy(self.attributes)
 
     def _registry(self) -> BatchRegistry:
         return current_context().registries.batch
@@ -129,40 +136,135 @@ class Batch(Metadata):
         return batch or self
 
     def begin(self, **attributes) -> Self:
+        registry = self._registry()
+
+        if self.status.is_running():
+            message = "Cannot begin a batch that is already running."
+            BatchTransitionError.raise_if(
+                registry.failfast,
+                message,
+                source=self.status,
+                target=BatchStatus.RUNNING,
+            )
+            logger.warning(message)
+            return self
+
         self.attempts += 1
-        batch = self._registry().begin(self, **attributes)
-        self._attributes_snapshot = deepcopy(self.attributes)
-        return batch or self
+        self.status = self.status.transition_to(BatchStatus.RUNNING, failfast=registry.failfast)
+        self.attributes |= attributes
+        self.updated_at = utcnow()
+
+        return registry.register_transition(self) or self
 
     def commit(self, **attributes) -> Self:
-        batch = self._registry().commit(self, **attributes)
-        return batch or self
+        registry = self._registry()
+
+        if self.status.is_succeeded():
+            message = "Cannot commit a batch that has already succeeded."
+            BatchTransitionError.raise_if(
+                registry.failfast,
+                message,
+                source=self.status,
+                target=BatchStatus.SUCCEEDED,
+            )
+            logger.warning(message)
+            return self
+
+        self.status = self.status.transition_to(BatchStatus.SUCCEEDED, failfast=registry.failfast)
+        self.attributes |= attributes
+        self.updated_at = utcnow()
+
+        return registry.register_transition(self) or self
 
     def rollback(self, error: Exception = None, **attributes) -> Self:
-        if self._attributes_snapshot is not None:
-            self.attributes = deepcopy(self._attributes_snapshot)
+        registry = self._registry()
+
+        if self.status.is_failed():
+            message = "Cannot rollback a batch that has already failed."
+            BatchTransitionError.raise_if(
+                registry.failfast,
+                message,
+                source=self.status,
+                target=BatchStatus.FAILED,
+            )
+            logger.warning(message)
+            return self
+
+        self.status = self.status.transition_to(BatchStatus.FAILED, failfast=registry.failfast)
+        self.attributes = deepcopy(self._attributes_snapshot)
 
         if error:
             self.attributes["__error"] = str(error)
 
-        batch = self._registry().fail(self, **attributes)
-        return batch or self
+        self.attributes |= attributes
+        self.updated_at = utcnow()
+
+        return registry.register_transition(self) or self
 
     def cancel(self, **attributes) -> Self:
-        batch = self._registry().cancel(self, **attributes)
-        return batch or self
+        registry = self._registry()
+
+        if self.status.is_canceled():
+            message = "Cannot cancel a batch that has already been canceled."
+            BatchTransitionError.raise_if(
+                registry.failfast,
+                message,
+                source=self.status,
+                target=BatchStatus.CANCELED,
+            )
+            logger.warning(message)
+            return self
+
+        self.status = self.status.transition_to(BatchStatus.CANCELED, failfast=registry.failfast)
+        self.attributes |= attributes
+        self.updated_at = utcnow()
+
+        return registry.register_transition(self) or self
 
     def quarantine(self, error: Exception = None, **attributes) -> Self:
+        registry = self._registry()
+
+        if self.status.is_quarantined():
+            message = "Cannot quarantine a batch that has already been quarantined."
+            BatchTransitionError.raise_if(
+                registry.failfast,
+                message,
+                source=self.status,
+                target=BatchStatus.QUARANTINED,
+            )
+            logger.warning(message)
+            return self
+
+        self.status = self.status.transition_to(BatchStatus.QUARANTINED, failfast=registry.failfast)
+
         if error:
             self.attributes["__error"] = str(error)
 
-        batch = self._registry().quarantine(self, **attributes)
-        return batch or self
+        self.attributes |= attributes
+        self.updated_at = utcnow()
+
+        return registry.register_transition(self) or self
 
     def replay(self, **attributes) -> Self:
+        registry = self._registry()
+
+        if self.status.is_pending():
+            message = "Cannot replay a batch that is already pending."
+            BatchTransitionError.raise_if(
+                registry.failfast,
+                message,
+                source=self.status,
+                target=BatchStatus.PENDING,
+            )
+            logger.warning(message)
+            return self
+
         self.attempts = 0
-        batch = self._registry().replay(self, **attributes)
-        return batch or self
+        self.status = self.status.transition_to(BatchStatus.PENDING, failfast=registry.failfast)
+        self.attributes |= attributes
+        self.updated_at = utcnow()
+
+        return registry.register_transition(self) or self
 
     @property
     def qualified_resource(self) -> str:

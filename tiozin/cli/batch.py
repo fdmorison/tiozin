@@ -151,8 +151,7 @@ def cancel(
     resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
-    batch.attributes |= parse_attributes(attributes)
-    batch = app.registries.batch.cancel(batch)
+    batch = batch.cancel(**parse_attributes(attributes))
 
     app.info(f"Batch {batch.id} cancelled.")
     render_batches([batch])
@@ -182,8 +181,7 @@ def replay(
     resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
-    batch.attributes |= parse_attributes(attributes)
-    batch = app.registries.batch.replay(batch)
+    batch = batch.replay(**parse_attributes(attributes))
 
     app.info(f"Batch {batch.id} replayed.")
     render_batches([batch])
@@ -213,8 +211,7 @@ def quarantine(
     resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
-    batch.attributes |= parse_attributes(attributes)
-    batch = app.registries.batch.quarantine(batch)
+    batch = batch.quarantine(**parse_attributes(attributes))
 
     app.info(f"Batch {batch.id} quarantined.")
     render_batches([batch])
