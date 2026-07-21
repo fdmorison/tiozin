@@ -140,12 +140,7 @@ class Batch(Metadata):
 
         if self.status.is_running():
             message = "Cannot begin a batch that is already running."
-            BatchTransitionError.raise_if(
-                registry.failfast,
-                message,
-                source=self.status,
-                target=BatchStatus.RUNNING,
-            )
+            BatchTransitionError.raise_if(registry.failfast, message)
             logger.warning(message)
             return self
 
@@ -161,12 +156,7 @@ class Batch(Metadata):
 
         if self.status.is_succeeded():
             message = "Cannot commit a batch that has already succeeded."
-            BatchTransitionError.raise_if(
-                registry.failfast,
-                message,
-                source=self.status,
-                target=BatchStatus.SUCCEEDED,
-            )
+            BatchTransitionError.raise_if(registry.failfast, message)
             logger.warning(message)
             return self
 
@@ -181,12 +171,7 @@ class Batch(Metadata):
 
         if self.status.is_failed():
             message = "Cannot rollback a batch that has already failed."
-            BatchTransitionError.raise_if(
-                registry.failfast,
-                message,
-                source=self.status,
-                target=BatchStatus.FAILED,
-            )
+            BatchTransitionError.raise_if(registry.failfast, message)
             logger.warning(message)
             return self
 
@@ -206,12 +191,7 @@ class Batch(Metadata):
 
         if self.status.is_canceled():
             message = "Cannot cancel a batch that has already been canceled."
-            BatchTransitionError.raise_if(
-                registry.failfast,
-                message,
-                source=self.status,
-                target=BatchStatus.CANCELED,
-            )
+            BatchTransitionError.raise_if(registry.failfast, message)
             logger.warning(message)
             return self
 
@@ -226,12 +206,7 @@ class Batch(Metadata):
 
         if self.status.is_quarantined():
             message = "Cannot quarantine a batch that has already been quarantined."
-            BatchTransitionError.raise_if(
-                registry.failfast,
-                message,
-                source=self.status,
-                target=BatchStatus.QUARANTINED,
-            )
+            BatchTransitionError.raise_if(registry.failfast, message)
             logger.warning(message)
             return self
 
@@ -250,12 +225,7 @@ class Batch(Metadata):
 
         if self.status.is_pending():
             message = "Cannot replay a batch that is already pending."
-            BatchTransitionError.raise_if(
-                registry.failfast,
-                message,
-                source=self.status,
-                target=BatchStatus.PENDING,
-            )
+            BatchTransitionError.raise_if(registry.failfast, message)
             logger.warning(message)
             return self
 
