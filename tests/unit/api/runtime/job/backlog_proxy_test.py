@@ -120,7 +120,7 @@ def test_submit_should_skip_when_backlog_is_empty(
 
 
 @pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
-def test_submit_should_mark_the_backlog_as_failed_when_execution_fails(
+def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
     backlog,
     fake_domain: dict,
     job_stub: JobStub,
@@ -145,5 +145,38 @@ def test_submit_should_mark_the_backlog_as_failed_when_execution_fails(
     expected = [
         BatchStatus.FAILED,
         BatchStatus.FAILED,
+    ]
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "backlog",
+    [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC],
+)
+def test_submit_should_quarantine_the_backlog_when_execution_fails_beyond_retries(
+    backlog,
+    fake_domain: dict,
+    job_stub: JobStub,
+    batch_registry_stub: BatchRegistryStub,
+):
+    # Arrange
+    backlog = [
+        Batch(**fake_domain, nominal_time=_2026_01_15T01_00_00, attempts=3),
+        Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00, attempts=3),
+    ]
+    batch_registry_stub.backlog = backlog
+    job_stub.backlog = backlog
+    job_stub.max_batches_per_run = 2
+    job_stub.failure = RuntimeError("boom")
+
+    # Act
+    with pytest.raises(RuntimeError):
+        job_stub.submit()
+
+    # Assert
+    actual = [batch.status for batch in backlog]
+    expected = [
+        BatchStatus.QUARANTINED,
+        BatchStatus.QUARANTINED,
     ]
     assert actual == expected

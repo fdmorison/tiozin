@@ -127,19 +127,12 @@ class BatchRegistry(Registry[Batch]):
     def fail(self, batch: Batch, **attributes) -> Batch:
         """
         Transitions the batch to FAILED, or skips if it already is.
-
-        Once the number of attempts exceeds the retry limit, the batch is
-        quarantined instead of failed.
         """
         if batch.status.is_failed():
             self.warning("Batch %s has already failed, so there is nothing to fail.", batch)
             return batch
 
         batch.status = batch.status.to_failed(failfast=self.failfast)
-
-        if batch.attempts > self.retries:
-            return self.quarantine(batch, **attributes)
-
         batch.attributes |= attributes
         batch.updated_at = utcnow()
         return self.register_transition(batch)

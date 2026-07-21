@@ -339,42 +339,14 @@ def test_fail_should_not_record_transition_when_already_failed(
     register_transition.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    "attempts, expected_status",
-    [
-        (0, BatchStatus.FAILED),
-        (3, BatchStatus.FAILED),
-        (4, BatchStatus.QUARANTINED),
-    ],
-)
-def test_fail_should_escalate_to_quarantine_when_attempts_exceeds_retries(
-    attempts, expected_status, batch_registry_stub, fake_domain
-):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=any_source_of(BatchStatus.FAILED),
-        attempts=attempts,
-    )
-
-    # Act
-    batch_registry_stub.fail(batch)
-
-    # Assert
-    actual = batch.status
-    expected = expected_status
-    assert actual == expected
-
-
-def test_fail_should_escalate_to_quarantine_when_retries_is_exhausted(fake_domain):
+def test_fail_should_transition_to_failed_regardless_of_attempts_exceeding_retries(fake_domain):
     # Arrange
     registry = BatchRegistryStub(retries=1)
     batch = Batch(
         **fake_domain,
         nominal_time=NOMINAL_TIME,
         status=any_source_of(BatchStatus.FAILED),
-        attempts=2,
+        attempts=5,
     )
 
     # Act
@@ -382,7 +354,7 @@ def test_fail_should_escalate_to_quarantine_when_retries_is_exhausted(fake_domai
 
     # Assert
     actual = batch.status
-    expected = BatchStatus.QUARANTINED
+    expected = BatchStatus.FAILED
     assert actual == expected
 
 

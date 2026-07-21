@@ -509,6 +509,43 @@ def test_rollback_should_set_error_message_in_attributes(job_context, fake_domai
     assert actual == expected
 
 
+def test_quarantine_should_keep_attribute_mutations(job_context, fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        attributes={"watermark": 10},
+    )
+    batch.begin()
+    batch.attributes["watermark"] = 11
+    batch.attributes["extra"] = 123456
+
+    # Act
+    batch.quarantine()
+
+    # Assert
+    actual = batch.attributes
+    expected = {"watermark": 11, "extra": 123456}
+    assert actual == expected
+
+
+def test_quarantine_should_set_error_message_in_attributes(job_context, fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+    )
+    batch.begin()
+
+    # Act
+    batch.quarantine(error=RuntimeError("boom"))
+
+    # Assert
+    actual = batch.attributes["__error"]
+    expected = "boom"
+    assert actual == expected
+
+
 # ============================================================================
 # acquire
 # ============================================================================

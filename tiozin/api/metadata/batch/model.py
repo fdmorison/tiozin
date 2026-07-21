@@ -152,7 +152,10 @@ class Batch(Metadata):
         batch = self._registry().cancel(self, **attributes)
         return batch or self
 
-    def quarantine(self, **attributes) -> Self:
+    def quarantine(self, error: Exception = None, **attributes) -> Self:
+        if error:
+            self.attributes["__error"] = str(error)
+
         batch = self._registry().quarantine(self, **attributes)
         return batch or self
 
