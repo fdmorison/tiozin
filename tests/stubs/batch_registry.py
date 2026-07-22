@@ -20,13 +20,13 @@ class BatchRegistryStub(BatchRegistry):
     def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return None
 
-    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+    def get_frontier(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return None
 
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         return self.backlog
 
-    def get_history(
+    def get_board(
         self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:
         return []

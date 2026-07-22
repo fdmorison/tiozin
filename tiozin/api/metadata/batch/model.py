@@ -70,8 +70,9 @@ class Batch(Metadata):
         status:
             Current lifecycle status of the batch.
 
-        failure_count:
-            Number of failures since the batch was last replayed.
+        attempts:
+            Number of attempts to execute the batch since it was started for
+            first time or replayed. Incremented on every begin.
 
         state:
             Typed processing state of the batch (execution window and
@@ -95,6 +96,9 @@ class Batch(Metadata):
         validate_default=True,
     )
 
+    _registry_ref: BatchRegistry = PrivateAttr(default=None)
+    _attributes_snapshot: Attributes = PrivateAttr(default=None)
+
     resource_fields: ClassVar[tuple[str, ...]] = RESOURCE_FIELDS
     natural_key_fields: ClassVar[tuple[str, ...]] = (*RESOURCE_FIELDS, "nominal_time")
 
@@ -111,52 +115,75 @@ class Batch(Metadata):
     nominal_time: NominalTime = Field(frozen=True)
 
     status: BatchStatus = BatchStatus.PENDING
-    failure_count: Counter
+    attempts: Counter
     state: BatchState = Field(default_factory=BatchState)
     attributes: Attributes
 
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
-    _attributes_snapshot: Attributes | None = PrivateAttr(default=None)
+    def model_post_init(self, __context) -> None:
+        self._attributes_snapshot = deepcopy(self.attributes)
 
     def _registry(self) -> BatchRegistry:
-        return current_context().registries.batch
+        return self._registry_ref or current_context().registries.batch
 
     def register(self) -> Self:
-        batch = self._registry().register(self)
-        return batch or self
+        return self._registry().register(self)
 
     def begin(self, **attributes) -> Self:
-        batch = self._registry().begin(self, **attributes)
-        self._attributes_snapshot = deepcopy(self.attributes)
-        return batch or self
+        registry = self._registry()
+        self.attempts += 1
+        self.status = self.status.transition_to(BatchStatus.RUNNING, failfast=registry.failfast)
+        self.attributes |= attributes
+        return registry.register_transition(self)
 
     def commit(self, **attributes) -> Self:
-        batch = self._registry().commit(self, **attributes)
-        return batch or self
+        registry = self._registry()
+        self.status = self.status.transition_to(BatchStatus.SUCCEEDED, failfast=registry.failfast)
+        self.attributes |= attributes
+        return registry.register_transition(self)
 
     def rollback(self, error: Exception = None, **attributes) -> Self:
-        if self._attributes_snapshot is not None:
-            self.attributes = deepcopy(self._attributes_snapshot)
+        registry = self._registry()
+        self.attributes = deepcopy(self._attributes_snapshot)
 
         if error:
             self.attributes["__error"] = str(error)
 
-        batch = self._registry().fail(self, **attributes)
-        return batch or self
+        self.status = self.status.transition_to(BatchStatus.FAILED, failfast=registry.failfast)
+        self.attributes |= attributes
+        return registry.register_transition(self)
 
     def cancel(self, **attributes) -> Self:
-        batch = self._registry().cancel(self, **attributes)
-        return batch or self
+        registry = self._registry()
+        self.status = self.status.transition_to(BatchStatus.CANCELED, failfast=registry.failfast)
+        self.attributes |= attributes
+        return registry.register_transition(self)
 
-    def quarantine(self, **attributes) -> Self:
-        batch = self._registry().quarantine(self, **attributes)
-        return batch or self
+    def quarantine(self, error: Exception = None, **attributes) -> Self:
+        registry = self._registry()
+
+        if error:
+            self.attributes["__error"] = str(error)
+
+        self.status = self.status.transition_to(BatchStatus.QUARANTINED, failfast=registry.failfast)
+        self.attributes |= attributes
+        return registry.register_transition(self)
 
     def replay(self, **attributes) -> Self:
-        batch = self._registry().replay(self, **attributes)
-        return batch or self
+        registry = self._registry()
+
+        if self.status.is_terminal():
+            self.attempts = 0
+
+        self.status = self.status.transition_to(BatchStatus.PENDING, failfast=registry.failfast)
+        self.attributes |= attributes
+        return registry.register_transition(self)
+
+    @property
+    def retries(self) -> int:
+        return max(0, self.attempts - 1)
 
     @property
     def qualified_resource(self) -> str:
@@ -170,7 +197,7 @@ class Batch(Metadata):
     def acquire(cls) -> Batch:
         context = current_context()
         resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
-        previous = context.registries.batch.get_latest(**resources)
+        previous = context.registries.batch.get_frontier(**resources)
 
         if not previous:
             current_state = BatchState(end=context.nominal_time)

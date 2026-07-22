@@ -25,8 +25,25 @@ class BatchTransitionError(BatchError, TiozinConflictError):
 
     message = "Invalid transition: {source} -> {target}."
 
-    def __init__(self, message: str = None, *, source: BatchStatus, target: BatchStatus) -> None:
+    def __init__(
+        self, message: str = None, *, source: BatchStatus = None, target: BatchStatus = None
+    ) -> None:
         super().__init__(message, source=source, target=target)
+
+    @classmethod
+    def raise_if(
+        cls,
+        condition: bool,
+        message: str = None,
+        *,
+        source: BatchStatus = None,
+        target: BatchStatus = None,
+    ) -> None:
+        """
+        Raises with `source` and `target` when `condition` is true.
+        """
+        if condition:
+            raise cls(message, source=source, target=target)
 
 
 class BatchAlreadyExistsError(BatchError, TiozinConflictError):

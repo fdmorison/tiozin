@@ -347,43 +347,60 @@ The backlog commands below show what a backlog-driven job has waiting.
 
 ## Managing Batches
 
-A batch is the slice of data a job processes for a given nominal time. The `tiozin batch` commands inspect and manage
-those batches. Every command takes a job identifier, the same file path or registry identifier passed
-to `tiozin run`.
+A batch represents the slice of data processed by a job for a given nominal time. The `tiozin batch`
+commands inspect and manage those batches. Every command accepts the same job identifier used by
+`tiozin run`, whether it is a file path or a registry identifier.
 
-Start by looking at what a job has produced. The backlog lists batches still awaiting processing, and
-`latest` shows the most recently registered one:
+To inspect a job, start with its backlog or frontier:
 
 ```bash
 tiozin batch backlog jobs/orders_daily_summary.yaml
-tiozin batch latest jobs/orders_daily_summary.yaml
+tiozin batch frontier jobs/orders_daily_summary.yaml
 ```
 
-`history` lists every batch from newest to oldest. Narrow it with `--limit` and `--since`:
+The backlog lists batches still awaiting processing. The frontier is the latest batch whose processing
+window still determines the job's progress. It may already have advanced progress (`SUCCEEDED`,
+`QUARANTINED`) or still require resolution before progress can continue (`PENDING`, `RUNNING`,
+`FAILED`). `CANCELED` batches are never part of the frontier because an abandoned window does not
+advance the job. The frontier is primarily useful for `monotonic` jobs, where it determines whether
+the next run resumes an existing batch or creates a new one.
+
+To inspect the complete history of a job, use `board`:
 
 ```bash
-tiozin batch history jobs/orders_daily_summary.yaml --limit 20 --since 2026-02-01
+tiozin batch board jobs/orders_daily_summary.yaml --limit 20 --since 2026-02-01
 ```
 
-Each command prints a table that includes the batch `id`. Pass that id to the commands that change a
-batch's state.
+The board shows every batch, regardless of status, ordered from newest to oldest. Use `--limit` and
+`--since` to narrow the result. Every inspection command displays the batch `id`, which is required
+by commands that modify a batch.
 
-To reprocess a batch that already succeeded, or one that was canceled or quarantined, replay it. This
-returns the batch to the pending state so the next run picks it up again:
+Use `replay` to return a batch to the `PENDING` state so it will be processed again by the next run.
 
 ```bash
 tiozin batch replay jobs/orders_daily_summary.yaml 018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90
 ```
 
-Cancel removes a batch from the backlog so runs stop picking it up, and quarantine sets a batch aside
-until it is explicitly replayed. Attach a note to any state change with `--attribute` (or `-a`) as
-`key=value`:
+Use `cancel` to remove a batch from the backlog, preventing future runs from processing it, or
+`quarantine` to set a batch aside until it is explicitly replayed.
 
 ```bash
-tiozin batch cancel jobs/orders_daily_summary.yaml 018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90 -a reason=bad-source
+tiozin batch cancel jobs/orders_daily_summary.yaml 018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90
 ```
 
-To create a batch for a nominal time by hand, register it. The new batch starts in the pending state:
+State transition commands accept `--attribute` (or `-a`) to attach arbitrary metadata to the
+transition. Specify each attribute as a `key=value` pair and repeat the option to provide multiple
+attributes.
+
+```bash
+tiozin batch quarantine jobs/orders_daily_summary.yaml \
+  018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90 \
+  -a reason=bad-source \
+  -a requested_by=alice
+```
+
+To create a batch manually for a specific nominal time, use `register`. Newly registered batches
+start in the `PENDING` state.
 
 ```bash
 tiozin batch register jobs/orders_daily_summary.yaml 2026-02-24T00:00:00

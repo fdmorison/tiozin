@@ -4,7 +4,14 @@ from functools import reduce
 
 import pyarrow as pa
 import pyarrow.compute as pc
-from pyiceberg.expressions import And, BooleanExpression, EqualTo, GreaterThanOrEqual, In
+from pyiceberg.expressions import (
+    And,
+    BooleanExpression,
+    EqualTo,
+    GreaterThanOrEqual,
+    In,
+    NotEqualTo,
+)
 from pyiceberg.table import Table
 
 from tiozin import Batch, BatchStatus
@@ -38,8 +45,8 @@ class IcebergBatchDAO:
         df = self._scan(id=id, **fields)
         return self._to_object(df)
 
-    def find_latest(self, **fields) -> Batch | None:
-        df = self._scan(**fields)
+    def find_frontier(self, **fields) -> Batch | None:
+        df = self._scan(NotEqualTo("status", BatchStatus.CANCELED), **fields)
 
         if not len(df):
             return None
@@ -55,7 +62,7 @@ class IcebergBatchDAO:
         )
         return self._to_objects(df)
 
-    def find_history(self, limit: int, since: datetime, **fields) -> list[Batch]:
+    def find_board(self, limit: int, since: datetime, **fields) -> list[Batch]:
         df = (
             self._scan(GreaterThanOrEqual("created_at", since), **fields)
             .sort_by([("created_at", "descending")])

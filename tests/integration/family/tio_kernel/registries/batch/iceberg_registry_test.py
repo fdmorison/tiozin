@@ -142,7 +142,7 @@ def test_register_should_persist_all_fields(registry: IcebergBatchRegistry, fake
     registry.register(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain)
+    actual = registry.get_frontier(**fake_domain)
     expected = state
     assert actual == expected
 
@@ -159,7 +159,7 @@ def test_register_should_persist_attributes(registry: IcebergBatchRegistry, fake
     registry.register(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain).attributes
+    actual = registry.get_frontier(**fake_domain).attributes
     expected = {"extra1": "value1", "existing1": "value2"}
     assert actual == expected
 
@@ -178,7 +178,7 @@ def test_register_should_persist_attributes_with_none_value(
     registry.register(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain).attributes
+    actual = registry.get_frontier(**fake_domain).attributes
     expected = {"extra1": None}
     assert actual == expected
 
@@ -208,7 +208,7 @@ def test_register_should_persist_default_start_as_epoch_and_watermarks_as_empty(
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state
+    result = registry.get_frontier(**fake_domain).state
     actual = (result.start, result.watermarks)
     expected = (
         datetime(1970, 1, 1, tzinfo=UTC),
@@ -229,7 +229,7 @@ def test_register_should_persist_default_end_as_registration_time_truncated_to_m
 
     # Assert
     after = datetime.now(UTC).replace(second=0, microsecond=0)
-    result = registry.get_latest(**fake_domain).state
+    result = registry.get_frontier(**fake_domain).state
     assert before <= result.end <= after
 
 
@@ -248,7 +248,7 @@ def test_register_should_persist_state_window(registry: IcebergBatchRegistry, fa
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state
+    result = registry.get_frontier(**fake_domain).state
     actual = (result.start, result.end)
     expected = (datetime(2026, 1, 14, tzinfo=UTC), datetime(2026, 1, 15, tzinfo=UTC))
     assert actual == expected
@@ -266,7 +266,7 @@ def test_register_should_persist_int_watermark(registry: IcebergBatchRegistry, f
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state.watermarks["orders"]
+    result = registry.get_frontier(**fake_domain).state.watermarks["orders"]
     actual = (result, type(result))
     expected = (42, int)
     assert actual == expected
@@ -284,7 +284,7 @@ def test_register_should_persist_date_watermark(registry: IcebergBatchRegistry, 
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state.watermarks["orders"]
+    result = registry.get_frontier(**fake_domain).state.watermarks["orders"]
     actual = (result, type(result))
     expected = (date(2026, 1, 15), date)
     assert actual == expected
@@ -306,7 +306,7 @@ def test_register_should_persist_datetime_watermark(
     registry.register(state)
 
     # Assert
-    result = registry.get_latest(**fake_domain).state.watermarks["orders"]
+    result = registry.get_frontier(**fake_domain).state.watermarks["orders"]
     actual = (result, type(result))
     expected = (datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC), datetime)
     assert actual == expected
@@ -324,7 +324,7 @@ def test_register_should_persist_none_watermark(registry: IcebergBatchRegistry, 
     registry.register(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain).state.watermarks
+    actual = registry.get_frontier(**fake_domain).state.watermarks
     expected = {"orders": None}
     assert actual == expected
 
@@ -349,7 +349,7 @@ def test_register_should_persist_one_watermark_per_source(
     registry.register(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain).state.watermarks
+    actual = registry.get_frontier(**fake_domain).state.watermarks
     expected = {
         "orders": 42,
         "customers": date(2026, 1, 15),
@@ -383,7 +383,7 @@ def test_register_transition_should_persist_new_status(
     registry.register_transition(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain).status
+    actual = registry.get(state.id, **fake_domain).status
     expected = status
     assert actual == expected
 
@@ -404,7 +404,7 @@ def test_register_transition_should_persist_updated_attributes(
     registry.register_transition(state)
 
     # Assert
-    actual = registry.get_latest(**fake_domain).attributes
+    actual = registry.get_frontier(**fake_domain).attributes
     expected = {"existing1": "value1", "extra1": "value2"}
     assert actual == expected
 
@@ -425,20 +425,20 @@ def test_register_transition_should_raise_not_found_when_batch_is_not_registered
 
 
 # ============================================================================
-# get_latest
+# get_frontier
 # ============================================================================
-def test_get_latest_should_return_none_when_no_batch_matches(
+def test_get_frontier_should_return_none_when_no_batch_matches(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange / Act
-    actual = registry.get_latest(**fake_domain)
+    actual = registry.get_frontier(**fake_domain)
 
     # Assert
     expected = None
     assert actual == expected
 
 
-def test_get_latest_should_return_batch_with_highest_created_at(
+def test_get_frontier_should_return_batch_with_highest_created_at(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -447,10 +447,61 @@ def test_get_latest_should_return_batch_with_highest_created_at(
     registry.register(Batch(**fake_domain, nominal_time=datetime(2026, 1, 13, tzinfo=UTC)))
 
     # Act
-    actual = registry.get_latest(**fake_domain).nominal_time
+    actual = registry.get_frontier(**fake_domain).nominal_time
 
     # Assert
     expected = datetime(2026, 1, 13, tzinfo=UTC)
+    assert actual == expected
+
+
+def test_get_frontier_should_return_latest_active_batch_when_newest_is_cancelled(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    active = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    cancelled = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 20, tzinfo=UTC),
+        created_at=datetime(2026, 6, 2, tzinfo=UTC),
+        status=BatchStatus.CANCELED,
+    )
+    registry.register(active)
+    registry.register(cancelled)
+
+    # Act
+    actual = registry.get_frontier(**fake_domain)
+
+    # Assert
+    expected = active
+    assert actual == expected
+
+
+def test_get_frontier_should_return_none_when_all_batches_are_cancelled(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    older = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 10, tzinfo=UTC),
+        status=BatchStatus.CANCELED,
+    )
+    newer = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 20, tzinfo=UTC),
+        status=BatchStatus.CANCELED,
+    )
+    registry.register(older)
+    registry.register(newer)
+
+    # Act
+    actual = registry.get_frontier(**fake_domain)
+
+    # Assert
+    expected = None
     assert actual == expected
 
 
@@ -547,20 +598,20 @@ def test_get_backlog_should_return_nothing_when_status_is_terminal(
 
 
 # ============================================================================
-# get_history
+# get_board
 # ============================================================================
-def test_get_history_should_return_empty_when_no_batch_exists(
+def test_get_board_should_return_empty_when_no_batch_exists(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange / Act
-    actual = registry.get_history(**fake_domain)
+    actual = registry.get_board(**fake_domain)
 
     # Assert
     expected = []
     assert actual == expected
 
 
-def test_get_history_should_return_registered_batch(
+def test_get_board_should_return_registered_batch(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -573,14 +624,14 @@ def test_get_history_should_return_registered_batch(
     registry.register(state)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [state]
     assert actual == expected
 
 
-def test_get_history_should_return_batches_ordered_by_created_at_descending(
+def test_get_board_should_return_batches_ordered_by_created_at_descending(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -607,14 +658,14 @@ def test_get_history_should_return_batches_ordered_by_created_at_descending(
     registry.register(newest)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [newest, middle, oldest]
     assert actual == expected
 
 
-def test_get_history_should_truncate_to_limit(registry: IcebergBatchRegistry, fake_domain: dict):
+def test_get_board_should_truncate_to_limit(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
     oldest = Batch(
         **fake_domain,
@@ -639,14 +690,14 @@ def test_get_history_should_truncate_to_limit(registry: IcebergBatchRegistry, fa
     registry.register(newest)
 
     # Act
-    actual = registry.get_history(limit=2, since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(limit=2, since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [newest, middle]
     assert actual == expected
 
 
-def test_get_history_should_exclude_batches_older_than_since(
+def test_get_board_should_exclude_batches_older_than_since(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -666,14 +717,14 @@ def test_get_history_should_exclude_batches_older_than_since(
     registry.register(newer)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 5, 15, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 5, 15, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [newer]
     assert actual == expected
 
 
-def test_get_history_should_scope_to_resource(registry: IcebergBatchRegistry, fake_domain: dict):
+def test_get_board_should_scope_to_resource(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
     other_domain = {**fake_domain, "model": "payments"}
     target = Batch(
@@ -692,7 +743,7 @@ def test_get_history_should_scope_to_resource(registry: IcebergBatchRegistry, fa
     registry.register(other)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [target]

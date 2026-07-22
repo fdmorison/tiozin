@@ -14,19 +14,21 @@ batch_cli = typer.Typer(no_args_is_help=True)
 
 
 @batch_cli.command()
-def latest(
+def frontier(
     ctx: typer.Context,
     job: str = typer.Argument(REQUIRED, help=docs.JOB),
 ) -> None:
     """
-    Show the most recently registered batch of a job.
+    Show the batch at the frontier of a job's processed data.
 
-    The batch is selected by registration time and may be in any state.
+    The frontier is the latest batch whose processing window still counts
+    toward the job's progress. CANCELED batches are never returned, since an
+    abandoned window does not advance the frontier.
     """
     announce(job)
     app: TiozinApp = ctx.obj
     resource = app.resolve_manifest(job).to_resource_dict()
-    batch = app.registries.batch.get_latest(**resource)
+    batch = app.registries.batch.get_frontier(**resource)
     if not batch:
         app.warning(f"No batch found for job {job}.")
         return
@@ -58,7 +60,7 @@ def backlog(
 
 
 @batch_cli.command()
-def history(
+def board(
     ctx: typer.Context,
     job: str = typer.Argument(REQUIRED, help=docs.JOB),
     limit: int = typer.Option(
@@ -74,17 +76,17 @@ def history(
     ),
 ) -> None:
     """
-    Show the registration history of a job's batches.
+    Show the full board of a job's batches, across every status.
 
-    History includes batches in every state, ordered from the most to the
-    least recently registered. Use --since and --limit to narrow the results.
+    Results are ordered from the most to the least recently registered.
+    Use --since and --limit to narrow the results.
     """
     announce(job)
     app: TiozinApp = ctx.obj
     resource = app.resolve_manifest(job).to_resource_dict()
-    batches = app.registries.batch.get_history(limit=limit, since=since, **resource)
+    batches = app.registries.batch.get_board(limit=limit, since=since, **resource)
     if not batches:
-        app.warning(f"No history found for job {job}.")
+        app.warning(f"No batches found for job {job}.")
         return
     render_batches(batches)
 
@@ -151,8 +153,7 @@ def cancel(
     resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
-    batch.attributes |= parse_attributes(attributes)
-    batch = app.registries.batch.cancel(batch)
+    batch = batch.cancel(**parse_attributes(attributes))
 
     app.info(f"Batch {batch.id} cancelled.")
     render_batches([batch])
@@ -182,8 +183,7 @@ def replay(
     resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
-    batch.attributes |= parse_attributes(attributes)
-    batch = app.registries.batch.replay(batch)
+    batch = batch.replay(**parse_attributes(attributes))
 
     app.info(f"Batch {batch.id} replayed.")
     render_batches([batch])
@@ -213,8 +213,7 @@ def quarantine(
     resource = app.resolve_manifest(job).to_resource_dict()
 
     batch = app.registries.batch.get(id=batch_id, **resource)
-    batch.attributes |= parse_attributes(attributes)
-    batch = app.registries.batch.quarantine(batch)
+    batch = batch.quarantine(**parse_attributes(attributes))
 
     app.info(f"Batch {batch.id} quarantined.")
     render_batches([batch])
