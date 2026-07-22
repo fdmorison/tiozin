@@ -352,12 +352,18 @@ those batches. Every command takes a job identifier, the same file path or regis
 to `tiozin run`.
 
 Start by looking at what a job has produced. The backlog lists batches still awaiting processing, and
-`latest` shows the most recently registered one:
+`frontier` shows the batch at the frontier of the job's processed data:
 
 ```bash
 tiozin batch backlog jobs/orders_daily_summary.yaml
-tiozin batch latest jobs/orders_daily_summary.yaml
+tiozin batch frontier jobs/orders_daily_summary.yaml
 ```
+
+The frontier is the latest batch whose processing window still counts toward the job's progress. That
+includes batches which have already advanced it, such as succeeded or quarantined ones, and batches
+that must be resolved before progress continues, such as pending, running, or failed ones. A canceled
+batch is never the frontier, because an abandoned window does not advance it. The frontier matters most
+for `monotonic` jobs, where it decides whether the next run creates a new batch or resumes an existing one.
 
 The board lists every batch of a job, whatever its status, from newest to oldest. Narrow it with `--limit` and `--since`:
 
