@@ -179,6 +179,10 @@ class Batch(Metadata):
         return registry.register_transition(self)
 
     @property
+    def retries(self) -> int:
+        return max(0, self.attempts - 1)
+
+    @property
     def qualified_resource(self) -> str:
         return ".".join(getattr(self, field) for field in self.resource_fields)
 

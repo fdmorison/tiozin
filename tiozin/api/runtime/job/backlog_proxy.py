@@ -46,7 +46,7 @@ class BacklogJobProxy(wrapt.ObjectProxy):
         return [self.submit_run(job, batches) for batches in runs]
 
     def submit_run(self, job: Job, batches: tuple[Batch, ...]) -> Any:
-        retries = Context.current().batch_registry.retries
+        max_retries = Context.current().batch_registry.retries
 
         for batch in batches:
             batch.begin()
@@ -56,7 +56,7 @@ class BacklogJobProxy(wrapt.ObjectProxy):
             result = job.submit()
         except Exception as error:
             for batch in batches:
-                if batch.attempts <= retries:
+                if batch.retries < max_retries:
                     batch.rollback(error=error)
                 else:
                     batch.quarantine(error=error)

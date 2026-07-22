@@ -152,6 +152,32 @@ def test_qualified_natural_key_should_append_nominal_time_to_qualified_resource(
 
 
 # ============================================================================
+# computed properties - retries
+# ============================================================================
+@pytest.mark.parametrize(
+    "attempts, expected_retries",
+    [
+        (0, 0),
+        (1, 0),
+        (2, 1),
+        (3, 2),
+    ],
+)
+def test_retries_should_count_attempts_beyond_the_first(
+    attempts, expected_retries, fake_domain: dict
+):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, attempts=attempts)
+
+    # Act
+    actual = batch.retries
+
+    # Assert
+    expected = expected_retries
+    assert actual == expected
+
+
+# ============================================================================
 # lifecycle - register (delegation)
 # ============================================================================
 def test_register_should_delegate_to_registry(registry: MagicMock, fake_domain):
