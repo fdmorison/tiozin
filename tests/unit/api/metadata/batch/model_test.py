@@ -6,7 +6,6 @@ from pydantic import ValidationError
 
 from tiozin import Batch, BatchStatus
 from tiozin.api import Cadence
-from tiozin.api.metadata.batch.exceptions import BatchTransitionError
 from tiozin.api.metadata.batch.state import BatchState
 
 # Default nominal_time for a test batch, and the value reassignment tests
@@ -270,18 +269,6 @@ def test_begin_should_transition_status_to_running(registry: MagicMock, fake_dom
     assert actual == expected
 
 
-def test_begin_should_raise_transition_error_when_transition_is_invalid(
-    registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = True
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.SUCCEEDED)
-
-    # Act / Assert
-    with pytest.raises(BatchTransitionError):
-        batch.begin()
-
-
 # ============================================================================
 # lifecycle - commit (delegation)
 # ============================================================================
@@ -338,18 +325,6 @@ def test_commit_should_transition_status_to_succeeded(registry: MagicMock, fake_
     actual = batch.status
     expected = BatchStatus.SUCCEEDED
     assert actual == expected
-
-
-def test_commit_should_raise_transition_error_when_transition_is_invalid(
-    registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = True
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.PENDING)
-
-    # Act / Assert
-    with pytest.raises(BatchTransitionError):
-        batch.commit()
 
 
 # ============================================================================

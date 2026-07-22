@@ -195,6 +195,22 @@ def test_get_should_preserve_result():
     assert actual is expected
 
 
+def test_get_should_attach_registry_into_batch(fake_domain):
+    # Arrange
+    registry = MagicMock()
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+    registry.get.return_value = batch
+    proxy = BatchRegistryProxy(registry)
+
+    # Act
+    result = proxy.get("batch-id-1")
+
+    # Assert
+    actual = result._registry_ref
+    expected = proxy
+    assert actual is expected
+
+
 # ============================================================================
 # get_latest
 # ============================================================================
