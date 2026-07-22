@@ -212,44 +212,44 @@ def test_get_should_attach_registry_into_batch(fake_domain):
 
 
 # ============================================================================
-# get_latest
+# get_frontier
 # ============================================================================
-def test_get_latest_should_delegate():
+def test_get_frontier_should_delegate():
     # Arrange
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    proxy.get_latest(model="orders")
+    proxy.get_frontier(model="orders")
 
     # Assert
-    actual = registry.get_latest.call_args
+    actual = registry.get_frontier.call_args
     expected = call(model="orders")
     assert actual == expected
 
 
-def test_get_latest_should_preserve_result():
+def test_get_frontier_should_preserve_result():
     # Arrange
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    result = proxy.get_latest()
+    result = proxy.get_frontier()
 
     # Assert
     actual = result
-    expected = registry.get_latest.return_value
+    expected = registry.get_frontier.return_value
     assert actual is expected
 
 
-def test_get_latest_should_return_none_when_registry_returns_none():
+def test_get_frontier_should_return_none_when_registry_returns_none():
     # Arrange
     registry = MagicMock()
-    registry.get_latest.return_value = None
+    registry.get_frontier.return_value = None
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    result = proxy.get_latest()
+    result = proxy.get_frontier()
 
     # Assert
     assert result is None

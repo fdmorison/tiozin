@@ -11,7 +11,7 @@ class NoOpBatchRegistry(BatchRegistry):
     No-op batch registry.
 
     Does nothing. Returns the received batch for every write, `None` for
-    `get`/`get_latest`, and an empty list for the backlog and board.
+    `get`/`get_frontier`, and an empty list for the backlog and board.
     Useful for testing or when batch tracking is disabled.
     """
 
@@ -27,7 +27,7 @@ class NoOpBatchRegistry(BatchRegistry):
     def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return None
 
-    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+    def get_frontier(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         return None
 
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:

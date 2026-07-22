@@ -14,19 +14,21 @@ batch_cli = typer.Typer(no_args_is_help=True)
 
 
 @batch_cli.command()
-def latest(
+def frontier(
     ctx: typer.Context,
     job: str = typer.Argument(REQUIRED, help=docs.JOB),
 ) -> None:
     """
-    Show the most recently registered batch of a job.
+    Show the batch at the frontier of a job's processed data.
 
-    The batch is selected by registration time and may be in any state.
+    The frontier is the latest batch whose processing window still counts
+    toward the job's progress. CANCELED batches are never returned, since an
+    abandoned window does not advance the frontier.
     """
     announce(job)
     app: TiozinApp = ctx.obj
     resource = app.resolve_manifest(job).to_resource_dict()
-    batch = app.registries.batch.get_latest(**resource)
+    batch = app.registries.batch.get_frontier(**resource)
     if not batch:
         app.warning(f"No batch found for job {job}.")
         return

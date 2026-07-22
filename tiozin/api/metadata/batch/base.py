@@ -65,12 +65,21 @@ class BatchRegistry(Registry[Batch]):
         """
 
     @abstractmethod
-    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+    def get_frontier(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         """
-        Returns the most recently registered batch for the resource.
+        Returns the batch at the frontier of processed data for the resource.
 
-        Returns:
-            The latest batch, or `None` if no batches have been registered for the resource.
+        This method is primarily intended for jobs with `BacklogPolicy.MONOTONIC`,
+        where the frontier determines whether a new batch should be created or an
+        existing one should be resumed.
+
+        The frontier is the latest batch whose processing window still determines
+        the pipeline's progress. This includes batches that have already advanced
+        the frontier (such as SUCCEEDED or QUARANTINED) and batches that must be
+        resolved before progress can continue (such as PENDING, RUNNING, or FAILED).
+
+        CANCELED batches must never be returned, since an abandoned window should not
+        advance the frontier.
         """
 
     @abstractmethod

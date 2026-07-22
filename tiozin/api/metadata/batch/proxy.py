@@ -51,8 +51,8 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
         self._attach_registry(batch)
         return batch
 
-    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
-        batch = self._registry.get_latest(**resource)
+    def get_frontier(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+        batch = self._registry.get_frontier(**resource)
         self._attach_registry(batch)
         return batch
 

@@ -740,7 +740,7 @@ def test_acquire_should_reuse_previous_batch_when_not_terminal(context, fake_dom
         nominal_time=PREVIOUS_START,
         status=BatchStatus.RUNNING,
     )
-    context.registries.batch.get_latest.return_value = previous
+    context.registries.batch.get_frontier.return_value = previous
 
     # Act
     actual = Batch.acquire()
@@ -757,7 +757,7 @@ def test_acquire_should_register_new_batch_when_previous_is_terminal(context, fa
         nominal_time=PREVIOUS_START,
         status=BatchStatus.SUCCEEDED,
     )
-    context.registries.batch.get_latest.return_value = previous
+    context.registries.batch.get_frontier.return_value = previous
 
     # Act
     actual = Batch.acquire().nominal_time
@@ -775,7 +775,7 @@ def test_acquire_should_carry_watermarks_forward_from_previous_state(context, fa
         status=BatchStatus.SUCCEEDED,
         state=BatchState(watermarks={"orders": 42}),
     )
-    context.registries.batch.get_latest.return_value = previous
+    context.registries.batch.get_frontier.return_value = previous
 
     # Act
     actual = Batch.acquire().state.watermarks
@@ -798,7 +798,7 @@ def test_acquire_should_derive_window_from_previous_end(context, fake_domain):
             end=PREVIOUS_END,
         ),
     )
-    context.registries.batch.get_latest.return_value = previous
+    context.registries.batch.get_frontier.return_value = previous
 
     # Act
     result = Batch.acquire().state
@@ -814,7 +814,7 @@ def test_acquire_should_derive_window_from_previous_end(context, fake_domain):
 
 def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(context):
     # Arrange
-    context.registries.batch.get_latest.return_value = None
+    context.registries.batch.get_frontier.return_value = None
 
     # Act
     actual = Batch.acquire().state.end
@@ -826,7 +826,7 @@ def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(contex
 
 def test_acquire_should_start_from_epoch_when_no_previous_batch(context):
     # Arrange
-    context.registries.batch.get_latest.return_value = None
+    context.registries.batch.get_frontier.return_value = None
 
     # Act
     actual = Batch.acquire().state.start
@@ -838,7 +838,7 @@ def test_acquire_should_start_from_epoch_when_no_previous_batch(context):
 
 def test_acquire_should_start_watermarks_empty_when_no_previous_batch(context):
     # Arrange
-    context.registries.batch.get_latest.return_value = None
+    context.registries.batch.get_frontier.return_value = None
 
     # Act
     actual = Batch.acquire().state.watermarks

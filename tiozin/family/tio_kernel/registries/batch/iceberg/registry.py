@@ -105,8 +105,8 @@ class IcebergBatchRegistry(BatchRegistry):
             raise BatchNotFoundError(batch=id)
         return batch
 
-    def get_latest(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
-        return self._batch_dao.find_latest(**resource)
+    def get_frontier(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
+        return self._batch_dao.find_frontier(**resource)
 
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         return self._batch_dao.find_by_status(

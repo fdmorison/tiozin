@@ -197,7 +197,7 @@ class Batch(Metadata):
     def acquire(cls) -> Batch:
         context = current_context()
         resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
-        previous = context.registries.batch.get_latest(**resources)
+        previous = context.registries.batch.get_frontier(**resources)
 
         if not previous:
             current_state = BatchState(end=context.nominal_time)
