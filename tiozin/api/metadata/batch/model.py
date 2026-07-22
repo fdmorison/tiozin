@@ -5,20 +5,16 @@ from typing import TYPE_CHECKING, ClassVar, Self
 
 from pydantic import ConfigDict, Field, PrivateAttr
 
-from tiozin import logs
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, isozformat, utcnow
 
 from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
 from .enums import BatchStatus
-from .exceptions import BatchTransitionError
 from .state import BatchState
 
 if TYPE_CHECKING:
     from tiozin import BatchRegistry
-
-logger = logs.get_logger("Batch")
 
 
 class Batch(Metadata):
@@ -137,13 +133,6 @@ class Batch(Metadata):
 
     def begin(self, **attributes) -> Self:
         registry = self._registry()
-
-        if self.status.is_running():
-            message = "Cannot begin a batch that is already running."
-            BatchTransitionError.raise_if(registry.failfast, message)
-            logger.warning(message)
-            return self
-
         self.attempts += 1
         self.status = self.status.transition_to(BatchStatus.RUNNING, failfast=registry.failfast)
         self.attributes |= attributes
@@ -151,44 +140,23 @@ class Batch(Metadata):
 
     def commit(self, **attributes) -> Self:
         registry = self._registry()
-
-        if self.status.is_succeeded():
-            message = "Cannot commit a batch that has already succeeded."
-            BatchTransitionError.raise_if(registry.failfast, message)
-            logger.warning(message)
-            return self
-
         self.status = self.status.transition_to(BatchStatus.SUCCEEDED, failfast=registry.failfast)
         self.attributes |= attributes
         return registry.register_transition(self)
 
     def rollback(self, error: Exception = None, **attributes) -> Self:
         registry = self._registry()
-
-        if self.status.is_failed():
-            message = "Cannot rollback a batch that has already failed."
-            BatchTransitionError.raise_if(registry.failfast, message)
-            logger.warning(message)
-            return self
-
-        self.status = self.status.transition_to(BatchStatus.FAILED, failfast=registry.failfast)
         self.attributes = deepcopy(self._attributes_snapshot)
 
         if error:
             self.attributes["__error"] = str(error)
 
+        self.status = self.status.transition_to(BatchStatus.FAILED, failfast=registry.failfast)
         self.attributes |= attributes
         return registry.register_transition(self)
 
     def cancel(self, **attributes) -> Self:
         registry = self._registry()
-
-        if self.status.is_canceled():
-            message = "Cannot cancel a batch that has already been canceled."
-            BatchTransitionError.raise_if(registry.failfast, message)
-            logger.warning(message)
-            return self
-
         self.status = self.status.transition_to(BatchStatus.CANCELED, failfast=registry.failfast)
         self.attributes |= attributes
         return registry.register_transition(self)
@@ -196,29 +164,15 @@ class Batch(Metadata):
     def quarantine(self, error: Exception = None, **attributes) -> Self:
         registry = self._registry()
 
-        if self.status.is_quarantined():
-            message = "Cannot quarantine a batch that has already been quarantined."
-            BatchTransitionError.raise_if(registry.failfast, message)
-            logger.warning(message)
-            return self
-
-        self.status = self.status.transition_to(BatchStatus.QUARANTINED, failfast=registry.failfast)
-
         if error:
             self.attributes["__error"] = str(error)
 
+        self.status = self.status.transition_to(BatchStatus.QUARANTINED, failfast=registry.failfast)
         self.attributes |= attributes
         return registry.register_transition(self)
 
     def replay(self, **attributes) -> Self:
         registry = self._registry()
-
-        if self.status.is_pending():
-            message = "Cannot replay a batch that is already pending."
-            BatchTransitionError.raise_if(registry.failfast, message)
-            logger.warning(message)
-            return self
-
         self.attempts = 0
         self.status = self.status.transition_to(BatchStatus.PENDING, failfast=registry.failfast)
         self.attributes |= attributes

@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
@@ -13,9 +13,6 @@ from tiozin.api.metadata.batch.state import BatchState
 # attempt to set on frozen/mutable fields.
 NOMINAL_TIME = datetime(2026, 1, 15, tzinfo=UTC)
 REASSIGNED_TIME = datetime(2026, 2, 1, tzinfo=UTC)
-
-# Stale timestamp for asserting that a no-op verb preserves updated_at.
-OLD_UPDATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
 # Time constants for the acquire flow, named after their semantic role.
 # Context always exposes a minute-truncated nominal_time, so these are the
@@ -247,83 +244,6 @@ def test_begin_should_transition_status_to_running(registry: MagicMock, fake_dom
     assert actual == expected
 
 
-def test_begin_should_not_persist_when_already_running(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
-
-    # Act
-    batch.begin()
-
-    # Assert
-    registry.register_transition.assert_not_called()
-
-
-def test_begin_should_not_increment_attempts_when_already_running(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.RUNNING,
-        attempts=2,
-    )
-
-    # Act
-    batch.begin()
-
-    # Assert
-    actual = batch.attempts
-    expected = 2
-    assert actual == expected
-
-
-@patch("tiozin.api.metadata.batch.model.logger")
-def test_begin_should_warn_when_already_running(
-    logger: MagicMock, registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
-
-    # Act
-    batch.begin()
-
-    # Assert
-    actual = logger.warning.call_args
-    expected = call("Cannot begin a batch that is already running.")
-    assert actual == expected
-
-
-def test_begin_should_keep_updated_at_when_already_running(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.RUNNING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.begin()
-
-    # Assert
-    actual = batch.updated_at
-    expected = OLD_UPDATED_AT
-    assert actual == expected
-
-
-def test_begin_should_raise_transition_error_when_already_running(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = True
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
-
-    # Act / Assert
-    with pytest.raises(BatchTransitionError):
-        batch.begin()
-
-
 def test_begin_should_raise_transition_error_when_transition_is_invalid(
     registry: MagicMock, fake_domain
 ):
@@ -392,66 +312,6 @@ def test_commit_should_transition_status_to_succeeded(registry: MagicMock, fake_
     actual = batch.status
     expected = BatchStatus.SUCCEEDED
     assert actual == expected
-
-
-def test_commit_should_not_persist_when_already_succeeded(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.SUCCEEDED)
-
-    # Act
-    batch.commit()
-
-    # Assert
-    registry.register_transition.assert_not_called()
-
-
-@patch("tiozin.api.metadata.batch.model.logger")
-def test_commit_should_warn_when_already_succeeded(
-    logger: MagicMock, registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.SUCCEEDED)
-
-    # Act
-    batch.commit()
-
-    # Assert
-    actual = logger.warning.call_args
-    expected = call("Cannot commit a batch that has already succeeded.")
-    assert actual == expected
-
-
-def test_commit_should_keep_updated_at_when_already_succeeded(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.SUCCEEDED,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.commit()
-
-    # Assert
-    actual = batch.updated_at
-    expected = OLD_UPDATED_AT
-    assert actual == expected
-
-
-def test_commit_should_raise_transition_error_when_already_succeeded(
-    registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = True
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.SUCCEEDED)
-
-    # Act / Assert
-    with pytest.raises(BatchTransitionError):
-        batch.commit()
 
 
 def test_commit_should_raise_transition_error_when_transition_is_invalid(
@@ -524,66 +384,6 @@ def test_rollback_should_transition_status_to_failed(registry: MagicMock, fake_d
     assert actual == expected
 
 
-def test_rollback_should_not_persist_when_already_failed(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.FAILED)
-
-    # Act
-    batch.rollback()
-
-    # Assert
-    registry.register_transition.assert_not_called()
-
-
-@patch("tiozin.api.metadata.batch.model.logger")
-def test_rollback_should_warn_when_already_failed(
-    logger: MagicMock, registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.FAILED)
-
-    # Act
-    batch.rollback()
-
-    # Assert
-    actual = logger.warning.call_args
-    expected = call("Cannot rollback a batch that has already failed.")
-    assert actual == expected
-
-
-def test_rollback_should_keep_updated_at_when_already_failed(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.FAILED,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.rollback()
-
-    # Assert
-    actual = batch.updated_at
-    expected = OLD_UPDATED_AT
-    assert actual == expected
-
-
-def test_rollback_should_raise_transition_error_when_already_failed(
-    registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = True
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.FAILED)
-
-    # Act / Assert
-    with pytest.raises(BatchTransitionError):
-        batch.rollback()
-
-
 # ============================================================================
 # lifecycle - cancel (delegation)
 # ============================================================================
@@ -634,54 +434,6 @@ def test_cancel_should_transition_status_to_canceled(registry: MagicMock, fake_d
     # Assert
     actual = batch.status
     expected = BatchStatus.CANCELED
-    assert actual == expected
-
-
-def test_cancel_should_not_persist_when_already_canceled(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.CANCELED)
-
-    # Act
-    batch.cancel()
-
-    # Assert
-    registry.register_transition.assert_not_called()
-
-
-@patch("tiozin.api.metadata.batch.model.logger")
-def test_cancel_should_warn_when_already_canceled(
-    logger: MagicMock, registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.CANCELED)
-
-    # Act
-    batch.cancel()
-
-    # Assert
-    actual = logger.warning.call_args
-    expected = call("Cannot cancel a batch that has already been canceled.")
-    assert actual == expected
-
-
-def test_cancel_should_keep_updated_at_when_already_canceled(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.CANCELED,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.cancel()
-
-    # Assert
-    actual = batch.updated_at
-    expected = OLD_UPDATED_AT
     assert actual == expected
 
 
@@ -740,56 +492,6 @@ def test_quarantine_should_transition_status_to_quarantined(registry: MagicMock,
     # Assert
     actual = batch.status
     expected = BatchStatus.QUARANTINED
-    assert actual == expected
-
-
-def test_quarantine_should_not_persist_when_already_quarantined(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.QUARANTINED)
-
-    # Act
-    batch.quarantine()
-
-    # Assert
-    registry.register_transition.assert_not_called()
-
-
-@patch("tiozin.api.metadata.batch.model.logger")
-def test_quarantine_should_warn_when_already_quarantined(
-    logger: MagicMock, registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.QUARANTINED)
-
-    # Act
-    batch.quarantine()
-
-    # Assert
-    actual = logger.warning.call_args
-    expected = call("Cannot quarantine a batch that has already been quarantined.")
-    assert actual == expected
-
-
-def test_quarantine_should_keep_updated_at_when_already_quarantined(
-    registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.QUARANTINED,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.quarantine()
-
-    # Assert
-    actual = batch.updated_at
-    expected = OLD_UPDATED_AT
     assert actual == expected
 
 
@@ -866,54 +568,6 @@ def test_replay_should_transition_status_to_pending(registry: MagicMock, fake_do
     # Assert
     actual = batch.status
     expected = BatchStatus.PENDING
-    assert actual == expected
-
-
-def test_replay_should_not_persist_when_already_pending(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.PENDING)
-
-    # Act
-    batch.replay()
-
-    # Assert
-    registry.register_transition.assert_not_called()
-
-
-@patch("tiozin.api.metadata.batch.model.logger")
-def test_replay_should_warn_when_already_pending(
-    logger: MagicMock, registry: MagicMock, fake_domain
-):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.PENDING)
-
-    # Act
-    batch.replay()
-
-    # Assert
-    actual = logger.warning.call_args
-    expected = call("Cannot replay a batch that is already pending.")
-    assert actual == expected
-
-
-def test_replay_should_keep_updated_at_when_already_pending(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.failfast = False
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.PENDING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.replay()
-
-    # Assert
-    actual = batch.updated_at
-    expected = OLD_UPDATED_AT
     assert actual == expected
 
 

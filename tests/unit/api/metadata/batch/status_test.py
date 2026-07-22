@@ -16,13 +16,9 @@ VALID_TRANSITIONS = [
     (BatchStatus.FAILED, BatchStatus.PENDING),
     (BatchStatus.FAILED, BatchStatus.RUNNING),
     (BatchStatus.FAILED, BatchStatus.QUARANTINED),
-    (BatchStatus.FAILED, BatchStatus.FAILED),
     (BatchStatus.SUCCEEDED, BatchStatus.PENDING),
-    (BatchStatus.SUCCEEDED, BatchStatus.SUCCEEDED),
     (BatchStatus.CANCELED, BatchStatus.PENDING),
-    (BatchStatus.CANCELED, BatchStatus.CANCELED),
     (BatchStatus.QUARANTINED, BatchStatus.PENDING),
-    (BatchStatus.QUARANTINED, BatchStatus.QUARANTINED),
 ]
 
 INVALID_TRANSITIONS = [
@@ -33,16 +29,20 @@ INVALID_TRANSITIONS = [
     (BatchStatus.SUCCEEDED, BatchStatus.FAILED),
     (BatchStatus.SUCCEEDED, BatchStatus.CANCELED),
     (BatchStatus.SUCCEEDED, BatchStatus.QUARANTINED),
+    (BatchStatus.SUCCEEDED, BatchStatus.SUCCEEDED),
     (BatchStatus.FAILED, BatchStatus.SUCCEEDED),
     (BatchStatus.FAILED, BatchStatus.CANCELED),
+    (BatchStatus.FAILED, BatchStatus.FAILED),
     (BatchStatus.CANCELED, BatchStatus.RUNNING),
     (BatchStatus.CANCELED, BatchStatus.SUCCEEDED),
     (BatchStatus.CANCELED, BatchStatus.FAILED),
     (BatchStatus.CANCELED, BatchStatus.QUARANTINED),
+    (BatchStatus.CANCELED, BatchStatus.CANCELED),
     (BatchStatus.QUARANTINED, BatchStatus.RUNNING),
     (BatchStatus.QUARANTINED, BatchStatus.SUCCEEDED),
     (BatchStatus.QUARANTINED, BatchStatus.FAILED),
     (BatchStatus.QUARANTINED, BatchStatus.CANCELED),
+    (BatchStatus.QUARANTINED, BatchStatus.QUARANTINED),
 ]
 
 TERMINAL_STATUSES = [BatchStatus.SUCCEEDED, BatchStatus.CANCELED, BatchStatus.QUARANTINED]
@@ -55,7 +55,8 @@ NON_OPERATIONAL_STATUSES = [
     BatchStatus.QUARANTINED,
 ]
 
-# Every status can transition back to PENDING, so all statuses are replayable.
+# Every status can transition back to PENDING, so every status is replayable,
+# including PENDING itself now that PENDING self-loops.
 REPLAYABLE_STATUSES = list(BatchStatus)
 
 STATUS_VALUES = [
