@@ -100,6 +100,9 @@ class Batch(Metadata):
         validate_default=True,
     )
 
+    _registry_ref: BatchRegistry = PrivateAttr(default=None)
+    _attributes_snapshot: Attributes = PrivateAttr(default=None)
+
     resource_fields: ClassVar[tuple[str, ...]] = RESOURCE_FIELDS
     natural_key_fields: ClassVar[tuple[str, ...]] = (*RESOURCE_FIELDS, "nominal_time")
 
@@ -123,17 +126,14 @@ class Batch(Metadata):
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
-    _attributes_snapshot: Attributes = PrivateAttr(default=None)
-
     def model_post_init(self, __context) -> None:
         self._attributes_snapshot = deepcopy(self.attributes)
 
     def _registry(self) -> BatchRegistry:
-        return current_context().registries.batch
+        return self._registry_ref or current_context().registries.batch
 
     def register(self) -> Self:
-        batch = self._registry().register(self)
-        return batch or self
+        return self._registry().register(self)
 
     def begin(self, **attributes) -> Self:
         registry = self._registry()
@@ -147,9 +147,7 @@ class Batch(Metadata):
         self.attempts += 1
         self.status = self.status.transition_to(BatchStatus.RUNNING, failfast=registry.failfast)
         self.attributes |= attributes
-        self.updated_at = utcnow()
-
-        return registry.register_transition(self) or self
+        return registry.register_transition(self)
 
     def commit(self, **attributes) -> Self:
         registry = self._registry()
@@ -162,9 +160,7 @@ class Batch(Metadata):
 
         self.status = self.status.transition_to(BatchStatus.SUCCEEDED, failfast=registry.failfast)
         self.attributes |= attributes
-        self.updated_at = utcnow()
-
-        return registry.register_transition(self) or self
+        return registry.register_transition(self)
 
     def rollback(self, error: Exception = None, **attributes) -> Self:
         registry = self._registry()
@@ -182,9 +178,7 @@ class Batch(Metadata):
             self.attributes["__error"] = str(error)
 
         self.attributes |= attributes
-        self.updated_at = utcnow()
-
-        return registry.register_transition(self) or self
+        return registry.register_transition(self)
 
     def cancel(self, **attributes) -> Self:
         registry = self._registry()
@@ -197,9 +191,7 @@ class Batch(Metadata):
 
         self.status = self.status.transition_to(BatchStatus.CANCELED, failfast=registry.failfast)
         self.attributes |= attributes
-        self.updated_at = utcnow()
-
-        return registry.register_transition(self) or self
+        return registry.register_transition(self)
 
     def quarantine(self, error: Exception = None, **attributes) -> Self:
         registry = self._registry()
@@ -216,9 +208,7 @@ class Batch(Metadata):
             self.attributes["__error"] = str(error)
 
         self.attributes |= attributes
-        self.updated_at = utcnow()
-
-        return registry.register_transition(self) or self
+        return registry.register_transition(self)
 
     def replay(self, **attributes) -> Self:
         registry = self._registry()
@@ -232,9 +222,7 @@ class Batch(Metadata):
         self.attempts = 0
         self.status = self.status.transition_to(BatchStatus.PENDING, failfast=registry.failfast)
         self.attributes |= attributes
-        self.updated_at = utcnow()
-
-        return registry.register_transition(self) or self
+        return registry.register_transition(self)
 
     @property
     def qualified_resource(self) -> str:

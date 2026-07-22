@@ -2,7 +2,6 @@ from datetime import UTC, datetime
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from freezegun import freeze_time
 from pydantic import ValidationError
 
 from tiozin import Batch, BatchStatus
@@ -15,9 +14,7 @@ from tiozin.api.metadata.batch.state import BatchState
 NOMINAL_TIME = datetime(2026, 1, 15, tzinfo=UTC)
 REASSIGNED_TIME = datetime(2026, 2, 1, tzinfo=UTC)
 
-# Fixed clock and a stale timestamp for asserting that a verb stamps (or
-# preserves) updated_at.
-FIXED_NOW = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+# Stale timestamp for asserting that a no-op verb preserves updated_at.
 OLD_UPDATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
 # Time constants for the acquire flow, named after their semantic role.
@@ -184,18 +181,6 @@ def test_register_should_return_registry_result(registry: MagicMock, fake_domain
     assert actual is expected
 
 
-def test_register_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Act
-    result = batch.register()
-
-    # Assert
-    assert result is batch
-
-
 # ============================================================================
 # lifecycle - begin (delegation)
 # ============================================================================
@@ -236,18 +221,6 @@ def test_begin_should_return_registry_result(registry: MagicMock, fake_domain):
     assert actual is expected
 
 
-def test_begin_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register_transition.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Act
-    result = batch.begin()
-
-    # Assert
-    assert result is batch
-
-
 def test_begin_should_increment_attempts(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, attempts=2)
@@ -271,25 +244,6 @@ def test_begin_should_transition_status_to_running(registry: MagicMock, fake_dom
     # Assert
     actual = batch.status
     expected = BatchStatus.RUNNING
-    assert actual == expected
-
-
-@freeze_time(FIXED_NOW)
-def test_begin_should_stamp_updated_at(registry: MagicMock, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.PENDING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.begin()
-
-    # Assert
-    actual = batch.updated_at
-    expected = FIXED_NOW
     assert actual == expected
 
 
@@ -427,18 +381,6 @@ def test_commit_should_return_registry_result(registry: MagicMock, fake_domain):
     assert actual is expected
 
 
-def test_commit_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register_transition.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
-
-    # Act
-    result = batch.commit()
-
-    # Assert
-    assert result is batch
-
-
 def test_commit_should_transition_status_to_succeeded(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
@@ -449,25 +391,6 @@ def test_commit_should_transition_status_to_succeeded(registry: MagicMock, fake_
     # Assert
     actual = batch.status
     expected = BatchStatus.SUCCEEDED
-    assert actual == expected
-
-
-@freeze_time(FIXED_NOW)
-def test_commit_should_stamp_updated_at(registry: MagicMock, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.RUNNING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.commit()
-
-    # Assert
-    actual = batch.updated_at
-    expected = FIXED_NOW
     assert actual == expected
 
 
@@ -588,18 +511,6 @@ def test_rollback_should_return_registry_result(registry: MagicMock, fake_domain
     assert actual is expected
 
 
-def test_rollback_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register_transition.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
-
-    # Act
-    result = batch.rollback()
-
-    # Assert
-    assert result is batch
-
-
 def test_rollback_should_transition_status_to_failed(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
@@ -610,25 +521,6 @@ def test_rollback_should_transition_status_to_failed(registry: MagicMock, fake_d
     # Assert
     actual = batch.status
     expected = BatchStatus.FAILED
-    assert actual == expected
-
-
-@freeze_time(FIXED_NOW)
-def test_rollback_should_stamp_updated_at(registry: MagicMock, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.RUNNING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.rollback()
-
-    # Assert
-    actual = batch.updated_at
-    expected = FIXED_NOW
     assert actual == expected
 
 
@@ -732,18 +624,6 @@ def test_cancel_should_return_registry_result(registry: MagicMock, fake_domain):
     assert actual is expected
 
 
-def test_cancel_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register_transition.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
-
-    # Act
-    result = batch.cancel()
-
-    # Assert
-    assert result is batch
-
-
 def test_cancel_should_transition_status_to_canceled(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.PENDING)
@@ -754,25 +634,6 @@ def test_cancel_should_transition_status_to_canceled(registry: MagicMock, fake_d
     # Assert
     actual = batch.status
     expected = BatchStatus.CANCELED
-    assert actual == expected
-
-
-@freeze_time(FIXED_NOW)
-def test_cancel_should_stamp_updated_at(registry: MagicMock, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.PENDING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.cancel()
-
-    # Assert
-    actual = batch.updated_at
-    expected = FIXED_NOW
     assert actual == expected
 
 
@@ -869,18 +730,6 @@ def test_quarantine_should_return_registry_result(registry: MagicMock, fake_doma
     assert actual is expected
 
 
-def test_quarantine_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register_transition.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
-
-    # Act
-    result = batch.quarantine()
-
-    # Assert
-    assert result is batch
-
-
 def test_quarantine_should_transition_status_to_quarantined(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.RUNNING)
@@ -891,25 +740,6 @@ def test_quarantine_should_transition_status_to_quarantined(registry: MagicMock,
     # Assert
     actual = batch.status
     expected = BatchStatus.QUARANTINED
-    assert actual == expected
-
-
-@freeze_time(FIXED_NOW)
-def test_quarantine_should_stamp_updated_at(registry: MagicMock, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.RUNNING,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.quarantine()
-
-    # Assert
-    actual = batch.updated_at
-    expected = FIXED_NOW
     assert actual == expected
 
 
@@ -1008,18 +838,6 @@ def test_replay_should_return_registry_result(registry: MagicMock, fake_domain):
     assert actual is expected
 
 
-def test_replay_should_return_self_when_registry_returns_none(registry: MagicMock, fake_domain):
-    # Arrange
-    registry.register_transition.return_value = None
-    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, status=BatchStatus.SUCCEEDED)
-
-    # Act
-    result = batch.replay()
-
-    # Assert
-    assert result is batch
-
-
 def test_replay_should_reset_attempts(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(
@@ -1048,25 +866,6 @@ def test_replay_should_transition_status_to_pending(registry: MagicMock, fake_do
     # Assert
     actual = batch.status
     expected = BatchStatus.PENDING
-    assert actual == expected
-
-
-@freeze_time(FIXED_NOW)
-def test_replay_should_stamp_updated_at(registry: MagicMock, fake_domain):
-    # Arrange
-    batch = Batch(
-        **fake_domain,
-        nominal_time=NOMINAL_TIME,
-        status=BatchStatus.SUCCEEDED,
-        updated_at=OLD_UPDATED_AT,
-    )
-
-    # Act
-    batch.replay()
-
-    # Assert
-    actual = batch.updated_at
-    expected = FIXED_NOW
     assert actual == expected
 
 
