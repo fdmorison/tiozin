@@ -58,7 +58,7 @@ def backlog(
 
 
 @batch_cli.command()
-def history(
+def board(
     ctx: typer.Context,
     job: str = typer.Argument(REQUIRED, help=docs.JOB),
     limit: int = typer.Option(
@@ -74,17 +74,17 @@ def history(
     ),
 ) -> None:
     """
-    Show the registration history of a job's batches.
+    Show the full board of a job's batches, across every status.
 
-    History includes batches in every state, ordered from the most to the
-    least recently registered. Use --since and --limit to narrow the results.
+    Results are ordered from the most to the least recently registered.
+    Use --since and --limit to narrow the results.
     """
     announce(job)
     app: TiozinApp = ctx.obj
     resource = app.resolve_manifest(job).to_resource_dict()
-    batches = app.registries.batch.get_history(limit=limit, since=since, **resource)
+    batches = app.registries.batch.get_board(limit=limit, since=since, **resource)
     if not batches:
-        app.warning(f"No history found for job {job}.")
+        app.warning(f"No batches found for job {job}.")
         return
     render_batches(batches)
 

@@ -26,7 +26,7 @@ class BatchRegistryStub(BatchRegistry):
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         return self.backlog
 
-    def get_history(
+    def get_board(
         self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:
         return []

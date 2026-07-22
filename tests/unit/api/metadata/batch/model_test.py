@@ -566,7 +566,7 @@ def test_replay_should_return_registry_result(registry: MagicMock, fake_domain):
     assert actual is expected
 
 
-def test_replay_should_reset_attempts(registry: MagicMock, fake_domain):
+def test_replay_should_reset_attempts_when_batch_is_terminal(registry: MagicMock, fake_domain):
     # Arrange
     batch = Batch(
         **fake_domain,
@@ -581,6 +581,27 @@ def test_replay_should_reset_attempts(registry: MagicMock, fake_domain):
     # Assert
     actual = batch.attempts
     expected = 0
+    assert actual == expected
+
+
+@pytest.mark.parametrize("status", [BatchStatus.RUNNING, BatchStatus.FAILED])
+def test_replay_should_preserve_attempts_when_batch_is_operational(
+    status, registry: MagicMock, fake_domain
+):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        status=status,
+        attempts=3,
+    )
+
+    # Act
+    batch.replay()
+
+    # Assert
+    actual = batch.attempts
+    expected = 3
     assert actual == expected
 
 

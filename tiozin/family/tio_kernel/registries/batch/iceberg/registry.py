@@ -116,7 +116,7 @@ class IcebergBatchRegistry(BatchRegistry):
             **resource,
         )
 
-    def get_history(
+    def get_board(
         self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:
-        return self._batch_dao.find_history(limit, since, **resource)
+        return self._batch_dao.find_board(limit, since, **resource)

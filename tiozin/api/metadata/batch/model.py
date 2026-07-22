@@ -173,7 +173,10 @@ class Batch(Metadata):
 
     def replay(self, **attributes) -> Self:
         registry = self._registry()
-        self.attempts = 0
+
+        if self.status.is_terminal():
+            self.attempts = 0
+
         self.status = self.status.transition_to(BatchStatus.PENDING, failfast=registry.failfast)
         self.attributes |= attributes
         return registry.register_transition(self)

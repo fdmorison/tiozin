@@ -288,77 +288,77 @@ def test_get_backlog_should_attach_registry_into_batches(fake_domain):
 
 
 # ============================================================================
-# get_history - default resolution
+# get_board - default resolution
 # ============================================================================
 @patch("tiozin.api.metadata.batch.proxy.utcnow")
-def test_get_history_should_delegate_with_resolved_defaults(utcnow: MagicMock):
+def test_get_board_should_delegate_with_resolved_defaults(utcnow: MagicMock):
     # Arrange
     utcnow.return_value = NOW
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    proxy.get_history()
+    proxy.get_board()
 
     # Assert
-    actual = registry.get_history.call_args
+    actual = registry.get_board.call_args
     expected = call(100, NOW - timedelta(days=7))
     assert actual == expected
 
 
-def test_get_history_should_preserve_result():
+def test_get_board_should_preserve_result():
     # Arrange
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    result = proxy.get_history()
+    result = proxy.get_board()
 
     # Assert
     actual = result
-    expected = registry.get_history.return_value
+    expected = registry.get_board.return_value
     assert actual == expected
 
 
 @patch("tiozin.api.metadata.batch.proxy.utcnow")
-def test_get_history_should_override_default_limit_when_provided(utcnow: MagicMock):
+def test_get_board_should_override_default_limit_when_provided(utcnow: MagicMock):
     # Arrange
     utcnow.return_value = NOW
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    proxy.get_history(limit=5)
+    proxy.get_board(limit=5)
 
     # Assert
-    actual = registry.get_history.call_args
+    actual = registry.get_board.call_args
     expected = call(5, NOW - timedelta(days=7))
     assert actual == expected
 
 
-def test_get_history_should_override_default_since_when_provided():
+def test_get_board_should_override_default_since_when_provided():
     # Arrange
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    proxy.get_history(since=SINCE)
+    proxy.get_board(since=SINCE)
 
     # Assert
-    actual = registry.get_history.call_args
+    actual = registry.get_board.call_args
     expected = call(100, SINCE)
     assert actual == expected
 
 
-def test_get_history_should_forward_resource():
+def test_get_board_should_forward_resource():
     # Arrange
     registry = MagicMock()
     proxy = BatchRegistryProxy(registry)
 
     # Act
-    proxy.get_history(limit=5, since=SINCE, model="orders")
+    proxy.get_board(limit=5, since=SINCE, model="orders")
 
     # Assert
-    actual = registry.get_history.call_args
+    actual = registry.get_board.call_args
     expected = call(5, SINCE, model="orders")
     assert actual == expected

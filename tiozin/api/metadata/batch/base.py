@@ -82,13 +82,13 @@ class BatchRegistry(Registry[Batch]):
         """
 
     @abstractmethod
-    def get_history(
+    def get_board(
         self, limit: int, since: datetime, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:
         """
-        Returns recently registered batches for the resource.
+        Returns the full board of batches for the resource, across every status.
 
-        Results are ordered by `created_at` in descending order and include
-        batches of any status. Only batches registered at or after `since`
-        are considered. Up to `limit` batches are returned.
+        Results are ordered by `created_at` in descending order. Only batches
+        registered at or after `since` are considered. Up to `limit` batches
+        are returned.
         """

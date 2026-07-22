@@ -55,7 +55,7 @@ class IcebergBatchDAO:
         )
         return self._to_objects(df)
 
-    def find_history(self, limit: int, since: datetime, **fields) -> list[Batch]:
+    def find_board(self, limit: int, since: datetime, **fields) -> list[Batch]:
         df = (
             self._scan(GreaterThanOrEqual("created_at", since), **fields)
             .sort_by([("created_at", "descending")])

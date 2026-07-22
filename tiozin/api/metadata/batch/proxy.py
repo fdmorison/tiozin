@@ -61,11 +61,11 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
         self._attach_registry(*batches)
         return batches
 
-    def get_history(
+    def get_board(
         self, limit: int = None, since: datetime = None, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:
-        limit = default(limit, config.default_batch_history_limit)
-        since = default(since, utcnow() - timedelta(days=config.default_batch_history_since_days))
-        batches = self._registry.get_history(limit, since, **resource)
+        limit = default(limit, config.default_batch_board_limit)
+        since = default(since, utcnow() - timedelta(days=config.default_batch_board_since_days))
+        batches = self._registry.get_board(limit, since, **resource)
         self._attach_registry(*batches)
         return batches

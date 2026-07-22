@@ -547,20 +547,20 @@ def test_get_backlog_should_return_nothing_when_status_is_terminal(
 
 
 # ============================================================================
-# get_history
+# get_board
 # ============================================================================
-def test_get_history_should_return_empty_when_no_batch_exists(
+def test_get_board_should_return_empty_when_no_batch_exists(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange / Act
-    actual = registry.get_history(**fake_domain)
+    actual = registry.get_board(**fake_domain)
 
     # Assert
     expected = []
     assert actual == expected
 
 
-def test_get_history_should_return_registered_batch(
+def test_get_board_should_return_registered_batch(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -573,14 +573,14 @@ def test_get_history_should_return_registered_batch(
     registry.register(state)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [state]
     assert actual == expected
 
 
-def test_get_history_should_return_batches_ordered_by_created_at_descending(
+def test_get_board_should_return_batches_ordered_by_created_at_descending(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -607,14 +607,14 @@ def test_get_history_should_return_batches_ordered_by_created_at_descending(
     registry.register(newest)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [newest, middle, oldest]
     assert actual == expected
 
 
-def test_get_history_should_truncate_to_limit(registry: IcebergBatchRegistry, fake_domain: dict):
+def test_get_board_should_truncate_to_limit(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
     oldest = Batch(
         **fake_domain,
@@ -639,14 +639,14 @@ def test_get_history_should_truncate_to_limit(registry: IcebergBatchRegistry, fa
     registry.register(newest)
 
     # Act
-    actual = registry.get_history(limit=2, since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(limit=2, since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [newest, middle]
     assert actual == expected
 
 
-def test_get_history_should_exclude_batches_older_than_since(
+def test_get_board_should_exclude_batches_older_than_since(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
     # Arrange
@@ -666,14 +666,14 @@ def test_get_history_should_exclude_batches_older_than_since(
     registry.register(newer)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 5, 15, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 5, 15, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [newer]
     assert actual == expected
 
 
-def test_get_history_should_scope_to_resource(registry: IcebergBatchRegistry, fake_domain: dict):
+def test_get_board_should_scope_to_resource(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
     other_domain = {**fake_domain, "model": "payments"}
     target = Batch(
@@ -692,7 +692,7 @@ def test_get_history_should_scope_to_resource(registry: IcebergBatchRegistry, fa
     registry.register(other)
 
     # Act
-    actual = registry.get_history(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
+    actual = registry.get_board(since=datetime(2026, 1, 1, tzinfo=UTC), **fake_domain)
 
     # Assert
     expected = [target]

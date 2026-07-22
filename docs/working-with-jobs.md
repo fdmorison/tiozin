@@ -359,10 +359,10 @@ tiozin batch backlog jobs/orders_daily_summary.yaml
 tiozin batch latest jobs/orders_daily_summary.yaml
 ```
 
-`history` lists every batch from newest to oldest. Narrow it with `--limit` and `--since`:
+The board lists every batch of a job, whatever its status, from newest to oldest. Narrow it with `--limit` and `--since`:
 
 ```bash
-tiozin batch history jobs/orders_daily_summary.yaml --limit 20 --since 2026-02-01
+tiozin batch board jobs/orders_daily_summary.yaml --limit 20 --since 2026-02-01
 ```
 
 Each command prints a table that includes the batch `id`. Pass that id to the commands that change a
