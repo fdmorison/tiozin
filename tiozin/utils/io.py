@@ -11,6 +11,7 @@ from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import fsspec
+import rapidjson
 from ruamel.yaml import YAML
 
 from tiozin import config
@@ -52,6 +53,32 @@ def write_text(path: StrOrPath, data: str, **options) -> None:
     """
     with fsspec.open(str(path), mode="w", **options) as f:
         f.write(data)
+
+
+def dumps_json(value: Any) -> str:
+    """
+    Serialize a Python value to a JSON string.
+
+    ``datetime`` and ``date`` values are written as ISO 8601 strings; a naive
+    datetime (without a timezone) is treated as UTC.
+    """
+    return rapidjson.dumps(
+        value,
+        datetime_mode=rapidjson.DM_ISO8601 | rapidjson.DM_NAIVE_IS_UTC,
+    )
+
+
+def loads_json(value: str) -> Any:
+    """
+    Parse a JSON string into a Python value.
+
+    ISO 8601 strings are read back as ``datetime`` or ``date`` objects; a datetime
+    without a timezone is read as UTC.
+    """
+    return rapidjson.loads(
+        value,
+        datetime_mode=rapidjson.DM_ISO8601 | rapidjson.DM_NAIVE_IS_UTC,
+    )
 
 
 def load_yaml(text: str) -> Any:
