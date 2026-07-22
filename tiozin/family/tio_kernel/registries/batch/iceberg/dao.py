@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta
 from functools import reduce
 
@@ -16,7 +15,7 @@ from pyiceberg.table import Table
 
 from tiozin import Batch, BatchStatus
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import prune, utcnow
+from tiozin.utils import dumps_json, loads_json, utcnow
 
 NATURAL_KEY_FIELDS = (*RESOURCE_FIELDS, "nominal_time")
 
@@ -78,32 +77,19 @@ class IcebergBatchDAO:
         if not len(df):
             return None
         row = df.to_pylist(maps_as_pydicts="strict")[0]
-        row["attributes"] = json.loads(row["attributes"])
+        row["attributes"] = loads_json(row["attributes"])
         return Batch(**row)
 
     def _to_objects(self, df: pa.Table) -> list[Batch]:
         batches = []
         for row in df.to_pylist(maps_as_pydicts="strict"):
-            row["attributes"] = json.loads(row["attributes"])
+            row["attributes"] = loads_json(row["attributes"])
             batches.append(Batch(**row))
         return batches
 
     def _to_arrow(self, batch: Batch) -> pa.Table:
         record = batch.model_dump(mode="python")
-        record["attributes"] = json.dumps(record["attributes"])
-
-        with self._table.update_schema() as update:
-            # Avoid Arrow inferring `null` types.
-            sample = prune(record, dicts=True, lists=True)
-            # Arrow infers dicts as structs, so map fields must stay out of the sample.
-            sample.get("state", {}).pop("watermarks", None)
-            # Infer newly inferred fields.
-            inferred_schema = pa.Table.from_pylist([sample]).schema
-            inferred_schema = inferred_schema.set(
-                inferred_schema.get_field_index("id"),
-                inferred_schema.field("id").with_nullable(False),
-            )
-            update.union_by_name(inferred_schema)
+        record["attributes"] = dumps_json(record["attributes"])
 
         return pa.Table.from_pylist([record], schema=self._table.schema().as_arrow())
 

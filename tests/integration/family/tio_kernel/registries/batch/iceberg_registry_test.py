@@ -183,6 +183,31 @@ def test_register_should_persist_attributes_with_none_value(
     assert actual == expected
 
 
+def test_register_should_persist_datetime_and_date_attributes_with_their_types(
+    registry: IcebergBatchRegistry, fake_domain: dict
+):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        attributes={
+            "seen_at": datetime(2026, 1, 15, 10, 30, tzinfo=UTC),
+            "seen_on": date(2026, 1, 15),
+        },
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    actual = registry.get_frontier(**fake_domain).attributes
+    expected = {
+        "seen_at": datetime(2026, 1, 15, 10, 30, tzinfo=UTC),
+        "seen_on": date(2026, 1, 15),
+    }
+    assert actual == expected
+
+
 def test_register_should_raise_when_natural_key_already_exists(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):

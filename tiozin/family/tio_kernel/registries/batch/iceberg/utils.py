@@ -30,6 +30,9 @@ def create_table_if_not_exists(
         },
     )
 
+    with table.update_schema() as update:
+        update.union_by_name(schema)
+
     if table.spec().is_unpartitioned():
         with table.transaction() as txn:
             with txn.update_schema() as update:
