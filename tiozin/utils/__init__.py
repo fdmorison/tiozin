@@ -43,6 +43,8 @@ from tiozin.utils.io import (
     write_yaml,
     load_yaml,
     dump_yaml,
+    dumps_json,
+    loads_json,
     normalize_uri,
 )
 
@@ -89,6 +91,8 @@ __all__ = [
     "write_yaml",
     "load_yaml",
     "dump_yaml",
+    "dumps_json",
+    "loads_json",
     "normalize_uri",
     # Runtime
     "bind_data_tokens",
