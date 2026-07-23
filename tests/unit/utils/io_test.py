@@ -1,5 +1,7 @@
+from datetime import UTC, date, datetime
 from pathlib import Path
 
+import pendulum
 import pytest
 
 from tests.config import app_temp_workdir
@@ -345,6 +347,194 @@ def test_join_path_should_not_fail_when_either_argument_is_none(
 
     # Assert
     actual = result
+    assert actual == expected
+
+
+# ============================================================================
+# Testing io.dump_yaml()
+# ============================================================================
+@pytest.mark.parametrize(
+    "value",
+    [
+        date(2026, 7, 13),
+        pendulum.date(2026, 7, 13),
+    ],
+)
+def test_dump_yaml_should_render_date(value: date):
+    # Arrange
+    data = {"v": value}
+
+    # Act
+    result = io.dump_yaml(data)
+
+    # Assert
+    assert "2026-07-13" in result
+
+
+def test_dump_yaml_should_render_utc_with_z_suffix():
+    # Arrange
+    data = {"v": datetime(2026, 7, 13, 12, 30, 0, tzinfo=UTC)}
+
+    # Act
+    result = io.dump_yaml(data)
+
+    # Assert
+    assert "2026-07-13T12:30:00Z" in result
+
+
+def test_dump_yaml_should_accept_timespec():
+    # Arrange
+    data = {"ts": datetime(2026, 7, 13, 12, 30, 0, 123456, tzinfo=UTC)}
+
+    # Act
+    result = io.dump_yaml(data, timespec="milliseconds")
+
+    # Assert
+    assert "2026-07-13T12:30:00.123Z" in result
+
+
+def test_dump_yaml_should_accept_indent():
+    # Arrange
+    data = {"a": {"b": 1}}
+
+    # Act
+    result = io.dump_yaml(data, indent=4)
+
+    # Assert
+    assert "    b: 1" in result
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        date(2026, 7, 13),
+        datetime(2026, 7, 13, 12, 30, tzinfo=UTC),
+    ],
+)
+def test_dump_yaml_should_round_trip_date_and_datetime(value: date):
+    # Arrange
+    data = {"v": value}
+
+    # Act
+    result = io.load_yaml(io.dump_yaml(data))
+
+    # Assert
+    actual = result["v"]
+    expected = value
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        date(2026, 7, 13),
+        pendulum.date(2026, 7, 13),
+    ],
+)
+def test_dump_yaml_should_render_date_as_native_scalar(value: date):
+    # Arrange
+    data = {"d": value}
+
+    # Act
+    result = io.dump_yaml(data)
+
+    # Assert
+    actual = result
+    expected = "d: 2026-07-13\n"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        datetime(2026, 7, 13, 12, 30, tzinfo=UTC),
+        pendulum.datetime(2026, 7, 13, 12, 30, tz="UTC"),
+    ],
+)
+def test_dump_yaml_should_render_datetime_as_native_scalar(value: datetime):
+    # Arrange
+    data = {"dt": value}
+
+    # Act
+    result = io.dump_yaml(data)
+
+    # Assert
+    actual = result
+    expected = "dt: 2026-07-13T12:30:00Z\n"
+    assert actual == expected
+
+
+# ============================================================================
+# Testing io.dumps_json()
+# ============================================================================
+@pytest.mark.parametrize(
+    "value",
+    [
+        date(2026, 7, 13),
+        pendulum.date(2026, 7, 13),
+    ],
+)
+def test_dumps_json_should_render_date(value: date):
+    # Arrange
+    data = {"v": value}
+
+    # Act
+    result = io.dumps_json(data)
+
+    # Assert
+    assert "2026-07-13" in result
+
+
+def test_dumps_json_should_render_utc_with_z_suffix():
+    # Arrange
+    data = {"v": datetime(2026, 7, 13, 12, 30, 0, tzinfo=UTC)}
+
+    # Act
+    result = io.dumps_json(data)
+
+    # Assert
+    assert "2026-07-13T12:30:00Z" in result
+
+
+def test_dumps_json_should_accept_timespec():
+    # Arrange
+    data = {"ts": datetime(2026, 7, 13, 12, 30, 0, 123456, tzinfo=UTC)}
+
+    # Act
+    result = io.dumps_json(data, timespec="milliseconds")
+
+    # Assert
+    assert "2026-07-13T12:30:00.123Z" in result
+
+
+def test_dumps_json_should_accept_indent():
+    # Arrange
+    data = {"a": {"b": 1}}
+
+    # Act
+    result = io.dumps_json(data, indent=2)
+
+    # Assert
+    assert '  "a":' in result
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        date(2026, 7, 13),
+        datetime(2026, 7, 13, 12, 30, tzinfo=UTC),
+    ],
+)
+def test_dumps_json_should_round_trip_date_and_datetime(value: date):
+    # Arrange
+    data = {"v": value}
+
+    # Act
+    result = io.loads_json(io.dumps_json(data))
+
+    # Assert
+    actual = result["v"]
+    expected = value
     assert actual == expected
 
 
