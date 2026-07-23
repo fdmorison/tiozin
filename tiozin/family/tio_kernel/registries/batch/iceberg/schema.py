@@ -15,16 +15,6 @@ import pyarrow as pa
 String = pa.string()
 Integer = pa.int32()
 Timestamptz = pa.timestamp("us", tz="UTC")
-StringMap = pa.map_(String, String)
-
-
-IcebergStateSchema = pa.struct(
-    [
-        pa.field("start", Timestamptz, nullable=True),
-        pa.field("end", Timestamptz, nullable=True),
-        pa.field("watermarks", StringMap, nullable=True),
-    ]
-)
 
 
 IcebergBatchSchema = pa.schema(
@@ -40,7 +30,6 @@ IcebergBatchSchema = pa.schema(
         pa.field("nominal_time", Timestamptz, nullable=False),
         pa.field("status", String, nullable=False),
         pa.field("attempts", Integer, nullable=False),
-        pa.field("state", IcebergStateSchema, nullable=False),
         pa.field("attributes", String, nullable=False),
         pa.field("created_at", Timestamptz, nullable=False),
         pa.field("updated_at", Timestamptz, nullable=False),

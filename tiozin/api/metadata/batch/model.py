@@ -11,7 +11,6 @@ from tiozin.utils import current_context, isozformat, utcnow
 from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
 from .enums import BatchStatus
-from .state import BatchState
 
 if TYPE_CHECKING:
     from tiozin import BatchRegistry
@@ -74,10 +73,6 @@ class Batch(Metadata):
             Number of attempts to execute the batch since it was started for
             first time or replayed. Incremented on every begin.
 
-        state:
-            Typed processing state of the batch (execution window and
-            watermarks), replicated across executions. See `BatchState`.
-
         attributes:
             Arbitrary job-specific metadata associated with the batch. Typical
             values include record counts, source locations, checksums, execution
@@ -116,7 +111,6 @@ class Batch(Metadata):
 
     status: BatchStatus = BatchStatus.PENDING
     attempts: Counter
-    state: BatchState = Field(default_factory=BatchState)
     attributes: Attributes
 
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
@@ -192,25 +186,6 @@ class Batch(Metadata):
     @property
     def qualified_natural_key(self) -> str:
         return f"{self.qualified_resource}.{isozformat(self.nominal_time)}"
-
-    @classmethod
-    def acquire(cls) -> Batch:
-        context = current_context()
-        resources = {field: getattr(context, field) for field in RESOURCE_FIELDS}
-        previous = context.registries.batch.get_frontier(**resources)
-
-        if not previous:
-            current_state = BatchState(end=context.nominal_time)
-        elif previous.status.is_terminal():
-            current_state = previous.state.advance_to(context.nominal_time)
-        else:
-            return previous
-
-        return Batch(
-            **resources,
-            nominal_time=context.nominal_time,
-            state=current_state,
-        ).register()
 
     def __str__(self) -> str:
         return self.qualified_natural_key
