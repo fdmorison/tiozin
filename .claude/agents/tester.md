@@ -29,8 +29,17 @@ Other `conftest.py` files may exist under `unit/` and `integration/` subdirector
 
 ## Rules
 
+- ABSOLUTE, HIGHEST-PRIORITY RULE — NEVER mock, patch, or stub the SUT itself. Patching the behavior under test (e.g. `@patch.object(JobStub, "submit")` in a test that exercises `submit`) replaces the very thing the test exists to verify, making the test pass for the wrong reasons. No convenience, no other rule, and no existing test pattern justifies violating this. When a test must observe the SUT (e.g. count invocations), build the observation into the stub itself (a call counter attribute incremented by the real method), never by patching the SUT.
+- Readability beats reusability, always. Never hide simple, declarative construction behind helper functions or factory indirection (e.g. `make_backlog(...)`, `consumer_of(...)`). Inline the objects each test needs, even when that repeats lines across tests. A reader must understand the scenario from the test body alone.
+- Never rebuild a stub through factory fixtures (e.g. `make_job(...)`) when a plain stub fixture exists. Use the stub fixture (e.g. `job_stub`) and set the attributes the test needs directly on it (e.g. `job_stub.batch_policy = BatchPolicy.UPSTREAM`).
+- A unit test file owns exactly one SUT, the one it is named after. Do not reach into other objects (e.g. unwrapping a proxy via `__wrapped__` to exercise the inner object in a proxy's test file); exercise the SUT through its public entry point.
 - Write tests that verify behavior, not implementation.
-- Keep tests focused on the contract; don't expand coverage beyond the requested change.
+- Keep tests focused on the contract and on the current change.
+- Prefer inline setup over helper functions.
+- Prefer stub fixtures over factory fixtures.
+- Each test file owns a single SUT.
+- Never mock, patch, or stub the SUT. Use test doubles only for its dependencies.
+- Exercise the SUT only through its public API.
 - Do not create duplicate tests.
   - Consider tests with equivalent contracts to be duplicates.
   - Add a new test only when it introduces a new subject, expected outcome, or condition.
@@ -42,7 +51,7 @@ Other `conftest.py` files may exist under `unit/` and `integration/` subdirector
   - Don't remove or weaken failing tests
   - Reuse existing fixtures, mocks, and stubs before creating new ones
 - Never hardcode local filesystem paths; use temporary path fixtures
-- Each test validates a single behavioral contract with exactly one assertion. When validating multiple attributes of a single object, group them into a tuple. Never use tuples to group attributes from different objects
+- Each test validates a single behavioral contract with a single assertion.
   ```python
   # ✔ Correct
   assert actual == expected
@@ -52,24 +61,36 @@ Other `conftest.py` files may exist under `unit/` and `integration/` subdirector
   assert customer_actual == customer_expected
 
   # ❌ Incorrect
-  assert a = "ok"
-  assert b.foo = 2
-  assert other_thing = 12345
+  assert b.foo == 2
+  assert b.bar == "ok"
+  assert other_thing == 12345
+  ```
 
+- When asserting multiple attributes of the same object, compare tuples. Never group attributes from different objects.
+  ```python
   # ✔ Correct
   actual = (
-    response.status,
-    response.json(),
+      response.status,
+      response.json(),
   )
   expected = (
-    200,
-    {"id": 10, "name": "John"},
+      200,
+      {"id": 10, "name": "John"},
   )
   assert actual == expected
 
-  # ❌ Incorrect: many asserts in same test case
-  assert response.status == 200
-  assert response.json() == {"id": 10, "name": "John"}
+  # ❌ Incorrect
+  actual = (
+      company.name,
+      customer.name,
+  )
+
+  expected = (
+      "Acme",
+      "John",
+  )
+
+  assert actual == expected
   ```
 - Use AAA in every test; never mix phases
   ```python
