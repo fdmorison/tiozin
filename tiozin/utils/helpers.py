@@ -1,6 +1,6 @@
 from collections import deque
 from collections.abc import Iterable, Iterator, Mapping
-from datetime import datetime
+from datetime import date, datetime
 from itertools import islice
 from typing import TypeVar
 from uuid import UUID, uuid4
@@ -37,14 +37,22 @@ def as_utc(dt: datetime) -> pendulum.DateTime:
     return pendulum.instance(dt).in_timezone(pendulum.UTC)
 
 
-def isozformat(dt: datetime) -> str:
+def isozformat(dt: date, timespec: str = None) -> str:
     """
     Format a datetime as an ISO 8601 string, preserving its timezone offset.
 
     A datetime in UTC is rendered with the ``Z`` suffix, never as ``+00:00``
     (e.g. ``2026-07-13T12:30:00Z``).
+
+    The optional `timespec` argument specifies the time precision.
+    Valid values are: auto, hours, minutes, seconds, milliseconds, and microseconds.
     """
-    return pendulum.instance(dt).to_iso8601_string()
+    timespec = timespec or "auto"
+
+    if isinstance(dt, datetime):
+        return dt.isoformat(timespec=timespec).replace("+00:00", "Z")
+
+    return dt.isoformat()
 
 
 def trim(value: str | None) -> str | None:
