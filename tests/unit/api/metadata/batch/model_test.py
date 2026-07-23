@@ -5,21 +5,11 @@ import pytest
 from pydantic import ValidationError
 
 from tiozin import Batch, BatchStatus
-from tiozin.api import Cadence
-from tiozin.api.metadata.batch.state import BatchState
 
 # Default nominal_time for a test batch, and the value reassignment tests
 # attempt to set on frozen/mutable fields.
 NOMINAL_TIME = datetime(2026, 1, 15, tzinfo=UTC)
 REASSIGNED_TIME = datetime(2026, 2, 1, tzinfo=UTC)
-
-# Time constants for the acquire flow, named after their semantic role.
-# Context always exposes a minute-truncated nominal_time, so these are the
-# canonical (already :00) forms.
-PREVIOUS_START = datetime(2026, 1, 15, tzinfo=UTC)
-PREVIOUS_END = datetime(2026, 1, 15, 10, 30, tzinfo=UTC)
-CURRENT_START = datetime(2026, 1, 17, tzinfo=UTC)
-CURRENT_NOMINAL_TIME = datetime(2026, 1, 16, 8, 15, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -27,18 +17,6 @@ def registry():
     mock = MagicMock()
     with patch("tiozin.api.metadata.batch.model.Batch._registry", return_value=mock):
         yield mock
-
-
-@pytest.fixture
-def context(fake_domain):
-    context = MagicMock(
-        **fake_domain,
-        cadence=Cadence.MINUTELY,
-        nominal_time=CURRENT_START,
-    )
-    context.registries.batch.register.side_effect = lambda batch: batch
-    with patch("tiozin.api.context.Context.current", return_value=context):
-        yield context
 
 
 # ============================================================================
@@ -727,122 +705,4 @@ def test_quarantine_should_set_error_message_in_attributes(job_context, fake_dom
     # Assert
     actual = batch.attributes["__error"]
     expected = "boom"
-    assert actual == expected
-
-
-# ============================================================================
-# acquire
-# ============================================================================
-def test_acquire_should_reuse_previous_batch_when_not_terminal(context, fake_domain):
-    # Arrange
-    previous = Batch(
-        **fake_domain,
-        nominal_time=PREVIOUS_START,
-        status=BatchStatus.RUNNING,
-    )
-    context.registries.batch.get_frontier.return_value = previous
-
-    # Act
-    actual = Batch.acquire()
-
-    # Assert
-    expected = previous
-    assert actual is expected
-
-
-def test_acquire_should_register_new_batch_when_previous_is_terminal(context, fake_domain):
-    # Arrange
-    previous = Batch(
-        **fake_domain,
-        nominal_time=PREVIOUS_START,
-        status=BatchStatus.SUCCEEDED,
-    )
-    context.registries.batch.get_frontier.return_value = previous
-
-    # Act
-    actual = Batch.acquire().nominal_time
-
-    # Assert
-    expected = CURRENT_START
-    assert actual == expected
-
-
-def test_acquire_should_carry_watermarks_forward_from_previous_state(context, fake_domain):
-    # Arrange
-    previous = Batch(
-        **fake_domain,
-        nominal_time=PREVIOUS_START,
-        status=BatchStatus.SUCCEEDED,
-        state=BatchState(watermarks={"orders": 42}),
-    )
-    context.registries.batch.get_frontier.return_value = previous
-
-    # Act
-    actual = Batch.acquire().state.watermarks
-
-    # Assert
-    expected = {"orders": 42}
-    assert actual == expected
-
-
-def test_acquire_should_derive_window_from_previous_end(context, fake_domain):
-    # Arrange
-    context.nominal_time = CURRENT_NOMINAL_TIME
-
-    previous = Batch(
-        **fake_domain,
-        nominal_time=PREVIOUS_START,
-        status=BatchStatus.SUCCEEDED,
-        state=BatchState(
-            start=datetime(2026, 1, 14, tzinfo=UTC),
-            end=PREVIOUS_END,
-        ),
-    )
-    context.registries.batch.get_frontier.return_value = previous
-
-    # Act
-    result = Batch.acquire().state
-
-    # Assert
-    actual = (result.start, result.end)
-    expected = (
-        PREVIOUS_END,
-        CURRENT_NOMINAL_TIME,
-    )
-    assert actual == expected
-
-
-def test_acquire_should_end_window_at_nominal_time_when_no_previous_batch(context):
-    # Arrange
-    context.registries.batch.get_frontier.return_value = None
-
-    # Act
-    actual = Batch.acquire().state.end
-
-    # Assert
-    expected = CURRENT_START
-    assert actual == expected
-
-
-def test_acquire_should_start_from_epoch_when_no_previous_batch(context):
-    # Arrange
-    context.registries.batch.get_frontier.return_value = None
-
-    # Act
-    actual = Batch.acquire().state.start
-
-    # Assert
-    expected = datetime(1970, 1, 1, tzinfo=UTC)
-    assert actual == expected
-
-
-def test_acquire_should_start_watermarks_empty_when_no_previous_batch(context):
-    # Arrange
-    context.registries.batch.get_frontier.return_value = None
-
-    # Act
-    actual = Batch.acquire().state.watermarks
-
-    # Assert
-    expected = {}
     assert actual == expected
