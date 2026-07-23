@@ -3,13 +3,14 @@ name: committing
 description: Commits uncommitted changes by grouping related changes into focused commits and applying the repository commit conventions.
 user-invocable: true
 allowed-tools:
+  - Bash(git checkout *)
+  - Bash(git switch *)
   - Bash(git status *)
   - Bash(git diff *)
+  - Bash(git grep *)
   - Bash(git log *)
   - Bash(git add *)
   - Bash(git commit *)
-  - Bash(git checkout *)
-  - Bash(git switch *)
   - Bash(make format)
 ---
 
