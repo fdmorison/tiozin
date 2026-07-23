@@ -19,7 +19,7 @@ runs:
         TOUCHED_PRODUCTION: ${{ steps.filter.outputs.release }}
       with:
         script: |
-          const RELEASE_IMPACTING_TYPE = /^(feat|fix|perf|refactor|chore|docs)(\(.+\))?!?:/;
+          const RELEASE_IMPACTING_TYPE = /^(feat|fix|perf|refactor|build|docs)(\(.+\))?!?:/;
 
           const { data: pr } = await github.rest.pulls.get({
             ...context.repo,
