@@ -1,14 +1,16 @@
-name: PR Checks
+name: PR Meta
 
 on:
-  workflow_call:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
 
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-  check:
+  meta:
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     steps:
       - name: Setup environment
@@ -34,10 +36,14 @@ jobs:
             build
           scopes: |
             core
+            core-api
+            core-cli
+            core-utils
+            core-compose
             tio_kernel
             tio_duckdb
             tio_spark
-            claude
+            harness
           requireScope: true
 
       - name: Check Commits
@@ -45,12 +51,3 @@ jobs:
 
       - name: Check Release Intent
         uses: fdmorison/tiozin/.github/actions/check-release-intent@main
-
-      - name: Install Dependencies
-        run: make install-dev
-
-      - name: Lint
-        run: make check
-
-      - name: Tests
-        run: make test
