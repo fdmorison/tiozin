@@ -5,6 +5,7 @@ Wraps fsspec to work uniformly across local paths, cloud storage (S3, GCS,
 Azure), and remote protocols (HTTP, HTTPS, FTP, SFTP).
 """
 
+from datetime import date, datetime
 from io import StringIO
 from pathlib import Path
 from typing import Any
@@ -13,8 +14,11 @@ from urllib.parse import urlparse, urlunparse
 import fsspec
 import rapidjson
 from ruamel.yaml import YAML
+from ruamel.yaml.representer import SafeRepresenter
 
 from tiozin import config
+
+from .helpers import isozformat
 
 StrOrPath = str | Path
 
@@ -24,13 +28,46 @@ def _fs(path: StrOrPath) -> tuple[Any, str]:
     return fs, paths[0]
 
 
-def _yaml() -> YAML:
-    loader = YAML(typ="safe")
-    loader.allow_duplicate_keys = False
-    loader.explicit_start = False
-    loader.sort_base_mapping_type_on_output = False
-    loader.default_flow_style = False
-    return loader
+def _yaml(timespec: str = None, indent: int = None) -> YAML:
+    """
+    Build the canonical YAML implementation used throughout Tiozin.
+
+    This function encapsulates Tiozin's YAML conventions for both loading and
+    dumping. Loading always runs in safe mode, duplicate keys are rejected, mapping
+    order is preserved, output uses block style without the leading `---` document
+    marker, and datetimes are serialized as ISO 8601 strings with a `Z` suffix for
+    UTC (e.g. `2026-07-13T12:30:00Z`) instead of YAML's native timestamp format.
+
+    The configurable behaviors are the datetime precision (`timespec`) and the
+    block indentation width (`indent`).
+
+    Args:
+        timespec: Time precision for rendered datetimes. Values: see `isozformat`.
+        indent: Block indentation width for mappings and sequences. Default is 2.
+    """
+
+    class TiozinRepresenter(SafeRepresenter):
+        def represent_datetime(self, data: datetime) -> Any:
+            return self.represent_scalar("tag:yaml.org,2002:timestamp", isozformat(data, timespec))
+
+        def represent_date(self, data: date) -> Any:
+            return self.represent_scalar("tag:yaml.org,2002:timestamp", data.isoformat())
+
+    indent = indent or 2
+
+    yaml = YAML(typ="safe")
+    yaml.allow_duplicate_keys = False
+    yaml.explicit_start = False
+    yaml.sort_base_mapping_type_on_output = False
+    yaml.default_flow_style = False
+    yaml.indent(mapping=indent, sequence=indent, offset=max(indent - 2, 0))
+
+    yaml.Representer = TiozinRepresenter
+    yaml.Representer.add_representer(datetime, TiozinRepresenter.represent_datetime)
+    yaml.Representer.add_multi_representer(datetime, TiozinRepresenter.represent_datetime)
+    yaml.Representer.add_representer(date, TiozinRepresenter.represent_date)
+    yaml.Representer.add_multi_representer(date, TiozinRepresenter.represent_date)
+    return yaml
 
 
 def read_text(path: StrOrPath, **options) -> str:
@@ -55,17 +92,22 @@ def write_text(path: StrOrPath, data: str, **options) -> None:
         f.write(data)
 
 
-def dumps_json(value: Any) -> str:
+def dumps_json(value: Any, indent: int = None, timespec: str = None) -> str:
     """
     Serialize a Python value to a JSON string.
 
-    ``datetime`` and ``date`` values are written as ISO 8601 strings; a naive
-    datetime (without a timezone) is treated as UTC.
+    Datetimes are rendered in ISO 8601 with a `Z` suffix for UTC
+    (e.g. `2026-07-13T12:30:00Z`) and their offset preserved otherwise.
+    `timespec` sets the rendered datetime time precision, forwarded to `isozformat`
+    which defines the accepted values.
     """
-    return rapidjson.dumps(
-        value,
-        datetime_mode=rapidjson.DM_ISO8601 | rapidjson.DM_NAIVE_IS_UTC,
-    )
+
+    def _json_default(obj: Any) -> str:
+        if isinstance(obj, date):
+            return isozformat(obj, timespec)
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    return rapidjson.dumps(value, default=_json_default, indent=indent)
 
 
 def loads_json(value: str) -> Any:
@@ -88,12 +130,17 @@ def load_yaml(text: str) -> Any:
     return _yaml().load(text)
 
 
-def dump_yaml(data: Any) -> str:
+def dump_yaml(data: Any, indent: int = None, timespec: str = None) -> str:
     """
     Serialize data to a YAML string.
+
+    Datetimes are rendered in ISO 8601 with a `Z` suffix for UTC
+    (e.g. `2026-07-13T12:30:00Z`). `timespec` sets the rendered datetime time
+    precision, forwarded to `isozformat` which defines the accepted values.
+    `indent` sets the block indentation width; None uses the default.
     """
     buffer = StringIO()
-    _yaml().dump(data, buffer)
+    _yaml(timespec, indent).dump(data, buffer)
     return buffer.getvalue()
 
 

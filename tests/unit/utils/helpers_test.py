@@ -1,5 +1,5 @@
 from collections import deque
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
@@ -760,16 +760,54 @@ def test_isozformat_should_preserve_timezone_offset():
     assert actual == expected
 
 
-def test_isozformat_should_format_utc_datetime_with_z_suffix():
-    # Arrange
-    dt = datetime(2026, 7, 13, 12, 30, tzinfo=UTC)
-
+@pytest.mark.parametrize(
+    "dt",
+    [
+        datetime(2026, 7, 13, 12, 30, 0, tzinfo=UTC),
+        pendulum.datetime(2026, 7, 13, 12, 30, 0, tz="UTC"),
+    ],
+)
+def test_isozformat_should_format_utc_with_z_suffix(dt: datetime):
     # Act
     result = isozformat(dt)
 
     # Assert
     actual = result
     expected = "2026-07-13T12:30:00Z"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "timespec, expected",
+    [
+        ("seconds", "2026-07-13T12:30:00Z"),
+        ("milliseconds", "2026-07-13T12:30:00.123Z"),
+        ("microseconds", "2026-07-13T12:30:00.123456Z"),
+    ],
+)
+def test_isozformat_should_apply_given_timespec_precision(timespec: str, expected: str):
+    # Arrange
+    dt = datetime(2026, 7, 13, 12, 30, 0, 123456, tzinfo=UTC)
+
+    # Act
+    result = isozformat(dt, timespec=timespec)
+
+    # Assert
+    actual = result
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "timespec",
+    ["seconds", "milliseconds", "microseconds"],
+)
+def test_isozformat_should_ignore_timespec_for_date(timespec: str):
+    # Act
+    result = isozformat(date(2026, 7, 13), timespec=timespec)
+
+    # Assert
+    actual = result
+    expected = "2026-07-13"
     assert actual == expected
 
 
