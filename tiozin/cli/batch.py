@@ -27,12 +27,12 @@ def frontier(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
-    batch = app.registries.batch.get_frontier(**resource)
+    manifest = app.resolve_manifest(job)
+    batch = app.registries.batch.get_frontier(**manifest.to_resource_dict())
     if not batch:
-        app.warning(f"No batch found for job {job}.")
+        app.warning(f"No frontier found for job {manifest.name}.")
         return
-    render_batches([batch])
+    render_batches([batch], manifest.name)
 
 
 @batch_cli.command()
@@ -51,12 +51,12 @@ def backlog(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
-    batches = app.registries.batch.get_backlog(**resource)
-    if not batches:
-        app.warning(f"No backlog found for job {job}.")
+    manifest = app.resolve_manifest(job)
+    backlog = app.registries.batch.get_backlog(**manifest.to_resource_dict())
+    if not backlog:
+        app.warning(f"No backlog found for job {manifest.name}.")
         return
-    render_batches(batches)
+    render_batches(backlog, manifest.name)
 
 
 @batch_cli.command()
@@ -83,12 +83,14 @@ def board(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
-    batches = app.registries.batch.get_board(limit=limit, since=since, **resource)
-    if not batches:
-        app.warning(f"No batches found for job {job}.")
+    manifest = app.resolve_manifest(job)
+    backlog = app.registries.batch.get_board(
+        limit=limit, since=since, **manifest.to_resource_dict()
+    )
+    if not backlog:
+        app.warning(f"No batches found for job {manifest.name}.")
         return
-    render_batches(batches)
+    render_batches(backlog, manifest.name)
 
 
 @batch_cli.command()
@@ -116,17 +118,17 @@ def register(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
+    manifest = app.resolve_manifest(job)
 
     batch = Batch(
-        **resource,
+        **manifest.to_resource_dict(),
         nominal_time=nominal_time,
         attributes=parse_attributes(attributes),
     )
     batch = app.registries.batch.register(batch)
 
     app.info(f"Batch registered for job {job}, nominal time {nominal_time.isoformat()}.")
-    render_batches([batch])
+    render_batches([batch], manifest.name)
 
 
 @batch_cli.command()
@@ -150,13 +152,14 @@ def cancel(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
+    manifest = app.resolve_manifest(job)
+    attributes = parse_attributes(attributes)
 
-    batch = app.registries.batch.get(id=batch_id, **resource)
-    batch = batch.cancel(**parse_attributes(attributes))
+    batch = app.registries.batch.get(id=batch_id, **manifest.to_resource_dict())
+    batch = batch.cancel(**attributes)
 
     app.info(f"Batch {batch.id} cancelled.")
-    render_batches([batch])
+    render_batches([batch], manifest.name)
 
 
 @batch_cli.command()
@@ -180,13 +183,14 @@ def replay(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
+    manifest = app.resolve_manifest(job)
+    attributes = parse_attributes(attributes)
 
-    batch = app.registries.batch.get(id=batch_id, **resource)
-    batch = batch.replay(**parse_attributes(attributes))
+    batch = app.registries.batch.get(id=batch_id, **manifest.to_resource_dict())
+    batch = batch.replay(**attributes)
 
     app.info(f"Batch {batch.id} replayed.")
-    render_batches([batch])
+    render_batches([batch], manifest.name)
 
 
 @batch_cli.command()
@@ -210,10 +214,11 @@ def quarantine(
     """
     announce(job)
     app: TiozinApp = ctx.obj
-    resource = app.resolve_manifest(job).to_resource_dict()
+    manifest = app.resolve_manifest(job)
+    attributes = parse_attributes(attributes)
 
-    batch = app.registries.batch.get(id=batch_id, **resource)
-    batch = batch.quarantine(**parse_attributes(attributes))
+    batch = app.registries.batch.get(id=batch_id, **manifest.to_resource_dict())
+    batch = batch.quarantine(**attributes)
 
     app.info(f"Batch {batch.id} quarantined.")
-    render_batches([batch])
+    render_batches([batch], manifest.name)
