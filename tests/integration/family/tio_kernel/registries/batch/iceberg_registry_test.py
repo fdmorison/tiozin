@@ -184,6 +184,31 @@ def test_register_should_persist_attributes(registry: IcebergBatchRegistry, fake
     assert actual == expected
 
 
+def test_register_should_persist_bookmarks(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        bookmarks={
+            "cursor": 42,
+            "watermark_at": datetime(2026, 1, 15, 10, 30, tzinfo=UTC),
+            "watermark_on": date(2026, 1, 15),
+        },
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    actual = registry.get_frontier(**fake_domain).bookmarks
+    expected = {
+        "cursor": 42,
+        "watermark_at": datetime(2026, 1, 15, 10, 30, tzinfo=UTC),
+        "watermark_on": date(2026, 1, 15),
+    }
+    assert actual == expected
+
+
 def test_register_should_persist_attributes_with_none_value(
     registry: IcebergBatchRegistry, fake_domain: dict
 ):
