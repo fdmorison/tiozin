@@ -44,7 +44,7 @@ def test_resolve_batch_should_create_subsequent_batches_since_frontier_end(
         status=BatchStatus.SUCCEEDED,
     )
     batch_registry_stub.get_frontier = lambda **_: frontier
-    proxy = BacklogProducerJobProxy(job_stub.__wrapped__)
+    proxy = BacklogProducerJobProxy(job_stub)
 
     # Act
     batch = proxy.resolve_batch(job_stub)
@@ -75,7 +75,7 @@ def test_resolve_batch_should_preserve_frontier_bookmarks(
         bookmarks={"orders": 42},
     )
     batch_registry_stub.get_frontier = lambda **_: frontier
-    proxy = BacklogProducerJobProxy(job_stub.__wrapped__)
+    proxy = BacklogProducerJobProxy(job_stub)
 
     # Act
     batch = proxy.resolve_batch(job_stub)
@@ -102,7 +102,7 @@ def test_resolve_batch_should_resume_frontier(
         status=BatchStatus.RUNNING,
     )
     batch_registry_stub.get_frontier = lambda **_: frontier
-    proxy = BacklogProducerJobProxy(job_stub.__wrapped__)
+    proxy = BacklogProducerJobProxy(job_stub)
 
     # Act
     batch = proxy.resolve_batch(job_stub)
@@ -125,7 +125,7 @@ def test_resolve_batch_should_extend_frontier_window_on_resume(
         status=BatchStatus.RUNNING,
     )
     batch_registry_stub.get_frontier = lambda **_: frontier
-    proxy = BacklogProducerJobProxy(job_stub.__wrapped__)
+    proxy = BacklogProducerJobProxy(job_stub)
 
     # Act
     proxy.resolve_batch(job_stub)

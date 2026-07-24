@@ -125,7 +125,7 @@ class Batch(Metadata):
 
     nominal_time: NominalTime = Field(frozen=True)
     nominal_start_time: NominalTime = Field(frozen=True, default_factory=epoch)
-    nominal_end_time: NominalTime = Field(frozen=True, default_factory=utcnow)
+    nominal_end_time: NominalTime = Field(default_factory=utcnow)
 
     status: BatchStatus = BatchStatus.PENDING
     attempts: Counter
