@@ -1,22 +1,42 @@
-from rich.console import Console
-from rich.table import Table
+from datetime import datetime
 
-from ..api import Batch
-from ..utils import human_join, isozformat
+from rich import box
+from rich.console import Console
+from rich.table import Column, Table
+
+from ..api import Batch, BatchStatus
+from ..utils import as_utc, dump_yaml, human_join, isozformat
 
 console = Console()
 
+STATUS_DOT = "●"
+UP_ARROW = "⇡"
+EMPTY_CELL = "[dim]empty[/]"
+
+# Horizontal rules plus discrete dashed vertical column separators (no outer borders).
+BATCH_BOX = box.Box("    \n  ╎ \n ─┼ \n  ╎ \n ─┼ \n ─┼ \n  ╎ \n    \n")
+
 BATCH_COLUMNS = (
-    "id",
-    "nominal_time",
-    "nominal_start_time",
-    "nominal_end_time",
-    "status",
-    "attempts",
-    "attributes",
-    "created_at",
-    "updated_at",
+    Column("#"),
+    Column("ID", no_wrap=True),
+    Column("NOMINAL_TIME"),
+    Column("NOMINAL_WINDOW", justify="center"),
+    Column("STATUS", no_wrap=True),
+    Column("ATTEMPTS", justify="center"),
+    Column("BOOKMARKS"),
+    Column("ATTRIBUTES"),
+    Column("CREATED_AT", justify="center"),
+    Column("UPDATED_AT", justify="center"),
 )
+
+STATUS_STYLES = {
+    "pending": "yellow",
+    "running": "cyan",
+    "failed": "red",
+    "succeeded": "green",
+    "quarantined": "magenta",
+    "canceled": "bright_black",
+}
 
 
 def announce(job: str | list[str]) -> None:
@@ -27,7 +47,40 @@ def announce(job: str | list[str]) -> None:
     console.print(f"[green]Jobs:[/green] [bold cyan]{label}[/bold cyan]\n")
 
 
-def render_batches(batches: list[Batch]) -> None:
+def status_cell(status: BatchStatus) -> str:
+    """
+    Renders a status as a colored dot followed by its neutral label.
+    """
+    style = STATUS_STYLES.get(status, "white")
+    return f"[{style}]{STATUS_DOT}[/] {status}"
+
+
+def window_cell(start: datetime, end: datetime) -> str:
+    """
+    Renders the window across three lines: the end over an up arrow over the
+    start, matching the table's most-recent-first ordering.
+    """
+    return f"{isozformat(end)}\n{UP_ARROW}\n{isozformat(start)}"
+
+
+def mapping_cell(mapping: dict) -> str:
+    """
+    Renders a mapping as YAML, or a dim placeholder when empty.
+    """
+    return dump_yaml(mapping) if mapping else EMPTY_CELL
+
+
+def timestamp_cell(dt: datetime) -> str:
+    """
+    Renders a timestamp across two lines: the relative time (e.g. `2 hours
+    ago`) over its dim absolute value in seconds precision.
+    """
+    absolute = isozformat(dt, timespec="seconds")
+    relative = as_utc(dt).diff_for_humans()
+    return f"{relative}\n[gray70]{absolute}[/]"
+
+
+def render_batches(batches: list[Batch], job: str) -> None:
     """
     Renders batches as a Rich table.
     """
@@ -35,20 +88,36 @@ def render_batches(batches: list[Batch]) -> None:
     if not batches:
         return
 
-    table = Table(show_header=True, header_style="bold")
-    for column in BATCH_COLUMNS:
-        table.add_column(column)
+    title = (
+        f"[bold][cornflower_blue]\nBatch Board of `{job}`[/]\n"
+        f"[steel_blue]{batches[0].qualified_resource}[/]"
+    )
+    table = Table(
+        *BATCH_COLUMNS,
+        title=title,
+        box=BATCH_BOX,
+        show_header=True,
+        show_lines=True,
+        header_style="navy_blue",
+        border_style="dim",
+        padding=(0, 1),
+        pad_edge=False,
+        row_styles=[""],
+        caption="\n",
+    )
 
-    for batch in batches:
+    for i, batch in enumerate(batches, start=1):
         table.add_row(
+            str(i),
             batch.id,
             isozformat(batch.nominal_time),
-            isozformat(batch.nominal_start_time),
-            isozformat(batch.nominal_end_time),
-            batch.status.value,
+            window_cell(batch.nominal_start_time, batch.nominal_end_time),
+            status_cell(batch.status),
             str(batch.attempts),
-            str(batch.attributes),
-            isozformat(batch.created_at),
-            isozformat(batch.updated_at),
+            mapping_cell(batch.bookmarks),
+            mapping_cell(batch.attributes),
+            timestamp_cell(batch.created_at),
+            timestamp_cell(batch.updated_at),
         )
+
     console.print(table)
