@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pendulum
@@ -8,17 +8,16 @@ from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from tiozin.api.types import (
     Attributes,
+    Bookmarks,
     Counter,
     NominalTime,
     Slug,
     TechnicalTime,
     TimeOrderedId,
-    Watermark,
 )
 
 GENERATED_ID = "01920000-0000-7000-8000-000000000001"
 PROVIDED_ID = "01920000-0000-7000-8000-000000000000"
-WATERMARK = TypeAdapter(Watermark)
 TECHNICAL_TIME = TypeAdapter(TechnicalTime)
 NOMINAL_TIME = TypeAdapter(NominalTime)
 SLUG = TypeAdapter(Slug)
@@ -48,6 +47,10 @@ class CounterModel(TestModel):
 
 class AttributesModel(TestModel):
     attributes: Attributes
+
+
+class BookmarksModel(TestModel):
+    bookmarks: Bookmarks
 
 
 # =============================================================================
@@ -239,67 +242,6 @@ def test_nominal_time_should_raise_validation_error_when_datetime_is_naive():
 
 
 # =============================================================================
-# Watermark
-# =============================================================================
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [
-        (42, 42),
-        (date(2026, 1, 15), date(2026, 1, 15)),
-    ],
-)
-def test_watermark_should_accept_value(value, expected):
-    # Act
-    result = WATERMARK.validate_python(value)
-
-    # Assert
-    actual = result
-    assert actual == expected
-
-
-def test_watermark_should_normalize_datetime_to_utc():
-    # Arrange
-    value = datetime(2026, 1, 15, 12, 0, 0, tzinfo=timezone(timedelta(hours=3)))
-
-    # Act
-    result = WATERMARK.validate_python(value)
-
-    # Assert
-    actual = result
-    expected = datetime(2026, 1, 15, 9, 0, 0, tzinfo=UTC)
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [
-        ("00000000000000000042", 42),
-        ("2026-01-15", date(2026, 1, 15)),
-        ("2026-01-15T10:30:45.123456+00:00", datetime(2026, 1, 15, 10, 30, 45, 123456, tzinfo=UTC)),
-    ],
-)
-def test_watermark_should_parse_canonical_string(value, expected):
-    # Act
-    result = WATERMARK.validate_python(value)
-
-    # Assert
-    actual = result
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "value",
-    ["not-a-watermark", "42", -1, 10**20],
-)
-def test_watermark_should_raise_validation_error_when_value_is_invalid(value):
-    # Act / Assert
-    with pytest.raises(ValidationError):
-        WATERMARK.validate_python(value)
-
-
-# =============================================================================
 # Counter
 # =============================================================================
 
@@ -389,6 +331,69 @@ def test_attributes_should_not_share_default_between_instances():
 
     # Assert
     actual = second.attributes
+    expected = {}
+    assert actual == expected
+
+
+# =============================================================================
+# Bookmarks
+# =============================================================================
+
+
+def test_bookmarks_should_default_to_empty_dict_when_omitted():
+    # Act
+    result = BookmarksModel()
+
+    # Assert
+    actual = result.bookmarks
+    expected = {}
+    assert actual == expected
+
+
+def test_bookmarks_should_default_to_empty_dict_when_none():
+    # Act
+    result = BookmarksModel(bookmarks=None)
+
+    # Assert
+    actual = result.bookmarks
+    expected = {}
+    assert actual == expected
+
+
+def test_bookmarks_should_preserve_provided_mapping():
+    # Act
+    result = BookmarksModel(bookmarks={"k": "v", "n": 1})
+
+    # Assert
+    actual = result.bookmarks
+    expected = {"k": "v", "n": 1}
+    assert actual == expected
+
+
+def test_bookmarks_should_not_mutate_provided_mapping():
+    # Arrange
+    source = {"k": "v"}
+    model = BookmarksModel(bookmarks=source)
+
+    # Act
+    model.bookmarks["k2"] = "v2"
+
+    # Assert
+    actual = source
+    expected = {"k": "v"}
+    assert actual == expected
+
+
+def test_bookmarks_should_not_share_default_between_instances():
+    # Arrange
+    first = BookmarksModel()
+    second = BookmarksModel()
+
+    # Act
+    first.bookmarks["k"] = "v"
+
+    # Assert
+    actual = second.bookmarks
     expected = {}
     assert actual == expected
 

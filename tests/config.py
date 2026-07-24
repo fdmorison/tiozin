@@ -75,8 +75,6 @@ default_batch_registry = "tio_kernel:NoOpBatchRegistry"
 default_batch_retries = 3
 default_batch_board_limit = 100
 default_batch_board_since_days = 7
-batch_watermark_int_digits = 20
-
 default_metric_registry = "tio_kernel:NoOpMetricRegistry"
 
 # ===============================================

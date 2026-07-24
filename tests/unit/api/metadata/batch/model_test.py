@@ -38,6 +38,19 @@ def test_status_should_default_to_pending(fake_domain: dict):
     assert actual == expected
 
 
+@pytest.mark.parametrize("field", ["attributes", "bookmarks"])
+def test_batch_should_default_metadata_map_to_empty_dict(field, fake_domain: dict):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    actual = getattr(batch, field)
+
+    # Assert
+    expected = {}
+    assert actual == expected
+
+
 # ============================================================================
 # nominal window
 # ============================================================================
@@ -101,6 +114,7 @@ def test_batch_should_raise_when_frozen_field_is_reassigned(field, value, fake_d
         ("status", BatchStatus.SUCCEEDED),
         ("attempts", 3),
         ("attributes", {"extra1": "value1"}),
+        ("bookmarks", {"cursor1": "value1"}),
         ("updated_at", REASSIGNED_TIME),
     ],
 )
@@ -645,6 +659,46 @@ def test_rollback_should_discard_attribute_mutations(job_context, fake_domain):
     # Assert
     actual = batch.attributes
     expected = {"watermark": 10}
+    assert actual == expected
+
+
+def test_rollback_should_restore_bookmarks(job_context, fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"cursor": 10},
+    )
+    batch.begin()
+    batch.bookmarks["cursor"] = 11
+    batch.bookmarks["extra"] = 123456
+
+    # Act
+    batch.rollback()
+
+    # Assert
+    actual = batch.bookmarks
+    expected = {"cursor": 10}
+    assert actual == expected
+
+
+def test_commit_should_keep_bookmark_mutations(job_context, fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"cursor": 10},
+    )
+    batch.begin()
+    batch.bookmarks["cursor"] = 11
+    batch.bookmarks["extra"] = 123456
+
+    # Act
+    batch.commit()
+
+    # Assert
+    actual = batch.bookmarks
+    expected = {"cursor": 11, "extra": 123456}
     assert actual == expected
 
 
