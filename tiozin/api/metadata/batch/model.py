@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Self
 
 from pydantic import ConfigDict, Field, PrivateAttr
@@ -8,7 +9,7 @@ from pydantic import ConfigDict, Field, PrivateAttr
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, epoch, isozformat, utcnow
 
-from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
+from ...types import Attributes, Bookmarks, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
 from .enums import BatchStatus
 
@@ -80,9 +81,19 @@ class Batch(Metadata):
             first time or replayed. Incremented on every begin.
 
         attributes:
-            Arbitrary job-specific metadata associated with the batch. Typical
-            values include record counts, source locations, checksums, execution
-            details, or any other application-defined information.
+            Arbitrary metadata associated with the batch, propagated across the
+            pipeline layers of a single execution. Attributes allow jobs to
+            propagate progress and resume incremental processing in downstream
+            pipeline layers. Typical values include record counts, paths,
+            partitions, table names, execution details, or any other
+            plugin-defined information.
+
+        bookmarks:
+            Arbitrary metadata associated with the batch, propagated across
+            pipeline executions. Bookmarks allow jobs to track progress and
+            resume incremental processing across executions. Typical values
+            include watermarks, checkpoints, API tokens, or any other
+            plugin-defined information.
 
         created_at:
             UTC timestamp when the batch was first registered.
@@ -98,7 +109,6 @@ class Batch(Metadata):
     )
 
     _registry_ref: BatchRegistry = PrivateAttr(default=None)
-    _attributes_snapshot: Attributes = PrivateAttr(default=None)
 
     resource_fields: ClassVar[tuple[str, ...]] = RESOURCE_FIELDS
     natural_key_fields: ClassVar[tuple[str, ...]] = (*RESOURCE_FIELDS, "nominal_time")
@@ -119,13 +129,19 @@ class Batch(Metadata):
 
     status: BatchStatus = BatchStatus.PENDING
     attempts: Counter
+
+    bookmarks: Bookmarks
+    _bookmarks_snapshot: Bookmarks = PrivateAttr(default=None)
+
     attributes: Attributes
+    _attributes_snapshot: Attributes = PrivateAttr(default=None)
 
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
     def model_post_init(self, __context) -> None:
-        self._attributes_snapshot = deepcopy(self.attributes)
+        self._attributes_snapshot = MappingProxyType(deepcopy(self.attributes))
+        self._bookmarks_snapshot = MappingProxyType(deepcopy(self.bookmarks))
 
     def _registry(self) -> BatchRegistry:
         return self._registry_ref or current_context().registries.batch
@@ -148,7 +164,8 @@ class Batch(Metadata):
 
     def rollback(self, error: Exception = None, **attributes) -> Self:
         registry = self._registry()
-        self.attributes = deepcopy(self._attributes_snapshot)
+        self.attributes = deepcopy(dict(self._attributes_snapshot))
+        self.bookmarks = deepcopy(dict(self._bookmarks_snapshot))
 
         if error:
             self.attributes["__error"] = str(error)

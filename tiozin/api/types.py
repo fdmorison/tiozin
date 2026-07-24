@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date, datetime
 from typing import Annotated, Any
 
 from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field
@@ -8,7 +7,6 @@ from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field
 from tiozin.utils import as_utc, check_time_ordered_id, generate_time_ordered_id, slugify
 
 from .enums import Cadence
-from .metadata.batch.watermark import check_watermark, parse_watermark
 
 # Generates a time-ordered ID when the value is missing or None.
 TimeOrderedId = Annotated[
@@ -36,18 +34,18 @@ Counter = Annotated[
     Field(default=0, ge=0),
 ]
 
-# An open mapping of arbitrary key-value metadata.
+# An open mapping of arbitrary key-value metadata that propagates accross layers
 Attributes = Annotated[
     dict[str, Any],
     Field(default=None),
     BeforeValidator(lambda value: dict(value) if value else {}),
 ]
 
-# A validated batch watermark represented as an integer, date, or datetime.
-Watermark = Annotated[
-    int | date | datetime,
-    BeforeValidator(lambda value: parse_watermark(value)),
-    AfterValidator(lambda value: check_watermark(value)),
+# An open mapping of arbitrary key-value metadata that propagates accross executions
+Bookmarks = Annotated[
+    dict[str, Any],
+    Field(default=None),
+    BeforeValidator(lambda value: dict(value) if value else {}),
 ]
 
 # A string normalized into a safe SQL and filesystem identifier.

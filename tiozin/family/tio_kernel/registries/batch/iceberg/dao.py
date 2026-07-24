@@ -78,19 +78,21 @@ class IcebergBatchDAO:
             return None
         row = df.to_pylist(maps_as_pydicts="strict")[0]
         row["attributes"] = loads_json(row["attributes"])
+        row["bookmarks"] = loads_json(row["bookmarks"])
         return Batch(**row)
 
     def _to_objects(self, df: pa.Table) -> list[Batch]:
         batches = []
         for row in df.to_pylist(maps_as_pydicts="strict"):
             row["attributes"] = loads_json(row["attributes"])
+            row["bookmarks"] = loads_json(row["bookmarks"])
             batches.append(Batch(**row))
         return batches
 
     def _to_arrow(self, batch: Batch) -> pa.Table:
         record = batch.model_dump(mode="python")
-        record["attributes"] = dumps_json(record["attributes"])
-
+        record["attributes"] = dumps_json(record["attributes"], timespec="microseconds")
+        record["bookmarks"] = dumps_json(record["bookmarks"], timespec="microseconds")
         return pa.Table.from_pylist([record], schema=self._table.schema().as_arrow())
 
     def _scan(self, *expressions: BooleanExpression, **fields) -> pa.Table:
