@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .base import Job
 
 
-class BacklogJobProxy(wrapt.ObjectProxy):
+class BacklogConsumerJobProxy(wrapt.ObjectProxy):
     """
     Internal proxy that executes jobs over pending backlogs.
 
