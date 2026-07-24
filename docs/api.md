@@ -208,6 +208,8 @@ The `get_job_backlog()` method returns the pending batches to be processed by th
 
 The number of batches is limited by the job's `max_batches_per_run`. For example, if `max_batches_per_run: 10`, each execution processes at most ten batches, and `get_job_backlog()` returns at most ten batches. See [Jobs](concepts/jobs.md#max-batches-per-run).
 
+Each batch processes data within a nominal time window bounded by `nominal_start_time` and `nominal_end_time`. Both are UTC datetimes truncated to the job's cadence. When omitted, `nominal_start_time` defaults to the Unix epoch (`1970-01-01T00:00:00Z`), so the window begins at the earliest available data, while `nominal_end_time` defaults to the current time. `nominal_time` uniquely identifies the batch and denotes the end of its processing window.
+
 Each batch has an `attributes` dictionary for custom batch properties. These properties travel with the batch as it propagates across pipeline layers. Changes to `attributes` are transactional: they are committed only if the job completes successfully. If the job fails, all changes to `attributes` are rolled back.
 
 For example, an output may record the location where it wrote the data:
