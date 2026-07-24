@@ -9,6 +9,8 @@ console = Console()
 BATCH_COLUMNS = (
     "id",
     "nominal_time",
+    "nominal_start_time",
+    "nominal_end_time",
     "status",
     "attempts",
     "attributes",
@@ -41,6 +43,8 @@ def render_batches(batches: list[Batch]) -> None:
         table.add_row(
             batch.id,
             isozformat(batch.nominal_time),
+            isozformat(batch.nominal_start_time),
+            isozformat(batch.nominal_end_time),
             batch.status.value,
             str(batch.attempts),
             str(batch.attributes),

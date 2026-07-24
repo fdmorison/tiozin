@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, ClassVar, Self
 from pydantic import ConfigDict, Field, PrivateAttr
 
 from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import current_context, isozformat, utcnow
+from tiozin.utils import current_context, epoch, isozformat, utcnow
 
 from ...types import Attributes, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
@@ -66,6 +66,12 @@ class Batch(Metadata):
             Equivalent to OpenLineage's nominal time concept, see
             https://openlineage.io/docs/1.47.0/spec/facets/run-facets/nominal_time/
 
+        nominal_start_time:
+            UTC datetime where the batch's processing window begins.
+
+        nominal_end_time:
+            UTC datetime where the batch's processing window ends.
+
         status:
             Current lifecycle status of the batch.
 
@@ -108,6 +114,8 @@ class Batch(Metadata):
     model: str = Field(frozen=True)
 
     nominal_time: NominalTime = Field(frozen=True)
+    nominal_start_time: NominalTime = Field(frozen=True, default_factory=epoch)
+    nominal_end_time: NominalTime = Field(frozen=True, default_factory=utcnow)
 
     status: BatchStatus = BatchStatus.PENDING
     attempts: Counter

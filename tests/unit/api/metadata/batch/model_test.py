@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+from freezegun import freeze_time
 from pydantic import ValidationError
 
 from tiozin import Batch, BatchStatus
@@ -10,6 +11,9 @@ from tiozin import Batch, BatchStatus
 # attempt to set on frozen/mutable fields.
 NOMINAL_TIME = datetime(2026, 1, 15, tzinfo=UTC)
 REASSIGNED_TIME = datetime(2026, 2, 1, tzinfo=UTC)
+
+# Frozen clock used to assert the default of nominal_end_time (utcnow, truncated).
+FROZEN_NOW = datetime(2026, 6, 1, 12, 30, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -35,6 +39,34 @@ def test_status_should_default_to_pending(fake_domain: dict):
 
 
 # ============================================================================
+# nominal window
+# ============================================================================
+def test_nominal_start_time_should_default_to_epoch(fake_domain: dict):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    actual = batch.nominal_start_time
+
+    # Assert
+    expected = datetime(1970, 1, 1, tzinfo=UTC)
+    assert actual == expected
+
+
+@freeze_time(FROZEN_NOW)
+def test_nominal_end_time_should_default_to_current_time(fake_domain: dict):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    actual = batch.nominal_end_time
+
+    # Assert
+    expected = FROZEN_NOW
+    assert actual == expected
+
+
+# ============================================================================
 # frozen fields
 # ============================================================================
 @pytest.mark.parametrize(
@@ -49,6 +81,8 @@ def test_status_should_default_to_pending(fake_domain: dict):
         ("product", "leads"),
         ("model", "contacts"),
         ("nominal_time", REASSIGNED_TIME),
+        ("nominal_start_time", REASSIGNED_TIME),
+        ("nominal_end_time", REASSIGNED_TIME),
         ("created_at", REASSIGNED_TIME),
     ],
 )

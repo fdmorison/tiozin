@@ -142,6 +142,31 @@ def test_register_should_persist_all_fields(registry: IcebergBatchRegistry, fake
     assert actual == expected
 
 
+def test_register_should_persist_nominal_window(registry: IcebergBatchRegistry, fake_domain: dict):
+    # Arrange
+    state = Batch(
+        **fake_domain,
+        nominal_time=datetime(2026, 1, 15, tzinfo=UTC),
+        nominal_start_time=datetime(2026, 1, 1, tzinfo=UTC),
+        nominal_end_time=datetime(2026, 1, 14, tzinfo=UTC),
+    )
+
+    # Act
+    registry.register(state)
+
+    # Assert
+    reloaded = registry.get_frontier(**fake_domain)
+    actual = (
+        reloaded.nominal_start_time,
+        reloaded.nominal_end_time,
+    )
+    expected = (
+        datetime(2026, 1, 1, tzinfo=UTC),
+        datetime(2026, 1, 14, tzinfo=UTC),
+    )
+    assert actual == expected
+
+
 def test_register_should_persist_attributes(registry: IcebergBatchRegistry, fake_domain: dict):
     # Arrange
     state = Batch(
