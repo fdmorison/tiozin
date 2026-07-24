@@ -95,7 +95,6 @@ def test_nominal_end_time_should_default_to_current_time(fake_domain: dict):
         ("model", "contacts"),
         ("nominal_time", REASSIGNED_TIME),
         ("nominal_start_time", REASSIGNED_TIME),
-        ("nominal_end_time", REASSIGNED_TIME),
         ("created_at", REASSIGNED_TIME),
     ],
 )
@@ -115,6 +114,7 @@ def test_batch_should_raise_when_frozen_field_is_reassigned(field, value, fake_d
         ("attempts", 3),
         ("attributes", {"extra1": "value1"}),
         ("bookmarks", {"cursor1": "value1"}),
+        ("nominal_end_time", REASSIGNED_TIME),
         ("updated_at", REASSIGNED_TIME),
     ],
 )

@@ -18,6 +18,7 @@ from ..output.base import Output
 from ..runner.base import Runner
 from ..transform.base import Transform
 from .backlog_consumer_proxy import BacklogConsumerJobProxy
+from .backlog_producer_proxy import BacklogProducerJobProxy
 from .proxy import JobProxy
 
 if TYPE_CHECKING:
@@ -28,6 +29,7 @@ TData = TypeVar("TData")
 
 @tioproxy(
     JobProxy,
+    BacklogProducerJobProxy,
     BacklogConsumerJobProxy,
 )
 class Job(Resourceful, Tiozin, Generic[TData]):
