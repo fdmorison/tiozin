@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from typing import Literal
+
+from wrapt import ObjectProxy
 
 from tiozin import Context, Job
 
@@ -27,3 +31,9 @@ class JobStub(Job):
 
     def teardown(self) -> None:
         self.captured_teardown = self.path
+
+    def unwrap(self) -> JobStub:
+        job = self
+        while isinstance(job, ObjectProxy):
+            job = job.__wrapped__
+        return job

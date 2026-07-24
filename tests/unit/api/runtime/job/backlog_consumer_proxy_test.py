@@ -4,6 +4,7 @@ import pytest
 
 from tests.stubs import BatchRegistryStub, JobStub
 from tiozin import BacklogPolicy, Batch, BatchStatus, Context
+from tiozin.api.runtime.job.backlog_consumer_proxy import BacklogConsumerJobProxy
 
 _2026_01_15T01_00_00 = datetime(2026, 1, 15, 1, tzinfo=UTC)
 _2026_01_15T02_00_00 = datetime(2026, 1, 15, 2, tzinfo=UTC)
@@ -25,7 +26,7 @@ def test_submit_should_run_the_job_once_when_policy_is_none(job_stub: JobStub):
     job_stub.backlog = BacklogPolicy.NONE
 
     # Act
-    result = job_stub.submit()
+    result = BacklogConsumerJobProxy(job_stub).submit()
 
     # Assert
     actual = (job_stub.submit_count, result)
@@ -52,11 +53,10 @@ def test_submit_should_process_the_entire_backlog(
         Batch(**fake_domain, nominal_time=_2026_01_15T05_00_00),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
 
     # Act
-    job_stub.submit()
+    BacklogConsumerJobProxy(job_stub).submit()
 
     # Assert
     actual = [batch.status for batch in backlog]
@@ -86,11 +86,10 @@ def test_submit_should_expose_only_the_current_chunk_to_each_run(
         batch_5 := Batch(**fake_domain, nominal_time=_2026_01_15T05_00_00),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
 
     # Act
-    job_stub.submit()
+    BacklogConsumerJobProxy(job_stub).submit()
 
     # Assert
     actual = job_stub.captured_backlogs
@@ -111,7 +110,7 @@ def test_submit_should_skip_when_backlog_is_empty(
     job_stub.backlog = backlog
 
     # Act
-    result = job_stub.submit()
+    result = BacklogConsumerJobProxy(job_stub).submit()
 
     # Assert
     actual = (job_stub.submit_count, result)
@@ -132,13 +131,12 @@ def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
         Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
     job_stub.failure = RuntimeError("boom")
 
     # Act
     with pytest.raises(RuntimeError):
-        job_stub.submit()
+        BacklogConsumerJobProxy(job_stub).submit()
 
     # Assert
     actual = [batch.status for batch in backlog]
@@ -165,13 +163,12 @@ def test_submit_should_quarantine_the_backlog_when_execution_fails_beyond_retrie
         Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00, attempts=3),
     ]
     batch_registry_stub.backlog = backlog
-    job_stub.backlog = backlog
     job_stub.max_batches_per_run = 2
     job_stub.failure = RuntimeError("boom")
 
     # Act
     with pytest.raises(RuntimeError):
-        job_stub.submit()
+        BacklogConsumerJobProxy(job_stub).submit()
 
     # Assert
     actual = [batch.status for batch in backlog]

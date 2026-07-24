@@ -144,7 +144,7 @@ def job_stub(
         transforms=[transform_stub],
         outputs=[output_stub],
         **fake_domain,
-    )
+    ).unwrap()
 
 
 @pytest.fixture()
