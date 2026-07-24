@@ -13,7 +13,7 @@ def test_resolve_batch_should_create_first_batch_since_1970(
     job_context: Context, job_stub: JobStub, fake_domain: dict
 ):
     # Arrange
-    proxy = BacklogProducerJobProxy(job_stub.__wrapped__)
+    proxy = BacklogProducerJobProxy(job_stub)
 
     # Act
     batch = proxy.resolve_batch(job_stub)
