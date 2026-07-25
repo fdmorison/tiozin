@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field
+from benedict import benedict
+from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field, PlainSerializer
 
 from tiozin.utils import as_utc, check_time_ordered_id, generate_time_ordered_id, slugify
 
@@ -38,14 +39,18 @@ Counter = Annotated[
 Attributes = Annotated[
     dict[str, Any],
     Field(default=None),
-    BeforeValidator(lambda value: dict(value) if value else {}),
+    BeforeValidator(lambda value: dict(value or {})),
+    AfterValidator(lambda value: benedict(value)),
+    PlainSerializer(lambda value: dict(value), return_type=dict),
 ]
 
 # An open mapping of arbitrary key-value metadata that propagates accross executions
 Bookmarks = Annotated[
     dict[str, Any],
     Field(default=None),
-    BeforeValidator(lambda value: dict(value) if value else {}),
+    BeforeValidator(lambda value: dict(value or {})),
+    AfterValidator(lambda value: benedict(value)),
+    PlainSerializer(lambda value: dict(value), return_type=dict),
 ]
 
 # A string normalized into a safe SQL and filesystem identifier.

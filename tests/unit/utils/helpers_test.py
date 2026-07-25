@@ -760,6 +760,14 @@ def test_isozformat_should_preserve_timezone_offset():
     assert actual == expected
 
 
+def test_isozformat_should_return_none_when_dt_is_none():
+    # Act
+    result = isozformat(None)
+
+    # Assert
+    assert result is None
+
+
 @pytest.mark.parametrize(
     "dt",
     [
