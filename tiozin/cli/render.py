@@ -10,7 +10,7 @@ from ..utils import as_utc, dump_yaml, human_join, isozformat
 console = Console()
 
 STATUS_DOT = "●"
-UP_ARROW = "⇡"
+RIGHT_ARROW = "→"
 EMPTY_CELL = "[dim]empty[/]"
 
 # Horizontal rules plus discrete dashed vertical column separators (no outer borders).
@@ -60,7 +60,8 @@ def window_cell(start: datetime, end: datetime) -> str:
     Renders the window across three lines: the end over an up arrow over the
     start, matching the table's most-recent-first ordering.
     """
-    return f"{isozformat(end)}\n{UP_ARROW}\n{isozformat(start)}"
+    diff = as_utc(start).diff(end).in_words()
+    return f"{isozformat(start)} {RIGHT_ARROW} {isozformat(end)}\n[dim]{diff}[/]"
 
 
 def mapping_cell(mapping: dict) -> str:
@@ -77,7 +78,7 @@ def timestamp_cell(dt: datetime) -> str:
     """
     absolute = isozformat(dt, timespec="seconds")
     relative = as_utc(dt).diff_for_humans()
-    return f"{relative}\n[gray70]{absolute}[/]"
+    return f"{absolute}\n[dim]{relative}[/]"
 
 
 def render_batches(batches: list[Batch], job: str) -> None:
