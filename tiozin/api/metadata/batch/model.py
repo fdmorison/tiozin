@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, ClassVar, Self
 
 from pydantic import ConfigDict, Field, PrivateAttr
 
+from tiozin import config
 from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.utils import current_context, epoch, isozformat, utcnow
 
@@ -95,6 +96,9 @@ class Batch(Metadata):
             include watermarks, checkpoints, API tokens, or any other
             plugin-defined information.
 
+        framework:
+            The framework version that created the batch in `{name}/{version}` syntax.
+
         created_at:
             UTC timestamp when the batch was first registered.
 
@@ -136,6 +140,7 @@ class Batch(Metadata):
     attributes: Attributes
     _attributes_snapshot: Attributes = PrivateAttr(default=None)
 
+    framework: str = Field(default=config.app_identifier, frozen=True)
     created_at: TechnicalTime = Field(default_factory=utcnow, frozen=True)
     updated_at: TechnicalTime = Field(default_factory=utcnow)
 
