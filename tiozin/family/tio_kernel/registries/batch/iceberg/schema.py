@@ -34,6 +34,7 @@ IcebergBatchSchema = pa.schema(
         pa.field("attempts", Integer, nullable=False),
         pa.field("bookmarks", String, nullable=True),
         pa.field("attributes", String, nullable=False),
+        pa.field("framework", String, nullable=False),
         pa.field("created_at", Timestamptz, nullable=False),
         pa.field("updated_at", Timestamptz, nullable=False),
     ]

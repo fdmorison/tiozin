@@ -5,7 +5,7 @@ import pytest
 from freezegun import freeze_time
 from pydantic import ValidationError
 
-from tiozin import Batch, BatchStatus
+from tiozin import Batch, BatchStatus, config
 
 # Default nominal_time for a test batch, and the value reassignment tests
 # attempt to set on frozen/mutable fields.
@@ -48,6 +48,34 @@ def test_batch_should_default_metadata_map_to_empty_dict(field, fake_domain: dic
 
     # Assert
     expected = {}
+    assert actual == expected
+
+
+def test_framework_should_default_to_app_identifier(fake_domain: dict):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    actual = batch.framework
+
+    # Assert
+    expected = config.app_identifier
+    assert actual == expected
+
+
+def test_framework_should_not_overwrite_explicit_value(fake_domain: dict):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        framework="some-old-framework/1.0.0",
+    )
+
+    # Act
+    actual = batch.framework
+
+    # Assert
+    expected = "some-old-framework/1.0.0"
     assert actual == expected
 
 
