@@ -1,6 +1,7 @@
 from typing import Any
 
 from tiozin import Input
+from tiozin.utils import isozformat, utcnow
 
 
 class NoOpInput(Input):
@@ -29,6 +30,9 @@ class NoOpInput(Input):
         if self.force_error:
             raise RuntimeError("Forced error for testing purposes")
 
+        mark1 = self.context.get_job_managed_bookmark("noop_mark")
+        mark2 = self.context.set_job_managed_bookmark("noop_mark", utcnow())
+        self.info(f"🔖 Bookmark advanced from `{isozformat(mark1)}` to `{isozformat(mark2)}`")
         return []
 
     def teardown(self) -> None:

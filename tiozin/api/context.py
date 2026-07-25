@@ -388,6 +388,115 @@ class Context(BaseModel):
             self.catalog.register(self.job, backlog=backlog)
         return backlog
 
+    def get_job_managed_bookmark(self, key: str, fallback: Any = None) -> Any:
+        """
+        Return where the current job resumes reading.
+
+        Managed bookmarks define a processing window. This returns the window's
+        lower bound, i.e. where reading starts. Pair it with `set_job_managed_bookmark`
+        to freeze the window and make replays process the exact same slice.
+
+        When the job has nothing to process, returns `fallback`.
+
+        Args:
+            key:
+                Name of the managed bookmark. Eg: updated_at, id, etc.
+
+            fallback:
+                Value returned when the bookmark does not exist.
+
+        Returns:
+            The window's lower bound, or `fallback` when no mark exists.
+        """
+        backlog = self.get_job_backlog()
+        if not backlog:
+            return fallback
+        return backlog[0].get_managed_bookmark(key, fallback)
+
+    def set_job_managed_bookmark(self, key: str, next_value: Any) -> Any:
+        """
+        Freeze the current job's processing window.
+
+        On the first run, records the window's upper bound and returns `next_value`.
+        On replay, ignores `next_value` and returns the previously recorded value,
+        so the job always processes the same slice.
+
+        Canonical watermark pattern:
+
+            start = ctx.get_job_managed_bookmark("max_updated_at")
+            end   = ctx.set_job_managed_bookmark("max_updated_at", source.max())
+            data  = source.read(start, end)
+
+        The first run discovers and freezes `end`. On replay, the same code returns
+        the frozen value, so `read(start, end)` covers the exact same slice.
+
+        When the job has nothing to process, does nothing and returns None.
+
+        Args:
+            key:
+                Name of the managed bookmark.
+
+            next_value:
+                Candidate upper bound for the processing window.
+
+        Returns:
+            The effective upper bound, or None when there is nothing to process.
+        """
+        backlog = self.get_job_backlog()
+        if not backlog:
+            return None
+        return backlog[0].set_managed_bookmark(key, next_value)
+
+    def get_job_bookmark(self, key: str, fallback: Any = None) -> Any:
+        """
+        Return a free-form bookmark for the current job.
+
+        Free-form bookmarks are plain progress markers with no processing window,
+        freeze, or replay semantics. This reads the stored value.
+
+        When the job has nothing to process, returns `fallback`.
+
+        Args:
+            key:
+                Name of the bookmark.
+
+            fallback:
+                Value returned when the bookmark does not exist. Stored values such
+                as `0` or `False` are returned unchanged.
+
+        Returns:
+            The stored value, or `fallback` when absent.
+        """
+        backlog = self.get_job_backlog()
+        if not backlog:
+            return fallback
+        return backlog[0].get_bookmark(key, fallback)
+
+    def set_job_bookmark(self, key: str, next_value: Any) -> Any:
+        """
+        Store a free-form bookmark for the current job.
+
+        Unlike managed bookmarks, free-form bookmarks are simple key-value pairs
+        with no processing window, freeze, or replay semantics. This stores the
+        value, overwriting any previous one under the same key.
+
+        When the job has nothing to process, does nothing and returns None.
+
+        Args:
+            key:
+                Name of the bookmark.
+
+            next_value:
+                Value to store.
+
+        Returns:
+            The stored value, or None when there is nothing to process.
+        """
+        backlog = self.get_job_backlog()
+        if not backlog:
+            return None
+        return backlog[0].set_bookmark(key, next_value)
+
     @property
     def is_job(self) -> bool:
         return self.tiozin_role == "Job"

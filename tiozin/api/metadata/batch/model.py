@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from copy import deepcopy
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from pydantic import ConfigDict, Field, PrivateAttr
 
 from tiozin import config
-from tiozin.api.conventions import RESOURCE_FIELDS
-from tiozin.utils import current_context, epoch, isozformat, utcnow
+from tiozin.api.conventions import INTERNAL_PREFIX, RESOURCE_FIELDS
+from tiozin.utils import current_context, default, epoch, isozformat, utcnow
 
 from ...types import Attributes, Bookmarks, Counter, NominalTime, TechnicalTime, TimeOrderedId
 from ..model import Metadata
@@ -16,6 +16,10 @@ from .enums import BatchStatus
 
 if TYPE_CHECKING:
     from tiozin import BatchRegistry
+
+_BOOKMARK_PREFIX = INTERNAL_PREFIX + "managed/"
+_BOOKMARK_LOWER_KEY = _BOOKMARK_PREFIX + "{key}.lower"
+_BOOKMARK_UPPER_KEY = _BOOKMARK_PREFIX + "{key}.upper"
 
 
 class Batch(Metadata):
@@ -204,6 +208,125 @@ class Batch(Metadata):
         self.status = self.status.transition_to(BatchStatus.PENDING, failfast=registry.failfast)
         self.attributes |= attributes
         return registry.register_transition(self)
+
+    def get_managed_bookmark_window(self, key: str) -> tuple[Any, ...]:
+        lower = _BOOKMARK_LOWER_KEY.format(key=key)
+        upper = _BOOKMARK_UPPER_KEY.format(key=key)
+        return self.bookmarks.get(lower), self.bookmarks.get(upper)
+
+    def get_managed_bookmark(self, key: str, fallback: Any = None) -> Any:
+        """
+        Return where this batch resumes reading.
+
+        Managed bookmarks define a processing window. This method returns the window's
+        lower bound, i.e. where the batch starts reading.
+
+        Pair this with `set_managed_bookmark` to freeze the window and make replays
+        process the exact same slice.
+
+        Args:
+            key:
+                Name of the managed bookmark. Eg: updated_at, id, etc.
+
+            fallback:
+                Value returned when the bookmark does not exist.
+
+        Returns:
+            The window's lower bound, or `fallback` when no mark exists.
+        """
+        lower = _BOOKMARK_LOWER_KEY.format(key=key)
+        lower_value = self.bookmarks.get(lower)
+        return default(lower_value, fallback)
+
+    def set_managed_bookmark(self, key: str, next_value: Any) -> Any:
+        """
+        Freeze this batch's processing window.
+
+        On the first run, records the window's upper bound and returns `next_value`.
+        On replay, this method becomes a no-op: it ignores `next_value` and returns
+        the previously recorded value, so the batch always processes the same slice.
+
+        Canonical watermark pattern:
+
+            start = batch.get_managed_bookmark("max_updated_at")
+            end   = batch.set_managed_bookmark("max_updated_at", source.max())
+            data  = source.read(start, end)
+
+        The first run discovers and freezes `end`. On replay, the same code returns
+        the frozen value, so `read(start, end)` covers the exact same slice.
+
+        Args:
+            key:
+                Name of the managed bookmark.
+
+            next_value:
+                Candidate upper bound for the processing window.
+
+        Returns:
+            The effective upper bound.
+        """
+        upper = _BOOKMARK_UPPER_KEY.format(key=key)
+        if upper in self.bookmarks:
+            return self.bookmarks[upper]
+
+        lower = _BOOKMARK_LOWER_KEY.format(key=key)
+        self.bookmarks.setdefault(lower, None)
+        self.bookmarks[upper] = next_value
+        return next_value
+
+    def get_bookmark(self, key: str, fallback: Any = None) -> Any:
+        """
+        Return a free-form bookmark.
+
+        Free-form bookmarks are plain progress markers with no processing window,
+        freeze, or replay semantics. This reads the stored value.
+
+        Args:
+            key:
+                Name of the bookmark.
+
+            fallback:
+                Value returned when the bookmark does not exist. Stored values such
+                as `0` or `False` are returned unchanged.
+
+        Returns:
+            The stored value, or `fallback` when absent.
+        """
+        key = key.removeprefix(_BOOKMARK_PREFIX)
+        return default(self.bookmarks.get(key), fallback)
+
+    def set_bookmark(self, key: str, next_value: Any) -> Any:
+        """
+        Store a free-form bookmark.
+
+        Unlike managed bookmarks, free-form bookmarks are simple key-value pairs
+        with no processing window, freeze, or replay semantics. This stores the
+        value, overwriting any previous one under the same key.
+
+        Args:
+            key:
+                Name of the bookmark.
+
+            next_value:
+                Value to store.
+
+        Returns:
+            The stored value.
+        """
+        key = key.removeprefix(_BOOKMARK_PREFIX)
+        self.bookmarks[key] = next_value
+        return next_value
+
+    def next_bookmarks(self) -> Bookmarks:
+        bookmarks = deepcopy(self.bookmarks)
+        for key in self.bookmarks:
+            if key.startswith(_BOOKMARK_PREFIX):
+                key = key.removeprefix(_BOOKMARK_PREFIX)
+                upper = _BOOKMARK_UPPER_KEY.format(key=key)
+                lower = _BOOKMARK_LOWER_KEY.format(key=key)
+                if upper in bookmarks:
+                    bookmarks[lower] = bookmarks.pop(upper)
+        return bookmarks
 
     @property
     def retries(self) -> int:
