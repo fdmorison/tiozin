@@ -822,3 +822,450 @@ def test_quarantine_should_set_error_message_in_attributes(job_context, fake_dom
     actual = batch.attributes["__error"]
     expected = "boom"
     assert actual == expected
+
+
+# ============================================================================
+# managed bookmarks - get
+# ============================================================================
+def test_get_managed_bookmark_should_return_value_when_window_is_open(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100}},
+    )
+
+    # Act
+    result = batch.get_managed_bookmark("orders")
+
+    # Assert
+    actual = result
+    expected = 100
+    assert actual == expected
+
+
+def test_get_managed_bookmark_should_return_lower_when_window_is_frozen(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100, "upper": 250}},
+    )
+
+    # Act
+    result = batch.get_managed_bookmark("orders")
+
+    # Assert
+    actual = result
+    expected = 100
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "bookmarks",
+    [
+        {},
+        {"__tio_managed/orders": {"lower": None}},
+        {"__tio_managed/orders": {"lower": None, "upper": 10}},
+    ],
+)
+def test_get_managed_bookmark_should_return_none(bookmarks, fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, bookmarks=bookmarks)
+
+    # Act
+    result = batch.get_managed_bookmark("orders")
+
+    # Assert
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    "bookmarks",
+    [
+        {},
+        {"__tio_managed/orders": {"lower": None}},
+        {"__tio_managed/orders": {"lower": None, "upper": 10}},
+    ],
+)
+def test_get_managed_bookmark_should_fallback(bookmarks, fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME, bookmarks=bookmarks)
+
+    # Act
+    result = batch.get_managed_bookmark("orders", fallback=99)
+
+    # Assert
+    actual = result
+    expected = 99
+    assert actual == expected
+
+
+def test_get_managed_bookmark_should_not_fallback_when_mark_is_zero(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 0}},
+    )
+
+    # Act
+    result = batch.get_managed_bookmark("orders", fallback=99)
+
+    # Assert
+    actual = result
+    expected = 0
+    assert actual == expected
+
+
+def test_get_managed_bookmark_should_ignore_unmanaged_key(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"watermark": 77},
+    )
+
+    # Act
+    result = batch.get_managed_bookmark("watermark")
+
+    # Assert
+    assert result is None
+
+
+# ============================================================================
+# managed bookmarks - set
+# ============================================================================
+def test_set_managed_bookmark_should_advance_open_window(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100}},
+    )
+
+    # Act
+    batch.set_managed_bookmark("orders", 250)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"__tio_managed/orders": {"lower": 100, "upper": 250}}
+    assert actual == expected
+
+
+def test_set_managed_bookmark_should_advance_open_window_when_next_value_is_same(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100}},
+    )
+
+    # Act
+    batch.set_managed_bookmark("orders", 100)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"__tio_managed/orders": {"lower": 100, "upper": 100}}
+    assert actual == expected
+
+
+def test_set_managed_bookmark_should_not_advance_frozen_window(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100, "upper": 250}},
+    )
+
+    # Act
+    batch.set_managed_bookmark("orders", 900)
+    batch.set_managed_bookmark("orders", 910)
+
+    # Assert
+    actual = batch.bookmarks
+    expected = {"__tio_managed/orders": {"lower": 100, "upper": 250}}
+    assert actual == expected
+
+
+def test_set_managed_bookmark_should_freeze_lower_as_none_when_fallback_used_on_get(
+    fake_domain,
+):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    batch.get_managed_bookmark("orders", fallback=99)
+    batch.set_managed_bookmark("orders", 10)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"__tio_managed/orders": {"lower": None, "upper": 10}}
+    assert actual == expected
+
+
+# ============================================================================
+# managed bookmarks - idempotent round trip
+# ============================================================================
+def test_bookmark_round_trip_should_read_from_value_to_next_value(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100}},
+    )
+
+    # Act
+    curr_mark = batch.get_managed_bookmark("orders")
+    next_mark = batch.set_managed_bookmark("orders", 250)
+
+    # Assert
+    actual = (curr_mark, next_mark)
+    expected = (100, 250)
+    assert actual == expected
+
+
+def test_bookmark_round_trip_should_read_same_window_when_frozen(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100, "upper": 250}},
+    )
+
+    # Act
+    curr_mark = batch.get_managed_bookmark("orders")
+    next_mark = batch.set_managed_bookmark("orders", 9999)
+
+    # Assert
+    actual = (curr_mark, next_mark)
+    expected = (100, 250)
+    assert actual == expected
+
+
+def test_get_managed_bookmark_should_return_lower_after_set(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100}},
+    )
+
+    # Act
+    batch.set_managed_bookmark("orders", 250)
+    result = batch.get_managed_bookmark("orders")
+
+    # Assert
+    actual = result
+    expected = 100
+    assert actual == expected
+
+
+# ============================================================================
+# bookmarks - get
+# ============================================================================
+def test_get_bookmark_should_return_stored_value(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"cursor": 100},
+    )
+
+    # Act
+    result = batch.get_bookmark("cursor")
+
+    # Assert
+    actual = result
+    expected = 100
+    assert actual == expected
+
+
+def test_get_bookmark_should_return_none_when_absent(fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    result = batch.get_bookmark("cursor")
+
+    # Assert
+    assert result is None
+
+
+def test_get_bookmark_should_return_fallback_when_absent(fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    result = batch.get_bookmark("cursor", fallback=99)
+
+    # Assert
+    actual = result
+    expected = 99
+    assert actual == expected
+
+
+@pytest.mark.parametrize("falsy", [0, False, ""])
+def test_get_bookmark_should_return_falsy_value_over_fallback(falsy, fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"cursor": falsy},
+    )
+
+    # Act
+    result = batch.get_bookmark("cursor", fallback=99)
+
+    # Assert
+    actual = result
+    expected = falsy
+    assert actual == expected
+
+
+def test_get_bookmark_should_strip_managed_prefix(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"w": 5, "__tio_managed/w": {"lower": 1, "upper": 2, "value": 2}},
+    )
+
+    # Act
+    result = batch.get_bookmark("__tio_managed/w")
+
+    # Assert
+    actual = result
+    expected = 5
+    assert actual == expected
+
+
+def test_get_bookmark_should_not_mutate_bookmarks(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"cursor": 100},
+    )
+
+    # Act
+    batch.get_bookmark("cursor", fallback=99)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"cursor": 100}
+    assert actual == expected
+
+
+# ============================================================================
+# bookmarks - set
+# ============================================================================
+def test_set_bookmark_should_return_next_value(fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    result = batch.set_bookmark("cursor", 100)
+
+    # Assert
+    actual = result
+    expected = 100
+    assert actual == expected
+
+
+def test_set_bookmark_should_store_next_value(fake_domain):
+    # Arrange
+    batch = Batch(**fake_domain, nominal_time=NOMINAL_TIME)
+
+    # Act
+    batch.set_bookmark("cursor", 100)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"cursor": 100}
+    assert actual == expected
+
+
+def test_set_bookmark_should_overwrite_previous_value(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"cursor": 100},
+    )
+
+    # Act
+    batch.set_bookmark("cursor", 250)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"cursor": 250}
+    assert actual == expected
+
+
+def test_set_bookmark_should_strip_managed_prefix(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"w": 5, "__tio_managed/w": {"lower": 1, "upper": 2}},
+    )
+
+    # Act
+    batch.set_bookmark("__tio_managed/w", 999)
+
+    # Assert
+    actual = dict(batch.bookmarks)
+    expected = {"w": 999, "__tio_managed/w": {"lower": 1, "upper": 2}}
+    assert actual == expected
+
+
+# ============================================================================
+# managed bookmarks - next_bookmarks (successor propagation)
+# ============================================================================
+def test_next_bookmarks_should_propagate_lower_when_window_is_open(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100}},
+    )
+
+    # Act
+    actual = batch.next_bookmarks()
+
+    # Assert
+    expected = {"__tio_managed/orders": {"lower": 100}}
+    assert actual == expected
+
+
+def test_next_bookmarks_should_promote_upper_to_lower_when_window_is_frozen(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100, "upper": 250}},
+    )
+
+    # Act
+    actual = batch.next_bookmarks()
+
+    # Assert
+    expected = {"__tio_managed/orders": {"lower": 250}}
+    assert actual == expected
+
+
+def test_next_bookmarks_should_promote_none_upper_when_window_is_frozen(fake_domain):
+    # Arrange
+    batch = Batch(
+        **fake_domain,
+        nominal_time=NOMINAL_TIME,
+        bookmarks={"__tio_managed/orders": {"lower": 100, "upper": None}},
+    )
+
+    # Act
+    actual = batch.next_bookmarks()
+
+    # Assert
+    expected = {"__tio_managed/orders": {"lower": None}}
+    assert actual == expected

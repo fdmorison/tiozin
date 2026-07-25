@@ -56,7 +56,7 @@ class BacklogProducerJobProxy(wrapt.ObjectProxy):
                 nominal_time=nominal_time,
                 nominal_start_time=frontier.nominal_end_time,
                 nominal_end_time=nominal_time,
-                bookmarks=frontier.bookmarks,
+                bookmarks=frontier.next_bookmarks(),
             )
 
         else:
