@@ -38,6 +38,7 @@ dependencies = [
   "python-slugify ~=8.0.4",
   "pyhumps ~=3.8.0",
   "python-rapidjson ~=1.23",
+  "python-benedict ~=0.38.0",
   # Temporary — to be removed once schema converters are rewritten
   "datacontract-cli ~=0.11.7",
 ]

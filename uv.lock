@@ -2693,6 +2693,19 @@ wheels = [
 ]
 
 [[package]]
+name = "python-benedict"
+version = "0.38.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-slugify" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ad/cf/5d4296746205a9a2b3c7ce9ec6b06496f7fd0942809519b3c8c81a90e22b/python_benedict-0.38.0.tar.gz", hash = "sha256:71e066b73f15d2231927b3021469a1db57a3e96092a99917018b63f51329e49c", size = 65605, upload-time = "2026-07-07T20:55:43.948Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/0d/984b84a671201bd6b50095970e070299037099b83e2c5c8f1dc4aeb25ed0/python_benedict-0.38.0-py3-none-any.whl", hash = "sha256:5f4cbdfdda245d3f2899a7fd9d59ee68e69e6d1e0d57693f8626f186a11fcc6b", size = 64929, upload-time = "2026-07-07T20:55:42.509Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -3151,6 +3164,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyhumps" },
+    { name = "python-benedict" },
     { name = "python-rapidjson" },
     { name = "python-slugify" },
     { name = "ruamel-yaml" },
@@ -3234,6 +3248,7 @@ requires-dist = [
     { name = "pyhumps", specifier = "~=3.8.0" },
     { name = "pyiceberg", extras = ["pyarrow", "sql-sqlite"], marker = "extra == 'tio-kernel'", specifier = ">=0.7.0,<1.0.0" },
     { name = "pyspark", marker = "extra == 'tio-spark'", specifier = ">=3.5.0,<4.0.0" },
+    { name = "python-benedict", specifier = "~=0.38.0" },
     { name = "python-rapidjson", specifier = "~=1.23" },
     { name = "python-slugify", specifier = "~=8.0.4" },
     { name = "ruamel-yaml", specifier = "~=0.18" },
