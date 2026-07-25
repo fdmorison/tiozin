@@ -6,7 +6,7 @@ from ..api import Batch
 from ..app import TiozinApp
 from . import docs
 from .render import announce, render_batches
-from .utils import parse_attributes
+from .utils import parse_params
 
 REQUIRED = ...
 
@@ -108,6 +108,12 @@ def register(
         "-a",
         help=docs.ATTRIBUTES,
     ),
+    bookmarks: list[str] = typer.Option(
+        [],
+        "--bookmark",
+        "-b",
+        help=docs.BOOKMARKS,
+    ),
 ) -> None:
     """
     Register a new batch for a job.
@@ -123,7 +129,8 @@ def register(
     batch = Batch(
         **manifest.to_resource_dict(),
         nominal_time=nominal_time,
-        attributes=parse_attributes(attributes),
+        attributes=parse_params(attributes, qualifier="attribute"),
+        bookmarks=parse_params(bookmarks, qualifier="bookmark"),
     )
     batch = app.registries.batch.register(batch)
 
@@ -142,6 +149,12 @@ def cancel(
         "-a",
         help=docs.ATTRIBUTES,
     ),
+    bookmarks: list[str] = typer.Option(
+        [],
+        "--bookmark",
+        "-b",
+        help=docs.BOOKMARKS,
+    ),
 ) -> None:
     """
     Cancel a batch of a job.
@@ -153,10 +166,11 @@ def cancel(
     announce(job)
     app: TiozinApp = ctx.obj
     manifest = app.resolve_manifest(job)
-    attributes = parse_attributes(attributes)
 
     batch = app.registries.batch.get(id=batch_id, **manifest.to_resource_dict())
-    batch = batch.cancel(**attributes)
+    batch.attributes |= parse_params(attributes, qualifier="attribute")
+    batch.bookmarks |= parse_params(bookmarks, qualifier="bookmark")
+    batch = batch.cancel()
 
     app.info(f"Batch {batch.id} cancelled.")
     render_batches([batch], manifest.name)
@@ -173,6 +187,12 @@ def replay(
         "-a",
         help=docs.ATTRIBUTES,
     ),
+    bookmarks: list[str] = typer.Option(
+        [],
+        "--bookmark",
+        "-b",
+        help=docs.BOOKMARKS,
+    ),
 ) -> None:
     """
     Replay a batch of a job.
@@ -184,10 +204,11 @@ def replay(
     announce(job)
     app: TiozinApp = ctx.obj
     manifest = app.resolve_manifest(job)
-    attributes = parse_attributes(attributes)
 
     batch = app.registries.batch.get(id=batch_id, **manifest.to_resource_dict())
-    batch = batch.replay(**attributes)
+    batch.attributes |= parse_params(attributes, qualifier="attribute")
+    batch.bookmarks |= parse_params(bookmarks, qualifier="bookmark")
+    batch = batch.replay()
 
     app.info(f"Batch {batch.id} replayed.")
     render_batches([batch], manifest.name)
@@ -204,6 +225,12 @@ def quarantine(
         "-a",
         help=docs.ATTRIBUTES,
     ),
+    bookmarks: list[str] = typer.Option(
+        [],
+        "--bookmark",
+        "-b",
+        help=docs.BOOKMARKS,
+    ),
 ) -> None:
     """
     Quarantine a batch of a job.
@@ -215,10 +242,11 @@ def quarantine(
     announce(job)
     app: TiozinApp = ctx.obj
     manifest = app.resolve_manifest(job)
-    attributes = parse_attributes(attributes)
 
     batch = app.registries.batch.get(id=batch_id, **manifest.to_resource_dict())
-    batch = batch.quarantine(**attributes)
+    batch.attributes |= parse_params(attributes, qualifier="attribute")
+    batch.bookmarks |= parse_params(bookmarks, qualifier="bookmark")
+    batch = batch.quarantine()
 
     app.info(f"Batch {batch.id} quarantined.")
     render_batches([batch], manifest.name)
