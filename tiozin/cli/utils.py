@@ -1,20 +1,24 @@
 import typer
-from ruamel.yaml import YAML
+from benedict import benedict
 
-yaml = YAML(typ="safe")
+from tiozin.utils import load_yaml
 
 
-def parse_attributes(attributes: list[str] = None) -> dict:
+def parse_params(params: list[str] = None, qualifier: str = None) -> dict:
     """
-    Parses key=value attribute options into a dict, loading each value as YAML.
+    Parses key=value parameters options into a dict, loading each value as YAML.
+
+    A dotted key (e.g. `a.b.c=value`) is expanded into a nested value.
     """
-    parsed = {}
-    for item in attributes or []:
+    parsed = benedict({})
+    qualifier = qualifier or "parameter"
+
+    for item in params or []:
         key, sep, value = item.partition("=")
         if not sep:
-            raise typer.BadParameter(f"Invalid attribute '{item}'. Expected key=value.")
+            raise typer.BadParameter(f"Invalid {qualifier} '{item}'. Expected key=value.")
         try:
-            parsed[key] = yaml.load(value)
+            parsed[key] = load_yaml(value)
         except Exception as e:
-            raise typer.BadParameter(f"Invalid value for attribute '{key}': {value}") from e
-    return parsed
+            raise typer.BadParameter(f"Invalid {qualifier} value for '{key}': {value}") from e
+    return parsed.dict()

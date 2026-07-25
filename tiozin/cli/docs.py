@@ -38,3 +38,10 @@ Custom batch attributes.
 Provide each attribute as `key=value`. Multiple attributes may be
 provided. Existing values with the same key are overwritten.
 """
+
+BOOKMARKS = """
+Custom batch bookmarks.
+
+Provide each bookmark as `key=value`. Multiple bookmarks may be
+provided. Existing values with the same key are overwritten.
+"""

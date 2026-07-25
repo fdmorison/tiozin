@@ -47,6 +47,13 @@ def announce(job: str | list[str]) -> None:
     console.print(f"[green]Jobs:[/green] [bold cyan]{label}[/bold cyan]\n")
 
 
+def id_cell(batch: Batch) -> str:
+    """
+    Renders a batch's id across two lines: the id over its dim framework provenance.
+    """
+    return f"{batch.id}\n[dim]{batch.framework}[/]"
+
+
 def status_cell(status: BatchStatus) -> str:
     """
     Renders a status as a colored dot followed by its neutral label.
@@ -110,7 +117,7 @@ def render_batches(batches: list[Batch], job: str) -> None:
     for i, batch in enumerate(batches, start=1):
         table.add_row(
             str(i),
-            batch.id,
+            id_cell(batch),
             isozformat(batch.nominal_time),
             window_cell(batch.nominal_start_time, batch.nominal_end_time),
             status_cell(batch.status),
