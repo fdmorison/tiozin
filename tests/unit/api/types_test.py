@@ -26,6 +26,7 @@ SLUG = TypeAdapter(Slug)
 class TestModel(BaseModel):
     model_config = ConfigDict(
         validate_default=True,
+        validate_assignment=True,
     )
 
 
@@ -335,6 +336,69 @@ def test_attributes_should_not_share_default_between_instances():
     assert actual == expected
 
 
+def test_attributes_should_convert_pairs_to_mapping():
+    # Act
+    result = AttributesModel(attributes=(("a", 1), ("b", 2)))
+
+    # Assert
+    actual = result.attributes
+    expected = {"a": 1, "b": 2}
+    assert actual == expected
+
+
+def test_attributes_should_support_keypath_access():
+    # Act
+    result = AttributesModel(attributes={"a": {"b": 1}})
+
+    # Assert
+    actual = result.attributes["a.b"]
+    expected = 1
+    assert actual == expected
+
+
+def test_attributes_should_support_keypath_access_on_assignment():
+    # Arrange
+    model = AttributesModel()
+
+    # Act
+    model.attributes = {"a": {"b": 1}}
+
+    # Assert
+    actual = model.attributes["a.b"]
+    expected = 1
+    assert actual == expected
+
+
+def test_attributes_should_serialize_key_added_after_construction():
+    # Arrange
+    model = AttributesModel()
+    model.attributes["seen"] = True
+    model.attributes["cursor.page"] = 2
+
+    # Act
+    result = model.model_dump()
+
+    # Assert
+    actual = result["attributes"]
+    expected = {"seen": True, "cursor": {"page": 2}}
+    assert actual == expected
+
+
+def test_attributes_should_serialize_key_added_before_construction():
+    # Arrange
+    model = AttributesModel(attributes={"a": 1})
+    model.attributes["seen"] = True
+    model.attributes["cursor.page"] = 2
+
+    # Act
+    result = model.model_dump()
+
+    # Assert
+    actual = result["attributes"]
+    expected = {"a": 1, "seen": True, "cursor": {"page": 2}}
+    assert actual == expected
+
+
 # =============================================================================
 # Bookmarks
 # =============================================================================
@@ -395,6 +459,69 @@ def test_bookmarks_should_not_share_default_between_instances():
     # Assert
     actual = second.bookmarks
     expected = {}
+    assert actual == expected
+
+
+def test_bookmarks_should_convert_pairs_to_mapping():
+    # Act
+    result = BookmarksModel(bookmarks=(("a", 1), ("b", 2)))
+
+    # Assert
+    actual = result.bookmarks
+    expected = {"a": 1, "b": 2}
+    assert actual == expected
+
+
+def test_bookmarks_should_support_keypath_access():
+    # Act
+    result = BookmarksModel(bookmarks={"a": {"b": 1}})
+
+    # Assert
+    actual = result.bookmarks["a.b"]
+    expected = 1
+    assert actual == expected
+
+
+def test_bookmarks_should_support_keypath_access_on_assignment():
+    # Arrange
+    model = BookmarksModel()
+
+    # Act
+    model.bookmarks = {"a": {"b": 1}}
+
+    # Assert
+    actual = model.bookmarks["a.b"]
+    expected = 1
+    assert actual == expected
+
+
+def test_bookmarks_should_serialize_key_added_after_construction():
+    # Arrange
+    model = BookmarksModel()
+    model.bookmarks["seen"] = True
+    model.bookmarks["cursor.page"] = 2
+
+    # Act
+    result = model.model_dump()
+
+    # Assert
+    actual = result["bookmarks"]
+    expected = {"seen": True, "cursor": {"page": 2}}
+    assert actual == expected
+
+
+def test_bookmarks_should_serialize_key_added_before_construction():
+    # Arrange
+    model = BookmarksModel(bookmarks={"a": 1})
+    model.bookmarks["seen"] = True
+    model.bookmarks["cursor.page"] = 2
+
+    # Act
+    result = model.model_dump()
+
+    # Assert
+    actual = result["bookmarks"]
+    expected = {"a": 1, "seen": True, "cursor": {"page": 2}}
     assert actual == expected
 
 

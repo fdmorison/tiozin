@@ -49,6 +49,9 @@ def isozformat(dt: date, timespec: str = None) -> str:
     """
     timespec = timespec or "auto"
 
+    if not dt:
+        return None
+
     if isinstance(dt, datetime):
         return dt.isoformat(timespec=timespec).replace("+00:00", "Z")
 

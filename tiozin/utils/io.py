@@ -47,6 +47,9 @@ def _yaml(timespec: str = None, indent: int = None) -> YAML:
     """
 
     class TiozinRepresenter(SafeRepresenter):
+        def ignore_aliases(self, data: Any) -> bool:
+            return True
+
         def represent_datetime(self, data: datetime) -> Any:
             return self.represent_scalar("tag:yaml.org,2002:timestamp", isozformat(data, timespec))
 
@@ -67,6 +70,7 @@ def _yaml(timespec: str = None, indent: int = None) -> YAML:
     yaml.Representer.add_multi_representer(datetime, TiozinRepresenter.represent_datetime)
     yaml.Representer.add_representer(date, TiozinRepresenter.represent_date)
     yaml.Representer.add_multi_representer(date, TiozinRepresenter.represent_date)
+    yaml.Representer.add_multi_representer(dict, TiozinRepresenter.represent_dict)
     return yaml
 
 
