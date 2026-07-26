@@ -1,0 +1,7 @@
+ORG = "Organization that owns the domains and data products."
+REGION = "Unique name of the business regional domain, not the cloud region."
+DOMAIN = "Unique name of the business domain."
+SUBDOMAIN = "Subdivision within the business domain."
+LAYER = "Refinement level of the data product."
+PRODUCT = "Unique name of the data product."
+MODEL = "Model within the data product, a.k.a. asset, relation, entity, etc."
