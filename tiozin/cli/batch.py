@@ -24,6 +24,12 @@ def frontier(
     The frontier is the latest batch whose processing window still counts
     toward the job's progress. CANCELED batches are never returned, since an
     abandoned window does not advance the frontier.
+
+    Examples:
+
+        Show the frontier batch of a job:
+
+        $ tiozin batch frontier dummy.yaml
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -48,6 +54,12 @@ def backlog(
     limit or are quarantined. RUNNING batches are also included because an
     interrupted execution may terminate before the batch can be transitioned
     to FAILED, allowing it to be recovered and retried.
+
+    Examples:
+
+        Show every batch awaiting processing for a job:
+
+        $ tiozin batch backlog dummy.yaml
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -80,6 +92,16 @@ def board(
 
     Results are ordered from the most to the least recently registered.
     Use --since and --limit to narrow the results.
+
+    Examples:
+
+        Show the 5 most recently registered batches:
+
+        $ tiozin batch board dummy.yaml --limit 3
+
+        Show batches registered on or after a given moment:
+
+        $ tiozin batch board dummy.yaml --since 2026-01-01
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -121,6 +143,23 @@ def register(
     The batch is created in the PENDING state, identified by its nominal
     time, and becomes eligible for processing by future executions of the
     job. Registering a batch whose nominal time already exists fails.
+
+    Examples:
+
+        Register a batch for a nominal date:
+
+        $ tiozin batch register dummy.yaml 2026-01-16
+
+        Register a batch for a nominal time:
+
+        $ tiozin batch register dummy.yaml 2026-01-16T00:00:00
+
+        Register a batch with attributes and a bookmark:
+
+        $ tiozin batch register dummy.yaml 2026-01-16T00:00:00 \\
+            --attribute source.name=orders_api \\
+            --attribute priority=5 \\
+            --bookmark  source.offset=42
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -162,6 +201,18 @@ def cancel(
     The batch is moved to the CANCELED state and leaves the backlog, so
     executions of the job no longer pick it up. A canceled batch can be
     made eligible again with the replay command.
+
+    Examples:
+
+        Cancel a batch:
+
+        $ tiozin batch cancel dummy.yaml 018f3a2b-1c4d-7e5f-8a9b-0c1d2e3f4a5b
+
+        Cancel a batch and record why:
+
+        $ tiozin batch cancel dummy.yaml 018f3a2b-1c4d-7e5f-8a9b-0c1d2e3f4a5b \\
+            --attribute cancel.reason=duplicate \\
+            --attribute cancel.approved=true
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -200,6 +251,18 @@ def replay(
     The batch is returned to the PENDING state, making it eligible again
     for processing by future executions of the job. Use it to reprocess
     canceled, quarantined, or already processed batches.
+
+    Examples:
+
+        Replay a batch:
+
+        $ tiozin batch replay dummy.yaml 018f3a2b-1c4d-7e5f-8a9b-0c1d2e3f4a5b
+
+        Replay a batch and reset its source bookmark:
+
+        $ tiozin batch replay dummy.yaml 018f3a2b-1c4d-7e5f-8a9b-0c1d2e3f4a5b \\
+            --attribute replay.reason=late_data \\
+            --bookmark  source.offset=0
     """
     announce(job)
     app: TiozinApp = ctx.obj
@@ -238,6 +301,18 @@ def quarantine(
     The batch is moved to the QUARANTINED state and excluded from the
     backlog until it is explicitly replayed. Quarantine also happens
     automatically when a failed batch exceeds the retry limit.
+
+    Examples:
+
+        Quarantine a batch:
+
+        $ tiozin batch quarantine dummy.yaml 018f3a2b-1c4d-7e5f-8a9b-0c1d2e3f4a5b
+
+        Quarantine a batch and record the failing check:
+
+        $ tiozin batch quarantine dummy.yaml 018f3a2b-1c4d-7e5f-8a9b-0c1d2e3f4a5b \\
+            --attribute quarantine.check=schema_drift \\
+            --attribute quarantine.retries=3
     """
     announce(job)
     app: TiozinApp = ctx.obj
