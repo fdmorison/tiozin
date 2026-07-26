@@ -8,7 +8,7 @@ from pydantic import ConfigDict, Field, PrivateAttr
 
 from tiozin import config
 from tiozin.api.conventions import INTERNAL_PREFIX, RESOURCE_FIELDS
-from tiozin.api.resourceful import FrozenResourceful
+from tiozin.api.resourceful import Resourceful
 from tiozin.utils import current_context, default, epoch, isozformat, utcnow
 
 from ...types import Attributes, Bookmarks, Counter, NominalTime, TechnicalTime, TimeOrderedId
@@ -23,7 +23,7 @@ _BOOKMARK_LOWER_KEY = _BOOKMARK_PREFIX + "{key}.lower"
 _BOOKMARK_UPPER_KEY = _BOOKMARK_PREFIX + "{key}.upper"
 
 
-class Batch(FrozenResourceful, Metadata):
+class Batch(Resourceful, Metadata):
     """
     Stateful physical batch of data.
 
@@ -39,9 +39,9 @@ class Batch(FrozenResourceful, Metadata):
     evolves over time as they are processed, replayed, quarantined, or canceled.
 
     The resource a batch belongs to is identified by the fields defined by
-    FrozenResourceful: org, region, domain, subdomain, layer, product, and
-    model. They are required and frozen on construction, so a batch's
-    resource identity never changes.
+    Resourceful: org, region, domain, subdomain, layer, product, and model.
+    They are required and frozen on construction, so a batch's resource
+    identity never changes.
 
     Collections of batches form backlogs representing data awaiting processing.
 

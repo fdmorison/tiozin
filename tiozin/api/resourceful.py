@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Annotated, ClassVar
+from typing import Annotated
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from tiozin.api.conventions import DOMAIN_FIELDS, PRODUCT_FIELDS, RESOURCE_FIELDS, SUBDOMAIN_FIELDS
 from tiozin.exceptions.misc import RequiredArgumentError
@@ -41,37 +41,26 @@ class Resourceful:
         'acme.latam.sales.b2b.gold.sales_cube.fact_orders'
     """
 
-    __resourceful_required__: ClassVar[bool] = True
-
-    # Domain
-    org: Annotated[str, Field(description=docs.ORG)]
-    region: Annotated[str, Field(description=docs.REGION)]
-    domain: Annotated[str, Field(description=docs.DOMAIN)]
-    subdomain: Annotated[str, Field(description=docs.SUBDOMAIN)]
-    # Product
-    layer: Annotated[str, Field(description=docs.LAYER)]
-    product: Annotated[str, Field(description=docs.PRODUCT)]
-    model: Annotated[str, Field(description=docs.MODEL)]
+    org: Annotated[str, Field(description=docs.ORG, frozen=True, min_length=1)]
+    region: Annotated[str, Field(description=docs.REGION, frozen=True, min_length=1)]
+    domain: Annotated[str, Field(description=docs.DOMAIN, frozen=True, min_length=1)]
+    subdomain: Annotated[str, Field(description=docs.SUBDOMAIN, frozen=True, min_length=1)]
+    layer: Annotated[str, Field(description=docs.LAYER, frozen=True, min_length=1)]
+    product: Annotated[str, Field(description=docs.PRODUCT, frozen=True, min_length=1)]
+    model: Annotated[str, Field(description=docs.MODEL, frozen=True, min_length=1)]
 
     def __init__(self, *args, **options) -> None:
-        if not isinstance(self, BaseModel):
-            self.org = options.pop("org", None)
-            self.region = options.pop("region", None)
-            self.domain = options.pop("domain", None)
-            self.subdomain = options.pop("subdomain", None)
-            self.layer = options.pop("layer", None)
-            self.product = options.pop("product", None)
-            self.model = options.pop("model", None)
-            self._resourceful_validator()
+        if isinstance(self, BaseModel):
+            return super().__init__(*args, **options)
 
-        super().__init__(*args, **options)
+        self.org = options.pop("org", None)
+        self.region = options.pop("region", None)
+        self.domain = options.pop("domain", None)
+        self.subdomain = options.pop("subdomain", None)
+        self.layer = options.pop("layer", None)
+        self.product = options.pop("product", None)
+        self.model = options.pop("model", None)
 
-    @model_validator(mode="after")
-    def _resourceful_validator(self) -> Resourceful:
-        """
-        Runs on every pydantic validation, not just __init__, so requiredness
-        also holds for model_validate, model_copy, and other construction paths.
-        """
         RequiredArgumentError.raise_if_missing(
             org=self.org,
             region=self.region,
@@ -80,9 +69,10 @@ class Resourceful:
             layer=self.layer,
             product=self.product,
             model=self.model,
-            disable_=not self.__resourceful_required__,
+            disable_=isinstance(self, OptionalResourceful),
         )
-        return self
+
+        super().__init__(*args, **options)
 
     def to_resource_dict(self) -> dict:
         """
@@ -143,8 +133,6 @@ class OptionalResourceful(Resourceful):
     easy to find and migrate later.
     """
 
-    __resourceful_required__ = False
-
     org: Annotated[str | None, Field(description=docs.ORG)] = None
     region: Annotated[str | None, Field(description=docs.REGION)] = None
     domain: Annotated[str | None, Field(description=docs.DOMAIN)] = None
@@ -152,21 +140,3 @@ class OptionalResourceful(Resourceful):
     layer: Annotated[str | None, Field(description=docs.LAYER)] = None
     product: Annotated[str | None, Field(description=docs.PRODUCT)] = None
     model: Annotated[str | None, Field(description=docs.MODEL)] = None
-
-
-class FrozenResourceful(Resourceful):
-    """
-    Resourceful variant where the resource fields are required and immutable.
-
-    Use for classes whose resource identity must not change after construction.
-    """
-
-    __resourceful_required__ = True
-
-    org: Annotated[str, Field(description=docs.ORG, frozen=True)]
-    region: Annotated[str, Field(description=docs.REGION, frozen=True)]
-    domain: Annotated[str, Field(description=docs.DOMAIN, frozen=True)]
-    subdomain: Annotated[str, Field(description=docs.SUBDOMAIN, frozen=True)]
-    layer: Annotated[str, Field(description=docs.LAYER, frozen=True)]
-    product: Annotated[str, Field(description=docs.PRODUCT, frozen=True)]
-    model: Annotated[str, Field(description=docs.MODEL, frozen=True)]

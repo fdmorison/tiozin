@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from tiozin.api.resourceful import FrozenResourceful, OptionalResourceful, Resourceful
+from tiozin.api.resourceful import OptionalResourceful, Resourceful
 from tiozin.exceptions import RequiredArgumentError
 
 
@@ -31,10 +31,6 @@ class OptionalPydanticResource(OptionalResourceful, BaseModel):
 
 
 class RequiredPydanticResource(Resourceful, BaseModel):
-    pass
-
-
-class FrozenPydanticResource(FrozenResourceful, BaseModel):
     pass
 
 
@@ -138,7 +134,7 @@ def test_resource_model_should_assign_resource_fields():
 
 def test_resource_model_should_reassign_resource_field():
     # Arrange
-    resource = RequiredPydanticResource(
+    resource = OptionalPydanticResource(
         org="acme",
         region="latam",
         domain="ecommerce",
@@ -194,7 +190,7 @@ def test_resource_model_should_describe_resource_fields():
 
 
 # ============================================================================
-# Testing Resourceful.__resourceful_required__
+# Testing Resourceful's required and frozen resource identity
 # ============================================================================
 
 
@@ -246,6 +242,28 @@ def test_resource_mixin_should_raise_required_argument_when_mixed_into_another_c
     assert actual == expected
 
 
+# Job relies on the plain-class path, so its resource identity stays reassignable.
+def test_resource_mixin_should_reassign_resource_field():
+    # Arrange
+    resource = RequiredResource(
+        org="acme",
+        region="latam",
+        domain="ecommerce",
+        subdomain="checkout",
+        layer="raw",
+        product="sales",
+        model="orders",
+    )
+
+    # Act
+    resource.org = "globex"
+
+    # Assert
+    actual = resource.org
+    expected = "globex"
+    assert actual == expected
+
+
 def test_resource_model_should_raise_validation_error_when_resource_field_is_missing():
     # Act
     with pytest.raises(ValidationError) as error:
@@ -264,9 +282,9 @@ def test_resource_model_should_raise_validation_error_when_resource_field_is_mis
     assert actual == expected
 
 
-def test_resource_model_should_raise_required_argument_when_resource_field_is_empty():
+def test_resource_model_should_raise_validation_error_when_resource_field_is_empty():
     # Act
-    with pytest.raises(RequiredArgumentError) as error:
+    with pytest.raises(ValidationError) as error:
         RequiredPydanticResource(
             org="acme",
             region="latam",
@@ -278,14 +296,14 @@ def test_resource_model_should_raise_required_argument_when_resource_field_is_em
         )
 
     # Assert
-    actual = str(error.value)
-    expected = "Missing required fields: 'subdomain'"
+    actual = [(item["loc"][0], item["type"]) for item in error.value.errors()]
+    expected = [("subdomain", "string_too_short")]
     assert actual == expected
 
 
-def test_resource_model_should_raise_required_argument_when_validated_from_dict():
+def test_resource_model_should_raise_validation_error_when_validated_from_dict():
     # Act
-    with pytest.raises(RequiredArgumentError) as error:
+    with pytest.raises(ValidationError) as error:
         RequiredPydanticResource.model_validate(
             {
                 "org": "acme",
@@ -299,31 +317,8 @@ def test_resource_model_should_raise_required_argument_when_validated_from_dict(
         )
 
     # Assert
-    actual = str(error.value)
-    expected = "Missing required fields: 'model'"
-    assert actual == expected
-
-
-# ============================================================================
-# Testing FrozenResourceful
-# ============================================================================
-
-
-def test_frozen_resource_model_should_raise_validation_error_when_resource_field_is_missing():
-    # Act
-    with pytest.raises(ValidationError) as error:
-        FrozenPydanticResource(org="acme")
-
-    # Assert
-    actual = sorted((item["loc"][0], item["type"]) for item in error.value.errors())
-    expected = [
-        ("domain", "missing"),
-        ("layer", "missing"),
-        ("model", "missing"),
-        ("product", "missing"),
-        ("region", "missing"),
-        ("subdomain", "missing"),
-    ]
+    actual = [(item["loc"][0], item["type"]) for item in error.value.errors()]
+    expected = [("model", "string_too_short")]
     assert actual == expected
 
 
@@ -339,12 +334,12 @@ def test_frozen_resource_model_should_raise_validation_error_when_resource_field
         ("model", "contacts"),
     ],
 )
-def test_frozen_resource_model_should_raise_validation_error_when_resource_field_is_reassigned(
+def test_resource_model_should_raise_validation_error_when_resource_field_is_reassigned(
     field,
     value,
 ):
     # Arrange
-    resource = FrozenPydanticResource(
+    resource = RequiredPydanticResource(
         org="acme",
         region="latam",
         domain="ecommerce",
