@@ -16,7 +16,7 @@ product: users
 model: customers
 
 cadence: minutely
-backlog_policy: stateless
+backlog_policy: incremental
 
 unplanned_field: 12345
 
