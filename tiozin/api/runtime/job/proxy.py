@@ -45,17 +45,16 @@ class JobProxy(wrapt.ObjectProxy):
             backlog_policy=context.backlog_policy,
         )
 
-        with context, TiozinTemplateOverlay(job, context.template_vars):
+        with context, TiozinTemplateOverlay(job, context.template_vars), job.runner():
             try:
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 context.setup_at = utcnow()
                 job.setup()
-                context.executed_at = utcnow()
 
-                with job.runner():
-                    lineage.run_started(inputs=[], outputs=[])
-                    result = job.submit()
+                context.executed_at = utcnow()
+                lineage.run_started(inputs=[], outputs=[])
+                result = job.submit()
 
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
