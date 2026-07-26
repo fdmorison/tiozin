@@ -111,15 +111,8 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         self.labels = labels or {}
 
         self.namespace = JINJA.from_string(namespace or config.tiozin_namespace_template).render(
-            org=self.org,
-            region=self.region,
-            domain=self.domain,
-            subdomain=self.subdomain,
-            layer=self.layer,
-            product=self.product,
-            model=self.model,
+            **self.to_resource_dict()
         )
-
         self.cadence = Cadence.default(cadence)
         self.max_batches_per_run = default(max_batches_per_run, config.default_max_batches_per_run)
         self.backlog_policy = BacklogPolicy.default(backlog_policy)
