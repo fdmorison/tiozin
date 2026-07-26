@@ -8,6 +8,7 @@ from pydantic import ConfigDict, Field, PrivateAttr
 
 from tiozin import config
 from tiozin.api.conventions import INTERNAL_PREFIX, RESOURCE_FIELDS
+from tiozin.api.resourceful import FrozenResourceful
 from tiozin.utils import current_context, default, epoch, isozformat, utcnow
 
 from ...types import Attributes, Bookmarks, Counter, NominalTime, TechnicalTime, TimeOrderedId
@@ -22,7 +23,7 @@ _BOOKMARK_LOWER_KEY = _BOOKMARK_PREFIX + "{key}.lower"
 _BOOKMARK_UPPER_KEY = _BOOKMARK_PREFIX + "{key}.upper"
 
 
-class Batch(Metadata):
+class Batch(FrozenResourceful, Metadata):
     """
     Stateful physical batch of data.
 
@@ -37,33 +38,17 @@ class Batch(Metadata):
     Batches are uniquely identified by `(resource, nominal_time)`. Their status
     evolves over time as they are processed, replayed, quarantined, or canceled.
 
+    The resource a batch belongs to is identified by the fields defined by
+    FrozenResourceful: org, region, domain, subdomain, layer, product, and
+    model. They are required and frozen on construction, so a batch's
+    resource identity never changes.
+
     Collections of batches form backlogs representing data awaiting processing.
 
     Attributes:
         id:
             Unique identifier of the batch. Generated as a UUIDv7, so ids are
             monotonically increasing and chronologically sortable.
-
-        org:
-            Organization that owns the resource.
-
-        region:
-            Region associated with the resource.
-
-        domain:
-            Domain that owns the resource.
-
-        subdomain:
-            Subdomain within the domain.
-
-        layer:
-            Data layer associated with the resource.
-
-        product:
-            Product associated with the resource.
-
-        model:
-            Model associated with the resource.
 
         nominal_time:
             UTC datetime that uniquely identifies the logical execution time of the run.
@@ -118,18 +103,9 @@ class Batch(Metadata):
 
     _registry_ref: BatchRegistry = PrivateAttr(default=None)
 
-    resource_fields: ClassVar[tuple[str, ...]] = RESOURCE_FIELDS
     natural_key_fields: ClassVar[tuple[str, ...]] = (*RESOURCE_FIELDS, "nominal_time")
 
     id: TimeOrderedId = Field(frozen=True)
-
-    org: str = Field(frozen=True)
-    region: str = Field(frozen=True)
-    domain: str = Field(frozen=True)
-    subdomain: str = Field(frozen=True)
-    layer: str = Field(frozen=True)
-    product: str = Field(frozen=True)
-    model: str = Field(frozen=True)
 
     nominal_time: NominalTime = Field(frozen=True)
     nominal_start_time: NominalTime = Field(frozen=True, default_factory=epoch)
@@ -331,10 +307,6 @@ class Batch(Metadata):
     @property
     def retries(self) -> int:
         return max(0, self.attempts - 1)
-
-    @property
-    def qualified_resource(self) -> str:
-        return ".".join(getattr(self, field) for field in self.resource_fields)
 
     @property
     def qualified_natural_key(self) -> str:
