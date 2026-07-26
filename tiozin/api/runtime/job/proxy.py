@@ -6,7 +6,7 @@ import wrapt
 
 from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError
-from tiozin.utils import human_join, utcnow
+from tiozin.utils import human_join, isozformat, utcnow
 
 from ....compose import TiozinTemplateOverlay
 
@@ -34,20 +34,27 @@ class JobProxy(wrapt.ObjectProxy):
         context = Context.current(required=False) or Context.for_job(job)
         lineage = context.registries.lineage
         catalog = context.catalog
+        families = [t.replace("_", " ").title() for t in job.families]
 
-        with context, TiozinTemplateOverlay(job, context.template_vars):
+        job.info(
+            f"🚀 Starting job `{context.name}` with {human_join(families)}",
+            namespace=context.namespace,
+            run_id=context.run_id,
+            nominal_time=isozformat(context.nominal_time),
+            cadence=context.cadence,
+            backlog_policy=context.backlog_policy,
+        )
+
+        with context, TiozinTemplateOverlay(job, context.template_vars), job.runner():
             try:
-                families = [t.replace("_", " ").title() for t in job.families]
-                job.info(f"🚀 Job `{context.name}` is starting — {human_join(families)} on duty")
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 context.setup_at = utcnow()
                 job.setup()
-                context.executed_at = utcnow()
 
-                with job.runner():
-                    lineage.run_started(inputs=[], outputs=[])
-                    result = job.submit()
+                context.executed_at = utcnow()
+                lineage.run_started(inputs=[], outputs=[])
+                result = job.submit()
 
             except Exception:
                 job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")

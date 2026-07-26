@@ -37,8 +37,6 @@ class BacklogProducerJobProxy(wrapt.ObjectProxy):
         return job.submit()
 
     def resolve_batch(self, job: Job) -> Batch:
-        job.info("📚 Preparing backlog")
-
         nominal_time = job.context.nominal_time
         resource = job.to_resource_dict()
         frontier = job.context.batch_registry.get_frontier(**resource)
@@ -65,7 +63,7 @@ class BacklogProducerJobProxy(wrapt.ObjectProxy):
             return frontier
 
         batch = batch.register()
-        job.info(f"📚 Added batch `{batch}` to backlog")
+        job.info(f"📚 Self queued batch `{batch}` to backlog")
         return batch
 
     def __repr__(self) -> str:
