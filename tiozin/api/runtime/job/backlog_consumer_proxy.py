@@ -29,9 +29,8 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
         registry = Context.current().batch_registry
         runs = [()]
 
-        job.info(f"📚 Loading backlog for `{job.qualified_resource}`")
         backlog = registry.get_backlog(**job.to_resource_dict())
-        job.info(f"📚 Found {len(backlog)} batches in backlog")
+        job.info(f"📚 Found {len(backlog)} pending batch in backlog")
 
         if not backlog and not job.backlog_policy.runs_on_empty_backlog:
             job.warning("📚 Skipping execution: no batches to process")
@@ -39,10 +38,6 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
 
         if backlog:
             runs = list(batched(backlog, job.max_batches_per_run))
-            job.info(
-                f"📚 The backlog will be processed in {len(runs)} runs of "
-                f"{job.max_batches_per_run} batches each."
-            )
 
         return [self.submit_run(job, batches) for batches in runs]
 
@@ -50,6 +45,7 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
         max_retries = Context.current().batch_registry.retries
 
         for batch in batches:
+            job.info(f"📦 Processing batch `{batch}`")
             batch.begin()
 
         try:

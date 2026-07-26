@@ -37,7 +37,7 @@ class InputProxy(wrapt.ObjectProxy):
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
-                step.info("▶️  Starting to read data")
+                step.info(f"▶️  Reading data with `{context.name}` step")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 external = step.external_datasets()
