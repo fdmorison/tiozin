@@ -441,7 +441,6 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
     actual = yaml_output
     expected = dedent("""
         kind: Job
-        name: test_job
         org: tiozin
         region: latam
         domain: quality
@@ -449,6 +448,7 @@ def test_to_yaml_should_serialize_manifest_to_yaml_string():
         layer: test
         product: test_cases
         model: some_case
+        name: test_job
         runner:
           kind: TestRunner
         inputs:
@@ -524,7 +524,6 @@ def test_to_json_should_serialize_manifest_to_json_string():
     expected = dedent("""
     {
       "kind": "Job",
-      "name": "test_job",
       "org": "tiozin",
       "region": "latam",
       "domain": "quality",
@@ -532,6 +531,7 @@ def test_to_json_should_serialize_manifest_to_json_string():
       "layer": "test",
       "product": "test_cases",
       "model": "some_case",
+      "name": "test_job",
       "runner": {
         "kind": "TestRunner"
       },

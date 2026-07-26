@@ -1,6 +1,5 @@
 job = dict(
     kind="LinearJob",
-    name="default_job",
     org="tiozin",
     region="latam",
     domain="data",
@@ -8,6 +7,7 @@ job = dict(
     layer="refined",
     product="noop",
     model="noop",
+    name="default_job",
     runner={
         "kind": "NoOpRunner",
     },

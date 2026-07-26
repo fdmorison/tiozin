@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from tiozin.api.resourceful import Resourceful
+from tiozin.api.resourceful import OptionalResourceful
 from tiozin.api.runtime.dataset import Datasets
 from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
@@ -13,7 +13,7 @@ TData = TypeVar("TData")
 
 
 @tioproxy(TransformProxy)
-class Transform(Resourceful, Tiozin, Generic[TData]):
+class Transform(OptionalResourceful, Tiozin, Generic[TData]):
     """
     Defines a data transformation that modifies or enriches data.
 
@@ -25,15 +25,14 @@ class Transform(Resourceful, Tiozin, Generic[TData]):
     Execution may be eager or lazy, depending on the Runner's strategy.
     For operations requiring multiple datasets (joins, unions), use CoTransform.
 
+    The data product a transform produces is identified by the resource fields
+    defined by OptionalResourceful: org, region, domain, subdomain, layer,
+    product, and model. Each one is optional and falls back to the job's
+    corresponding field when the job assembles its steps.
+
     Attributes:
         name: Unique identifier for this transform within the job.
         description: Short description of the transformation logic.
-        org: Organization owning the transformation logic.
-        domain: Domain team owning the transformation.
-        subdomain: Subdomain within the domain team owning the transformation.
-        layer: Data layer of the transformation output.
-        product: Data product being transformed.
-        model: Data model being transformed.
     """
 
     def __init__(
@@ -42,27 +41,9 @@ class Transform(Resourceful, Tiozin, Generic[TData]):
         description: str = None,
         schema_subject: str = None,
         schema_version: str = None,
-        org: str = None,
-        region: str = None,
-        domain: str = None,
-        subdomain: str = None,
-        layer: str = None,
-        product: str = None,
-        model: str = None,
         **options,
     ) -> None:
-        super().__init__(
-            name,
-            description,
-            org=org,
-            region=region,
-            domain=domain,
-            subdomain=subdomain,
-            layer=layer,
-            product=product,
-            model=model,
-            **options,
-        )
+        super().__init__(name, description, **options)
 
         RequiredArgumentError.raise_if_missing(
             name=name,
