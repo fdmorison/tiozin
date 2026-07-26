@@ -90,7 +90,9 @@ JOB_MODEL = "Data model being produced (e.g., table, topic, collection)"
 JOB_LAYER = "Data layer this job represents (e.g., raw, trusted, refined)"
 JOB_CADENCE = "Frequency at which the job runs (defaults to minutely)"
 JOB_MAX_BATCHES_PER_RUN = "Maximum number of batches consumed per job execution (defaults to 1)"
-JOB_BACKLOG = "Where the job gets its batches: none, monotonic, or upstream (defaults to none)"
+JOB_BACKLOG_POLICY = (
+    "Where the job gets its batches: stateless, incremental, or consumer (defaults to stateless)"
+)
 JOB_RUNNER = "Runtime environment where the job runs"
 JOB_INPUTS = "Sources that provide data to the job"
 JOB_TRANSFORMS = "Steps that modify the data (defaults  to empty list)"

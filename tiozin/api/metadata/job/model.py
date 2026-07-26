@@ -162,7 +162,7 @@ class JobManifest(Manifest):
     # Execution
     cadence: Cadence | None = Field(None, description=docs.JOB_CADENCE)
     max_batches_per_run: int | None = Field(None, description=docs.JOB_MAX_BATCHES_PER_RUN)
-    backlog: BacklogPolicy | None = Field(None, description=docs.JOB_BACKLOG)
+    backlog_policy: BacklogPolicy | None = Field(None, description=docs.JOB_BACKLOG_POLICY)
 
     # Pipeline Components
     runner: RunnerManifest = Field(description=docs.JOB_RUNNER)

@@ -20,4 +20,4 @@ TIO_LOG_REDACT_MIN_LENGTH = 3
 # ===============================================
 TIO_NAMESPACE_TEMPLATE = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
 TIO_DEFAULT_MAX_BATCHES_PER_RUN = 1
-TIO_DEFAULT_BACKLOG_POLICY = "none"
+TIO_DEFAULT_BACKLOG_POLICY = "stateless"

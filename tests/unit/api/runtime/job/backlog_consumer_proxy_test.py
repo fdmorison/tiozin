@@ -19,11 +19,11 @@ def active_job_context(job_context: Context) -> Context:
 
 
 # ============================================================================
-# BacklogPolicy.NONE
+# BacklogPolicy.STATELESS
 # ============================================================================
 def test_submit_should_run_the_job_once_when_policy_is_none(job_stub: JobStub):
     # Arrange
-    job_stub.backlog = BacklogPolicy.NONE
+    job_stub.backlog_policy = BacklogPolicy.STATELESS
 
     # Act
     result = BacklogConsumerJobProxy(job_stub).submit()
@@ -35,9 +35,9 @@ def test_submit_should_run_the_job_once_when_policy_is_none(job_stub: JobStub):
 
 
 # ============================================================================
-# BacklogPolicy.UPSTREAM and BacklogPolicy.MONOTONIC
+# BacklogPolicy.CONSUMER and BacklogPolicy.INCREMENTAL
 # ============================================================================
-@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
 def test_submit_should_process_the_entire_backlog(
     backlog,
     fake_domain: dict,
@@ -70,7 +70,7 @@ def test_submit_should_process_the_entire_backlog(
     assert actual == expected
 
 
-@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
 def test_submit_should_expose_only_the_current_chunk_to_each_run(
     backlog,
     fake_domain: dict,
@@ -101,13 +101,13 @@ def test_submit_should_expose_only_the_current_chunk_to_each_run(
     assert actual == expected
 
 
-@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
 def test_submit_should_skip_when_backlog_is_empty(
     backlog,
     job_stub: JobStub,
 ):
     # Arrange
-    job_stub.backlog = backlog
+    job_stub.backlog_policy = backlog
 
     # Act
     result = BacklogConsumerJobProxy(job_stub).submit()
@@ -118,7 +118,7 @@ def test_submit_should_skip_when_backlog_is_empty(
     assert actual == expected
 
 
-@pytest.mark.parametrize("backlog", [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC])
+@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
 def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
     backlog,
     fake_domain: dict,
@@ -149,7 +149,7 @@ def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
 
 @pytest.mark.parametrize(
     "backlog",
-    [BacklogPolicy.UPSTREAM, BacklogPolicy.MONOTONIC],
+    [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL],
 )
 def test_submit_should_quarantine_the_backlog_when_execution_fails_beyond_retries(
     backlog,

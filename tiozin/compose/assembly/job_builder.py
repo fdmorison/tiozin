@@ -62,7 +62,7 @@ class JobBuilder:
 
         # Execution
         self._cadence: Cadence | None = None
-        self._backlog: BacklogPolicy | None = None
+        self._backlog_policy: BacklogPolicy | None = None
         self._max_batches_per_run: int | None = None
 
         # Runtime ETL
@@ -102,8 +102,8 @@ class JobBuilder:
         self._cadence = Cadence(cadence) if cadence else None
         return self
 
-    def with_backlog(self, backlog: BacklogPolicy) -> Self:
-        self._backlog = BacklogPolicy(backlog) if backlog else None
+    def with_backlog_policy(self, backlog_policy: BacklogPolicy) -> Self:
+        self._backlog_policy = BacklogPolicy(backlog_policy) if backlog_policy else None
         return self
 
     def with_max_batches_per_run(self, max_batches_per_run: int) -> Self:
@@ -255,7 +255,7 @@ class JobBuilder:
             model=self._model,
             # Execution
             cadence=self._cadence,
-            backlog=self._backlog,
+            backlog_policy=self._backlog_policy,
             max_batches_per_run=self._max_batches_per_run,
             # Pipeline
             runner=tiozin_registry.load_manifest(self._runner),

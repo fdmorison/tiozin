@@ -55,7 +55,7 @@ These fields declare the organizational context and lineage of the data this job
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
 | `cadence` | no | `Cadence` | `minutely` | Rhythm at which the job runs. Determines the nominal time of each execution. One of `minutely`, `hourly`, `daily`, `weekly`, or `monthly` |
-| `backlog` | no | `BacklogPolicy` | `none` | How the job participates in batch backlogs. One of `none`, `monotonic`, or `upstream` |
+| `backlog_policy` | no | `BacklogPolicy` | `stateless` | How the job participates in batch backlogs. One of `stateless`, `incremental`, or `consumer` |
 | `max_batches_per_run` | no | `int` | `1` | Maximum number of batches a single execution consumes |
 
 ### Pipeline components
@@ -82,13 +82,13 @@ This mechanism ensures that runs are idempotent within the same cadence slot. Af
 
 ## Backlog Policy
 
-Every job declares a backlog policy that controls how it participates in batch backlogs. The available policies are `none` (the default), `monotonic`, and `upstream`.
+Every job declares a backlog policy that controls how it participates in batch backlogs. The available policies are `stateless` (the default), `incremental`, and `consumer`.
 
-A `none` job runs without batches. It runs on every submit, even when the backlog is empty.
+A `stateless` job runs without batches. It runs on every submit, even when the backlog is empty.
 
-A `monotonic` job produces and consumes its own monotonic batches. An `upstream` job consumes batches produced by an upstream monotonic job.
+An `incremental` job produces and consumes its own incremental batches. A `consumer` job consumes batches produced by an upstream incremental job.
 
-Both `monotonic` and `upstream` are backlog-driven. They run only when the backlog holds batches to process and skip execution when the backlog is empty.
+Both `incremental` and `consumer` are backlog-driven. They run only when the backlog holds batches to process and skip execution when the backlog is empty.
 
 ## Max Batches Per Run
 

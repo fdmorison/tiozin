@@ -73,9 +73,9 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         max_batches_per_run: Maximum number of batches processed at once while
             the job is consuming the backlog. Defaults to 1, so batches are
             processed one at a time.
-        backlog: Where batches come from. NONE runs without batches,
-            MONOTONIC produces batches from the job's own cursor, and UPSTREAM
-            consumes batches produced upstream. Defaults to NONE.
+        backlog_policy: Where batches come from. STATELESS runs without batches,
+            INCREMENTAL produces batches from the job's own cursor, and CONSUMER
+            consumes batches produced upstream. Defaults to STATELESS.
         runner: Runtime environment where the job runs.
         inputs: Sources that provide data to the job.
         transforms: Steps that modify the data.
@@ -100,7 +100,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         namespace: str = None,
         cadence: Cadence = None,
         max_batches_per_run: int = None,
-        backlog: BacklogPolicy = None,
+        backlog_policy: BacklogPolicy = None,
         runner: Runner = None,
         inputs: list[Input] = None,
         transforms: list[Transform] = None,
@@ -150,7 +150,7 @@ class Job(Resourceful, Tiozin, Generic[TData]):
 
         self.cadence = Cadence.default(cadence)
         self.max_batches_per_run = default(max_batches_per_run, config.default_max_batches_per_run)
-        self.backlog = BacklogPolicy.default(backlog)
+        self.backlog_policy = BacklogPolicy.default(backlog_policy)
         self.runner = runner
         self.inputs = inputs or []
         self.transforms = transforms or []
