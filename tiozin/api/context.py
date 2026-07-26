@@ -25,6 +25,7 @@ from tiozin.utils import create_local_temp_dir, utcnow
 
 from .conventions import RESOURCE_FIELDS
 from .enums import Cadence
+from .metadata.batch.enums import BacklogPolicy
 from .metadata.bundle import Registries
 from .metadata.schema.model import Schema
 from .runtime.catalog import RuntimeCatalog
@@ -133,6 +134,7 @@ class Context(BaseModel):
     run_id: TimeOrderedId = Field(frozen=True)
     run_attempt: Counter = 1
     cadence: Cadence = Field(default_factory=Cadence.current, frozen=True)
+    backlog_policy: BacklogPolicy = Field(default_factory=BacklogPolicy.default, frozen=True)
     nominal_time: NominalTime = Field(default_factory=utcnow, frozen=True)
 
     # ==================================================
@@ -291,6 +293,7 @@ class Context(BaseModel):
             # Runtime — run_id and nominal_time resolved by the types
             runner=job.runner,
             cadence=job.cadence,
+            backlog_policy=job.backlog_policy,
             registries=registries or Registries(),
         )
         return ctx
@@ -353,6 +356,7 @@ class Context(BaseModel):
             job=self.job,
             runner=self.job.runner,
             cadence=self.job.cadence,
+            backlog_policy=self.job.backlog_policy,
             nominal_time=self.job.nominal_time,
             shared=self.shared,
             catalog=self.catalog,

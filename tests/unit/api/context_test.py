@@ -8,7 +8,7 @@ from freezegun import freeze_time
 
 from tests.stubs import BatchRegistryStub, InputStub, JobStub, RunnerStub
 from tiozin import Batch, Context
-from tiozin.api import Cadence
+from tiozin.api import BacklogPolicy, Cadence
 from tiozin.compose import TemplateDate
 
 FAKE_UUID = "01968e6a-0000-7000-8000-000000000001"
@@ -54,6 +54,7 @@ def test_for_job_should_create_job_context(
             "run_id": ANY,
             "run_attempt": 1,
             "cadence": job.cadence,
+            "backlog_policy": job.backlog_policy,
             "nominal_time": FROZEN_TIME_OBJ,
             # Runtime Lifecycle
             "runner": job.runner,
@@ -105,6 +106,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "run_id": ANY,
         "run_attempt": 1,
         "cadence": Cadence.MINUTELY,
+        "backlog_policy": BacklogPolicy.STATELESS,
         "nominal_time": FROZEN_TIME_OBJ,
         # Runtime Lifecycle
         "runner": None,
@@ -163,6 +165,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "run_id": ANY,
         "run_attempt": 1,
         "cadence": job_context.cadence,
+        "backlog_policy": job_context.backlog_policy,
         "nominal_time": job_context.nominal_time,
         # Runtime Lifecycle
         "runner": job_context.runner,
