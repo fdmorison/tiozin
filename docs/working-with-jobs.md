@@ -323,21 +323,21 @@ See [Jobs](concepts/jobs.md#cadence) for how nominal time works.
 
 ## Backlog Policy
 
-The `backlog` field says how a job participates in batch backlogs. Declare it alongside the job's other top-level fields:
+The `backlog_policy` field says how a job participates in batch backlogs. Declare it alongside the job's other top-level fields:
 
 ```yaml
 name: orders_daily_summary
-backlog: upstream
+backlog_policy: consumer
 max_batches_per_run: 10
 ```
 
-The `backlog` defaults to `none` when omitted. The three values are:
+The `backlog_policy` defaults to `stateless` when omitted. The three values are:
 
-- `none` runs the job without batches. The job runs on every submission, regardless of whether there is pending work.
-- `monotonic` produces and consumes the job's own monotonic batches. This mode is suitable for incremental processing, such as watermark-based jobs.
-- `upstream` consumes batches produced by an upstream monotonic job.
+- `stateless` runs the job without batches. The job runs on every submission, regardless of whether there is pending work.
+- `incremental` produces and consumes the job's own incremental batches. This mode is suitable for incremental processing, such as watermark-based jobs.
+- `consumer` consumes batches produced by an upstream incremental job.
 
-A `monotonic` or `upstream` job is backlog-driven. It runs only when the backlog has batches to process and skips when the backlog is empty.
+An `incremental` or `consumer` job is backlog-driven. It runs only when the backlog has batches to process and skips when the backlog is empty.
 
 `max_batches_per_run` caps how many batches one execution consumes. It defaults to 1, so each batch runs on its own. Raise it to drain a larger backlog in a single submit: Tiozin groups the pending batches into runs of at most this size and runs the job once per group. The batches in a group succeed or fail together.
 
@@ -362,7 +362,7 @@ The backlog lists batches still awaiting processing. The frontier is the latest 
 window still determines the job's progress. It may already have advanced progress (`SUCCEEDED`,
 `QUARANTINED`) or still require resolution before progress can continue (`PENDING`, `RUNNING`,
 `FAILED`). `CANCELED` batches are never part of the frontier because an abandoned window does not
-advance the job. The frontier is primarily useful for `monotonic` jobs, where it determines whether
+advance the job. The frontier is primarily useful for `incremental` jobs, where it determines whether
 the next run resumes an existing batch or creates a new one.
 
 To inspect the complete history of a job, use `board`:

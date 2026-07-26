@@ -399,7 +399,7 @@ def test_builder_should_set_backlog():
         .with_layer("test")
         .with_product("test_cases")
         .with_model("some_case")
-        .with_backlog("upstream")
+        .with_backlog_policy("consumer")
         .with_runner({"kind": "NoOpRunner"})
         .with_inputs({"kind": "NoOpInput", "name": "read_something"})
         .with_outputs({"kind": "NoOpOutput", "name": "write_something"})
@@ -407,8 +407,8 @@ def test_builder_should_set_backlog():
     )
 
     # Assert
-    actual = job.backlog
-    expected = BacklogPolicy.UPSTREAM
+    actual = job.backlog_policy
+    expected = BacklogPolicy.CONSUMER
     assert actual == expected
 
 

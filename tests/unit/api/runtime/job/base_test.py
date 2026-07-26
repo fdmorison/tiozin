@@ -126,13 +126,13 @@ def test_job_should_default_cadence_to_minutely_when_not_provided(
 
 
 # =============================================================================
-# Testing Job.backlog
+# Testing Job.backlog_policy
 # =============================================================================
 
 
 @pytest.mark.parametrize(
     "backlog",
-    [BacklogPolicy.MONOTONIC, "monotonic"],
+    [BacklogPolicy.INCREMENTAL, "incremental"],
 )
 def test_job_should_resolve_backlog(
     backlog,
@@ -146,14 +146,14 @@ def test_job_should_resolve_backlog(
         name="test_job",
         runner=runner_stub,
         inputs=[input_stub],
-        backlog=backlog,
+        backlog_policy=backlog,
         **fake_domain,
         **fake_governance,
     )
 
     # Assert
-    actual = job.backlog
-    expected = BacklogPolicy.MONOTONIC
+    actual = job.backlog_policy
+    expected = BacklogPolicy.INCREMENTAL
     assert actual == expected
 
 
@@ -173,8 +173,8 @@ def test_job_should_have_default_backlog(
     )
 
     # Assert
-    actual = job.backlog
-    expected = BacklogPolicy.NONE
+    actual = job.backlog_policy
+    expected = BacklogPolicy.STATELESS
     assert actual == expected
 
 

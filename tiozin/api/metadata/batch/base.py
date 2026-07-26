@@ -69,7 +69,7 @@ class BatchRegistry(Registry[Batch]):
         """
         Returns the batch at the frontier of processed data for the resource.
 
-        This method is primarily intended for jobs with `BacklogPolicy.MONOTONIC`,
+        This method is primarily intended for jobs with `BacklogPolicy.INCREMENTAL`,
         where the frontier determines whether a new batch should be created or an
         existing one should be resumed.
 

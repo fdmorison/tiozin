@@ -12,41 +12,40 @@ class BacklogPolicy(LowerEnum):
     """
     Defines how a job participates in batch backlogs.
 
-    NONE jobs run without batches. MONOTONIC jobs maintain their own
-    backlog. UPSTREAM jobs consume batches produced by an upstream monotonic
-    job.
-
-    Each policy defines whether the job produces batches, consumes a backlog,
-    and runs when the backlog is empty.
+    A policy determines whether a job produces batches, consumes backlog batches,
+    and whether it runs when no backlog is available.
 
     Attributes:
-        NONE:
-            Runs independently of batches.
-        MONOTONIC:
-            Produces and consumes its own monotonic batches.
-        UPSTREAM:
-            Consumes batches produced by an upstream monotonic job.
+        STATELESS:
+            Runs without batches.
+
+        INCREMENTAL:
+            Produces and consumes its own batches, advancing the processing window
+            after each successful execution.
+
+        CONSUMER:
+            Consumes batches produced by an upstream incremental job.
     """
 
-    produces_batches: bool
+    produces_backlog: bool
     consumes_backlog: bool
     runs_on_empty_backlog: bool
 
     #                 produces  consumes  runs_on_empty
-    NONE = auto(), False, False, True
-    MONOTONIC = auto(), True, True, False
-    UPSTREAM = auto(), False, True, False
+    STATELESS = auto(), False, False, True
+    INCREMENTAL = auto(), True, True, False
+    CONSUMER = auto(), False, True, False
 
     def __new__(
         cls,
         value: str,
-        produces_batches: bool,
+        produces_backlog: bool,
         consumes_backlog: bool,
         runs_on_empty_backlog: bool,
     ) -> Self:
         member = str.__new__(cls, value)
         member._value_ = value
-        member.produces_batches = produces_batches
+        member.produces_backlog = produces_backlog
         member.consumes_backlog = consumes_backlog
         member.runs_on_empty_backlog = runs_on_empty_backlog
         return member

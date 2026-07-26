@@ -31,7 +31,7 @@ class BacklogProducerJobProxy(wrapt.ObjectProxy):
     def submit(self) -> Any:
         job: Job = self.__wrapped__
 
-        if job.backlog.produces_batches:
+        if job.backlog_policy.produces_backlog:
             self.resolve_batch(job)
 
         return job.submit()

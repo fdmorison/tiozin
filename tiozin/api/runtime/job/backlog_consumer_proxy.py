@@ -26,13 +26,14 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
 
     def submit(self) -> Any:
         job: Job = self.__wrapped__
+        registry = Context.current().batch_registry
         runs = [()]
 
         job.info(f"📚 Loading backlog for `{job.qualified_resource}`")
-        backlog = Context.current().batch_registry.get_backlog(**job.to_resource_dict())
+        backlog = registry.get_backlog(**job.to_resource_dict())
         job.info(f"📚 Found {len(backlog)} batches in backlog")
 
-        if not backlog and not job.backlog.runs_on_empty_backlog:
+        if not backlog and not job.backlog_policy.runs_on_empty_backlog:
             job.warning("📚 Skipping execution: no batches to process")
             return []
 
