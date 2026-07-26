@@ -14,13 +14,12 @@ from .render import console
 TITLE = f"{config.app_title} v{config.app_version}"
 
 TIO_BANNER = rf"""
- _____ ___ ___ ________ _   _
-|_   _|_ _/ _ \__  /_ _| \ | |     _====_
-  | |  | | | | |/ / | ||  \| |    @(■ᴗ■⌐)@  Transform Inputs into Outputs,
-  | |  | | |_| / /_ | || |\  |     /(:::)\  and let's get this job running :)
-  |_| |___\___/____|___|_| \_|      /   \
-
-  {TITLE} - Your friendly ETL framework 🤓
+ _____ ___ ___ _______ _  _
+|_   _|_ _/ _ \_  /_ _| \| |    _====_
+  | |  | | (_) / / | || .` |   @(■ᴗ■⌐)@  Transform Inputs into Outputs,
+  |_| |___\___/___|___|_|\_|    /(:::)\  and let's get this job running :)
+                                 /   \
+  Welcome to {TITLE}, your friendly ETL framework 🤓
 """
 
 
