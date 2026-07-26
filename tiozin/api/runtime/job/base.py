@@ -41,6 +41,10 @@ class Job(Resourceful, Tiozin, Generic[TData]):
     Jobs represent the complete pipeline and produce data products following
     Data Mesh principles.
 
+    The data product a job produces is identified by the resource fields
+    defined by Resourceful: org, region, domain, subdomain, layer, product,
+    and model. Jobs require all of them.
+
     Jobs interact with registries to look up or register metadata required
     for pipeline definition and execution, such as schemas, settings, or
     runtime configuration.
@@ -59,13 +63,6 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         maintainer: Team that maintains this job.
         cost_center: Team that pays for this job.
         labels: Additional metadata as key-value pairs.
-        org: Organization producing the data product.
-        region: Business region of the domain team.
-        domain: Domain team following the Data Mesh concept.
-        subdomain: Subdomain within the domain team producing the data product.
-        layer: Data layer this job represents (e.g., raw, trusted, refined).
-        product: Data product being produced.
-        model: Data model being produced (e.g., table, topic, collection).
         namespace: Job namespace. Defaults to `org.region.domain.subdomain`
             when not provided. Can be customized via `TIO_JOB_NAMESPACE_TEMPLATE`.
         cadence: Frequency at which the job runs. Influences the nominal time
@@ -90,13 +87,6 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         maintainer: str = None,
         cost_center: str = None,
         labels: dict[str, str] = None,
-        org: str = None,
-        region: str = None,
-        domain: str = None,
-        subdomain: str = None,
-        layer: str = None,
-        product: str = None,
-        model: str = None,
         namespace: str = None,
         cadence: Cadence = None,
         max_batches_per_run: int = None,
@@ -107,30 +97,12 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         outputs: list[Output] = None,
         **options,
     ) -> None:
-        super().__init__(
-            name,
-            description,
-            org=org,
-            region=region,
-            domain=domain,
-            subdomain=subdomain,
-            layer=layer,
-            product=product,
-            model=model,
-            **options,
-        )
+        super().__init__(name, description, **options)
 
         RequiredArgumentError.raise_if_missing(
             name=name,
             runner=runner,
             inputs=inputs,
-            org=org,
-            region=region,
-            domain=domain,
-            subdomain=subdomain,
-            layer=layer,
-            product=product,
-            model=model,
         )
 
         self.maintainer = maintainer
@@ -139,13 +111,13 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         self.labels = labels or {}
 
         self.namespace = JINJA.from_string(namespace or config.tiozin_namespace_template).render(
-            org=org,
-            region=region,
-            domain=domain,
-            subdomain=subdomain,
-            layer=layer,
-            product=product,
-            model=model,
+            org=self.org,
+            region=self.region,
+            domain=self.domain,
+            subdomain=self.subdomain,
+            layer=self.layer,
+            product=self.product,
+            model=self.model,
         )
 
         self.cadence = Cadence.default(cadence)

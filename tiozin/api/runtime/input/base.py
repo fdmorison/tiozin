@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from tiozin.api.resourceful import Resourceful
+from tiozin.api.resourceful import OptionalResourceful
 from tiozin.api.runtime.dataset import Datasets
 from tiozin.compose import tioproxy
 from tiozin.exceptions import RequiredArgumentError
@@ -13,7 +13,7 @@ TData = TypeVar("TData")
 
 
 @tioproxy(InputProxy)
-class Input(Resourceful, Tiozin, Generic[TData]):
+class Input(OptionalResourceful, Tiozin, Generic[TData]):
     """
     Defines a data source that ingests data into the pipeline.
 
@@ -26,15 +26,14 @@ class Input(Resourceful, Tiozin, Generic[TData]):
     strategy. Schema metadata can be provided to describe the expected
     structure of the input data.
 
+    The data product an input consumes is identified by the resource fields
+    defined by OptionalResourceful: org, region, domain, subdomain, layer,
+    product, and model. Each one is optional and falls back to the job's
+    corresponding field when the job assembles its steps.
+
     Attributes:
         name: Unique identifier for this input within the job.
         description: Short description of the data source.
-        org: Organization owning the source data.
-        domain: Domain team owning the source data.
-        subdomain: Subdomain within the domain team owning the source data.
-        layer: Data layer of the source (e.g., raw, trusted, refined).
-        product: Data product being consumed.
-        model: Data model being read (e.g., table, topic, collection).
         schema_subject: Schema registry subject name.
         schema_version: Specific schema version.
     """
@@ -45,27 +44,9 @@ class Input(Resourceful, Tiozin, Generic[TData]):
         description: str = None,
         schema_subject: str = None,
         schema_version: str = None,
-        org: str = None,
-        region: str = None,
-        domain: str = None,
-        subdomain: str = None,
-        layer: str = None,
-        product: str = None,
-        model: str = None,
         **options,
     ) -> None:
-        super().__init__(
-            name,
-            description,
-            org=org,
-            region=region,
-            domain=domain,
-            subdomain=subdomain,
-            layer=layer,
-            product=product,
-            model=model,
-            **options,
-        )
+        super().__init__(name, description, **options)
 
         RequiredArgumentError.raise_if_missing(
             name=name,
