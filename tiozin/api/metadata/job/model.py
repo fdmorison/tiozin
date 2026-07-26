@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from tiozin.api.conventions import RESOURCE_FIELDS
 from tiozin.api.enums import Cadence
 from tiozin.api.metadata.batch.enums import BacklogPolicy
+from tiozin.api.resourceful import OptionalResourceful, Resourceful
 
 from .. import docs
 from ..model import Manifest
@@ -31,7 +31,7 @@ class RunnerManifest(Manifest):
     streaming: bool = Field(False, description=docs.RUNNER_STREAMING)
 
 
-class InputManifest(Manifest):
+class InputManifest(OptionalResourceful, Manifest):
     """
     Declarative data source definition.
 
@@ -48,21 +48,12 @@ class InputManifest(Manifest):
     name: str = Field(description=docs.INPUT_NAME)
     description: str | None = Field(None, description=docs.INPUT_DESCRIPTION)
 
-    # Business Taxonomy
-    org: str | None = Field(None, description=docs.INPUT_ORG)
-    region: str | None = Field(None, description=docs.INPUT_REGION)
-    domain: str | None = Field(None, description=docs.INPUT_DOMAIN)
-    subdomain: str | None = Field(None, description=docs.INPUT_SUBDOMAIN)
-    layer: str | None = Field(None, description=docs.INPUT_LAYER)
-    product: str | None = Field(None, description=docs.INPUT_PRODUCT)
-    model: str | None = Field(None, description=docs.INPUT_MODEL)
-
     # Specific
     schema_subject: str | None = Field(None, description=docs.INPUT_SCHEMA_SUBJECT)
     schema_version: str | None = Field(None, description=docs.INPUT_SCHEMA_VERSION)
 
 
-class TransformManifest(Manifest):
+class TransformManifest(OptionalResourceful, Manifest):
     """
     Declarative transformation definition.
 
@@ -79,21 +70,12 @@ class TransformManifest(Manifest):
     name: str = Field(description=docs.TRANSFORM_NAME)
     description: str | None = Field(None, description=docs.TRANSFORM_DESCRIPTION)
 
-    # Business Taxonomy
-    org: str | None = Field(None, description=docs.TRANSFORM_ORG)
-    region: str | None = Field(None, description=docs.TRANSFORM_REGION)
-    domain: str | None = Field(None, description=docs.TRANSFORM_DOMAIN)
-    subdomain: str | None = Field(None, description=docs.TRANSFORM_SUBDOMAIN)
-    layer: str | None = Field(None, description=docs.TRANSFORM_LAYER)
-    product: str | None = Field(None, description=docs.TRANSFORM_PRODUCT)
-    model: str | None = Field(None, description=docs.TRANSFORM_MODEL)
-
     # Specific
     schema_subject: str | None = Field(None, description=docs.TRANSFORM_SCHEMA_SUBJECT)
     schema_version: str | None = Field(None, description=docs.TRANSFORM_SCHEMA_VERSION)
 
 
-class OutputManifest(Manifest):
+class OutputManifest(OptionalResourceful, Manifest):
     """
     Declarative data destination definition.
 
@@ -110,21 +92,12 @@ class OutputManifest(Manifest):
     name: str = Field(description=docs.OUTPUT_NAME)
     description: str | None = Field(None, description=docs.OUTPUT_DESCRIPTION)
 
-    # Business Taxonomy
-    org: str | None = Field(None, description=docs.OUTPUT_ORG)
-    region: str | None = Field(None, description=docs.OUTPUT_REGION)
-    domain: str | None = Field(None, description=docs.OUTPUT_DOMAIN)
-    subdomain: str | None = Field(None, description=docs.OUTPUT_SUBDOMAIN)
-    layer: str | None = Field(None, description=docs.OUTPUT_LAYER)
-    product: str | None = Field(None, description=docs.OUTPUT_PRODUCT)
-    model: str | None = Field(None, description=docs.OUTPUT_MODEL)
-
     # Specific
     schema_subject: str | None = Field(None, description=docs.OUTPUT_SCHEMA_SUBJECT)
     schema_version: str | None = Field(None, description=docs.OUTPUT_SCHEMA_VERSION)
 
 
-class JobManifest(Manifest):
+class JobManifest(Resourceful, Manifest):
     """
     Declarative job definition.
 
@@ -148,17 +121,6 @@ class JobManifest(Manifest):
     cost_center: str | None = Field(None, description=docs.JOB_COST_CENTER)
     labels: dict[str, str] | None = Field(default_factory=dict, description=docs.JOB_LABELS)
 
-    # Domain
-    org: str = Field(description=docs.JOB_ORG)
-    region: str = Field(description=docs.JOB_REGION)
-    domain: str = Field(description=docs.JOB_DOMAIN)
-    subdomain: str = Field(description=docs.JOB_SUBDOMAIN)
-
-    # Product
-    layer: str = Field(description=docs.JOB_LAYER)
-    product: str = Field(description=docs.JOB_PRODUCT)
-    model: str = Field(description=docs.JOB_MODEL)
-
     # Execution
     cadence: Cadence | None = Field(None, description=docs.JOB_CADENCE)
     max_batches_per_run: int | None = Field(None, description=docs.JOB_MAX_BATCHES_PER_RUN)
@@ -171,6 +133,3 @@ class JobManifest(Manifest):
         default_factory=list, description=docs.JOB_TRANSFORMS
     )
     outputs: list[OutputManifest] | None = Field(default_factory=list, description=docs.JOB_OUTPUTS)
-
-    def to_resource_dict(self) -> dict:
-        return {field: getattr(self, field) for field in RESOURCE_FIELDS}

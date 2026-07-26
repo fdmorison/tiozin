@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from pydantic.config import ExtraValues
 from ruamel.yaml.constructor import DuplicateKeyError
 
-from tiozin.exceptions import ModelError
+from tiozin.exceptions import ModelError, RequiredArgumentError
 from tiozin.utils import dump_yaml, load_yaml, read_text, write_text
 from tiozin.utils.io import StrOrPath
 
@@ -30,6 +30,8 @@ class Metadata(BaseModel):
             super().__init__(**data)
         except ValidationError as e:
             raise ModelError.from_pydantic(type(self).__name__, e)
+        except RequiredArgumentError as e:
+            raise ModelError(type(self).__name__, str(e)) from e
 
     @classmethod
     def model_validate(
@@ -55,6 +57,8 @@ class Metadata(BaseModel):
             )
         except ValidationError as e:
             raise ModelError.from_pydantic(cls.__name__, e) from e
+        except RequiredArgumentError as e:
+            raise ModelError(cls.__name__, str(e)) from e
 
     @classmethod
     def from_file(cls, path: StrOrPath, **options) -> Self:

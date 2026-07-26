@@ -1,5 +1,4 @@
 kind: LinearJob
-name: default_job
 org: tiozin
 region: latam
 domain: data
@@ -7,6 +6,7 @@ subdomain: platform
 layer: refined
 product: noop
 model: noop
+name: default_job
 runner:
   kind: NoOpRunner
 inputs:
