@@ -20,15 +20,15 @@ class Loggable:
     to a logger instance scoped to the class name.
     """
 
-    __slots__ = ("_logger", "_logger_name")
+    @property
+    def __logger_name(self) -> str:
+        if name := getattr(self, "name", None):
+            return name
+        return type(self).__name__
 
     @property
     def logger(self) -> logging.Logger:
-        if not hasattr(self, "_logger"):
-            name = getattr(self, "name", None) or type(self).__name__
-            self._logger = logs.get_logger(name)
-            self._logger_name = name
-        return self._logger
+        return logs.get_logger(self.__logger_name)
 
     def debug(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         self.logger.debug(self._fmt(msg), *args, **kwargs)
@@ -51,5 +51,5 @@ class Loggable:
     def _fmt(self, msg: str) -> str:
         if config.log_json:
             return msg
-        name = self._logger_name.ljust(PADDING_MAX_LENGTH)
+        name = self.__logger_name.ljust(PADDING_MAX_LENGTH)
         return f"[{BLUE}{name}{RESET}] {msg}"
