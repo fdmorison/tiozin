@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.api import Batch
+from tiozin.utils import isozformat
 
 if TYPE_CHECKING:
     from .base import Job
@@ -32,11 +33,11 @@ class BacklogProducerJobProxy(wrapt.ObjectProxy):
         job: Job = self.__wrapped__
 
         if job.backlog_policy.produces_backlog:
-            self.resolve_batch(job)
+            self._produce_backlog(job)
 
         return job.submit()
 
-    def resolve_batch(self, job: Job) -> Batch:
+    def _produce_backlog(self, job: Job) -> Batch:
         nominal_time = job.context.nominal_time
         resource = job.to_resource_dict()
         frontier = job.context.batch_registry.get_frontier(**resource)
@@ -46,24 +47,35 @@ class BacklogProducerJobProxy(wrapt.ObjectProxy):
                 **resource,
                 nominal_time=nominal_time,
                 nominal_end_time=nominal_time,
-            )
+            ).register()
+            job.info(f"📚 Created initial backlog batch `{batch}`")
+            return batch
 
-        elif frontier.status.is_terminal():
-            batch = Batch(
-                **resource,
-                nominal_time=nominal_time,
-                nominal_start_time=frontier.nominal_end_time,
-                nominal_end_time=nominal_time,
-                bookmarks=frontier.next_bookmarks(),
+        if frontier.status.is_operational():
+            job.info(
+                f"📚 Resuming {frontier.status} batch `{frontier}` "
+                f"by extending its nominal window to `{nominal_time}`"
             )
-
-        else:
-            job.info(f"📚 Resuming {frontier.status} batch `{frontier}`")
             frontier.nominal_end_time = nominal_time
             return frontier
 
-        batch = batch.register()
-        job.info(f"📚 Self queued batch `{batch}` to backlog")
+        if frontier.nominal_time == nominal_time:
+            job.warning(
+                f"📚 No batch added to the backlog: nominal time "
+                f"`{isozformat(nominal_time)}` is already {frontier.status}. "
+                f"To process it again, replay it with `tiozin batch replay <job> {frontier.id}`."
+            )
+            return None
+
+        batch = Batch(
+            **resource,
+            nominal_time=nominal_time,
+            nominal_start_time=frontier.nominal_end_time,
+            nominal_end_time=nominal_time,
+            bookmarks=frontier.next_bookmarks(),
+        ).register()
+
+        job.info(f"📚 Added batch `{batch}` to backlog")
         return batch
 
     def __repr__(self) -> str:
