@@ -18,6 +18,7 @@ from pydantic import (
     model_validator,
 )
 
+from tiozin.api.loggable import Loggable
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
@@ -52,7 +53,7 @@ _current_context: ContextVar[Context | None] = ContextVar(
 )
 
 
-class Context(BaseModel):
+class Context(Loggable, BaseModel):
     """
     Represents the execution scope of a job or step.
 
