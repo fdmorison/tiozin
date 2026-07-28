@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch
+from collections.abc import Callable
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -61,53 +62,25 @@ def test_logger_should_be_cached_when_accessed_multiple_times(_get_logger: Magic
 # ============================================================================
 # Testing Log Methods
 # ============================================================================
-@pytest.mark.parametrize("method", ["debug", "info", "warning", "error", "exception", "critical"])
-@patch("tiozin.api.loggable.config")
+@pytest.mark.parametrize(
+    "log, expected",
+    [
+        (Loggable.debug, [call.debug("hello world")]),
+        (Loggable.info, [call.info("hello world")]),
+        (Loggable.warning, [call.warning("hello world")]),
+        (Loggable.error, [call.error("hello world")]),
+        (Loggable.exception, [call.exception("hello world")]),
+        (Loggable.critical, [call.critical("hello world")]),
+    ],
+)
 @patch("tiozin.api.loggable.logs.get_logger")
-def test_log_method_should_delegate_to_logger(
-    get_logger: MagicMock, config: MagicMock, method: str
-):
+def test_log_method_should_delegate_to_logger(get_logger: MagicMock, log: Callable, expected: list):
     # Arrange
-    config.log_json = True
     instance = NamedLoggable(name="test")
 
     # Act
-    getattr(instance, method)("test message")
+    log(instance, "hello world")
 
     # Assert
-    getattr(get_logger.return_value, method).assert_called_once()
-
-
-# ============================================================================
-# Testing Message Formatting
-# ============================================================================
-@patch("tiozin.api.loggable.config")
-def test_fmt_should_return_plain_message_for_json_logging(config: MagicMock):
-    # Arrange
-    config.log_json = True
-    instance = NamedLoggable(name="test")
-
-    # Act
-    result = instance._fmt("hello world")
-
-    # Assert
-    actual = result
-    expected = "hello world"
-    assert actual == expected
-
-
-@patch("tiozin.api.loggable.config")
-@patch("tiozin.api.loggable.logs.get_logger")
-def test_fmt_should_return_formatted_message_by_default(_get_logger: MagicMock, config: MagicMock):
-    # Arrange
-    config.log_json = False
-    instance = NamedLoggable(name="test")
-    _ = instance.logger  # lazy initialize _logger_name
-
-    # Act
-    result = instance._fmt("hello world")
-
-    # Assert
-    actual = ("test" in result, "hello world" in result, result.startswith("["))
-    expected = (True, True, True)
+    actual = get_logger.return_value.method_calls
     assert actual == expected
