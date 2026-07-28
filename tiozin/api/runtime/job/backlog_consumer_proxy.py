@@ -55,12 +55,15 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
             for batch in batches:
                 if batch.retries < max_retries:
                     batch.rollback(error)
+                    job.exception(f"❌ Batch `{batch}` failed on attempt #{batch.attempts}.")
                 else:
                     batch.quarantine(error)
+                    job.exception(f"❌ Batch `{batch}` quarantined on attempt #{batch.attempts}.")
             raise
         else:
             for batch in batches:
                 batch.commit()
+                job.info(f"✅ Batch `{batch}` succeeded on attempt #{batch.attempts}.")
             return result
 
     def __repr__(self) -> str:
