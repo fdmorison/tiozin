@@ -9,6 +9,7 @@ from typing_extensions import Unpack
 from tiozin import config
 from tiozin.api.typehint import ResourceKwargs
 from tiozin.utils import default, utcnow
+from tiozin.utils.decorators import log_delay
 
 if TYPE_CHECKING:
     from .base import BatchRegistry
@@ -35,32 +36,38 @@ class BatchRegistryProxy(wrapt.ObjectProxy):
         for batch in filter(None, batches):
             batch._registry_ref = batch._registry_ref or self
 
+    @log_delay("Batch registration", debug=True)
     def register(self, batch: Batch) -> Batch:
         result = self._registry.register(batch)
         self._attach_registry(result, batch)
         return result or batch
 
+    @log_delay("Transition registration", debug=True)
     def register_transition(self, batch: Batch) -> Batch:
         batch.updated_at = utcnow()
         result = self._registry.register_transition(batch)
         self._attach_registry(result, batch)
         return result or batch
 
+    @log_delay("Batch lookup", debug=True)
     def get(self, id: str, **resource: Unpack[ResourceKwargs]) -> Batch:
         batch = self._registry.get(id, **resource)
         self._attach_registry(batch)
         return batch
 
+    @log_delay("Frontier lookup", debug=True)
     def get_frontier(self, **resource: Unpack[ResourceKwargs]) -> Batch | None:
         batch = self._registry.get_frontier(**resource)
         self._attach_registry(batch)
         return batch
 
+    @log_delay("Backlog lookup", debug=True)
     def get_backlog(self, **resource: Unpack[ResourceKwargs]) -> list[Batch]:
         batches = self._registry.get_backlog(**resource)
         self._attach_registry(*batches)
         return batches
 
+    @log_delay("Board lookup", debug=True)
     def get_board(
         self, limit: int = None, since: datetime = None, **resource: Unpack[ResourceKwargs]
     ) -> list[Batch]:

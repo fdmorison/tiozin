@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 import wrapt
 
 from tiozin.exceptions import AccessViolationError
+from tiozin.utils.decorators import log_delay
 
 from ....compose import TiozinTemplateOverlay
 from ..dataset import Dataset
@@ -50,27 +51,22 @@ class RunnerProxy(wrapt.ObjectProxy):
 
         with TiozinTemplateOverlay(runner, context.template_vars):
             try:
-                runner.info(f"▶️  Initializing `{runner.name}`")
+                runner.info(f"⏳ Initializing `{runner.name}` runtime resources...")
                 runner.setup()
+                runner.info(f"🟢 `{runner.name}` runtime resources initialized successfully")
                 yield self
             finally:
                 try:
+                    runner.info(f"🛑 Releasing `{runner.name}` runtime resources")
+                    runner.info(f"⏳ Releasing `{runner.name}` runtime resources...")
                     runner.teardown()
-                    runner.info(f"Runner released for '{context.name}'")
-                except Exception as e:
-                    runner.error(f"🚨 Runner cleanup failed for '{context.name}': {e}")
 
+                except Exception as e:
+                    runner.error(f"🚨 Runner teardown failed: {e}")
+
+    @log_delay("Runner")
     def run(self, *args, **kwargs) -> Any:
-        """Wraps Runner.run() with logging and error handling."""
         runner: Runner = self.__wrapped__
-        context = runner.context
         raw_args = [Dataset.unwrap(arg) for arg in args]
-        try:
-            runner.info(f"▶️  Running '{context.name}'")
-            result = runner.run(*raw_args, **kwargs)
-        except Exception:
-            runner.error(f"🚨 Runner failed in {context.execution_delay:.2f}s")
-            raise
-        else:
-            runner.info(f"✅ Runner completed in {context.execution_delay:.2f}s")
-            return Dataset.unwrap(result)
+        result = runner.run(*raw_args, **kwargs)
+        return Dataset.unwrap(result)

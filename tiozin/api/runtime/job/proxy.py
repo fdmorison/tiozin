@@ -7,6 +7,7 @@ import wrapt
 from tiozin.api import Context
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import human_join, isozformat, utcnow
+from tiozin.utils.decorators import log_delay
 
 from ....compose import TiozinTemplateOverlay
 
@@ -29,6 +30,7 @@ class JobProxy(wrapt.ObjectProxy):
     def teardown(self) -> None:
         raise AccessViolationError(self)
 
+    @log_delay("Job")
     def submit(self) -> Any:
         job: Job = self.__wrapped__
         context = Context.current(required=False) or Context.for_job(job)
@@ -57,7 +59,6 @@ class JobProxy(wrapt.ObjectProxy):
                 result = job.submit()
 
             except Exception:
-                job.error(f"❌  `{context.name}` failed in {context.delay:.2f}s")
                 lineage.run_failed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),
@@ -65,7 +66,6 @@ class JobProxy(wrapt.ObjectProxy):
                 raise
 
             else:
-                job.info(f"✅  `{context.name}` completed in {context.delay:.2f}s")
                 lineage.run_completed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),

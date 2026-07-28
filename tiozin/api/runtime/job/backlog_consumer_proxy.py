@@ -64,7 +64,7 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
         max_retries = job.context.batch_registry.retries
 
         for batch in batches:
-            job.info(f"📦 Processing batch `{batch}`")
+            job.info(f"📚 Processing batch `{batch}`")
             batch.begin()
 
         try:
