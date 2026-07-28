@@ -1,6 +1,10 @@
 import pytest
 
-from tiozin.exceptions import JobAlreadyExistsError, JobError, JobNotFoundError
+from tiozin.exceptions import (
+    JobAlreadyExistsError,
+    JobError,
+    JobNotFoundError,
+)
 
 
 def test_job_not_found_error_should_format_job_name_in_message():

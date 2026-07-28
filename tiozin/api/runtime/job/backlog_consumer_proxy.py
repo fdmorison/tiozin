@@ -6,6 +6,8 @@ import wrapt
 
 from tiozin.utils import batched
 
+from .exceptions import JobRuntimeError
+
 if TYPE_CHECKING:
     from tiozin.api import Batch
 
@@ -37,8 +39,25 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
         backlog = job.context.batch_registry.get_backlog(**job.to_resource_dict())
         job.info(f"📚 Backlog has {len(backlog)} pending batches")
 
-        sliced_backlog = batched(backlog, job.max_batches_per_run)
-        return [self._submit_backlog_slice(batch) for batch in sliced_backlog]
+        results = []
+        succeeded = 0
+        failed = 0
+
+        for batches in batched(backlog, job.max_batches_per_run):
+            try:
+                results.append(self._submit_backlog_slice(batches))
+            except Exception:
+                failed += len(batches)
+            else:
+                succeeded += len(batches)
+
+        job.info(f"📊 Backlog summary: {succeeded} succeeded, {failed} failed")
+
+        JobRuntimeError.raise_if(
+            failed > 0,
+            f"The job failed to process {failed} of {succeeded + failed} batches.",
+        )
+        return results
 
     def _submit_backlog_slice(self, batches: tuple[Batch, ...]) -> Any:
         job: Job = self.__wrapped__

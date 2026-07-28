@@ -11,7 +11,7 @@ class JobError(TiozinUsageError):
     Base exception for job-related errors.
     """
 
-    message = "An error occurred while processing the job."
+    message = "An error occurred while resolving the job."
 
 
 class JobNotFoundError(JobError, TiozinNotFoundError):
