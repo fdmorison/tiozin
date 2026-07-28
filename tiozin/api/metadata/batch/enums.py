@@ -28,27 +28,39 @@ class BacklogPolicy(LowerEnum):
             batches or upstream jobs.
     """
 
+    STATELESS = (
+        auto(),
+        dict(
+            produces_backlog=False,
+            consumes_backlog=False,
+            runs_on_empty_backlog=True,
+        ),
+    )
+    INCREMENTAL = (
+        auto(),
+        dict(
+            produces_backlog=True,
+            consumes_backlog=True,
+            runs_on_empty_backlog=False,
+        ),
+    )
+    CONSUMER = (
+        auto(),
+        dict(
+            produces_backlog=False,
+            consumes_backlog=True,
+            runs_on_empty_backlog=False,
+        ),
+    )
+
     produces_backlog: bool
     consumes_backlog: bool
     runs_on_empty_backlog: bool
 
-    #                 produces  consumes  runs_on_empty
-    STATELESS = auto(), False, False, True
-    INCREMENTAL = auto(), True, True, False
-    CONSUMER = auto(), False, True, False
-
-    def __new__(
-        cls,
-        value: str,
-        produces_backlog: bool,
-        consumes_backlog: bool,
-        runs_on_empty_backlog: bool,
-    ) -> Self:
+    def __new__(cls, value: str, traits: dict[str, bool]) -> Self:
         member = str.__new__(cls, value)
         member._value_ = value
-        member.produces_backlog = produces_backlog
-        member.consumes_backlog = consumes_backlog
-        member.runs_on_empty_backlog = runs_on_empty_backlog
+        vars(member).update(traits)
         return member
 
     @classmethod
