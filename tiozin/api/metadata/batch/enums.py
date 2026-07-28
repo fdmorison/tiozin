@@ -33,6 +33,7 @@ class BacklogPolicy(LowerEnum):
         dict(
             produces_backlog=False,
             consumes_backlog=False,
+            supports_bookmark=False,
             runs_on_empty_backlog=True,
         ),
     )
@@ -41,6 +42,7 @@ class BacklogPolicy(LowerEnum):
         dict(
             produces_backlog=True,
             consumes_backlog=True,
+            supports_bookmark=True,
             runs_on_empty_backlog=False,
         ),
     )
@@ -49,12 +51,14 @@ class BacklogPolicy(LowerEnum):
         dict(
             produces_backlog=False,
             consumes_backlog=True,
+            supports_bookmark=False,
             runs_on_empty_backlog=False,
         ),
     )
 
     produces_backlog: bool
     consumes_backlog: bool
+    supports_bookmark: bool
     runs_on_empty_backlog: bool
 
     def __new__(cls, value: str, traits: dict[str, bool]) -> Self:
