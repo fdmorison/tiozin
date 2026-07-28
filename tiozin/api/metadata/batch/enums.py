@@ -12,19 +12,20 @@ class BacklogPolicy(LowerEnum):
     """
     Defines how a job participates in batch backlogs.
 
-    A policy determines whether a job produces batches, consumes backlog batches,
-    and whether it runs when no backlog is available.
+    A backlog policy is a cohesive set of rules that governs how a job handles
+    batches in its backlog, defining the process governing batch creation, execution, and lifecycle.
 
     Attributes:
         STATELESS:
-            Runs without batches.
+            The job runs without batches.
 
         INCREMENTAL:
-            Produces and consumes its own batches, advancing the processing window
+            The job produces and consumes its own batches, advancing the processing window
             after each successful execution.
 
         CONSUMER:
-            Consumes batches produced by an upstream incremental job.
+            The job consumes batches produced by external sources, such as manually created
+            batches or upstream jobs.
     """
 
     produces_backlog: bool
