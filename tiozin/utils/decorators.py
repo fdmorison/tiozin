@@ -1,8 +1,49 @@
+from collections.abc import Callable
+from time import perf_counter
 from typing import TypeVar
 
+import pendulum
 import wrapt
 
+from tiozin import logs
+from tiozin.api.loggable import Loggable
+
 T = TypeVar("T")
+
+logger = logs.get_logger("utils")
+
+
+def log_delay(operation: str, debug: bool = False) -> Callable:
+    """
+    Decorator that logs how long the decorated callable took.
+
+    Args:
+        operation:
+            Human-readable name of the operation, used to open the log message.
+
+        debug:
+            If True, successful calls are logged as debug instead of info, keeping
+            chatty operations out of the default output. Failures are always errors.
+    """
+
+    @wrapt.decorator
+    def measure(wrapped, instance, args, kwargs):
+        target = instance if isinstance(instance, Loggable) else logger
+        log = target.debug if debug else target.info
+        log(f"▶️  {operation} started")
+        begin = perf_counter()
+        try:
+            result = wrapped(*args, **kwargs)
+        except Exception:
+            delay = pendulum.duration(seconds=perf_counter() - begin)
+            target.error(f"❌ {operation} failed in {delay.in_words()}")
+            raise
+        else:
+            delay = pendulum.duration(seconds=perf_counter() - begin)
+            log(f"✅ {operation} completed in {delay.in_words()}")
+            return result
+
+    return measure
 
 
 def ensure_setup(cls: type[T]) -> type[T]:
