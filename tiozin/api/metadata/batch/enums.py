@@ -12,42 +12,55 @@ class BacklogPolicy(LowerEnum):
     """
     Defines how a job participates in batch backlogs.
 
-    A policy determines whether a job produces batches, consumes backlog batches,
-    and whether it runs when no backlog is available.
+    A backlog policy is a cohesive set of rules that governs how a job handles
+    batches in its backlog, defining the process governing batch creation, execution, and lifecycle.
 
     Attributes:
         STATELESS:
-            Runs without batches.
+            The job runs without batches.
 
         INCREMENTAL:
-            Produces and consumes its own batches, advancing the processing window
+            The job produces and consumes its own batches, advancing the processing window
             after each successful execution.
 
         CONSUMER:
-            Consumes batches produced by an upstream incremental job.
+            The job consumes batches produced by external sources, such as manually created
+            batches or upstream jobs.
     """
+
+    STATELESS = (
+        auto(),
+        dict(
+            produces_backlog=False,
+            consumes_backlog=False,
+            runs_on_empty_backlog=True,
+        ),
+    )
+    INCREMENTAL = (
+        auto(),
+        dict(
+            produces_backlog=True,
+            consumes_backlog=True,
+            runs_on_empty_backlog=False,
+        ),
+    )
+    CONSUMER = (
+        auto(),
+        dict(
+            produces_backlog=False,
+            consumes_backlog=True,
+            runs_on_empty_backlog=False,
+        ),
+    )
 
     produces_backlog: bool
     consumes_backlog: bool
     runs_on_empty_backlog: bool
 
-    #                 produces  consumes  runs_on_empty
-    STATELESS = auto(), False, False, True
-    INCREMENTAL = auto(), True, True, False
-    CONSUMER = auto(), False, True, False
-
-    def __new__(
-        cls,
-        value: str,
-        produces_backlog: bool,
-        consumes_backlog: bool,
-        runs_on_empty_backlog: bool,
-    ) -> Self:
+    def __new__(cls, value: str, traits: dict[str, bool]) -> Self:
         member = str.__new__(cls, value)
         member._value_ = value
-        member.produces_backlog = produces_backlog
-        member.consumes_backlog = consumes_backlog
-        member.runs_on_empty_backlog = runs_on_empty_backlog
+        vars(member).update(traits)
         return member
 
     @classmethod
