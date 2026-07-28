@@ -7,6 +7,7 @@ from tiozin.exceptions import (
     JobAlreadyExistsError,
     JobError,
     JobNotFoundError,
+    JobRuntimeError,
     ModelError,
     NotInitializedError,
     PluginConflictError,
@@ -111,6 +112,7 @@ def test_errors_should_be_catchable_as_invalid_input(error):
         AccessViolationError(name=object()),
         ProxyError("misused decorator"),
         NotInitializedError(),
+        JobRuntimeError(),
     ],
 )
 def test_internal_errors_should_be_catchable_as_internal_error(error):

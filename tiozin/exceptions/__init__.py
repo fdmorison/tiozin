@@ -33,6 +33,9 @@ from tiozin.api.metadata.job.exceptions import (
     JobError,
     JobNotFoundError,
 )
+from tiozin.api.runtime.job.exceptions import (
+    JobRuntimeError,
+)
 from tiozin.api.metadata.schema.exceptions import (
     SchemaError,
     SchemaNotFoundError,
@@ -68,6 +71,8 @@ __all__ = [
     "TiozinPreconditionError",
     "TiozinUnavailableError",
     "TiozinNotImplementedError",
+    # Runtime
+    "JobRuntimeError",
     # Domain
     "ModelError",
     "JobError",
