@@ -49,20 +49,25 @@ class RunnerProxy(wrapt.ObjectProxy):
         runner: Runner = self.__wrapped__
         context = runner.context
 
+        setup_successful = False
+
         with TiozinTemplateOverlay(runner, context.template_vars):
             try:
-                runner.info(f"⏳ Initializing `{runner.name}` runtime resources...")
+                runner.info("🟣 Initializing runtime resources...")
                 runner.setup()
-                runner.info(f"🟢 `{runner.name}` runtime resources initialized successfully")
+                setup_successful = True
+                runner.info("🟢 Runtime resources initialized successfully")
                 yield self
             finally:
-                try:
-                    runner.info(f"🛑 Releasing `{runner.name}` runtime resources")
-                    runner.info(f"⏳ Releasing `{runner.name}` runtime resources...")
-                    runner.teardown()
-
-                except Exception as e:
-                    runner.error(f"🚨 Runner teardown failed: {e}")
+                if setup_successful:
+                    try:
+                        runner.info("🟣 Releasing runtime resources...")
+                        runner.teardown()
+                        runner.info("🛑 Runtime resources released")
+                    except Exception as e:
+                        runner.error(f"🚨 Runner teardown failed: {e}")
+                else:
+                    runner.warning("⚠️ Skipping teardown because setup failed")
 
     @log_delay("Runner")
     def run(self, *args, **kwargs) -> Any:
