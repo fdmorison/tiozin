@@ -37,7 +37,7 @@ class JobProxy(wrapt.ObjectProxy):
         families = [t.replace("_", " ").title() for t in job.families]
 
         job.info(
-            f"🚀 Starting job `{context.name}` with {human_join(families)}",
+            f"🚀 Starting `{context.name}` with {human_join(families)}",
             namespace=context.namespace,
             run_id=context.run_id,
             nominal_time=isozformat(context.nominal_time),
@@ -65,7 +65,7 @@ class JobProxy(wrapt.ObjectProxy):
                 raise
 
             else:
-                job.info(f"✅  `{context.name}` finished in {context.delay:.2f}s")
+                job.info(f"✅  `{context.name}` completed in {context.delay:.2f}s")
                 lineage.run_completed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),
