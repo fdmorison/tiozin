@@ -37,9 +37,12 @@ def test_submit_should_run_the_job_once_when_policy_is_none(job_stub: JobStub):
 # ============================================================================
 # BacklogPolicy.CONSUMER and BacklogPolicy.INCREMENTAL
 # ============================================================================
-@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
+@pytest.mark.parametrize(
+    "backlog_policy",
+    [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL],
+)
 def test_submit_should_process_the_entire_backlog(
-    backlog,
+    backlog_policy,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -53,6 +56,7 @@ def test_submit_should_process_the_entire_backlog(
         Batch(**fake_domain, nominal_time=_2026_01_15T05_00_00),
     ]
     batch_registry_stub.backlog = backlog
+    job_stub.backlog_policy = backlog_policy
     job_stub.max_batches_per_run = 2
 
     # Act
@@ -70,9 +74,12 @@ def test_submit_should_process_the_entire_backlog(
     assert actual == expected
 
 
-@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
+@pytest.mark.parametrize(
+    "backlog_policy",
+    [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL],
+)
 def test_submit_should_expose_only_the_current_chunk_to_each_run(
-    backlog,
+    backlog_policy,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -86,6 +93,7 @@ def test_submit_should_expose_only_the_current_chunk_to_each_run(
         batch_5 := Batch(**fake_domain, nominal_time=_2026_01_15T05_00_00),
     ]
     batch_registry_stub.backlog = backlog
+    job_stub.backlog_policy = backlog_policy
     job_stub.max_batches_per_run = 2
 
     # Act
@@ -101,13 +109,16 @@ def test_submit_should_expose_only_the_current_chunk_to_each_run(
     assert actual == expected
 
 
-@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
+@pytest.mark.parametrize(
+    "backlog_policy",
+    [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL],
+)
 def test_submit_should_skip_when_backlog_is_empty(
-    backlog,
+    backlog_policy,
     job_stub: JobStub,
 ):
     # Arrange
-    job_stub.backlog_policy = backlog
+    job_stub.backlog_policy = backlog_policy
 
     # Act
     result = BacklogConsumerJobProxy(job_stub).submit()
@@ -118,9 +129,12 @@ def test_submit_should_skip_when_backlog_is_empty(
     assert actual == expected
 
 
-@pytest.mark.parametrize("backlog", [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL])
+@pytest.mark.parametrize(
+    "backlog_policy",
+    [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL],
+)
 def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
-    backlog,
+    backlog_policy,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -131,6 +145,7 @@ def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
         Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00),
     ]
     batch_registry_stub.backlog = backlog
+    job_stub.backlog_policy = backlog_policy
     job_stub.max_batches_per_run = 2
     job_stub.failure = RuntimeError("boom")
 
@@ -148,11 +163,11 @@ def test_submit_should_rollback_the_backlog_when_execution_fails_within_retries(
 
 
 @pytest.mark.parametrize(
-    "backlog",
+    "backlog_policy",
     [BacklogPolicy.CONSUMER, BacklogPolicy.INCREMENTAL],
 )
 def test_submit_should_quarantine_the_backlog_when_execution_fails_beyond_retries(
-    backlog,
+    backlog_policy,
     fake_domain: dict,
     job_stub: JobStub,
     batch_registry_stub: BatchRegistryStub,
@@ -163,6 +178,7 @@ def test_submit_should_quarantine_the_backlog_when_execution_fails_beyond_retrie
         Batch(**fake_domain, nominal_time=_2026_01_15T02_00_00, attempts=3),
     ]
     batch_registry_stub.backlog = backlog
+    job_stub.backlog_policy = backlog_policy
     job_stub.max_batches_per_run = 2
     job_stub.failure = RuntimeError("boom")
 

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 import wrapt
 
-from tiozin.api import Context
 from tiozin.utils import batched
 
 if TYPE_CHECKING:
@@ -24,43 +23,47 @@ class BacklogConsumerJobProxy(wrapt.ObjectProxy):
     the Job base class for the public API contract.
     """
 
-    def submit(self) -> Any:
+    def submit(self) -> list[Any]:
         job: Job = self.__wrapped__
-        registry = Context.current().batch_registry
-        runs = [()]
 
-        backlog = registry.get_backlog(**job.to_resource_dict())
-        job.info(f"📚 Found {len(backlog)} pending batch in backlog")
+        if job.backlog_policy.consumes_backlog:
+            return self._submit_backlog()
 
-        if not backlog and not job.backlog_policy.runs_on_empty_backlog:
-            job.warning("📚 Skipping execution: no batches to process")
-            return []
+        return [job.submit()]
 
-        if backlog:
-            runs = list(batched(backlog, job.max_batches_per_run))
+    def _submit_backlog(self) -> Any:
+        job: Job = self.__wrapped__
 
-        return [self.submit_run(job, batches) for batches in runs]
+        backlog = job.context.batch_registry.get_backlog(**job.to_resource_dict())
+        job.info(f"📚 Backlog has {len(backlog)} pending batches")
 
-    def submit_run(self, job: Job, batches: tuple[Batch, ...]) -> Any:
-        max_retries = Context.current().batch_registry.retries
+        sliced_backlog = batched(backlog, job.max_batches_per_run)
+        return [self._submit_backlog_slice(batch) for batch in sliced_backlog]
+
+    def _submit_backlog_slice(self, batches: tuple[Batch, ...]) -> Any:
+        job: Job = self.__wrapped__
+        max_retries = job.context.batch_registry.retries
 
         for batch in batches:
             job.info(f"📦 Processing batch `{batch}`")
             batch.begin()
 
         try:
-            Context.current().catalog.register(job, backlog=list(batches))
+            job.context.catalog.register(job, backlog=list(batches))
             result = job.submit()
         except Exception as error:
             for batch in batches:
                 if batch.retries < max_retries:
-                    batch.rollback(error=error)
+                    batch.rollback(error)
+                    job.exception(f"❌ Batch `{batch}` failed on attempt #{batch.attempts}.")
                 else:
-                    batch.quarantine(error=error)
+                    batch.quarantine(error)
+                    job.exception(f"❌ Batch `{batch}` quarantined on attempt #{batch.attempts}.")
             raise
         else:
             for batch in batches:
                 batch.commit()
+                job.info(f"✅ Batch `{batch}` succeeded on attempt #{batch.attempts}.")
             return result
 
     def __repr__(self) -> str:
