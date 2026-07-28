@@ -33,6 +33,7 @@ class BacklogPolicy(LowerEnum):
         dict(
             produces_backlog=False,
             consumes_backlog=False,
+            supports_bookmark=False,
         ),
     )
     INCREMENTAL = (
@@ -40,6 +41,7 @@ class BacklogPolicy(LowerEnum):
         dict(
             produces_backlog=True,
             consumes_backlog=True,
+            supports_bookmark=True,
         ),
     )
     CONSUMER = (
@@ -47,11 +49,13 @@ class BacklogPolicy(LowerEnum):
         dict(
             produces_backlog=False,
             consumes_backlog=True,
+            supports_bookmark=False,
         ),
     )
 
     produces_backlog: bool
     consumes_backlog: bool
+    supports_bookmark: bool
 
     def __new__(cls, value: str, traits: dict[str, bool]) -> Self:
         member = str.__new__(cls, value)

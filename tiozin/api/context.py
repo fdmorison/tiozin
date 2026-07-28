@@ -447,6 +447,12 @@ class Context(Loggable, BaseModel):
         Returns:
             The effective upper bound, or None when there is nothing to process.
         """
+        if not self.backlog_policy.supports_bookmark:
+            self.warning(
+                f"Backlog policy `{self.backlog_policy}` does not support bookmarks. "
+                "Bookmark updates may be ignored or not persist across runs."
+            )
+
         backlog = self.get_job_backlog()
         if not backlog:
             return None
@@ -497,6 +503,12 @@ class Context(Loggable, BaseModel):
         Returns:
             The stored value, or None when there is nothing to process.
         """
+        if not self.backlog_policy.supports_bookmark:
+            self.warning(
+                f"Backlog policy `{self.backlog_policy}` does not support bookmarks. "
+                "Bookmark updates may be ignored or not persist across runs."
+            )
+
         backlog = self.get_job_backlog()
         if not backlog:
             return None
