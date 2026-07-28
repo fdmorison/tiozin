@@ -11,7 +11,7 @@ from tiozin import config
 from .redactor import SecretRedactor
 
 LOGGER_NAME_PREFIX = "tiozin."
-LOGGER_NAME_WIDTH = 15
+LOGGER_NAME_WIDTH = 20
 
 
 class LogService:
