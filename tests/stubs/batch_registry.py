@@ -10,8 +10,10 @@ class BatchRegistryStub(BatchRegistry):
     def __init__(self, retries: int = None, failfast: bool = None, backlog: list[Batch] = None):
         super().__init__(location="stub://batch", retries=retries, failfast=failfast)
         self.backlog = backlog or []
+        self.registered: list[Batch] = []
 
     def register(self, batch: Batch) -> Batch:
+        self.registered.append(batch)
         return batch
 
     def register_transition(self, batch: Batch) -> Batch:
