@@ -57,7 +57,7 @@ class JobProxy(wrapt.ObjectProxy):
                 result = job.submit()
 
             except Exception:
-                job.error(f"❌  {context.kind} failed in {context.delay:.2f}s")
+                job.error(f"❌  `{context.name}` failed in {context.delay:.2f}s")
                 lineage.run_failed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),
@@ -65,7 +65,7 @@ class JobProxy(wrapt.ObjectProxy):
                 raise
 
             else:
-                job.info(f"✅  {context.kind} finished in {context.delay:.2f}s")
+                job.info(f"✅  `{context.name}` finished in {context.delay:.2f}s")
                 lineage.run_completed(
                     inputs=catalog.get_inputs(job.inputs),
                     outputs=catalog.get_outputs(job.outputs),
@@ -77,7 +77,7 @@ class JobProxy(wrapt.ObjectProxy):
                 try:
                     job.teardown()
                 except Exception as e:
-                    job.error(f"🚨 {context.kind} teardown failed because {e}")
+                    job.error(f"🚨 `{context.name}` teardown failed because {e}")
                 context.finished_at = utcnow()
 
     def __repr__(self) -> str:
