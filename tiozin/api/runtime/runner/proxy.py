@@ -69,12 +69,8 @@ class RunnerProxy(wrapt.ObjectProxy):
             runner.info(f"▶️  Running '{context.name}'")
             result = runner.run(*raw_args, **kwargs)
         except Exception:
-            runner.error(
-                f"🚨 Failed execution of '{context.name}' in {context.execution_delay:.2f}s"
-            )
+            runner.error(f"🚨 Runner failed in {context.execution_delay:.2f}s")
             raise
         else:
-            runner.info(
-                f"✅ Completed execution of '{context.name}' in {context.execution_delay:.2f}s"
-            )
+            runner.info(f"✅ Runner completed in {context.execution_delay:.2f}s")
             return Dataset.unwrap(result)
