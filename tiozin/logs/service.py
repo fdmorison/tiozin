@@ -4,10 +4,14 @@ import warnings
 
 import structlog
 import wrapt
+from structlog.dev import Column, ConsoleRenderer, KeyValueColumnFormatter
 
 from tiozin import config
 
 from .redactor import SecretRedactor
+
+LOGGER_NAME_PREFIX = "tiozin."
+LOGGER_NAME_WIDTH = 20
 
 
 class LogService:
@@ -25,16 +29,47 @@ class LogService:
         self._propagate = propagate
         self._ready = False
         self._redactor = SecretRedactor()
-        self._console_renderer = structlog.dev.ConsoleRenderer(
+
+    @property
+    def _json_renderer(self) -> structlog.processors.JSONRenderer:
+        return structlog.processors.JSONRenderer(
+            ensure_ascii=config.log_json_ensure_ascii,
+        )
+
+    @property
+    def _console_renderer(self) -> ConsoleRenderer:
+        renderer = ConsoleRenderer(
             colors=True,
             sort_keys=False,
             exception_formatter=structlog.dev.RichTracebackFormatter(
                 show_locals=config.log_show_locals
             ),
         )
-        self._json_renderer = structlog.processors.JSONRenderer(
-            ensure_ascii=config.log_json_ensure_ascii,
+        styles = ConsoleRenderer.get_default_column_styles(colors=True)
+        extras, timestamp, level, *_ = renderer.columns
+        logger_name = Column(
+            "logger",
+            KeyValueColumnFormatter(
+                key_style=None,
+                value_style=styles.logger_name,
+                reset_style=styles.reset,
+                width=LOGGER_NAME_WIDTH,
+                prefix="[",
+                postfix="]",
+                value_repr=lambda name: str(name).removeprefix(LOGGER_NAME_PREFIX),
+            ),
         )
+        message = Column(
+            "event",
+            KeyValueColumnFormatter(
+                key_style=None,
+                value_style="",
+                reset_style=styles.reset,
+                value_repr=str,
+            ),
+        )
+        renderer.columns = [extras, timestamp, level, logger_name, message]
+        return renderer
 
     @wrapt.synchronized
     def setup(self) -> None:
@@ -57,6 +92,7 @@ class LogService:
                 self._redactor,
                 structlog.contextvars.merge_contextvars,
                 structlog.processors.add_log_level,
+                structlog.stdlib.add_logger_name,
                 structlog.processors.StackInfoRenderer(),
                 structlog.processors.TimeStamper(fmt=config.log_date_format, utc=True),
                 structlog.dev.set_exc_info,

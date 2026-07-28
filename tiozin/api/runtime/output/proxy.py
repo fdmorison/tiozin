@@ -8,6 +8,7 @@ from tiozin.api import Context
 from tiozin.compose import TiozinTemplateOverlay
 from tiozin.exceptions import AccessViolationError
 from tiozin.utils import utcnow
+from tiozin.utils.decorators import log_delay
 
 from ..dataset import Dataset
 
@@ -29,6 +30,7 @@ class OutputProxy(wrapt.ObjectProxy):
     def teardown(self) -> None:
         raise AccessViolationError(self)
 
+    @log_delay("Data output")
     def write(self, *data: Dataset) -> Dataset:
         step: EtlStep = self.__wrapped__
         context = Context.for_step(step)
@@ -37,7 +39,6 @@ class OutputProxy(wrapt.ObjectProxy):
 
         with context, TiozinTemplateOverlay(step, context.template_vars):
             try:
-                step.info(f"▶️  Writing data with `{context.name}` step")
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
                 external = step.external_datasets()
@@ -59,12 +60,10 @@ class OutputProxy(wrapt.ObjectProxy):
                 result = step.write(*unwrapped_data)
 
             except Exception:
-                step.error(f"{context.kind} failed in {context.execution_delay:.2f}s")
                 lineage.run_failed(outputs=catalog.get_outputs(step))
                 raise
 
             else:
-                step.info(f"{context.kind} finished in {context.execution_delay:.2f}s")
                 output_dataset = (
                     Dataset.wrap(result)
                     .merge(external.outputs[0] if external.outputs else None)

@@ -1,14 +1,9 @@
 import logging
 from typing import Unpack
 
-from tiozin import config, logs
+from tiozin import logs
 
 from .typehint import LogKwargs
-
-BLUE = "\033[34m"
-RESET = "\033[0m"
-
-PADDING_MAX_LENGTH = 15
 
 
 class Loggable:
@@ -31,25 +26,19 @@ class Loggable:
         return logs.get_logger(self.__logger_name)
 
     def debug(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.debug(self._fmt(msg), *args, **kwargs)
+        self.logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.info(self._fmt(msg), *args, **kwargs)
+        self.logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.warning(self._fmt(msg), *args, **kwargs)
+        self.logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.error(self._fmt(msg), *args, **kwargs)
+        self.logger.error(msg, *args, **kwargs)
 
     def exception(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.exception(self._fmt(msg), *args, **kwargs)
+        self.logger.exception(msg, *args, **kwargs)
 
     def critical(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
-        self.logger.critical(self._fmt(msg), *args, **kwargs)
-
-    def _fmt(self, msg: str) -> str:
-        if config.log_json:
-            return msg
-        name = self.__logger_name.ljust(PADDING_MAX_LENGTH)
-        return f"[{BLUE}{name}{RESET}] {msg}"
+        self.logger.critical(msg, *args, **kwargs)

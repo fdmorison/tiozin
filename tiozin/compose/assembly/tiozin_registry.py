@@ -168,7 +168,7 @@ class TiozinRegistry(Loggable):
         arguments = default(arguments, self._defaults.get(kind))
         params = arguments.copy()
         params.pop("description", None)
-        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` joined", **params)
+        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` loaded", **params)
         return tiozin(**arguments)
 
     def load_manifest(self, manifest: Manifest | Tiozin) -> Tiozin:
