@@ -13,7 +13,7 @@ from tiozin.utils.decorators import log_delay
 from ..dataset import Dataset
 
 if TYPE_CHECKING:
-    from tiozin import EtlStep
+    from tiozin import Transform
 
 
 class TransformProxy(wrapt.ObjectProxy):
@@ -30,14 +30,18 @@ class TransformProxy(wrapt.ObjectProxy):
     def teardown(self) -> None:
         raise AccessViolationError(self)
 
-    @log_delay("Data transformation")
     def transform(self, *data: Dataset) -> Dataset:
-        step: EtlStep = self.__wrapped__
-        context = Context.for_step(step)
+        step: Transform = self.__wrapped__
+
+        with Context.for_step(step) as context:
+            return self._transform(step, context, *data)
+
+    @log_delay("Data transformation")
+    def _transform(self, step: Transform, context: Context, *data: Dataset) -> Dataset:
         catalog = context.catalog
         lineage = context.registries.lineage
 
-        with context, TiozinTemplateOverlay(step, context.template_vars):
+        with TiozinTemplateOverlay(step, context.template_vars):
             try:
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 
