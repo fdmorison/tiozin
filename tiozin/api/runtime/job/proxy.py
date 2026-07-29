@@ -30,10 +30,15 @@ class JobProxy(wrapt.ObjectProxy):
     def teardown(self) -> None:
         raise AccessViolationError(self)
 
-    @log_delay("Job")
     def submit(self) -> Any:
         job: Job = self.__wrapped__
         context = Context.current(required=False) or Context.for_job(job)
+
+        with context:
+            return self._submit(job, context)
+
+    @log_delay("Job")
+    def _submit(self, job: Job, context: Context) -> Any:
         lineage = context.registries.lineage
         catalog = context.catalog
         families = [t.replace("_", " ").title() for t in job.families]
@@ -47,7 +52,7 @@ class JobProxy(wrapt.ObjectProxy):
             backlog_policy=context.backlog_policy,
         )
 
-        with context, TiozinTemplateOverlay(job, context.template_vars), job.runner():
+        with TiozinTemplateOverlay(job, context.template_vars), job.runner():
             try:
                 job.debug(f"Temporary workdir is {context.temp_workdir}")
 

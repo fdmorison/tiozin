@@ -13,7 +13,7 @@ from tiozin.utils.decorators import log_delay
 from ..dataset import Dataset
 
 if TYPE_CHECKING:
-    from tiozin import EtlStep
+    from tiozin import Input
 
 
 class InputProxy(wrapt.ObjectProxy):
@@ -30,14 +30,18 @@ class InputProxy(wrapt.ObjectProxy):
     def teardown(self) -> None:
         raise AccessViolationError(self)
 
-    @log_delay("Data input")
     def read(self) -> Dataset:
-        step: EtlStep = self.__wrapped__
-        context = Context.for_step(step)
+        step: Input = self.__wrapped__
+
+        with Context.for_step(step) as context:
+            return self._read(step, context)
+
+    @log_delay("Data input")
+    def _read(self, step: Input, context: Context) -> Dataset:
         catalog = context.catalog
         lineage = context.registries.lineage
 
-        with context, TiozinTemplateOverlay(step, context.template_vars):
+        with TiozinTemplateOverlay(step, context.template_vars):
             try:
                 step.debug(f"Temporary workdir is {context.temp_workdir}")
 

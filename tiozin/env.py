@@ -1,8 +1,11 @@
 import logging
 import socket
+import sys
 from pathlib import Path
 
 from environs import Env
+
+IS_TERMINAL = sys.stdout.isatty()
 
 # ===============================================
 #           Load environment variables
@@ -37,8 +40,8 @@ LOG_LEVEL = _env.log_level("LOG_LEVEL", logging.INFO)
 # TIO_LOG_DATE_FORMAT - The date format for log timestamps.
 TIO_LOG_DATE_FORMAT = _env.str("TIO_LOG_DATE_FORMAT", "iso")
 
-# TIO_LOG_JSON - Enable JSON logging format.
-TIO_LOG_JSON = _env.bool("TIO_LOG_JSON", False)
+# TIO_LOG_JSON - Enable JSON logging format. Defaults to console on a terminal, JSON otherwise.
+TIO_LOG_JSON = _env.bool("TIO_LOG_JSON", not IS_TERMINAL)
 
 # TIO_LOG_JSON_ENSURE_ASCII - Ensure ASCII encoding in JSON logs.
 TIO_LOG_JSON_ENSURE_ASCII = _env.bool("TIO_LOG_JSON_ENSURE_ASCII", False)
