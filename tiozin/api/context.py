@@ -19,6 +19,7 @@ from pydantic import (
 )
 
 from tiozin.api.loggable import Loggable
+from tiozin.api.resourceful import Resourceful
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
 from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import TiozinInternalError
@@ -53,7 +54,7 @@ _current_context: ContextVar[Context | None] = ContextVar(
 )
 
 
-class Context(Loggable, BaseModel):
+class Context(Loggable, Resourceful, BaseModel):
     """
     Represents the execution scope of a job or step.
 
@@ -104,17 +105,6 @@ class Context(Loggable, BaseModel):
     kind: str = Field(frozen=True)
     tiozin_role: str = Field(frozen=True)
     namespace: str | None = Field(default=None, frozen=True)
-
-    # ==================================================
-    # Domain / Product
-    # ==================================================
-    org: str = Field(frozen=True)
-    region: str = Field(frozen=True)
-    domain: str = Field(frozen=True)
-    subdomain: str = Field(frozen=True)
-    layer: str = Field(frozen=True)
-    product: str = Field(frozen=True)
-    model: str = Field(frozen=True)
 
     # ==================================================
     # Ownership
