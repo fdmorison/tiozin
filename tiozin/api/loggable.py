@@ -42,3 +42,6 @@ class Loggable:
 
     def critical(self, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
         self.logger.critical(msg, *args, **kwargs)
+
+    def log(self, level: int, msg: str, *args, **kwargs: Unpack[LogKwargs]) -> None:
+        self.logger.log(level, msg, *args, **kwargs)
