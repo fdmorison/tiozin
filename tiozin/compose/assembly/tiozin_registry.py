@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from typing import Any, TypeVar
 
@@ -168,7 +169,14 @@ class TiozinRegistry(Loggable):
         arguments = default(arguments, self._defaults.get(kind))
         params = arguments.copy()
         params.pop("description", None)
-        self.info(f"🧝 Tiozin `{tiozin.tiozin_name}` loaded", **params)
+
+        # NOTE temporary workaround to avoid logging secrets from registry parameters
+        self.log(
+            logging.DEBUG if tiozin.is_registry() else logging.INFO,
+            f"🧝 Tiozin `{tiozin.tiozin_name}` loaded",
+            **params,
+        )
+
         return tiozin(**arguments)
 
     def load_manifest(self, manifest: Manifest | Tiozin) -> Tiozin:
