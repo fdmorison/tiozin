@@ -150,6 +150,30 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
 
         return result
 
+    @classmethod
+    def is_registry(cls) -> bool:
+        return cls.tiozin_role == "Registry"
+
+    @classmethod
+    def is_job(cls) -> bool:
+        return cls.tiozin_role == "Job"
+
+    @classmethod
+    def is_runner(cls) -> bool:
+        return cls.tiozin_role == "Runner"
+
+    @classmethod
+    def is_input(cls) -> bool:
+        return cls.tiozin_role == "Input"
+
+    @classmethod
+    def is_transform(cls) -> bool:
+        return cls.tiozin_role == "Transform"
+
+    @classmethod
+    def is_output(cls) -> bool:
+        return cls.tiozin_role == "Output"
+
     def __str__(self) -> str:
         """Returns a simple string representation of the resource."""
         return self.name
