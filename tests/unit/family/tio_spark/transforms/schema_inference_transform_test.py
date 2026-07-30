@@ -368,6 +368,27 @@ def test_transform_should_accept_json_numbers_with_leading_zeros(spark: SparkSes
     assertDataFrameEqual(actual, expected)
 
 
+def test_transform_should_camelize_option_keys_but_not_their_values() -> None:
+    # Arrange / Act
+    result = SparkSchemaInferenceTransform(
+        name="test",
+        json_fields="value",
+        extra_root_option="bad_record",
+        extra_nested_option={"nested_key": "nested_value"},
+    )
+
+    # Assert
+    actual = (
+        result.reader_options.get("extraRootOption"),
+        result.reader_options.get("extraNestedOption"),
+    )
+    expected = (
+        "bad_record",
+        {"nested_key": "nested_value"},
+    )
+    assert actual == expected
+
+
 # ============================================================================
 # Testing SparkSchemaInferenceTransform - Auto Timestamp Enforcement
 # ============================================================================

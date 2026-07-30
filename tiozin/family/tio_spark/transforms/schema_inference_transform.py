@@ -152,7 +152,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
             k: v
             for k, v in {
                 **DEFAULT_READER_OPTIONS,
-                **camelize(self.options),
+                **{camelize(k): v for k, v in self.options.items()},
                 "timeZone": self.timezone,
                 "samplingRatio": self.sampling_ratio,
                 "timestampFormat": self.timestamp_format[0] if self.timestamp_format else None,
