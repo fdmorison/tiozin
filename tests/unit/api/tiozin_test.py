@@ -45,7 +45,7 @@ def test_tiozin_should_use_kind_as_name_when_name_is_not_provided():
 
     # Assert
     actual = tiozin.name
-    expected = "nooprunner"
+    expected = "no_op_runner"
     assert actual == expected
 
 

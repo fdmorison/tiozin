@@ -5,6 +5,7 @@ from itertools import islice
 from typing import TypeVar
 from uuid import UUID, uuid4
 
+import inflection
 import pendulum
 from slugify import slugify as _slugify
 from uuid_utils import uuid7
@@ -397,11 +398,13 @@ def slugify(value: str) -> str:
     Convert a string into a safe SQL/filesystem identifier.
 
     Lowercases the value, replaces spaces and special characters with
-    underscores, and collapses consecutive separators. The result is
-    safe for use as SQL view names, table names, database identifiers,
-    and filesystem path segments.
+    underscores, and collapses consecutive separators. A leading digit
+    gets an underscore prefix, since most identifiers can't start with
+    one. The result is safe for use as SQL view names, table names,
+    database identifiers, and filesystem path segments.
 
-    Uses ``python-slugify`` under the hood with underscore as separator.
+    In practice, the result is snake_case: camelCase/PascalCase words are
+    decamelized first, so acronyms and word boundaries turn into underscores too.
 
     Args:
         value: The string to slugify.
@@ -416,5 +419,21 @@ def slugify(value: str) -> str:
         "orders_2024"
         >>> slugify("customer_orders")
         "customer_orders"
+        >>> slugify("FooBar")
+        "foo_bar"
+        >>> slugify("1foo")
+        "_1foo"
     """
-    return _slugify(value, separator="_")
+    if not value:
+        return value
+
+    result = _slugify(
+        inflection.underscore(value),
+        separator="_",
+        lowercase=True,
+    )
+
+    if result and result[0].isdigit():
+        result = f"_{result}"
+
+    return result

@@ -1,4 +1,4 @@
-from humps.main import camelize
+import inflection
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StructType
@@ -152,7 +152,7 @@ class SparkSchemaInferenceTransform(SparkTransform):
             k: v
             for k, v in {
                 **DEFAULT_READER_OPTIONS,
-                **{camelize(k): v for k, v in self.options.items()},
+                **{inflection.camelize(k, False): v for k, v in self.options.items()},
                 "timeZone": self.timezone,
                 "samplingRatio": self.sampling_ratio,
                 "timestampFormat": self.timestamp_format[0] if self.timestamp_format else None,

@@ -36,7 +36,7 @@ dependencies = [
   "typer ~=0.20",
   "uuid-utils ~=0.12",
   "python-slugify ~=8.0.4",
-  "pyhumps ~=3.8.0",
+  "inflection ~=0.5.1",
   "python-rapidjson ~=1.23",
   "python-benedict ~=0.38.0",
   # Temporary — to be removed once schema converters are rewritten

@@ -39,7 +39,7 @@ These install with every Tiozin and total roughly 15 MB. None of them is an exec
 | [environs](https://github.com/sloria/environs) | < 0.1 MB | Foundation for simple environment variables that do not need to be part of a serializable Pydantic model |
 | [single-source](https://github.com/rabbit72/single-source) | < 0.1 MB | Foundation for Tiozin version tracking, so it never falls out of sync with the installed package |
 | [python-slugify](https://github.com/un33k/python-slugify) | < 0.1 MB | Utility for creating normalized, filesystem-safe and database-safe slugs for naming ETL steps (Inputs, Transforms, Outputs) and jobs |
-| [pyhumps](https://humps.readthedocs.io/) | < 0.1 MB | Utility for converting camelCase field names from external schemas to snake_case during schema inference |
+| [pyhumps](https://humps.readthedocs.io/) | < 0.1 MB | Utility for splitting camelCase and PascalCase words when job and step names are slugified, and for converting snake_case plugin options into the camelCase reader options Spark expects during schema inference |
 
 ## Optional Family Dependencies
 
