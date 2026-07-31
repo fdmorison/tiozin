@@ -130,7 +130,7 @@ def test_from_context_should_unset_parent_when_job_context(job_context: Context)
     assert actual == expected
 
 
-def test_from_context_should_use_qualified_slug_as_job_name_when_step_context(
+def test_from_context_should_use_qualified_name_as_job_name_when_step_context(
     input_context: Context,
 ):
     # Act
@@ -142,8 +142,8 @@ def test_from_context_should_use_qualified_slug_as_job_name_when_step_context(
         result.job.name,
     )
     expected = (
-        input_context.namespace,
-        input_context.qualified_slug,
+        "acme.latam.ecommerce.checkout",
+        "test_job.test_input",
     )
     assert actual == expected
 

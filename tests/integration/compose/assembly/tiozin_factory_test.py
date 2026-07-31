@@ -152,7 +152,6 @@ def test_load_should_load_step_plugin(factory: TiozinRegistry, kind: str):
     expected = dict(
         kind=kind,
         name="test",
-        slug="test",
         description=None,
         org=None,
         region=None,
@@ -183,7 +182,6 @@ def test_load_should_load_runner_plugin(factory: TiozinRegistry):
     expected = dict(
         kind="NoOpRunner",
         name="test_runner",
-        slug="test_runner",
         description="test",
         streaming=False,
         verbose=True,
@@ -201,8 +199,7 @@ def test_load_should_load_registry_plugin(factory: TiozinRegistry):
     actual = vars(tiozin)
     expected = dict(
         kind="FileJobRegistry",
-        name="FileJobRegistry",
-        slug="filejobregistry",
+        name="filejobregistry",
         description=None,
         options=ANY,
         ready=False,

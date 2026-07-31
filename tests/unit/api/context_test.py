@@ -41,7 +41,6 @@ def test_for_job_should_create_job_context(
             "job": context,
             # Identity
             "name": job.name,
-            "slug": job.slug,
             "kind": job.kind,
             "tiozin_role": job.tiozin_role,
             # Domain / Governance
@@ -67,7 +66,7 @@ def test_for_job_should_create_job_context(
             "output_schema": None,
             # Infra
             "catalog": ANY,
-            "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
+            "temp_workdir": Path(f"/tmp/tiozin/{job.name}/{context.run_id}"),
             "template_vars": ANY,
             "shared": {},
         }
@@ -89,7 +88,6 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "job": None,
         # Identity
         "name": step.name,
-        "slug": step.slug,
         "kind": step.kind,
         "tiozin_role": step.tiozin_role,
         # Domain / Governance
@@ -119,7 +117,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "output_schema": None,
         # Infra
         "catalog": ANY,
-        "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{step.name}/{context.run_id}"),
         "template_vars": ANY,
         "shared": {},
     }
@@ -142,7 +140,6 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "job": job_context,
         # Identity
         "name": step.name,
-        "slug": step.slug,
         "kind": step.kind,
         "tiozin_role": step.tiozin_role,
         # Domain / Governance
@@ -178,7 +175,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "output_schema": None,
         # Infra
         "catalog": job_context.catalog,
-        "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{job_context.name}/{job_context.run_id}/{step.name}"),
         "template_vars": ANY,
         "shared": job_context.shared,
     }
@@ -228,23 +225,23 @@ def test_for_job_should_truncate_nominal_time_to_cadence_slot(
 
 
 # =============================================================================
-# Testing Context.qualified_slug
+# Testing Context.qualified_name
 # =============================================================================
 
 
-def test_qualified_slug_should_return_slug_when_context_is_root(job_context: Context):
+def test_qualified_name_should_return_name_when_context_is_root(job_context: Context):
     # Assert
-    actual = job_context.qualified_slug
-    expected = job_context.slug
+    actual = job_context.qualified_name
+    expected = "test_job"
     assert actual == expected
 
 
-def test_qualified_slug_should_return_job_slug_and_step_slug_when_context_is_child(
-    job_context: Context, input_context: Context
+def test_qualified_name_should_join_job_and_step_names_when_context_is_child(
+    input_context: Context,
 ):
     # Assert
-    actual = input_context.qualified_slug
-    expected = f"{job_context.slug}.{input_context.slug}"
+    actual = input_context.qualified_name
+    expected = "test_job.test_input"
     assert actual == expected
 
 
@@ -375,7 +372,6 @@ def test_init_template_vars_should_expose_day_values(fake_domain: dict):
     # Act
     result = Context(
         name="test_job",
-        slug="test_job",
         kind="job",
         tiozin_role="Job",
         **fake_domain,
@@ -409,7 +405,6 @@ def test_init_template_vars_should_override_base_with_context_fields(fake_domain
     # Act
     result = Context(
         name="test_job",
-        slug="test_job",
         kind="job",
         tiozin_role="Job",
         template_vars=base,
@@ -439,7 +434,6 @@ def test_init_template_vars_should_override_base_with_day(fake_domain: dict):
     # Act
     result = Context(
         name="test_job",
-        slug="test_job",
         kind="job",
         tiozin_role="Job",
         template_vars=base,
