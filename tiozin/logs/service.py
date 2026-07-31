@@ -137,14 +137,14 @@ class LogService:
                 event_dict["context"] = ROOT_CONTEXT_NAME
                 return event_dict
 
-            event_dict["context"] = context.runner.slug if context.is_job else context.slug
+            event_dict["context"] = context.runner.name if context.is_job else context.name
 
             if config.log_json:
                 event_dict["run_id"] = context.run_id
-                event_dict["job"] = context.job.slug if context.job else None
+                event_dict["job"] = context.job.name if context.job else None
 
                 if context.is_step:
-                    event_dict["step"] = context.slug
+                    event_dict["step"] = context.name
 
                 event_dict.update(context.to_owned_dict(flat=True))
                 event_dict.update(context.to_resource_dict())

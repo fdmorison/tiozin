@@ -24,9 +24,10 @@ class RuntimeCatalog:
     """
     Registers runtime objects for jobs and steps.
 
-    Each job or step has a record keyed by its slug. Records store objects such
-    as input datasets, output datasets, and pending batches for later access
-    during the execution.
+    Each job or step has a record keyed by its `name`, which is always a slug.
+    Plain string keys are slugified before lookup. Records store objects such as
+    input datasets, output datasets, and pending batches for later access during
+    the execution.
     """
 
     def __init__(self) -> None:
@@ -42,7 +43,7 @@ class RuntimeCatalog:
         output: Dataset = None,
         backlog: list[Batch] = None,
     ) -> RuntimeRecord:
-        key = slugify(object) if isinstance(object, str) else object.slug
+        key = slugify(object) if isinstance(object, str) else object.name
         record = self._records.setdefault(key, RuntimeRecord(key))
         inputs = inputs or []
 
@@ -59,7 +60,7 @@ class RuntimeCatalog:
         return record
 
     def get(self, object: JobOrStepOrSlug) -> RuntimeRecord | None:
-        key = slugify(object) if isinstance(object, str) else object.slug
+        key = slugify(object) if isinstance(object, str) else object.name
         return self._records.get(key)
 
     def get_records(self, objects: JobOrStepOrSlug | list[JobOrStepOrSlug]) -> list[RuntimeRecord]:

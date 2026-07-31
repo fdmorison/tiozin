@@ -19,6 +19,9 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
     Provides metadata and discovery capabilities for Tiozin plugins that are
     dynamically loaded by the framework. Used by Jobs, Inputs, Transforms,
     Outputs, Runners, and Registries.
+
+    Every plugin has a `name`, normalized into an underscore-separated slug.
+    It falls back to the plugin kind when not provided.
     """
 
     @dataclass(frozen=True)
@@ -40,8 +43,7 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         **options,
     ) -> None:
         self.kind = self.tiozin_name
-        self.name = name or self.kind
-        self.slug = slugify(self.name)
+        self.name = slugify(name or self.kind)
         self.description = description
         self.options = options
 

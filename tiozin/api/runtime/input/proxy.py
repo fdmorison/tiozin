@@ -71,7 +71,7 @@ class InputProxy(wrapt.ObjectProxy):
                     Dataset.wrap(result)
                     .merge(external.outputs[0] if external.outputs else None)
                     .with_namespace(context.namespace)
-                    .with_name(context.qualified_slug)
+                    .with_name(context.qualified_name)
                     .with_schema(context.output_schema)
                 )
                 catalog.register(step, output=output_dataset)

@@ -103,7 +103,7 @@ class DuckdbRunner(Runner[DuckdbPlan, DuckDBPyConnection, DuckdbOutput]):
 
         # Initialize main database
         self._conn = duckdb.connect(
-            self.database or f":memory:{self.context.job.slug}",
+            self.database or f":memory:{self.context.job.name}",
             read_only=self.read_only,
             config=self.options,
         )

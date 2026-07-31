@@ -101,8 +101,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
     # ==================================================
     # Identity
     # ==================================================
-    name: str = Field(frozen=True)
-    slug: Slug = Field(frozen=True)
+    name: Slug = Field(frozen=True)
     kind: str = Field(frozen=True)
     tiozin_role: str = Field(frozen=True)
     namespace: str | None = Field(default=None, frozen=True)
@@ -191,9 +190,9 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
             return self
 
         self.__dict__["temp_workdir"] = (
-            create_local_temp_dir(self.qualified_slug, self.run_id)
+            create_local_temp_dir(self.qualified_name, self.run_id)
             if self.is_root
-            else create_local_temp_dir(self.job.temp_workdir, self.slug)
+            else create_local_temp_dir(self.job.temp_workdir, self.name)
         )
 
         return self
@@ -255,7 +254,6 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = cls(
             # Identity — always from job
             name=job.name,
-            slug=job.slug,
             kind=job.tiozin_name,
             tiozin_role=job.tiozin_role,
             # Domain — always from job
@@ -294,7 +292,6 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = cls(
             # Identity — always from step
             name=step.name,
-            slug=step.slug,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
             # Domain — always from step
@@ -316,7 +313,6 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = Context(
             # Identity — always from step
             name=step.name,
-            slug=step.slug,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
             # Arguments — always from step
@@ -363,7 +359,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return ctx
 
     def belongs_to(self, plugin: Tiozin) -> bool:
-        return self.slug == plugin.slug and self.kind == plugin.tiozin_name
+        return self.name == plugin.name and self.kind == plugin.tiozin_name
 
     def render(self, value: str) -> str:
         return JINJA.from_string(value).render(self.template_vars)
@@ -510,10 +506,10 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return self.job is self or self.job is None
 
     @property
-    def qualified_slug(self) -> str:
+    def qualified_name(self) -> str:
         if self.is_root:
-            return self.slug
-        return f"{self.job.slug}.{self.slug}"
+            return self.name
+        return f"{self.job.name}.{self.name}"
 
     @property
     def setting_registry(self) -> SettingRegistry:

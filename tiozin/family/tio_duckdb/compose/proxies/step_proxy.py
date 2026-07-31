@@ -58,13 +58,13 @@ class DuckdbStepProxy(wrapt.ObjectProxy):
 
     def _register_view(self, relation: DuckDBPyRelation) -> DuckDBPyRelation:
         """
-        Registers a Relation as a DuckDB temporary view using the step slug.
+        Registers a Relation as a DuckDB temporary view using the step name.
         """
         if not isinstance(relation, DuckDBPyRelation):
             return relation
 
         step: DuckdbEtlStep = self.__wrapped__
-        view_name = step.slug
+        view_name = step.name
 
         step.duckdb.register(view_name, relation)
         relation = relation.set_alias(view_name)

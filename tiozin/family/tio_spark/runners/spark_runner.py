@@ -132,7 +132,7 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
 
         builder: SparkSession.Builder = SparkSession.builder
         builder = (
-            builder.appName(self.context.job.slug)
+            builder.appName(self.context.job.name)
             .config("spark.sql.session.timeZone", str(config.app_timezone))
             .config("spark.sql.adaptive.enabled", "true")
             .config("spark.jars.packages", ",".join(self.jars_packages))

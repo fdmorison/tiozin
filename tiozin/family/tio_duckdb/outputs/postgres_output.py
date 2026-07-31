@@ -166,7 +166,7 @@ class DuckdbPostgresOutput(DuckdbOutput):
 
     @property
     def _database(self) -> str:
-        return f"_pg_{self.slug}"
+        return f"_pg_{self.name}"
 
     @property
     def _secret(self) -> str:
