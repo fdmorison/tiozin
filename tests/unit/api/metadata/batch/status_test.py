@@ -6,6 +6,7 @@ from tiozin.api.metadata.batch.exceptions import BatchTransitionError
 VALID_TRANSITIONS = [
     (BatchStatus.PENDING, BatchStatus.RUNNING),
     (BatchStatus.PENDING, BatchStatus.CANCELED),
+    (BatchStatus.PENDING, BatchStatus.QUARANTINED),
     (BatchStatus.PENDING, BatchStatus.PENDING),
     (BatchStatus.RUNNING, BatchStatus.PENDING),
     (BatchStatus.RUNNING, BatchStatus.SUCCEEDED),
@@ -24,7 +25,6 @@ VALID_TRANSITIONS = [
 INVALID_TRANSITIONS = [
     (BatchStatus.PENDING, BatchStatus.SUCCEEDED),
     (BatchStatus.PENDING, BatchStatus.FAILED),
-    (BatchStatus.PENDING, BatchStatus.QUARANTINED),
     (BatchStatus.SUCCEEDED, BatchStatus.RUNNING),
     (BatchStatus.SUCCEEDED, BatchStatus.FAILED),
     (BatchStatus.SUCCEEDED, BatchStatus.CANCELED),
@@ -422,4 +422,4 @@ def test_to_quarantined_should_return_quarantined_when_valid():
 def test_to_quarantined_should_raise_transition_error_when_invalid():
     # Act / Assert
     with pytest.raises(BatchTransitionError):
-        BatchStatus.PENDING.to_quarantined()
+        BatchStatus.SUCCEEDED.to_quarantined()
