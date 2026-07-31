@@ -102,6 +102,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
     # Identity
     # ==================================================
     name: Slug = Field(frozen=True)
+    display_name: str = Field(frozen=True)
     kind: str = Field(frozen=True)
     tiozin_role: str = Field(frozen=True)
     namespace: str | None = Field(default=None, frozen=True)
@@ -254,6 +255,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = cls(
             # Identity — always from job
             name=job.name,
+            display_name=job.display_name,
             kind=job.tiozin_name,
             tiozin_role=job.tiozin_role,
             # Domain — always from job
@@ -292,6 +294,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = cls(
             # Identity — always from step
             name=step.name,
+            display_name=step.display_name,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
             # Domain — always from step
@@ -313,6 +316,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = Context(
             # Identity — always from step
             name=step.name,
+            display_name=step.display_name,
             kind=step.tiozin_name,
             tiozin_role=step.tiozin_role,
             # Arguments — always from step

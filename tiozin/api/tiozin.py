@@ -43,7 +43,8 @@ class Tiozin(Loggable, metaclass=TioProxyMeta):
         **options,
     ) -> None:
         self.kind = self.tiozin_name
-        self.name = slugify(name or self.kind)
+        self.display_name = name or self.kind
+        self.name = slugify(self.display_name)
         self.description = description
         self.options = options
 
