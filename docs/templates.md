@@ -26,6 +26,7 @@ These come from the job definition itself and are always available:
 | Variable | Example value |
 |---|---|
 | `name` | `"ecommerce_orders_ingestion"` |
+| `display_name` | `"Ecommerce Orders Ingestion"` |
 | `org` | `"tiozin"` |
 | `region` | `"latam"` |
 | `domain` | `"ecommerce"` |
@@ -38,6 +39,8 @@ These come from the job definition itself and are always available:
 | `cost_center` | `"tio_scrooge"` |
 | `run_id` | `"a1b2c3d4"` |
 | `run_attempt` | `1` |
+
+`name` is always slugified. `display_name` keeps the name exactly as declared in the job definition.
 
 Use them freely:
 
