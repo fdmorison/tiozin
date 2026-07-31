@@ -1,8 +1,12 @@
 # How to Use Schemas in Jobs
 
-Attach a schema to any step to make it available to your plugin code and include it in lineage events.
+This guide covers storing schemas in a registry and attaching them to the steps of a job. The schema attached to a step is available to plugin code and is included in the step's lineage event.
 
-Tiozin adopts the [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/v3.1.0/schema/) schema as its canonical schema format.
+The starting point is the built-in file-backed registry and the shape of a schema file. Tiozin adopts the [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/v3.1.0/schema/) schema object as its canonical schema format. After that come the `schema_subject` field on a step, the `auto` subject derived from the job taxonomy, version pinning, and reading the resolved schema from plugin code.
+
+Reading time: about 5 minutes.
+
+[Registries](../concepts/registries.md) covers what a registry is, how `failfast` behaves, and how one is declared in `tiozin.yaml`. This guide assumes it.
 
 ## The basics
 
