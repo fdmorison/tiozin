@@ -1,6 +1,12 @@
 # How to Configure OpenLineage
 
-Send job lineage events to any [OpenLineage](https://openlineage.io/)-compatible backend: Marquez, OpenMetadata, or any service that accepts the OpenLineage HTTP API.
+This guide covers sending job lineage events to an [OpenLineage](https://openlineage.io/)-compatible backend such as Marquez or OpenMetadata.
+
+It starts with the smallest working configuration and the events Tiozin sends on every run, then covers choosing between job-level and step-level events, authenticating against the backend, and replacing HTTP with another transport such as Kafka. The last sections cover naming: the namespace that places the job in the lineage graph, and how a step reports the physical dataset it reads or writes.
+
+Reading time: about 4 minutes.
+
+[Registries](../concepts/registries.md) explains what a registry is and how one is declared in `tiozin.yaml`, and this guide assumes that.
 
 ## The basics
 

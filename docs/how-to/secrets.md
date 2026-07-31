@@ -1,6 +1,12 @@
 # How to Use Secrets in Jobs
 
-Keep credentials out of job files by reading them from a secret registry at runtime. Tiozin masks secret values in all logs and reprs, so they never appear in output even when embedded in connection strings.
+This guide covers keeping credentials out of job files by reading them from a secret registry at runtime.
+
+It starts with the environment-backed registry and the `{{ SECRET.name }}` reference in a job field, then covers reading secrets from plugin code, how masking keeps values out of logs, loading a local `.env` file during development, and writing a registry for a vault or cloud secret manager.
+
+Reading time: about 3 minutes.
+
+[Registries](../concepts/registries.md) describes what a registry is and how one is declared in `tiozin.yaml`, and this guide assumes it.
 
 ## The basics
 
