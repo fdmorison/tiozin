@@ -520,6 +520,13 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return self.job is self or self.job is None
 
     @property
+    def slug(self) -> str:
+        """
+        Alias for `name`, kept for backward compatibility.
+        """
+        return self.name
+
+    @property
     def qualified_name(self) -> str:
         if self.is_root:
             return self.name
