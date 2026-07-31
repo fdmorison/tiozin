@@ -1,5 +1,76 @@
 # Changelog
 
+## [3.3.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.2.0...tiozin-v3.3.0) (2026-07-31)
+
+
+### Features
+
+* **core-api:** Add backlog producer job proxy ([#310](https://github.com/fdmorison/tiozin/issues/310)) ([474154b](https://github.com/fdmorison/tiozin/commit/474154b8d27f6c2325fa7aaf4b551b2b1dd30e08))
+* **core-api:** Add role checks and runtime log levels ([#330](https://github.com/fdmorison/tiozin/issues/330)) ([95282db](https://github.com/fdmorison/tiozin/commit/95282db8e2b0e9e3209cbb6936eedd0ea68f735d))
+* **core-api:** Allow quarantining pending batches ([#336](https://github.com/fdmorison/tiozin/issues/336)) ([c0f78f7](https://github.com/fdmorison/tiozin/commit/c0f78f789d1e8dce9e190a5b984bfc56c7291a87))
+* **core-api:** Enable logging from a job's execution context ([#322](https://github.com/fdmorison/tiozin/issues/322)) ([eb7a301](https://github.com/fdmorison/tiozin/commit/eb7a301b2ef64c24d587c18c587e1711a0fc52ae))
+* **core-api:** Process all pending batches before failing the job ([#326](https://github.com/fdmorison/tiozin/issues/326)) ([6aaac7c](https://github.com/fdmorison/tiozin/commit/6aaac7cee05dadb99d364a1c8ae41a63a1506ae6))
+* **core-api:** Warn when the backlog policy does not support bookmarks ([#324](https://github.com/fdmorison/tiozin/issues/324)) ([2836602](https://github.com/fdmorison/tiozin/commit/283660229db4ed3c5350c3cbeb4b75ac19104832))
+* **core-cli:** Add --bookmark option to batch commands ([#313](https://github.com/fdmorison/tiozin/issues/313)) ([2571ca2](https://github.com/fdmorison/tiozin/commit/2571ca2e325b33b6f38e9181a261189922155e77))
+* **core-cli:** Enrich the batch board table ([#308](https://github.com/fdmorison/tiozin/issues/308)) ([1196e95](https://github.com/fdmorison/tiozin/commit/1196e95b0e4b839d7a3780873efdd72696796ed9))
+* **core:** Add a self-generating time-ordered id type ([#288](https://github.com/fdmorison/tiozin/issues/288)) ([731601a](https://github.com/fdmorison/tiozin/commit/731601a568f85ce26a30f4eeed5c2276b0e82897))
+* **core:** Add attribute options to the batch register CLI command ([#253](https://github.com/fdmorison/tiozin/issues/253)) ([c69588e](https://github.com/fdmorison/tiozin/commit/c69588e157bbccb884e3a089b81dffbd0f49eecf))
+* **core:** Add batch inspection commands to the CLI ([#251](https://github.com/fdmorison/tiozin/issues/251)) ([62ccf0a](https://github.com/fdmorison/tiozin/commit/62ccf0a47bb05bdbf3c28066997616f79954a21f))
+* **core:** Add batch lookup by id and fix failure count reset on replay ([#254](https://github.com/fdmorison/tiozin/issues/254)) ([edd1741](https://github.com/fdmorison/tiozin/commit/edd1741abae729120ded488ed960cb8b0e2911b0))
+* **core:** Add batch source and max batches per run to jobs ([#292](https://github.com/fdmorison/tiozin/issues/292)) ([22c3cda](https://github.com/fdmorison/tiozin/commit/22c3cdabed6676b9e2784c5fd6bd119ec003e15e))
+* **core:** Add batched helper ([#291](https://github.com/fdmorison/tiozin/issues/291)) ([6e5d048](https://github.com/fdmorison/tiozin/commit/6e5d048da3faaa2d7453036efbdbc238f3cfdcd0))
+* **core:** Add cancel, replay, and quarantine commands to the batch CLI ([#255](https://github.com/fdmorison/tiozin/issues/255)) ([7fd0428](https://github.com/fdmorison/tiozin/commit/7fd0428ccfff9e01985cca3f80a8a369cd4a1341))
+* **core:** Add Counter and Attributes types ([#289](https://github.com/fdmorison/tiozin/issues/289)) ([aef1f28](https://github.com/fdmorison/tiozin/commit/aef1f284522f74a45b063b8b6522281d339bafd4))
+* **core:** Add epoch() helper ([#246](https://github.com/fdmorison/tiozin/issues/246)) ([cd5d665](https://github.com/fdmorison/tiozin/commit/cd5d665d4015538a1941e44240219395e62f11c4))
+* **core:** Add JSON helpers that preserve datetimes ([#298](https://github.com/fdmorison/tiozin/issues/298)) ([ea3e9e5](https://github.com/fdmorison/tiozin/commit/ea3e9e541254dbb4b7f4824c666f4a04df28c0a0))
+* **core:** Add nominal processing window to batches ([#306](https://github.com/fdmorison/tiozin/issues/306)) ([0e48d04](https://github.com/fdmorison/tiozin/commit/0e48d04883a7c7d2b21e93ec4a4d8ccbe6a110fb))
+* **core:** Add replay-safe batch bookmarks helpers ([#315](https://github.com/fdmorison/tiozin/issues/315)) ([1b24e39](https://github.com/fdmorison/tiozin/commit/1b24e396e37718798b58a18c6751e58f3534b3c8))
+* **core:** Add time window and defaults to batch history retrieval ([#250](https://github.com/fdmorison/tiozin/issues/250)) ([699ac01](https://github.com/fdmorison/tiozin/commit/699ac013ed86c640db0a9aa1bde94a955c9b85a9))
+* **core:** Add UTC datetime helpers ([#283](https://github.com/fdmorison/tiozin/issues/283)) ([d523ea0](https://github.com/fdmorison/tiozin/commit/d523ea0d9de7f44d70068a7bf5a2da58a7bc5ae5))
+* **core:** Add utilities to read the active execution context ([#273](https://github.com/fdmorison/tiozin/issues/273)) ([7963de8](https://github.com/fdmorison/tiozin/commit/7963de83d2673e44b81583a4475489c3341e9ca9))
+* **core:** Batch Attributes and Bookmarks with dotted keypath support. ([#314](https://github.com/fdmorison/tiozin/issues/314)) ([7132901](https://github.com/fdmorison/tiozin/commit/71329011db89ccfae73653b7c82c42b9c22284b9))
+* **core:** Carry typed batch state across executions ([#263](https://github.com/fdmorison/tiozin/issues/263)) ([4f63209](https://github.com/fdmorison/tiozin/commit/4f632096ae55e1f223d4cc41887ccb570a894b50))
+* **core:** Expose qualified resource identifiers on pipeline steps and jobs ([#267](https://github.com/fdmorison/tiozin/issues/267)) ([fc2f151](https://github.com/fdmorison/tiozin/commit/fc2f151604568f157a06ed4b98105f3c3b4a74e1))
+* **core:** Give jobs a cadence that aligns nominal time ([#286](https://github.com/fdmorison/tiozin/issues/286)) ([84837c8](https://github.com/fdmorison/tiozin/commit/84837c800b39493dc869c71fce5a6e96deda4227))
+* **core:** Initialize batch state at the Unix epoch ([#264](https://github.com/fdmorison/tiozin/issues/264)) ([323334d](https://github.com/fdmorison/tiozin/commit/323334dcb2fad0c509d6d93d11a641e35c2517e7))
+* **core:** Process job backlogs in transactional runs ([#294](https://github.com/fdmorison/tiozin/issues/294)) ([d353a36](https://github.com/fdmorison/tiozin/commit/d353a361927009f785416ac4507f33d438588281))
+* **core:** Prune utility to remove empty fields ([#259](https://github.com/fdmorison/tiozin/issues/259)) ([bf4a609](https://github.com/fdmorison/tiozin/commit/bf4a6092beaca942cc6d5645712d4e299a8e03c5))
+* **core:** Record the framework version that created a batch ([#312](https://github.com/fdmorison/tiozin/issues/312)) ([94e1111](https://github.com/fdmorison/tiozin/commit/94e11112a1c48d1714170b411cf44c362dbe6a75))
+* **core:** Replace batch watermark with open bookmarks ([#307](https://github.com/fdmorison/tiozin/issues/307)) ([2d178d9](https://github.com/fdmorison/tiozin/commit/2d178d9eaf09b95f826f876a1afdac66c0457945))
+* **core:** Roll back batch attributes on failure ([#293](https://github.com/fdmorison/tiozin/issues/293)) ([7fa5916](https://github.com/fdmorison/tiozin/commit/7fa591636353d58c13f646c63eb3146ab048d3cc))
+* **core:** Separate subdomain from domain identifiers ([#269](https://github.com/fdmorison/tiozin/issues/269)) ([7405e61](https://github.com/fdmorison/tiozin/commit/7405e615f0ae16decae95d3d6be9d0fdec67f193))
+* **core:** Standardize JSON and YAML date/time serialization ([#301](https://github.com/fdmorison/tiozin/issues/301)) ([5df761a](https://github.com/fdmorison/tiozin/commit/5df761a74b766d22d155db71f6704550631d8ec3))
+* **core:** State and StateRegistry specification ([#239](https://github.com/fdmorison/tiozin/issues/239)) ([a174edb](https://github.com/fdmorison/tiozin/commit/a174edbe39c061b3b2b41d3002bcf0fe2cb83d60))
+* **core:** Track watermarks by name in batch state ([#276](https://github.com/fdmorison/tiozin/issues/276)) ([6aed5d3](https://github.com/fdmorison/tiozin/commit/6aed5d3c9edde682676f2d6a0cafa85df7a5d0e5))
+* **tio_kernel:** Add IcebergBatchRegistry  ([#260](https://github.com/fdmorison/tiozin/issues/260)) ([7725e2d](https://github.com/fdmorison/tiozin/commit/7725e2d158c265a4c2d749e9029dfdaf33480704))
+* **tio_spark:** add date_fields and date_format to schema inference transform ([#237](https://github.com/fdmorison/tiozin/issues/237)) ([733d22a](https://github.com/fdmorison/tiozin/commit/733d22a08d7436f86f5bf418e7a4fd36ad2e700b))
+* **tio_spark:** add has_timezone detection for timestamp strings ([#232](https://github.com/fdmorison/tiozin/issues/232)) ([7626568](https://github.com/fdmorison/tiozin/commit/7626568ff86e833d31408892749b08e9a92c883d))
+* **tio_spark:** add nested field path utilities ([#227](https://github.com/fdmorison/tiozin/issues/227)) ([bc07d8f](https://github.com/fdmorison/tiozin/commit/bc07d8f21f8714f591f7dc078e1b1d4c554a56c4))
+* **tio_spark:** add SparkJsonSchemaInferenceTransform ([#223](https://github.com/fdmorison/tiozin/issues/223)) ([7ec6e26](https://github.com/fdmorison/tiozin/commit/7ec6e261fc84d0a46722ac6c0f2839793944f5c0))
+* **tio_spark:** enforce timestamp fields with timezone-aware parsing ([#228](https://github.com/fdmorison/tiozin/issues/228)) ([f8b326e](https://github.com/fdmorison/tiozin/commit/f8b326ee560562e457edbf06bc4c63fea5fa8b4d))
+
+
+### Bug Fixes
+
+* **core-cli:** Accept --settings-path in any command position ([#337](https://github.com/fdmorison/tiozin/issues/337)) ([759381b](https://github.com/fdmorison/tiozin/commit/759381bfda3b26f3036599f7d5f0d92681021b9f))
+* **core-compose:** Log registry loading at debug level ([#331](https://github.com/fdmorison/tiozin/issues/331)) ([d6cd08e](https://github.com/fdmorison/tiozin/commit/d6cd08e5fad84bee472243b514a18f5f6039997b))
+* **core:** Correct type-check imports for lineage and schema registries ([#274](https://github.com/fdmorison/tiozin/issues/274)) ([22f46d9](https://github.com/fdmorison/tiozin/commit/22f46d9eced8cc8e4f7f41bc9e82340f965a15e3))
+* **core:** ensure_setup now triggers setup on property access ([#247](https://github.com/fdmorison/tiozin/issues/247)) ([e75f7cb](https://github.com/fdmorison/tiozin/commit/e75f7cb77a4d99f064800a7b6c527dd0a8c47bf7))
+* **core:** Rename commitlint config to .cjs to fix ESM load error ([#258](https://github.com/fdmorison/tiozin/issues/258)) ([e86ed9c](https://github.com/fdmorison/tiozin/commit/e86ed9c1335a356f8d71c70ecd3eab4aa71b484b))
+* **core:** Suppress pydantic warning that broke shell completion ([#275](https://github.com/fdmorison/tiozin/issues/275)) ([9e60f68](https://github.com/fdmorison/tiozin/commit/9e60f680611be31daf36baaa1d2a496adb4666fd))
+* **tio_kernel:** correct StateStatus method names in NoOpStateRegistry ([582a1c1](https://github.com/fdmorison/tiozin/commit/582a1c1f0b45fa6e844df21e7369c370fd21e33d))
+* **tio_kernel:** Correct StateStatus method names in NoOpStateRegistry ([#241](https://github.com/fdmorison/tiozin/issues/241)) ([7ca32a1](https://github.com/fdmorison/tiozin/commit/7ca32a1881ef5f37f20df3cdaa93783f724a4ac8))
+* **tio_spark:** make JSON reader options reliable in schema inference transform ([#226](https://github.com/fdmorison/tiozin/issues/226)) ([1db4aab](https://github.com/fdmorison/tiozin/commit/1db4aab3f77bd6e73a4d7cd591a50429a1a9b69d))
+* **tio_spark:** Preserve option values in SparkSchemaInferenceTransform ([#332](https://github.com/fdmorison/tiozin/issues/332)) ([eecbfb0](https://github.com/fdmorison/tiozin/commit/eecbfb0784019bbce1ac236dd5776533c047a723))
+
+
+### Documentation
+
+* **core:** Clarify CLI command help texts ([#271](https://github.com/fdmorison/tiozin/issues/271)) ([159b774](https://github.com/fdmorison/tiozin/commit/159b77428b362c8670a4e21a895652c9c4401c17))
+* **core:** Document the batch system ([#333](https://github.com/fdmorison/tiozin/issues/333)) ([d9ca243](https://github.com/fdmorison/tiozin/commit/d9ca243713f5cdc03f430a6fb4e34e37e5c2b64d))
+* **core:** Update outdated documentation ([#335](https://github.com/fdmorison/tiozin/issues/335)) ([b3d8d10](https://github.com/fdmorison/tiozin/commit/b3d8d105a5be74b95ba85daa85d2a673fdf17b8b))
+* **tio_spark:** document built-in timestamp formats for auto_timestamp_fields ([#235](https://github.com/fdmorison/tiozin/issues/235)) ([419463b](https://github.com/fdmorison/tiozin/commit/419463b3ab96fd03b874ec9951fafa113b97606c))
+
 ## [3.2.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.1.0...tiozin-v3.2.0) (2026-06-01)
 
 
