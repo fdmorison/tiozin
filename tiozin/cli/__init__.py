@@ -52,6 +52,10 @@ cli = typer.Typer(
     cls=TiozinCli,
     no_args_is_help=True,
     pretty_exceptions_show_locals=config.log_show_locals,
+    context_settings=dict(
+        allow_interspersed_args=True,
+        ignore_unknown_options=True,
+    ),
 )
 
 
