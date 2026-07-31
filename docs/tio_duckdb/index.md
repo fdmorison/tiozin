@@ -12,19 +12,20 @@ pip install tiozin[tio_duckdb]
 
 ## How data flows through steps
 
-Every step in `tio_duckdb` produces a `DuckDBPyRelation`. After each step runs, the framework automatically registers that relation as a named temporary view using the step's slug as the view name. The slug is the slugified version of the step's `name` field: lowercase, with spaces and special characters replaced by underscores, and consecutive separators collapsed.
+Every step in `tio_duckdb` produces a `DuckDBPyRelation`. After each step runs, the framework automatically registers that relation as a named temporary view using the step's `name` as the view name.
 
 ```yaml
 inputs:
   - kind: DuckdbFileInput
-    name: raw customers      # slug: raw_customers
+    name: raw customers
+    # → registered as the view raw_customers
     path: data/customers.csv
 
 transforms:
   - kind: DuckdbSqlTransform
     name: filtered
     query: SELECT * FROM raw_customers WHERE status = 'active'
-    # raw_customers is available because the input was registered under that slug
+    # raw_customers is available because the input was registered under that name
 ```
 
 This view registration happens at the framework level for all inputs and transforms. Steps inherit the registered views automatically.

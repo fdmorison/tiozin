@@ -26,7 +26,6 @@ These come from the job definition itself and are always available:
 | Variable | Example value |
 |---|---|
 | `name` | `"ecommerce_orders_ingestion"` |
-| `slug` | `"ecommerce-orders-ingestion"` |
 | `org` | `"tiozin"` |
 | `region` | `"latam"` |
 | `domain` | `"ecommerce"` |

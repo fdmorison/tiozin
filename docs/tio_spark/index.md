@@ -12,19 +12,20 @@ pip install tiozin[tio_spark]
 
 ## How data flows between steps
 
-Every step in `tio_spark` produces a Spark `DataFrame`. After each step runs, the framework registers that DataFrame as a named temporary view using the step's slug. The slug is the slugified version of the step's `name` field: lowercase, with spaces and special characters replaced by underscores.
+Every step in `tio_spark` produces a Spark `DataFrame`. After each step runs, the framework registers that DataFrame as a named temporary view using the step's `name`.
 
 ```yaml
 inputs:
   - kind: SparkFileInput
-    name: raw customers      # slug: raw_customers
+    name: raw customers
+    # → registered as the view raw_customers
     path: data/customers
 
 transforms:
   - kind: SparkSqlTransform
     name: filtered
     query: SELECT * FROM raw_customers WHERE status = 'active'
-    # raw_customers is available because the input was registered under that slug
+    # raw_customers is available because the input was registered under that name
 ```
 
 This view registration happens at the framework level for all inputs and transforms.

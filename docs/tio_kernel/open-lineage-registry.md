@@ -75,7 +75,7 @@ Each event follows the OpenLineage `RunEvent` spec:
 }
 ```
 
-The job `namespace` comes from the job's `namespace` field. When not set explicitly, it is derived from `TIO_JOB_NAMESPACE_TEMPLATE` (default: `org.region.domain.subdomain`). The `name` is the job slug.
+The job `namespace` comes from the job's `namespace` field. When not set explicitly, it is derived from `TIO_JOB_NAMESPACE_TEMPLATE` (default: `org.region.domain.subdomain`). The `name` is the job name. Step-level events use the qualified form `<job_name>.<step_name>`.
 
 Inputs and outputs in the event are the physical datasets reported by each step. File plugins report the actual paths. Postgres plugins report the target table. Steps that do not override `external_datasets()` fall back to a logical dataset derived from the step's taxonomy fields.
 

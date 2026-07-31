@@ -18,7 +18,7 @@ transforms:
 
 ## Referencing upstream steps
 
-Because the framework registers every step result as a named temporary view, any input or prior transform is referenceable by its slug directly in SQL:
+Because the framework registers every step result as a named temporary view, any input or prior transform is referenceable by its `name` directly in SQL:
 
 ```yaml
 inputs:
@@ -41,7 +41,7 @@ transforms:
 
 ## The @data alias
 
-`@data` is a shorthand that resolves to the slug of the upstream step at query time. Use it to write a generic transform without hardcoding the upstream step name.
+`@data` is a shorthand that resolves to the name of the upstream step at query time. Use it to write a generic transform without hardcoding the upstream step name.
 
 ```yaml
 transforms:
