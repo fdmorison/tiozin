@@ -9,7 +9,6 @@ from tiozin.api.metadata.batch.enums import BacklogPolicy
 from tiozin.api.owned import Owned
 from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
-from tiozin.compose.templating.filters import JINJA
 from tiozin.exceptions import RequiredArgumentError
 from tiozin.utils import default
 
@@ -102,9 +101,7 @@ class Job(Resourceful, Owned, Tiozin, Generic[TData]):
             inputs=inputs,
         )
 
-        self.namespace = JINJA.from_string(namespace or config.tiozin_namespace_template).render(
-            **self.to_resource_dict()
-        )
+        self.namespace = namespace or config.tiozin_namespace_template
         self.cadence = Cadence.default(cadence)
         self.max_batches_per_run = default(max_batches_per_run, config.default_max_batches_per_run)
         self.backlog_policy = BacklogPolicy.default(backlog_policy)

@@ -186,6 +186,24 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _init_namespace(self) -> Self:
+        """
+        Renders the namespace template if one is set.
+
+        Only the root context is ever given an unrendered template to
+        start with (usually the job); child contexts inherit an
+        already-rendered value (usually the steps), so this is effectively
+        a no-op for them.
+        """
+        if not self.namespace:
+            return self
+
+        self.__dict__["namespace"] = JINJA.from_string(self.namespace).render(
+            **self.to_resource_dict()
+        )
+        return self
+
+    @model_validator(mode="after")
     def _init_temp_workdir(self) -> Self:
         if self.temp_workdir:
             return self
