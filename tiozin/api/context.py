@@ -498,6 +498,16 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return backlog[0].set_bookmark(key, next_value)
 
     @property
+    def id(self) -> str:
+        """
+        Unique job/step identifier, following OpenLineage's naming convention:
+        https://openlineage.io/docs/spec/naming/
+
+        The job name is unique within its namespace.
+        """
+        return f"{self.namespace}.{self.qualified_name}"
+
+    @property
     def is_job(self) -> bool:
         return self.tiozin_role == "Job"
 
