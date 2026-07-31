@@ -201,6 +201,8 @@ Context is activated automatically by the framework before calling `setup()`, `r
 | Field | Type | Description |
 |---|---|---|
 | `name` | `str` | Job or step name, normalized as an underscore-separated slug |
+| `qualified_name` | `str` | Job and step names joined with a dot, as in `example_job.load_it`. On a job context, the job name alone |
+| `qualified_slug` | `str` | The same identity as a single slug, as in `example_job_load_it` |
 | `run_id` | `str` | Unique execution ID for this run |
 | `nominal_time` | `NominalTime` | Reference time for this execution. A UTC datetime truncated to the job's cadence |
 | `org`, `domain`, `layer`, ... | `str` | Domain fields. See [Jobs](concepts/jobs.md#domain) |
