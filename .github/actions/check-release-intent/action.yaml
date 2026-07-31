@@ -12,6 +12,8 @@ runs:
           release:
             - 'tiozin/**/*.py'
             - 'pyproject.toml'
+            - 'docs/**'
+            - 'README.md'
 
     - name: Validate release intent
       uses: actions/github-script@v7
