@@ -57,6 +57,7 @@ class MyInput(Input[list]):
 | `registries.setting` | `SettingRegistry` | Configuration values |
 | `registries.secret` | `SecretRegistry` | Credentials and secrets |
 | `registries.schema` | `SchemaRegistry` | Data schemas |
+| `registries.batch` | `BatchRegistry` | Batches and backlogs |
 | `registries.job` | `JobRegistry` | Job manifests |
 | `registries.metric` | `MetricRegistry` | Execution metrics |
 | `registries.lineage` | `LineageRegistry` | Lineage events |

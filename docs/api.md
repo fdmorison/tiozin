@@ -20,6 +20,9 @@ from tiozin import (
     Output,
     # Metadata
     JobManifest,
+    Batch,
+    BatchStatus,
+    BacklogPolicy,
     # Registries
     JobRegistry,
     SettingRegistry,
@@ -137,9 +140,9 @@ Each subtype defines its own contract. The table below lists the methods or exte
 | `JobRegistry` | `get(identifier: str) -> JobManifest`, `register(identifier: str, value: JobManifest) -> None` |
 | `LineageRegistry` | `emit(event: LineageEvent) -> None` |
 | `MetricRegistry` | Extend to implement custom metric tracking against a backend such as Prometheus, InfluxDB, or Datadog |
-| `BatchRegistry` | Extend to track batch executions and commit logs (pending, running, success, failure) against a database or key/value store |
+| `BatchRegistry` | Persists and queries batches. See [Registries](concepts/registries.md#batchregistry) |
 
-`SchemaRegistry` and `LineageRegistry` accept extra constructor parameters on top of the base ones. See [Extending the Registry](extending/registry.md) for the full subtype contracts.
+`SchemaRegistry`, `LineageRegistry`, and `BatchRegistry` accept extra constructor parameters on top of the base ones. See [Extending the Registry](extending/registry.md) for the full subtype contracts.
 
 ## Context
 
@@ -202,45 +205,24 @@ class AuditOutput(Output):
         return data
 ```
 
-### Accessing Pending Batches
+### Accessing the Job Backlog
 
-The `get_job_backlog()` method returns the pending batches to be processed by the current job execution.
+The `Batch` is Tiozin's state model for incremental processing. This API lets incremental jobs work with pending data through a backlog abstraction.
 
-The number of batches is limited by the job's `max_batches_per_run`. For example, if `max_batches_per_run: 10`, each execution processes at most ten batches, and `get_job_backlog()` returns at most ten batches. See [Jobs](concepts/jobs.md#max-batches-per-run).
+Like a task backlog, each item represents a unit of work waiting to be completed. In Tiozin, those work items are batches of data. Plugins inspect and update batches while Tiozin tracks their execution and processing state.
 
-Each batch processes data within a nominal time window bounded by `nominal_start_time` and `nominal_end_time`. Both are UTC datetimes truncated to the job's cadence. When omitted, `nominal_start_time` defaults to the Unix epoch (`1970-01-01T00:00:00Z`), so the window begins at the earliest available data, while `nominal_end_time` defaults to the current time. `nominal_time` uniquely identifies the batch and denotes the end of its processing window.
+See [Batches](concepts/batches.md) for the batch model and lifecycle, and [How to Work with Backlogs](how-to/batches.md) for practical usage.
 
-Each batch has an `attributes` dictionary for custom batch properties. These properties travel with the batch as it propagates across pipeline layers. Changes to `attributes` are transactional: they are committed only if the job completes successfully. If the job fails, all changes to `attributes` are rolled back.
-
-For example, an output may record the location where it wrote the data:
-
-```python
-class FileOutput(Output):
-    def write(self, df: DataFrame) -> DataFrame:
-        path = "s3://bucket/prefix/table/dt=2026-07-16"
-
-        df.write.mode("overwrite").parquet(path)
-
-        for batch in self.context.get_job_backlog():
-            batch.attributes["path"] = path
-
-        return df
-```
-
-A downstream input can then consume the paths recorded on those batches:
-
-```python
-class FileInput(Input):
-    def read(self) -> DataFrame:
-        paths = set()
-
-        for batch in self.context.get_job_backlog():
-            path = batch.attributes["path"]
-            paths.add(path)
-            self.info(f"Reading {path}")
-
-        return self.spark.read.parquet(*paths)
-```
+| Member | Type | Description |
+| --- | --- | --- |
+| `cadence` | `Cadence` | Job cadence. See [Jobs](concepts/jobs.md#cadence). |
+| `backlog_policy` | `BacklogPolicy` | Active backlog policy. See [Jobs](concepts/jobs.md#backlog-policy). |
+| `batch_registry` | `BatchRegistry` | Registry subtype that persists and queries batches, falling back to `NoOpBatchRegistry` when none is configured. See [Registries](concepts/registries.md#batchregistry) for the full contract. |
+| `get_job_backlog()` | `list[Batch]` | Returns the batches assigned to the current execution, limited by the job's `max_batches_per_run`. See [Jobs](concepts/jobs.md#max-batches-per-run). |
+| `get_job_managed_bookmark(key, fallback=None)` | `Any` | Shortcut for `Batch.get_managed_bookmark()` on the first batch. Returns `fallback` when no batch is assigned. |
+| `set_job_managed_bookmark(key, next_value)` | `Any` | Shortcut for `Batch.set_managed_bookmark()` on the first batch. Returns `None` when no batch is assigned. |
+| `get_job_bookmark(key, fallback=None)` | `Any` | Shortcut for `Batch.get_bookmark()` on the first batch. Returns `fallback` when no batch is assigned. |
+| `set_job_bookmark(key, next_value)` | `Any` | Shortcut for `Batch.set_bookmark()` on the first batch. Returns `None` when no batch is assigned. |
 
 ## JobManifest
 

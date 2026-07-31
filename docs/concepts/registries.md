@@ -16,7 +16,7 @@ The framework defines seven registry contracts:
 | `SchemaRegistry` | Retrieves schema definitions for validation |
 | `LineageRegistry` | Registers data lineage events |
 | `MetricRegistry` | Registers execution metrics |
-| `BatchRegistry` | Registers batch executions |
+| `BatchRegistry` | Registers batches and serves the pending backlog |
 
 ## Built-in registries
 
@@ -59,9 +59,27 @@ Each registry type defines its own read and write methods. The signatures differ
 | `SchemaRegistry` | `get(subject, version=None)` | `register(subject, value)` |
 | `LineageRegistry` | (none) | `emit(event)` |
 | `MetricRegistry` | inherited from base | inherited from base |
-| `BatchRegistry` | inherited from base | inherited from base |
+| `BatchRegistry` | `get`, `get_frontier`, `get_backlog`, `get_board` | `register`, `register_transition` |
 
 All registries that have a `get()` method raise when the item is not found and `failfast=True`. When `failfast=False` (the default), `get()` returns `None` instead.
+
+### BatchRegistry
+
+The `BatchRegistry` persists and queries batches.
+
+| Member | Type | Description |
+| --- | --- | --- |
+| `retries` | `int` | Maximum retry attempts before a failed batch is quarantined. |
+| `register(batch)` | `Batch` | Registers a new batch. |
+| `register_transition(batch)` | `Batch` | Persists a batch status transition. |
+| `get(id, **resource)` | `Batch` | Returns the batch identified by `id` within the given resource. |
+| `get_frontier(**resource)` | `Batch \| None` | Returns the frontier batch for the given resource. |
+| `get_backlog(**resource)` | `list[Batch]` | Returns the pending backlog for the given resource. |
+| `get_board(limit, since, **resource)` | `list[Batch]` | Returns the batch history for the given resource. |
+
+The `**resource` parameter consists of the batch fields `org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model`.
+
+See [Batches](batches.md) for the batch model and lifecycle. See [IcebergBatchRegistry](../tio_kernel/iceberg-batch-registry.md) for the reference implementation.
 
 ## Implementing a custom registry
 

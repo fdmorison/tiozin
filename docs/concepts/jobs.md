@@ -56,7 +56,7 @@ These fields declare the organizational context and lineage of the data this job
 |---|---|---|---|---|
 | `cadence` | no | `Cadence` | `minutely` | Rhythm at which the job runs. Determines the nominal time of each execution. One of `minutely`, `hourly`, `daily`, `weekly`, or `monthly` |
 | `backlog_policy` | no | `BacklogPolicy` | `stateless` | How the job participates in batch backlogs. One of `stateless`, `incremental`, or `consumer` |
-| `max_batches_per_run` | no | `int` | `1` | Maximum number of batches a single execution consumes |
+| `max_batches_per_run` | no | `int` | `1` | Number of batches processed together as one transaction |
 
 ### Pipeline components
 
@@ -86,13 +86,17 @@ Every job declares a backlog policy that controls how it participates in batch b
 
 A `stateless` job runs without batches. It runs on every submit, even when the backlog is empty.
 
-An `incremental` job produces and consumes its own incremental batches. A `consumer` job consumes batches produced by an upstream incremental job.
+An `incremental` job produces and consumes its own batches, advancing its processing window after each successful execution. A `consumer` job consumes batches produced elsewhere, either by an upstream job or by an operator.
 
 Both `incremental` and `consumer` are backlog-driven. They run only when the backlog holds batches to process and skip execution when the backlog is empty.
 
+See [Batches](batches.md) for what batches, backlogs, and bookmarks are, and [How to Process Pending Work Incrementally](../how-to/batches.md) for incremental loads, bookmarks in practice, and consumer jobs.
+
 ## Max Batches Per Run
 
-By default, when job starts, the backlog is processed one batch at a time. Increasing `max_batches_per_run` allows batches to be processed in groups. A limit large enough executes the entire backlog in a single run.
+A submission works through the whole backlog, not a slice of it. `max_batches_per_run` sets how many batches are processed together in each transactional group: the default of 1 processes one batch at a time, while a higher value hands that many batches to a single call to `submit()`.
+
+The batches in a group succeed or fail together. When a group fails, the job still works through the remaining groups before reporting the failure.
 
 ## Invariants
 

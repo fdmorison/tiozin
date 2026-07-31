@@ -18,12 +18,15 @@ registries:
 | Property | Required | Default | Description |
 | -------- | -------- | ------- | ----------- |
 | `location` | yes | | Location of the Iceberg catalog. Its meaning depends on the selected catalog type. |
-| `namespace` | no | `default` | Iceberg namespace containing the batch table. |
+| `database` | no | `default` | Iceberg namespace containing the batch table. |
 | `table` | no | `tiozin_batches` | Batch table name. |
 | `catalog` | no | `tiozin` | Catalog name. |
 | `catalog_type` | no | `sqlite` | Catalog implementation used by PyIceberg. |
 | `retention_days` | no | `30` | Number of days of batch history to retain. |
+| `retries` | no | `3` | Maximum number of retry attempts before a failed batch is quarantined. |
 | Any other property | no | | Forwarded unchanged to the underlying PyIceberg catalog configuration. |
+
+`retries` belongs to every batch registry, not only this one. Its default comes from `TIO_BATCH_REGISTRY_RETRIES`, which itself defaults to `3`. Once a batch exhausts them, the next failure moves it to `QUARANTINED` instead of `FAILED`, and the backlog stops retrying it.
 
 ## Location
 
@@ -35,7 +38,7 @@ The meaning of `location` depends on the selected catalog type. For local catalo
 | `rest` | URI of the Iceberg REST catalog endpoint. |
 | Other catalog types | Usually ignored. The catalog-specific configuration determines how the catalog is located. |
 
-For local development, `location` is simply a directory:
+For local development, `location` is a directory:
 
 ```yaml
 registries:
@@ -107,9 +110,35 @@ registries:
 
 Refer to the [PyIceberg catalog configuration](https://py.iceberg.apache.org/configuration/) for the catalog-specific properties supported by each implementation.
 
-## Attributes
+## What The Table Stores
 
-Batch `attributes` are stored as a JSON document, allowing arbitrary metadata to be associated with each batch without requiring schema changes as new attributes are introduced.
+Each batch is one row. The table is partitioned by the resource fields (`org`, `region`, `domain`, `subdomain`, `layer`, `product`, `model`), so jobs writing different resources do not contend for the same files, and it is sorted by `created_at`.
+
+Alongside those fields, every row carries:
+
+| Column | Description |
+|--------|-------------|
+| `id` | Unique batch identifier. |
+| `nominal_time` | Logical time that, together with the resource fields, identifies the batch. |
+| `nominal_start_time` | Start of the batch's processing window. |
+| `nominal_end_time` | End of the batch's processing window. |
+| `status` | Current lifecycle status of the batch. |
+| `attempts` | Number of execution attempts since the batch started or was replayed. |
+| `attributes` | JSON document of metadata scoped to a single execution. |
+| `bookmarks` | JSON document of metadata carried across executions. |
+| `framework` | Framework version that created the batch, as `{name}/{version}`. |
+| `created_at` | When the batch was first registered. |
+| `updated_at` | When the batch was last updated. |
+
+## Attributes And Bookmarks
+
+Both are stored as JSON documents, so their keys can vary freely from one batch to the next without requiring schema changes.
+
+`attributes` propagate across pipeline layers within a single execution, and they are transactional: when the job fails, they roll back to the values recorded before the run.
+
+`bookmarks` propagate across executions of the same job and carry into the next batch, which is what lets an incremental job resume where the previous one stopped.
+
+For how batches use both during a run, see [How to Process Pending Work Incrementally](../how-to/batches.md).
 
 ## Retention
 
@@ -181,5 +210,6 @@ If no batch registry is configured, Tiozin uses `NoOpBatchRegistry`, which disca
 
 ## Related
 
+- [How to Process Pending Work Incrementally](../how-to/batches.md)
 - [NoOpBatchRegistry](noops.md)
 - [Working with Registries](../extending/registry.md)

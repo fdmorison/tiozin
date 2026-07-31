@@ -372,8 +372,21 @@ tiozin batch board jobs/orders_daily_summary.yaml --limit 20 --since 2026-02-01
 ```
 
 The board shows every batch, regardless of status, ordered from newest to oldest. Use `--limit` and
-`--since` to narrow the result. Every inspection command displays the batch `id`, which is required
-by commands that modify a batch.
+`--since` to narrow the result.
+
+Every inspection command prints the same table:
+
+- `#` numbers the rows in the order they were returned.
+- `ID` is the batch identifier, with the framework version that created the batch underneath. Commands
+  that modify a batch take this value.
+- `NOMINAL_TIME` is the nominal time the batch stands for.
+- `NOMINAL_WINDOW` is the processing window as `start → end`, with its duration underneath.
+- `STATUS` is the current status: `PENDING`, `RUNNING`, `FAILED`, `SUCCEEDED`, `QUARANTINED`, or
+  `CANCELED`.
+- `ATTEMPTS` counts how many executions the batch has entered since it was registered or last replayed.
+- `BOOKMARKS` and `ATTRIBUTES` print the batch metadata as YAML, or `empty` when there is none.
+- `CREATED_AT` and `UPDATED_AT` are the registration and last change timestamps, each with its relative
+  time underneath.
 
 Use `replay` to return a batch to the `PENDING` state so it will be processed again by the next run.
 
@@ -388,23 +401,43 @@ Use `cancel` to remove a batch from the backlog, preventing future runs from pro
 tiozin batch cancel jobs/orders_daily_summary.yaml 018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90
 ```
 
-State transition commands accept `--attribute` (or `-a`) to attach arbitrary metadata to the
-transition. Specify each attribute as a `key=value` pair and repeat the option to provide multiple
-attributes.
+The `register`, `replay`, `cancel`, and `quarantine` commands accept `-a` (`--attribute`) to record
+metadata on the batch and `-b` (`--bookmark`) to set the progress markers it carries. Specify each one
+as a `key=value` pair and repeat the option for more than one. Values are parsed as YAML, so `3`
+arrives as an integer and `true` as a boolean, and a dotted key expands into a nested value.
 
 ```bash
 tiozin batch quarantine jobs/orders_daily_summary.yaml \
   018f3a2b-9c7d-7e1a-b4f2-6a1c3d5e7f90 \
-  -a reason=bad-source \
-  -a requested_by=alice
+  -a quarantine.reason=bad-source \
+  -a quarantine.attempts=3 \
+  -b source.offset=0
 ```
 
-To create a batch manually for a specific nominal time, use `register`. Newly registered batches
-start in the `PENDING` state.
+The batch stores:
+
+```yaml
+attributes:
+  quarantine:
+    reason: bad-source
+    attempts: 3
+bookmarks:
+  source:
+    offset: 0
+```
+
+To create a batch manually for a specific nominal time, use `register`. Newly registered batches start
+in the `PENDING` state and carry whatever attributes and bookmarks the command sets.
+
+The nominal time must be an ISO 8601 datetime carrying a timezone.
 
 ```bash
-tiozin batch register jobs/orders_daily_summary.yaml 2026-02-24T00:00:00
+tiozin batch register jobs/orders_daily_summary.yaml 2026-02-24T00:00:00Z \
+  -b source.offset=42
 ```
+
+See [How to Process Pending Work Incrementally](how-to/batches.md) for incremental loads, adjusting a watermark, and
+consumer jobs.
 
 ## Templating
 
