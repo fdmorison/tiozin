@@ -89,9 +89,10 @@ class BatchStatus(LowerEnum):
         A running batch that fails is retried via RUNNING. After exhausting
         the retry limit, it is escalated to QUARANTINED instead of retried again.
 
-    FAILED -> QUARANTINED
-        A batch can still be quarantined by manual or administrative action, such as an operator
-        using the CLI. This is a separate path, not part of automatic retry exhaustion.
+    PENDING|RUNNING|FAILED -> QUARANTINED
+        A queued, running, or failed batch can also be quarantined by manual or administrative
+        action, such as an operator using the CLI. This is a separate path, not part of automatic
+        retry exhaustion.
 
     PENDING|RUNNING -> CANCELED
         A batch can be abandoned while queued or while running.
@@ -125,8 +126,8 @@ class BatchStatus(LowerEnum):
     CANCELED = auto()
 
     __state_machine__: ClassVar[dict[Self, set[Self]]] = {
-        PENDING: {PENDING, RUNNING, CANCELED},
-        RUNNING: {RUNNING, PENDING, SUCCEEDED, FAILED, CANCELED, QUARANTINED},
+        PENDING: {PENDING, RUNNING, CANCELED, QUARANTINED},
+        RUNNING: {PENDING, RUNNING, CANCELED, QUARANTINED, FAILED, SUCCEEDED},
         FAILED: {PENDING, RUNNING, QUARANTINED},
         SUCCEEDED: {PENDING},
         CANCELED: {PENDING},
