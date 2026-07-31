@@ -528,12 +528,23 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
 
     @property
     def qualified_name(self) -> str:
+        """
+        Dot-separated hierarchical name, e.g. `job_name.step_name`.
+
+        Inspired by the "Job Naming" section of
+        https://openlineage.io/docs/spec/naming/.
+        """
         if self.is_root:
             return self.name
         return f"{self.job.name}.{self.name}"
 
     @property
     def qualified_slug(self) -> str:
+        """
+        Slugified version of `qualified_name`, e.g. `job_name_step_name`.
+
+        Good for naming resources such as datasets, tables, etc.
+        """
         if self.is_root:
             return self.name
         return f"{self.job.name}_{self.name}"
