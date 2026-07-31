@@ -289,6 +289,27 @@ def test_qualified_slug_should_join_job_and_step_names_when_context_is_child(
 
 
 # =============================================================================
+# Testing Context.id
+# =============================================================================
+
+
+def test_id_should_join_namespace_and_name_when_context_is_root(job_context: Context):
+    # Assert
+    actual = job_context.id
+    expected = "acme.latam.ecommerce.checkout.test_job"
+    assert actual == expected
+
+
+def test_id_should_join_namespace_and_qualified_name_when_context_is_child(
+    input_context: Context,
+):
+    # Assert
+    actual = input_context.id
+    expected = "acme.latam.ecommerce.checkout.test_job.test_input"
+    assert actual == expected
+
+
+# =============================================================================
 # Testing Context.get_job_backlog
 # =============================================================================
 
