@@ -11,19 +11,35 @@ from tiozin import (
     # Bases
     Tiozin,
     Registry,
-    # Processors
+    # Runtime
     Job,
     Runner,
     Input,
     Transform,
     CoTransform,
     Output,
+    EtlStep,
+    Context,
+    TiozinApp,
+    TemplateString,
+    tioproxy,
     # Metadata
     JobManifest,
+    RunnerManifest,
+    InputManifest,
+    TransformManifest,
+    OutputManifest,
+    SettingsManifest,
+    Schema,
+    Secret,
+    Dataset,
+    Datasets,
+    LineageDataset,
+    LineageEvent,
+    LineageRunEvent,
     Batch,
     BatchStatus,
     BacklogPolicy,
-    # Registries
     JobRegistry,
     SettingRegistry,
     SecretRegistry,
@@ -31,12 +47,10 @@ from tiozin import (
     LineageRegistry,
     MetricRegistry,
     BatchRegistry,
-    # Runtime
-    Context,
-    TiozinApp,
-    tioproxy,
 )
 ```
+
+Three enums live one level down, in `tiozin.api`: `Cadence`, `LowerEnum`, and `UpperEnum`.
 
 ## TiozinApp
 
@@ -49,13 +63,14 @@ app = TiozinApp()
 app.run("path/to/job.yaml")
 ```
 
-`run()` accepts:
-- A path to a YAML or JSON file
-- A raw YAML or JSON string
-- A `JobManifest` object
-- A `Job` instance
+`run()` takes one or more jobs as positional arguments, or a single list. Each item may be:
 
-Returns the job execution result (provider-specific).
+- A `Job` instance
+- A `JobManifest` object
+- A raw YAML or JSON string
+- A job identifier resolved by the job registry. With the default file registry, the identifier is the manifest path, joined to the registry location when it is relative
+
+Returns a list of results, one per job, in submission order.
 
 ## Tiozin (base)
 
@@ -64,9 +79,9 @@ All executable components extend `Tiozin`. It provides:
 | Property | Description |
 |---|---|
 | `tiozin_name` | Class name used as the `kind` in YAML |
-| `tiozin_role` | Role: `job`, `runner`, `input`, `transform`, `output`, `registry` |
+| `tiozin_role` | Role class name: `Job`, `Runner`, `Input`, `Transform`, `Output`, or `Registry` |
 | `tiozin_family` | Provider family name (e.g. `tio_spark`, `tio_duckdb`) |
-| `tiozin_uri` | Fully qualified identifier: `<family>/<role>/<name>` |
+| `tiozin_uri` | Fully qualified identifier: `tiozin://<family>/<role>/<name>`, with the role lowercased |
 | `context` | Active execution `Context` (raises if no active context) |
 
 ## Job
@@ -111,7 +126,7 @@ Abstract base for data destinations. Extend and implement `write()`. See [Steps]
 
 `write()` can return the data, a writer object, or `None`. The return value becomes part of the execution plan passed to the runner's `run()` method.
 
-Lifecycle: `setup(data)` → `write(data)` → `teardown(data)`
+Lifecycle: `setup()` → `write(data)` → `teardown()`
 
 ## Registry
 
@@ -139,14 +154,18 @@ Each subtype defines its own contract. The table below lists the methods or exte
 | `SchemaRegistry` | `get(subject: str, version: str = None) -> Schema`, `register(subject: str, value: Schema) -> None` |
 | `JobRegistry` | `get(identifier: str) -> JobManifest`, `register(identifier: str, value: JobManifest) -> None` |
 | `LineageRegistry` | `emit(event: LineageEvent) -> None` |
-| `MetricRegistry` | Extend to implement custom metric tracking against a backend such as Prometheus, InfluxDB, or Datadog |
+| `MetricRegistry` | No methods yet. The class is declared as a reservation for future use, with metric backends such as Prometheus, InfluxDB, or Datadog as the intended direction |
 | `BatchRegistry` | Persists and queries batches. See [Registries](concepts/registries.md#batchregistry) |
 
 `SchemaRegistry`, `LineageRegistry`, and `BatchRegistry` accept extra constructor parameters on top of the base ones. See [Extending the Registry](extending/registry.md) for the full subtype contracts.
 
 ## Context
 
-Holds the execution scope for the current job or step. Populated automatically by the framework. Every step and runner that runs inside a job has access to the same context for that execution.
+Holds the execution scope for the current job or step. The framework builds one context for the job and, from it, a separate context for every step that runs inside that job.
+
+Those contexts are not identical. Each one carries its own `name`, `kind`, `options`, `slug`, and `temp_workdir`, because they describe the component the context belongs to. The domain fields (`org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model`) take the step's own value and fall back to the job's when the step declares none. Everything that describes the execution as a whole is inherited unchanged from the job: `namespace`, the ownership fields (`maintainer`, `cost_center`, `owner`, and `labels`), and the runtime values `job`, `runner`, `cadence`, `backlog_policy`, `nominal_time`, `shared`, `catalog`, `registries`, and `template_vars`.
+
+For a plugin developer, `Context` is the API to work against. It is the single place that exposes what the framework knows about the running execution: who the job is, which runner is active, which registries are available, and which batches are waiting to be processed.
 
 ### Thread and async safety
 
@@ -163,10 +182,17 @@ These guarantees are provided by the Python runtime and do not require any appli
 From inside any Tiozin plugin:
 
 ```python
+from tiozin import Context
+from tiozin.utils import current_context, try_current_context
+
 ctx = self.context                     # raises if no active context
 ctx = Context.current()                # same
 ctx = Context.current(required=False)  # returns None if not active
+ctx = current_context()                # raises if no active context
+ctx = try_current_context()            # returns None if not active
 ```
+
+`current_context()` and `try_current_context()` are thin wrappers over `Context.current()`. They exist for helper code that is not a plugin method and therefore has no `self.context` to reach for.
 
 Context is activated automatically by the framework before calling `setup()`, `read()`, `transform()`, `write()`, or `teardown()` methods. Manual activation is not required.
 
@@ -176,16 +202,22 @@ Context is activated automatically by the framework before calling `setup()`, `r
 |---|---|---|
 | `name` | `str` | Job or step name |
 | `run_id` | `str` | Unique execution ID for this run |
-| `nominal_time` | `DateTime` | Reference time for this execution (UTC) |
+| `nominal_time` | `NominalTime` | Reference time for this execution. A UTC datetime truncated to the job's cadence |
 | `org`, `domain`, `layer`, ... | `str` | Domain fields. See [Jobs](concepts/jobs.md#domain) |
 | `runner` | `Runner` | Active runner |
 | `job` | `Context` | The parent job context (same as `self` when accessed from a job) |
-| `shared` | `dict` | Shared mutable state for passing data between steps within the same execution |
+| `shared` | `dict` | Session-scoped state shared by every step of the same execution |
 | `temp_workdir` | `Path` | Temporary working directory for this component's execution |
 
-### Passing data between steps
+Every registry is reachable as a property: `setting_registry`, `secret_registry`, `schema_registry`, `job_registry`, `metric_registry`, `lineage_registry`, and `batch_registry`. Each returns the configured instance, or the fallback Tiozin installs when the job declares none, with the contracts listed in [Registry Subtypes](#registry-subtypes).
 
-`shared` is a plain `dict` scoped to the current job execution. Values written by one step are readable by any step that runs after it:
+### Sharing Session State
+
+Pipeline data does not pass through the context. It moves from step to step as the step's return value: the value returned by `read()` is the input of `transform()`, and the value returned by `transform()` is the input of `write()`. Tiozin wraps that value in a `Dataset`, which holds the payload together with its `(namespace, name)` identity and an optional `Schema`.
+
+`shared` answers a different need: values that are not the data itself but must remain available after the step that produced them finishes. It is a plain `dict` created once per job execution and passed to every step context, so every step reads and writes the same object. Session attributes in a web server are the closest analogy: whatever a step stores stays visible to every step that runs after it, and it is gone once the execution ends.
+
+Counting records in a transform and reporting the count from an output is a typical use:
 
 ```python
 from typing import Any
@@ -204,6 +236,8 @@ class AuditOutput(Output):
         self.info(f"{self.context.name}: writing {count} records")
         return data
 ```
+
+The dataset is still the return value of each method. Only the count is stored in `shared`.
 
 ### Accessing the Job Backlog
 
@@ -231,9 +265,14 @@ Pydantic model representing a parsed YAML job definition.
 ```python
 from tiozin import JobManifest
 
-# Parse from a YAML file path or raw YAML/JSON string
-manifest = JobManifest.try_from_yaml_or_json("path/to/job.yaml")
+manifest = JobManifest.from_file("path/to/job.yaml")  # local path or URI
+manifest = JobManifest.from_yaml(content)             # raw YAML or JSON string
+manifest = JobManifest.try_from_yaml(content)         # same, returns None instead of raising
 ```
+
+`from_file()` reads local paths and remote URIs through [fsspec](https://filesystem-spec.readthedocs.io/en/latest/), including `s3://`, `gs://`, `az://`, `http://`, `https://`, `ftp://`, and `sftp://`. Both YAML and JSON files are accepted.
+
+To accept any of these forms in a single call, use `TiozinApp.resolve_manifest()`. It returns a `JobManifest` as is, parses a string as YAML or JSON content, and falls back to a job registry lookup by identifier.
 
 ## @tioproxy
 
