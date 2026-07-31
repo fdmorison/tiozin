@@ -1,7 +1,6 @@
 import pytest
 
 from tests.stubs import InputStub, JobStub, RunnerStub
-from tiozin import config
 from tiozin.api import BacklogPolicy, Cadence
 
 # =============================================================================
@@ -31,28 +30,7 @@ def test_job_should_use_explicit_namespace_when_provided(
     assert actual == expected
 
 
-def test_job_should_derive_namespace_from_domain_fields_when_namespace_is_not_provided(
-    fake_domain: dict,
-    fake_governance: dict,
-    runner_stub: RunnerStub,
-    input_stub: InputStub,
-):
-    # Act
-    job = JobStub(
-        name="test_job",
-        runner=runner_stub,
-        inputs=[input_stub],
-        **fake_domain,
-        **fake_governance,
-    )
-
-    # Assert
-    actual = job.namespace
-    expected = "acme.latam.ecommerce.checkout"
-    assert actual == expected
-
-
-def test_job_should_render_namespace_template_when_namespace_is_a_jinja_string(
+def test_job_should_keep_namespace_unrendered_when_namespace_is_a_jinja_template(
     fake_domain: dict,
     fake_governance: dict,
     runner_stub: RunnerStub,
@@ -70,20 +48,16 @@ def test_job_should_render_namespace_template_when_namespace_is_a_jinja_string(
 
     # Assert
     actual = job.namespace
-    expected = "acme-checkout"
+    expected = "{{org}}-{{subdomain}}"
     assert actual == expected
 
 
-def test_job_should_render_namespace_from_custom_config_template(
-    monkeypatch: pytest.MonkeyPatch,
+def test_job_should_default_namespace_to_config_template_when_not_provided(
     fake_domain: dict,
     fake_governance: dict,
     runner_stub: RunnerStub,
     input_stub: InputStub,
 ):
-    # Arrange
-    monkeypatch.setattr(config, "tiozin_namespace_template", "{{org}}.{{domain}}")
-
     # Act
     job = JobStub(
         name="test_job",
@@ -95,7 +69,7 @@ def test_job_should_render_namespace_from_custom_config_template(
 
     # Assert
     actual = job.namespace
-    expected = "acme.ecommerce"
+    expected = "{{org}}.{{region}}.{{domain}}.{{subdomain}}"
     assert actual == expected
 
 

@@ -402,6 +402,44 @@ def test_context_should_calculate_lifecycle_delays(job_context: Context):
 
 
 # =============================================================================
+# Testing Context._init_namespace
+# =============================================================================
+
+
+def test_init_namespace_should_render_namespace_when_namespace_is_a_jinja_template(
+    job_stub: JobStub,
+):
+    # Arrange
+    job_stub.namespace = "{{org}}-{{subdomain}}"
+
+    # Act
+    result = Context.for_job(job_stub)
+
+    # Assert
+    actual = result.namespace
+    expected = "acme-checkout"
+    assert actual == expected
+
+
+def test_init_namespace_should_keep_namespace_unset_when_namespace_is_not_provided(
+    fake_domain: dict,
+):
+    # Act
+    result = Context(
+        name="test_input",
+        display_name="test_input",
+        kind="input",
+        tiozin_role="Input",
+        **fake_domain,
+    )
+
+    # Assert
+    actual = result.namespace
+    expected = None
+    assert actual == expected
+
+
+# =============================================================================
 # Testing Context._init_template_vars
 # =============================================================================
 
