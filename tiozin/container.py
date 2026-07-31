@@ -29,7 +29,7 @@ class AppContainer(Loggable):
         defaults.location = defaults.location or self.settings_path
 
         setting_registry = tiozin_registry.load(
-            tiozin_role=SettingRegistry,
+            role=SettingRegistry,
             **defaults.model_dump(),
         )
         setting_registry.setup()
