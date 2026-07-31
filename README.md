@@ -109,6 +109,7 @@ Tiozin is built around a small set of principles that are not features but const
 ### Concepts
 - [Family Model: Tios and Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/family.md)
 - [Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/jobs.md)
+- [Batches](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/batches.md)
 - [Runners](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/runners.md)
 - [Inputs, Transforms & Outputs](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/steps.md)
 - [Registries](https://github.com/fdmorison/tiozin/blob/main/docs/concepts/registries.md)
@@ -122,6 +123,7 @@ Tiozin is built around a small set of principles that are not features but const
 - [Tio Duckdb - DuckDB Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
 
 ### How-to Guides
+- [How to Work with Incremental Backlogs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/batches.md)
 - [How to Configure OpenLineage](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/openlineage.md)
 - [How to Use Schemas in Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/schemas.md)
 - [How to Use Secrets in Jobs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/secrets.md)
