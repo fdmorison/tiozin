@@ -246,6 +246,27 @@ def test_qualified_name_should_join_job_and_step_names_when_context_is_child(
 
 
 # =============================================================================
+# Testing Context.qualified_slug
+# =============================================================================
+
+
+def test_qualified_slug_should_return_name_when_context_is_root(job_context: Context):
+    # Assert
+    actual = job_context.qualified_slug
+    expected = "test_job"
+    assert actual == expected
+
+
+def test_qualified_slug_should_join_job_and_step_names_when_context_is_child(
+    input_context: Context,
+):
+    # Assert
+    actual = input_context.qualified_slug
+    expected = "test_job_test_input"
+    assert actual == expected
+
+
+# =============================================================================
 # Testing Context.get_job_backlog
 # =============================================================================
 
