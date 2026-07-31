@@ -512,6 +512,12 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return f"{self.job.name}.{self.name}"
 
     @property
+    def qualified_slug(self) -> str:
+        if self.is_root:
+            return self.name
+        return f"{self.job.name}_{self.name}"
+
+    @property
     def setting_registry(self) -> SettingRegistry:
         return self.registries.setting
 
