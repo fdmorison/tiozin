@@ -51,7 +51,7 @@ description: |
 
 ## Declare ownership
 
-These fields record who requested this job, who maintains it, and who pays for it. All are optional.
+These fields record who required this job, who maintains it, and which cost center is charged. All are optional.
 
 ```yaml
 owner: data-platform
