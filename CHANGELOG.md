@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.3.1...tiozin-v4.0.0) (2026-08-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** Refactor the Tiozin Job, Step and Context naming model ([#340](https://github.com/fdmorison/tiozin/issues/340))
+
+### Features
+
+* **core-api:** Mixin for ownership fields ([#341](https://github.com/fdmorison/tiozin/issues/341)) ([d08ca95](https://github.com/fdmorison/tiozin/commit/d08ca9560882e3df2b9030de293614857820a9ca))
+
+
+### Code Refactoring
+
+* **core:** Refactor the Tiozin Job, Step and Context naming model ([#340](https://github.com/fdmorison/tiozin/issues/340)) ([457fa75](https://github.com/fdmorison/tiozin/commit/457fa75163300e98b50b05388512e7d8966be157))
+
 ## [3.3.1](https://github.com/fdmorison/tiozin/compare/tiozin-v3.3.0...tiozin-v3.3.1) (2026-08-01)
 
 
