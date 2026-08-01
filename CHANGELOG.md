@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.1](https://github.com/fdmorison/tiozin/compare/tiozin-v3.3.0...tiozin-v3.3.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **core:** pass the correct kwarg to load the setting registry ([#338](https://github.com/fdmorison/tiozin/issues/338)) ([6cfc76d](https://github.com/fdmorison/tiozin/commit/6cfc76dbf20fa1e1c2470d2830706d7afa7261e5))
+
 ## [3.3.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.2.0...tiozin-v3.3.0) (2026-07-31)
 
 
