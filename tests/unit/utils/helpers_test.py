@@ -881,6 +881,13 @@ def test_human_join_should_quote_items_when_quote_is_true(items: list[str], expe
         ("special!@#chars", "special_chars"),
         ("already_valid", "already_valid"),
         ("UPPER CASE", "upper_case"),
+        ("FooBar", "foo_bar"),
+        ("FooBarBaz", "foo_bar_baz"),
+        ("parseURL", "parse_url"),
+        ("HTTPServer", "http_server"),
+        ("foo-bar", "foo_bar"),
+        ("foo----bar", "foo_bar"),
+        ("1foo", "_1foo"),
     ],
 )
 def test_slugify_should_return_safe_identifier(value: str, expected: str):
@@ -889,6 +896,17 @@ def test_slugify_should_return_safe_identifier(value: str, expected: str):
 
     # Assert
     actual = result
+    assert actual == expected
+
+
+@pytest.mark.parametrize("value", [None, ""])
+def test_slugify_should_accept_null_or_empty_string(value: str | None):
+    # Act
+    result = slugify(value)
+
+    # Assert
+    actual = result
+    expected = value
     assert actual == expected
 
 

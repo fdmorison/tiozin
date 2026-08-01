@@ -75,7 +75,7 @@ class LineageJob(Metadata):
     def from_context(cls, ctx: Context) -> LineageJob:
         return cls(
             namespace=ctx.namespace,
-            name=ctx.qualified_slug,
+            name=ctx.qualified_name,
             type=JobType.JOB,
             processing_type=ProcessingType.STREAMING
             if ctx.runner and ctx.runner.streaming
@@ -95,7 +95,7 @@ class LineageParentRun(Metadata):
             return None
         return cls(
             run_id=ctx.job.run_id,
-            name=ctx.job.qualified_slug,
+            name=ctx.job.qualified_name,
             namespace=ctx.job.namespace,
         )
 

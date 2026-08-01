@@ -7,7 +7,7 @@ runner:
   kind: DuckdbRunner
 ```
 
-By default, the runner opens a named in-memory database using the job's slug. For a job named `my-analytics-job`, the database is `:memory:my_analytics_job`. Named in-memory databases are shared: any other connection that opens `:memory:my_analytics_job` sees the same data. To point a second job at the same database, set `database` explicitly:
+By default, the runner opens a named in-memory database using the job name. Names are normalized as underscore-separated slugs, so a job declared as `my-analytics-job` gets `:memory:my_analytics_job`. Named in-memory databases are shared: any other connection that opens `:memory:my_analytics_job` sees the same data. To point a second job at the same database, set `database` explicitly:
 
 ```yaml
 runner:
@@ -27,7 +27,7 @@ runner:
 
 | Property | Description | Default |
 |---|---|---|
-| `database` | DuckDB database path, or `:memory:` for an anonymous in-memory database | `:memory:<job_slug>` |
+| `database` | DuckDB database path, or `:memory:` for an anonymous in-memory database | `:memory:<job_name>` |
 | `read_only` | Open the main database and all attached databases in read-only mode | `false` |
 | `attach` | Map of alias to path for external databases to attach during setup | `{}` |
 | `extensions` | DuckDB extensions to install and load during setup | `[]` |

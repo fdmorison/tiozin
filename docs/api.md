@@ -79,7 +79,7 @@ All executable components extend `Tiozin`. It provides:
 | Property | Description |
 |---|---|
 | `tiozin_name` | Class name used as the `kind` in YAML |
-| `tiozin_role` | Role class name: `Job`, `Runner`, `Input`, `Transform`, `Output`, or `Registry` |
+| `role` | Role class name: `Job`, `Runner`, `Input`, `Transform`, `Output`, or `Registry` |
 | `tiozin_family` | Provider family name (e.g. `tio_spark`, `tio_duckdb`) |
 | `tiozin_uri` | Fully qualified identifier: `tiozin://<family>/<role>/<name>`, with the role lowercased |
 | `context` | Active execution `Context` (raises if no active context) |
@@ -163,7 +163,7 @@ Each subtype defines its own contract. The table below lists the methods or exte
 
 Holds the execution scope for the current job or step. The framework builds one context for the job and, from it, a separate context for every step that runs inside that job.
 
-Those contexts are not identical. Each one carries its own `name`, `kind`, `options`, `slug`, and `temp_workdir`, because they describe the component the context belongs to. The domain fields (`org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model`) take the step's own value and fall back to the job's when the step declares none. Everything that describes the execution as a whole is inherited unchanged from the job: `namespace`, the ownership fields (`maintainer`, `cost_center`, `owner`, and `labels`), and the runtime values `job`, `runner`, `cadence`, `backlog_policy`, `nominal_time`, `shared`, `catalog`, `registries`, and `template_vars`.
+Those contexts are not identical. Each one carries its own `name`, `kind`, `options`, and `temp_workdir`, because they describe the component the context belongs to. The domain fields (`org`, `region`, `domain`, `subdomain`, `layer`, `product`, and `model`) take the step's own value and fall back to the job's when the step declares none. Everything that describes the execution as a whole is inherited unchanged from the job: `namespace`, the ownership fields (`maintainer`, `cost_center`, `owner`, and `labels`), and the runtime values `job`, `runner`, `cadence`, `backlog_policy`, `nominal_time`, `shared`, `catalog`, `registries`, and `template_vars`.
 
 For a plugin developer, `Context` is the API to work against. It is the single place that exposes what the framework knows about the running execution: who the job is, which runner is active, which registries are available, and which batches are waiting to be processed.
 
@@ -200,7 +200,10 @@ Context is activated automatically by the framework before calling `setup()`, `r
 
 | Field | Type | Description |
 |---|---|---|
-| `name` | `str` | Job or step name |
+| `name` | `str` | Job or step name, normalized as an underscore-separated slug |
+| `display_name` | `str` | Job or step name as declared, before slugification |
+| `qualified_name` | `str` | Job and step names joined with a dot, as in `example_job.load_it`. On a job context, the job name alone |
+| `qualified_slug` | `str` | The same identity as a single slug, as in `example_job_load_it` |
 | `run_id` | `str` | Unique execution ID for this run |
 | `nominal_time` | `NominalTime` | Reference time for this execution. A UTC datetime truncated to the job's cadence |
 | `org`, `domain`, `layer`, ... | `str` | Domain fields. See [Jobs](concepts/jobs.md#domain) |

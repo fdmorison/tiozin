@@ -34,7 +34,7 @@ Three lifecycle methods define the contract:
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
 | `kind` | yes | `str` | | Input type, used to resolve the plugin |
-| `name` | yes | `str` | | Unique identifier within the job |
+| `name` | yes | `str` | | Unique identifier within the job, normalized as an underscore-separated slug |
 | `description` | no | `str` | `None` | Short description of the data source |
 | `schema_subject` | no | `str` | `None` | Schema registry subject name |
 | `schema_version` | no | `str` | `None` | Specific schema version to enforce |
@@ -106,7 +106,7 @@ class MyCoTransform(CoTransform[Any]):
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
 | `kind` | yes | `str` | | Transform type, used to resolve the plugin |
-| `name` | yes | `str` | | Unique identifier within the job |
+| `name` | yes | `str` | | Unique identifier within the job, normalized as an underscore-separated slug |
 | `description` | no | `str` | `None` | Short description of the transformation |
 | `schema_subject` | no | `str` | `None` | Schema registry subject name |
 | `schema_version` | no | `str` | `None` | Specific schema version to enforce |
@@ -145,7 +145,7 @@ Three lifecycle methods define the contract:
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
 | `kind` | yes | `str` | | Output type, used to resolve the plugin |
-| `name` | yes | `str` | | Unique identifier within the job |
+| `name` | yes | `str` | | Unique identifier within the job, normalized as an underscore-separated slug |
 | `description` | no | `str` | `None` | Short description of the destination |
 | `schema_subject` | no | `str` | `None` | Schema registry subject name |
 | `schema_version` | no | `str` | `None` | Specific schema version to enforce |

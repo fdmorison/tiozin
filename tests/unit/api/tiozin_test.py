@@ -13,12 +13,12 @@ from tiozin.family.tio_kernel import (
 )
 
 # ============================================================================
-# Testing Tiozin.slug
+# Testing Tiozin.name
 # ============================================================================
 
 
 @pytest.mark.parametrize(
-    "name,expected_slug",
+    "name,expected_name",
     [
         ("my input", "my_input"),
         ("  my input  ", "my_input"),
@@ -27,25 +27,56 @@ from tiozin.family.tio_kernel import (
         ("already_valid", "already_valid"),
     ],
 )
-def test_tiozin_should_have_slug_derived_from_name(name: str, expected_slug: str):
+def test_tiozin_should_normalize_name(name: str, expected_name: str):
     # Arrange / Act
     tiozin = NoOpInput(
         name=name, org="x", region="x", domain="x", subdomain="x", layer="x", product="x", model="x"
     )
 
     # Assert
-    actual = tiozin.slug
-    expected = expected_slug
+    actual = tiozin.name
+    expected = expected_name
     assert actual == expected
 
 
-def test_tiozin_should_use_kind_as_slug_when_name_is_not_provided():
+def test_tiozin_should_use_kind_as_name_when_name_is_not_provided():
     # Arrange / Act
     tiozin = NoOpRunner()
 
     # Assert
-    actual = tiozin.slug
-    expected = "nooprunner"
+    actual = tiozin.name
+    expected = "no_op_runner"
+    assert actual == expected
+
+
+# ============================================================================
+# Testing Tiozin.display_name
+# ============================================================================
+
+
+def test_tiozin_should_preserve_display_name():
+    # Arrange / Act
+    tiozin = NoOpInput(name="My Step Name")
+
+    # Assert
+    actual = (
+        tiozin.display_name,
+        tiozin.name,
+    )
+    expected = (
+        "My Step Name",
+        "my_step_name",
+    )
+    assert actual == expected
+
+
+def test_tiozin_should_use_kind_as_display_name_when_name_is_not_provided():
+    # Arrange / Act
+    tiozin = NoOpRunner()
+
+    # Assert
+    actual = tiozin.display_name
+    expected = "NoOpRunner"
     assert actual == expected
 
 

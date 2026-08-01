@@ -1,6 +1,6 @@
 # SparkRunner
 
-Runs a Tiozin job on Apache Spark. During setup, it creates a `SparkSession` with the job slug as the app name. During teardown, it stops the session.
+Runs a Tiozin job on Apache Spark. During setup, it creates a `SparkSession` with the job name as the app name. During teardown, it stops the session.
 
 ```yaml
 runner:

@@ -71,7 +71,7 @@ class TransformProxy(wrapt.ObjectProxy):
                 output_dataset = (
                     Dataset.wrap(result)
                     .with_namespace(context.namespace)
-                    .with_name(context.qualified_slug)
+                    .with_name(context.qualified_name)
                     .with_schema(context.output_schema)
                 )
                 catalog.register(step, output=output_dataset)

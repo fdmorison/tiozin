@@ -23,7 +23,7 @@ The framework wraps every job in a `JobProxy` before execution. The proxy handle
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
 | `kind` | yes | `str` | | Job type, used to resolve the plugin |
-| `name` | yes | `str` | | Unique job identifier. Not the execution ID |
+| `name` | yes | `str` | | Unique job identifier, normalized as an underscore-separated slug. Not the execution ID |
 | `description` | no | `str` | `None` | Short description of the pipeline |
 
 ### Ownership

@@ -41,9 +41,9 @@ def test_for_job_should_create_job_context(
             "job": context,
             # Identity
             "name": job.name,
-            "slug": job.slug,
+            "display_name": job.display_name,
             "kind": job.kind,
-            "tiozin_role": job.tiozin_role,
+            "role": job.tiozin_role,
             # Domain / Governance
             **fake_domain,
             "namespace": "acme.latam.ecommerce.checkout",
@@ -67,7 +67,7 @@ def test_for_job_should_create_job_context(
             "output_schema": None,
             # Infra
             "catalog": ANY,
-            "temp_workdir": Path(f"/tmp/tiozin/{job.slug}/{context.run_id}"),
+            "temp_workdir": Path(f"/tmp/tiozin/{job.name}/{context.run_id}"),
             "template_vars": ANY,
             "shared": {},
         }
@@ -89,9 +89,9 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "job": None,
         # Identity
         "name": step.name,
-        "slug": step.slug,
+        "display_name": step.display_name,
         "kind": step.kind,
-        "tiozin_role": step.tiozin_role,
+        "role": step.tiozin_role,
         # Domain / Governance
         **fake_domain,
         "namespace": None,
@@ -119,7 +119,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "output_schema": None,
         # Infra
         "catalog": ANY,
-        "temp_workdir": Path(f"/tmp/tiozin/{step.slug}/{context.run_id}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{step.name}/{context.run_id}"),
         "template_vars": ANY,
         "shared": {},
     }
@@ -142,9 +142,9 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "job": job_context,
         # Identity
         "name": step.name,
-        "slug": step.slug,
+        "display_name": step.display_name,
         "kind": step.kind,
-        "tiozin_role": step.tiozin_role,
+        "role": step.tiozin_role,
         # Domain / Governance
         "org": job_context.org,
         "region": job_context.region,
@@ -178,10 +178,29 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "output_schema": None,
         # Infra
         "catalog": job_context.catalog,
-        "temp_workdir": Path(f"/tmp/tiozin/{job_context.slug}/{job_context.run_id}/{step.slug}"),
+        "temp_workdir": Path(f"/tmp/tiozin/{job_context.name}/{job_context.run_id}/{step.name}"),
         "template_vars": ANY,
         "shared": job_context.shared,
     }
+    assert actual == expected
+
+
+def test_for_job_should_keep_the_original_job_name_as_display_name(job_stub: JobStub):
+    # Arrange
+    job_stub.display_name = "My Test Job"
+
+    # Act
+    result = Context.for_job(job_stub)
+
+    # Assert
+    actual = (
+        result.display_name,
+        result.name,
+    )
+    expected = (
+        "My Test Job",
+        "test_job",
+    )
     assert actual == expected
 
 
@@ -228,23 +247,65 @@ def test_for_job_should_truncate_nominal_time_to_cadence_slot(
 
 
 # =============================================================================
+# Testing Context.qualified_name
+# =============================================================================
+
+
+def test_qualified_name_should_return_name_when_context_is_root(job_context: Context):
+    # Assert
+    actual = job_context.qualified_name
+    expected = "test_job"
+    assert actual == expected
+
+
+def test_qualified_name_should_join_job_and_step_names_when_context_is_child(
+    input_context: Context,
+):
+    # Assert
+    actual = input_context.qualified_name
+    expected = "test_job.test_input"
+    assert actual == expected
+
+
+# =============================================================================
 # Testing Context.qualified_slug
 # =============================================================================
 
 
-def test_qualified_slug_should_return_slug_when_context_is_root(job_context: Context):
+def test_qualified_slug_should_return_name_when_context_is_root(job_context: Context):
     # Assert
     actual = job_context.qualified_slug
-    expected = job_context.slug
+    expected = "test_job"
     assert actual == expected
 
 
-def test_qualified_slug_should_return_job_slug_and_step_slug_when_context_is_child(
-    job_context: Context, input_context: Context
+def test_qualified_slug_should_join_job_and_step_names_when_context_is_child(
+    input_context: Context,
 ):
     # Assert
     actual = input_context.qualified_slug
-    expected = f"{job_context.slug}.{input_context.slug}"
+    expected = "test_job_test_input"
+    assert actual == expected
+
+
+# =============================================================================
+# Testing Context.id
+# =============================================================================
+
+
+def test_id_should_join_namespace_and_name_when_context_is_root(job_context: Context):
+    # Assert
+    actual = job_context.id
+    expected = "acme.latam.ecommerce.checkout.test_job"
+    assert actual == expected
+
+
+def test_id_should_join_namespace_and_qualified_name_when_context_is_child(
+    input_context: Context,
+):
+    # Assert
+    actual = input_context.id
+    expected = "acme.latam.ecommerce.checkout.test_job.test_input"
     assert actual == expected
 
 
@@ -341,6 +402,44 @@ def test_context_should_calculate_lifecycle_delays(job_context: Context):
 
 
 # =============================================================================
+# Testing Context._init_namespace
+# =============================================================================
+
+
+def test_init_namespace_should_render_namespace_when_namespace_is_a_jinja_template(
+    job_stub: JobStub,
+):
+    # Arrange
+    job_stub.namespace = "{{org}}-{{subdomain}}"
+
+    # Act
+    result = Context.for_job(job_stub)
+
+    # Assert
+    actual = result.namespace
+    expected = "acme-checkout"
+    assert actual == expected
+
+
+def test_init_namespace_should_keep_namespace_unset_when_namespace_is_not_provided(
+    fake_domain: dict,
+):
+    # Act
+    result = Context(
+        name="test_input",
+        display_name="test_input",
+        kind="input",
+        role="Input",
+        **fake_domain,
+    )
+
+    # Assert
+    actual = result.namespace
+    expected = None
+    assert actual == expected
+
+
+# =============================================================================
 # Testing Context._init_template_vars
 # =============================================================================
 
@@ -375,9 +474,9 @@ def test_init_template_vars_should_expose_day_values(fake_domain: dict):
     # Act
     result = Context(
         name="test_job",
-        slug="test_job",
+        display_name="test_job",
         kind="job",
-        tiozin_role="Job",
+        role="Job",
         **fake_domain,
     )
 
@@ -409,9 +508,9 @@ def test_init_template_vars_should_override_base_with_context_fields(fake_domain
     # Act
     result = Context(
         name="test_job",
-        slug="test_job",
+        display_name="test_job",
         kind="job",
-        tiozin_role="Job",
+        role="Job",
         template_vars=base,
         **fake_domain,
     )
@@ -439,9 +538,9 @@ def test_init_template_vars_should_override_base_with_day(fake_domain: dict):
     # Act
     result = Context(
         name="test_job",
-        slug="test_job",
+        display_name="test_job",
         kind="job",
-        tiozin_role="Job",
+        role="Job",
         template_vars=base,
         **fake_domain,
     )

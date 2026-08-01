@@ -108,7 +108,7 @@ class DuckdbFileInput(DuckdbInput):
 
         relation = (
             ReadBuilder(self.duckdb)
-            .mode(self.mode, self.slug)
+            .mode(self.mode, self.name)
             .format(self.format)
             .path(self.path)
             .with_hive_partitioning(self.hive_partitioning)

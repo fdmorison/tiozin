@@ -46,7 +46,7 @@ def test_setup_should_resolve_multiple_delegation_hops(tiozin_yaml: str):
     )
     expected = (
         "NoOpSettingRegistry",
-        "my-job-registry-3",
+        "my_job_registry_3",
     )
     assert actual == expected
 

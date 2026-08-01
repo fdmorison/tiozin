@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import inflection
 import wrapt
 
 from tiozin.api import Context
@@ -41,7 +42,7 @@ class JobProxy(wrapt.ObjectProxy):
     def _submit(self, job: Job, context: Context) -> Any:
         lineage = context.registries.lineage
         catalog = context.catalog
-        families = [t.replace("_", " ").title() for t in job.families]
+        families = [inflection.titleize(t) for t in job.families]
 
         job.info(
             f"🚀 Starting `{context.name}` with {human_join(families)}",

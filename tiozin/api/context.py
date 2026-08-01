@@ -101,10 +101,10 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
     # ==================================================
     # Identity
     # ==================================================
-    name: str = Field(frozen=True)
-    slug: Slug = Field(frozen=True)
+    name: Slug = Field(frozen=True)
+    display_name: str = Field(frozen=True)
     kind: str = Field(frozen=True)
-    tiozin_role: str = Field(frozen=True)
+    role: str = Field(frozen=True)
     namespace: str | None = Field(default=None, frozen=True)
 
     # ==================================================
@@ -186,14 +186,32 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _init_namespace(self) -> Self:
+        """
+        Renders the namespace template if one is set.
+
+        Only the root context is ever given an unrendered template to
+        start with (usually the job); child contexts inherit an
+        already-rendered value (usually the steps), so this is effectively
+        a no-op for them.
+        """
+        if not self.namespace:
+            return self
+
+        self.__dict__["namespace"] = JINJA.from_string(self.namespace).render(
+            **self.to_resource_dict()
+        )
+        return self
+
+    @model_validator(mode="after")
     def _init_temp_workdir(self) -> Self:
         if self.temp_workdir:
             return self
 
         self.__dict__["temp_workdir"] = (
-            create_local_temp_dir(self.qualified_slug, self.run_id)
+            create_local_temp_dir(self.qualified_name, self.run_id)
             if self.is_root
-            else create_local_temp_dir(self.job.temp_workdir, self.slug)
+            else create_local_temp_dir(self.job.temp_workdir, self.name)
         )
 
         return self
@@ -255,10 +273,10 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = cls(
             # Identity — always from job
             name=job.name,
-            slug=job.slug,
+            display_name=job.display_name,
             kind=job.tiozin_name,
-            tiozin_role=job.tiozin_role,
-            # Domain — always from job
+            role=job.tiozin_role,
+            # Domain & Product — always from job
             org=job.org,
             region=job.region,
             domain=job.domain,
@@ -294,10 +312,10 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = cls(
             # Identity — always from step
             name=step.name,
-            slug=step.slug,
+            display_name=step.display_name,
             kind=step.tiozin_name,
-            tiozin_role=step.tiozin_role,
-            # Domain — always from step
+            role=step.tiozin_role,
+            # Domain & Product — always from step
             org=step.org,
             region=step.region,
             domain=step.domain,
@@ -316,12 +334,12 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         ctx = Context(
             # Identity — always from step
             name=step.name,
-            slug=step.slug,
+            display_name=step.display_name,
             kind=step.tiozin_name,
-            tiozin_role=step.tiozin_role,
+            role=step.tiozin_role,
             # Arguments — always from step
             options=step.options,
-            # Domain — step value, fallback to parent
+            # Domain & Product — step value, fallback to parent
             org=step.org or self.org,
             region=step.region or self.region,
             domain=step.domain or self.domain,
@@ -363,7 +381,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return ctx
 
     def belongs_to(self, plugin: Tiozin) -> bool:
-        return self.slug == plugin.slug and self.kind == plugin.tiozin_name
+        return self.name == plugin.name and self.kind == plugin.tiozin_name
 
     def render(self, value: str) -> str:
         return JINJA.from_string(value).render(self.template_vars)
@@ -498,22 +516,56 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
         return backlog[0].set_bookmark(key, next_value)
 
     @property
+    def id(self) -> str:
+        """
+        Unique job/step identifier, following OpenLineage's naming convention:
+        https://openlineage.io/docs/spec/naming/
+
+        The job name is unique within its namespace.
+        """
+        return f"{self.namespace}.{self.qualified_name}"
+
+    @property
     def is_job(self) -> bool:
-        return self.tiozin_role == "Job"
+        return self.role == "Job"
 
     @property
     def is_step(self) -> bool:
-        return self.tiozin_role in ("Input", "Transform", "Output")
+        return self.role in ("Input", "Transform", "Output")
 
     @property
     def is_root(self) -> bool:
         return self.job is self or self.job is None
 
     @property
-    def qualified_slug(self) -> str:
+    def slug(self) -> str:
+        """
+        Alias for `name`, kept for backward compatibility.
+        """
+        return self.name
+
+    @property
+    def qualified_name(self) -> str:
+        """
+        Dot-separated hierarchical name, e.g. `job_name.step_name`.
+
+        Inspired by the "Job Naming" section of
+        https://openlineage.io/docs/spec/naming/.
+        """
         if self.is_root:
-            return self.slug
-        return f"{self.job.slug}.{self.slug}"
+            return self.name
+        return f"{self.job.name}.{self.name}"
+
+    @property
+    def qualified_slug(self) -> str:
+        """
+        Slugified version of `qualified_name`, e.g. `job_name_step_name`.
+
+        Good for naming resources such as datasets, tables, etc.
+        """
+        if self.is_root:
+            return self.name
+        return f"{self.job.name}_{self.name}"
 
     @property
     def setting_registry(self) -> SettingRegistry:
