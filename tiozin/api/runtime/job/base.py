@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 from tiozin import config
 from tiozin.api.enums import Cadence
 from tiozin.api.metadata.batch.enums import BacklogPolicy
+from tiozin.api.owned import Owned
 from tiozin.api.resourceful import Resourceful
 from tiozin.compose import tioproxy
 from tiozin.compose.templating.filters import JINJA
@@ -32,7 +33,7 @@ TData = TypeVar("TData")
     BacklogProducerJobProxy,
     BacklogConsumerJobProxy,
 )
-class Job(Resourceful, Tiozin, Generic[TData]):
+class Job(Resourceful, Owned, Tiozin, Generic[TData]):
     """
     Defines a complete data pipeline.
 
@@ -44,6 +45,10 @@ class Job(Resourceful, Tiozin, Generic[TData]):
     The data product a job produces is identified by the resource fields
     defined by Resourceful: org, region, domain, subdomain, layer, product,
     and model. Jobs require all of them.
+
+    Who is responsible for the job is identified by the ownership fields
+    defined by Owned: owner, maintainer, cost_center, and labels. All of them
+    are optional.
 
     Jobs interact with registries to look up or register metadata required
     for pipeline definition and execution, such as schemas, settings, or
@@ -59,10 +64,6 @@ class Job(Resourceful, Tiozin, Generic[TData]):
     Attributes:
         name: Unique name for the job (not the execution ID).
         description: Short description of the pipeline.
-        owner: Team that required the job.
-        maintainer: Team that maintains this job.
-        cost_center: Team that pays for this job.
-        labels: Additional metadata as key-value pairs.
         namespace: Job namespace. Defaults to `org.region.domain.subdomain`
             when not provided. Can be customized via `TIO_JOB_NAMESPACE_TEMPLATE`.
         cadence: Frequency at which the job runs. Influences the nominal time
@@ -83,10 +84,6 @@ class Job(Resourceful, Tiozin, Generic[TData]):
         self,
         name: str = None,
         description: str = None,
-        owner: str = None,
-        maintainer: str = None,
-        cost_center: str = None,
-        labels: dict[str, str] = None,
         namespace: str = None,
         cadence: Cadence = None,
         max_batches_per_run: int = None,
@@ -104,11 +101,6 @@ class Job(Resourceful, Tiozin, Generic[TData]):
             runner=runner,
             inputs=inputs,
         )
-
-        self.maintainer = maintainer
-        self.cost_center = cost_center
-        self.owner = owner
-        self.labels = labels or {}
 
         self.namespace = JINJA.from_string(namespace or config.tiozin_namespace_template).render(
             **self.to_resource_dict()
