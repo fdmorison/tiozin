@@ -104,7 +104,7 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
     name: Slug = Field(frozen=True)
     display_name: str = Field(frozen=True)
     kind: str = Field(frozen=True)
-    tiozin_role: str = Field(frozen=True)
+    role: str = Field(frozen=True)
     namespace: str | None = Field(default=None, frozen=True)
 
     # ==================================================
@@ -275,8 +275,8 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
             name=job.name,
             display_name=job.display_name,
             kind=job.tiozin_name,
-            tiozin_role=job.tiozin_role,
-            # Domain — always from job
+            role=job.tiozin_role,
+            # Domain & Product — always from job
             org=job.org,
             region=job.region,
             domain=job.domain,
@@ -314,8 +314,8 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
             name=step.name,
             display_name=step.display_name,
             kind=step.tiozin_name,
-            tiozin_role=step.tiozin_role,
-            # Domain — always from step
+            role=step.tiozin_role,
+            # Domain & Product — always from step
             org=step.org,
             region=step.region,
             domain=step.domain,
@@ -336,10 +336,10 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
             name=step.name,
             display_name=step.display_name,
             kind=step.tiozin_name,
-            tiozin_role=step.tiozin_role,
+            role=step.tiozin_role,
             # Arguments — always from step
             options=step.options,
-            # Domain — step value, fallback to parent
+            # Domain & Product — step value, fallback to parent
             org=step.org or self.org,
             region=step.region or self.region,
             domain=step.domain or self.domain,
@@ -527,11 +527,11 @@ class Context(Loggable, Resourceful, Owned, BaseModel):
 
     @property
     def is_job(self) -> bool:
-        return self.tiozin_role == "Job"
+        return self.role == "Job"
 
     @property
     def is_step(self) -> bool:
-        return self.tiozin_role in ("Input", "Transform", "Output")
+        return self.role in ("Input", "Transform", "Output")
 
     @property
     def is_root(self) -> bool:

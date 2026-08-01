@@ -43,7 +43,7 @@ def test_for_job_should_create_job_context(
             "name": job.name,
             "display_name": job.display_name,
             "kind": job.kind,
-            "tiozin_role": job.tiozin_role,
+            "role": job.tiozin_role,
             # Domain / Governance
             **fake_domain,
             "namespace": "acme.latam.ecommerce.checkout",
@@ -91,7 +91,7 @@ def test_for_step_should_create_step_context(input_stub: InputStub, fake_domain:
         "name": step.name,
         "display_name": step.display_name,
         "kind": step.kind,
-        "tiozin_role": step.tiozin_role,
+        "role": step.tiozin_role,
         # Domain / Governance
         **fake_domain,
         "namespace": None,
@@ -144,7 +144,7 @@ def test_for_child_step_should_create_step_context_with_job_information(
         "name": step.name,
         "display_name": step.display_name,
         "kind": step.kind,
-        "tiozin_role": step.tiozin_role,
+        "role": step.tiozin_role,
         # Domain / Governance
         "org": job_context.org,
         "region": job_context.region,
@@ -429,7 +429,7 @@ def test_init_namespace_should_keep_namespace_unset_when_namespace_is_not_provid
         name="test_input",
         display_name="test_input",
         kind="input",
-        tiozin_role="Input",
+        role="Input",
         **fake_domain,
     )
 
@@ -476,7 +476,7 @@ def test_init_template_vars_should_expose_day_values(fake_domain: dict):
         name="test_job",
         display_name="test_job",
         kind="job",
-        tiozin_role="Job",
+        role="Job",
         **fake_domain,
     )
 
@@ -510,7 +510,7 @@ def test_init_template_vars_should_override_base_with_context_fields(fake_domain
         name="test_job",
         display_name="test_job",
         kind="job",
-        tiozin_role="Job",
+        role="Job",
         template_vars=base,
         **fake_domain,
     )
@@ -540,7 +540,7 @@ def test_init_template_vars_should_override_base_with_day(fake_domain: dict):
         name="test_job",
         display_name="test_job",
         kind="job",
-        tiozin_role="Job",
+        role="Job",
         template_vars=base,
         **fake_domain,
     )

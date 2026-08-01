@@ -79,7 +79,7 @@ All executable components extend `Tiozin`. It provides:
 | Property | Description |
 |---|---|
 | `tiozin_name` | Class name used as the `kind` in YAML |
-| `tiozin_role` | Role class name: `Job`, `Runner`, `Input`, `Transform`, `Output`, or `Registry` |
+| `role` | Role class name: `Job`, `Runner`, `Input`, `Transform`, `Output`, or `Registry` |
 | `tiozin_family` | Provider family name (e.g. `tio_spark`, `tio_duckdb`) |
 | `tiozin_uri` | Fully qualified identifier: `tiozin://<family>/<role>/<name>`, with the role lowercased |
 | `context` | Active execution `Context` (raises if no active context) |
