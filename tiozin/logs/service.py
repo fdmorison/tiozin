@@ -146,10 +146,7 @@ class LogService:
                 if context.is_step:
                     event_dict["step"] = context.slug
 
-                event_dict["owner"] = context.owner
-                event_dict["maintainer"] = context.maintainer
-                event_dict["cost_center"] = context.cost_center
-                event_dict.update(context.labels)
+                event_dict.update(context.to_owned_dict(flat=True))
                 event_dict.update(context.to_resource_dict())
 
             return event_dict

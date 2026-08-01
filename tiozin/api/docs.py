@@ -5,3 +5,8 @@ SUBDOMAIN = "Subdivision within the business domain."
 LAYER = "Refinement level of the data product."
 PRODUCT = "Unique name of the data product."
 MODEL = "Model within the data product, a.k.a. asset, relation, entity, etc."
+
+OWNER = "Who required the job, a team, person or organization."
+MAINTAINER = "Who maintains the job, a team, person or organization."
+COST_CENTER = "Cost center charged for the job, such as a billing code or team."
+LABELS = "Additional metadata as key-value pairs."

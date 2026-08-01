@@ -56,10 +56,6 @@ OUTPUT_SCHEMA_VERSION = "Specific schema version (optional)"
 # JobManifest - Identity & Ownership
 JOB_NAME = "Unique name for the job (it is not the execution ID)"
 JOB_DESCRIPTION = "Short description of the pipeline (optional)"
-JOB_OWNER = "Team that required for the job (optional)"
-JOB_MAINTAINER = "Team that maintains this job (optional)"
-JOB_COST_CENTER = "Team that pays for this job (optional)"
-JOB_LABELS = "Additional metadata as key-value pairs (defaults  to empty dict)"
 JOB_CADENCE = "Frequency at which the job runs (defaults to minutely)"
 JOB_MAX_BATCHES_PER_RUN = "Maximum number of batches consumed per job execution (defaults to 1)"
 JOB_BACKLOG_POLICY = (

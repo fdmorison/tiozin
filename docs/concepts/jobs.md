@@ -30,9 +30,9 @@ The framework wraps every job in a `JobProxy` before execution. The proxy handle
 
 | Property | Required | Type | Default | Description |
 |---|---|---|---|---|
-| `owner` | no | `str` | `None` | Team that requested this job |
-| `maintainer` | no | `str` | `None` | Team that maintains this job |
-| `cost_center` | no | `str` | `None` | Team that pays for this job |
+| `owner` | no | `str` | `None` | Who required this job, a team, person or organization |
+| `maintainer` | no | `str` | `None` | Who maintains this job, a team, person or organization |
+| `cost_center` | no | `str` | `None` | Cost center charged for this job, such as a billing code or team |
 | `labels` | no | `dict[str, str]` | `{}` | Free-form key-value metadata |
 
 ### Domain

@@ -19,6 +19,7 @@ from pydantic import (
 )
 
 from tiozin.api.loggable import Loggable
+from tiozin.api.owned import Owned
 from tiozin.api.resourceful import Resourceful
 from tiozin.compose import TemplateDate, TemplateEnv, TemplateSecret
 from tiozin.compose.templating.filters import JINJA
@@ -54,11 +55,11 @@ _current_context: ContextVar[Context | None] = ContextVar(
 )
 
 
-class Context(Loggable, Resourceful, BaseModel):
+class Context(Loggable, Resourceful, Owned, BaseModel):
     """
     Represents the execution scope of a job or step.
 
-    Context stores identity, domain, governance, runner, and runtime state
+    Context stores identity, domain, ownership, runner, and runtime state
     for the current execution.
 
     It works as a standard Python context manager. When activated with
@@ -105,14 +106,6 @@ class Context(Loggable, Resourceful, BaseModel):
     kind: str = Field(frozen=True)
     tiozin_role: str = Field(frozen=True)
     namespace: str | None = Field(default=None, frozen=True)
-
-    # ==================================================
-    # Ownership
-    # ==================================================
-    maintainer: str | None = Field(default=None, frozen=True)
-    cost_center: str | None = Field(default=None, frozen=True)
-    owner: str | None = Field(default=None, frozen=True)
-    labels: dict[str, str] = Field(default_factory=dict, frozen=True)
 
     # ==================================================
     # Extra Tiozin arguments
