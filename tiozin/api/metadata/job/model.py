@@ -4,6 +4,7 @@ from pydantic import Field
 
 from tiozin.api.enums import Cadence
 from tiozin.api.metadata.batch.enums import BacklogPolicy
+from tiozin.api.owned import Owned
 from tiozin.api.resourceful import OptionalResourceful, Resourceful
 
 from .. import docs
@@ -97,7 +98,7 @@ class OutputManifest(OptionalResourceful, Manifest):
     schema_version: str | None = Field(None, description=docs.OUTPUT_SCHEMA_VERSION)
 
 
-class JobManifest(Resourceful, Manifest):
+class JobManifest(Resourceful, Owned, Manifest):
     """
     Declarative job definition.
 
@@ -114,12 +115,6 @@ class JobManifest(Resourceful, Manifest):
     # Identity
     name: str = Field(description=docs.JOB_NAME)
     description: str | None = Field(None, description=docs.JOB_DESCRIPTION)
-
-    # Ownership
-    owner: str | None = Field(None, description=docs.JOB_OWNER)
-    maintainer: str | None = Field(None, description=docs.JOB_MAINTAINER)
-    cost_center: str | None = Field(None, description=docs.JOB_COST_CENTER)
-    labels: dict[str, str] | None = Field(default_factory=dict, description=docs.JOB_LABELS)
 
     # Execution
     cadence: Cadence | None = Field(None, description=docs.JOB_CADENCE)
