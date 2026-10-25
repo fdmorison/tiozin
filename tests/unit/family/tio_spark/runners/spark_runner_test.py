@@ -1,7 +1,10 @@
+from unittest.mock import MagicMock, call, patch
+
 import pytest
 
-from tiozin.exceptions import NotInitializedError
+from tiozin.exceptions import NotInitializedError, TiozinInputError
 from tiozin.family.tio_spark.runners.spark_runner import DEFAULT_LOGLEVEL, SparkRunner
+from tiozin.logs.service import LogService
 
 
 # ============================================================================
@@ -126,6 +129,16 @@ def test_spark_runner_should_store_extra_options():
     assert actual == expected
 
 
+def test_spark_runner_should_raise_input_error_when_master_and_endpoint_are_provided():
+    # Arrange
+    master = "local[*]"
+    endpoint = "sc://localhost:15002"
+
+    # Act & Assert
+    with pytest.raises(TiozinInputError):
+        SparkRunner(master=master, endpoint=endpoint)
+
+
 # ============================================================================
 # Testing SparkRunner session property
 # ============================================================================
@@ -136,3 +149,69 @@ def test_spark_runner_session_should_raise_not_initialized_error_before_setup():
     # Act & Assert
     with pytest.raises(NotInitializedError):
         _ = runner.session
+
+
+# ============================================================================
+# Testing SparkRunner setup
+# ============================================================================
+@patch("tiozin.family.tio_spark.runners.spark_runner.SparkSession")
+def test_setup_should_configure_jars_packages(session_class: MagicMock):
+    # Arrange
+    builder = session_class.builder
+    builder.appName.return_value = builder
+    builder.config.return_value = builder
+    runner = SparkRunner(
+        jars_packages=[
+            "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0",
+            "software.amazon.awssdk:bundle:2.20.0",
+        ],
+    )
+
+    # Act
+    with runner():
+        pass
+
+    # Assert
+    actual = builder.config.call_args_list
+    expected = call(
+        "spark.jars.packages",
+        "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0,software.amazon.awssdk:bundle:2.20.0",
+    )
+    assert expected in actual
+
+
+@patch("tiozin.family.tio_spark.runners.spark_runner.SparkSession")
+def test_setup_should_not_configure_jars_packages_when_none_provided(session_class: MagicMock):
+    # Arrange
+    builder = session_class.builder
+    builder.appName.return_value = builder
+    builder.config.return_value = builder
+    runner = SparkRunner()
+
+    # Act
+    with runner():
+        pass
+
+    # Assert
+    actual = [config.args[0] for config in builder.config.call_args_list]
+    assert "spark.jars.packages" not in actual
+
+
+@patch("tiozin.family.tio_spark.runners.spark_runner.SparkSession")
+@patch("tiozin.logs.log_service", new_callable=lambda: LogService(propagate=True))
+def test_setup_should_not_log_endpoint_parameters(
+    log_service: LogService,
+    _session_class: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+):
+    # Arrange
+    log_service.setup()
+    runner = SparkRunner(endpoint="sc://spark.example.com:443/;token=fake-token-123;user_id=fake")
+
+    # Act
+    with runner():
+        pass
+
+    # Assert
+    assert "Connecting to the Spark Connect server at sc://spark.example.com:443/" in caplog.text
+    assert "fake-token-123" not in caplog.text

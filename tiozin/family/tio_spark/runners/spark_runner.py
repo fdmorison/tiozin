@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame, DataFrameWriter, SparkSession
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
 from tiozin import Runner, config
-from tiozin.exceptions import JobError, NotInitializedError
+from tiozin.exceptions import JobError, NotInitializedError, TiozinInputError
 from tiozin.utils import as_list, trim
 
 from ..typehints import SparkPlan
@@ -106,6 +106,10 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
         **options,
     ) -> None:
         super().__init__(**options)
+        TiozinInputError.raise_if(
+            master and endpoint,
+            "`master` and `endpoint` are mutually exclusive",
+        )
         self.master = trim(master)
         self.endpoint = trim(endpoint)
         self.enable_hive_support = enable_hive_support
@@ -135,8 +139,10 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
             builder.appName(self.context.job.name)
             .config("spark.sql.session.timeZone", str(config.app_timezone))
             .config("spark.sql.adaptive.enabled", "true")
-            .config("spark.jars.packages", ",".join(self.jars_packages))
         )
+
+        if self.jars_packages:
+            builder = builder.config("spark.jars.packages", ",".join(self.jars_packages))
 
         if self.enable_hive_support:
             self.info("🐝 Hive Support is enabled")
@@ -147,14 +153,17 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
             builder = builder.master(self.master)
 
         if self.endpoint:
-            self.info(f"🔌 Connecting to the Spark Connect server at {self.endpoint}")
+            self.info(f"🔌 Connecting to the Spark Connect server at {self.endpoint.split(';')[0]}")
             builder = builder.remote(self.endpoint)
 
         for name, value in self.options.items():
             builder = builder.config(name, value)
 
         self._spark = builder.getOrCreate()
-        self._spark.sparkContext.setLogLevel(self.log_level)
+
+        if not self.endpoint:
+            self._spark.sparkContext.setLogLevel(self.log_level)
+
         self.info(f"🔥 SparkSession ready for {self.context.name}")
 
     def run(self, execution_plan: SparkPlan) -> None:
