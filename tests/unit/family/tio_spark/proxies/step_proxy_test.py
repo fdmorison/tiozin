@@ -1,9 +1,13 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from pyspark.sql import SparkSession
+from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 
+from tests.stubs import TransformStub
 from tiozin import Context, Schema
 from tiozin.family.tio_spark import SparkFileOutput, SparkWordCountTransform
+from tiozin.family.tio_spark.compose.step_proxy import SparkStepProxy
 from tiozin.utils.runtime import tio_alias
 
 # =============================================================================
@@ -55,6 +59,19 @@ def test_proxy_should_normalize_view_name_when_name_has_special_characters(
     actual = tio_alias(result)
     expected = "word_count_2024"
     assert actual == expected
+
+
+def test_proxy_should_register_view_using_step_name_when_dataframe_is_spark_connect():
+    """Spark Connect DataFrames do not inherit from the classic DataFrame but are registered too."""
+    # Arrange
+    step = SparkStepProxy(TransformStub(name="connect step"))
+    df = MagicMock(spec=ConnectDataFrame)
+
+    # Act
+    step.transform(df)
+
+    # Assert
+    df.createOrReplaceTempView.assert_called_once_with("connect_step")
 
 
 # =============================================================================

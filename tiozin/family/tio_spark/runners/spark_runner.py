@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pyspark.sql import DataFrame, DataFrameWriter, SparkSession
+from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
+from pyspark.sql.connect.readwriter import DataFrameWriter as ConnectDataFrameWriter
+from pyspark.sql.connect.streaming.readwriter import DataStreamWriter as ConnectDataStreamWriter
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
 from tiozin import Runner, config
@@ -165,13 +168,13 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
             match result:
                 case None:
                     self.warning("Skipping the plan because it is empty or already executed.")
-                case DataFrame():
+                case DataFrame() | ConnectDataFrame():
                     self.info("Running Spark DataFrame Action")
                     result.count()
-                case DataFrameWriter():
+                case DataFrameWriter() | ConnectDataFrameWriter():
                     self.info("Running Spark DataFrameWriter")
                     result.save()
-                case DataStreamWriter():
+                case DataStreamWriter() | ConnectDataStreamWriter():
                     self.info("Running Spark Streaming Query")
                     result.start().awaitTermination()
                 case _:

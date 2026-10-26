@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
+from pyspark.sql.connect.readwriter import DataFrameWriter as ConnectDataFrameWriter
+from pyspark.sql.connect.streaming.readwriter import DataStreamWriter as ConnectDataStreamWriter
 
 from tiozin.exceptions import NotInitializedError
 from tiozin.family.tio_spark.runners.spark_runner import DEFAULT_LOGLEVEL, SparkRunner
@@ -171,3 +174,42 @@ def test_setup_should_not_set_log_level_when_endpoint_is_set(spark_session_cls: 
 
     # Assert
     session.sparkContext.setLogLevel.assert_not_called()
+
+
+# ============================================================================
+# Testing SparkRunner run with Spark Connect plans
+# ============================================================================
+def test_run_should_count_connect_dataframe():
+    # Arrange
+    runner: SparkRunner = SparkRunner().__wrapped__
+    plan = MagicMock(spec=ConnectDataFrame)
+
+    # Act
+    runner.run(plan)
+
+    # Assert
+    plan.count.assert_called_once()
+
+
+def test_run_should_save_connect_dataframe_writer():
+    # Arrange
+    runner: SparkRunner = SparkRunner().__wrapped__
+    plan = MagicMock(spec=ConnectDataFrameWriter)
+
+    # Act
+    runner.run(plan)
+
+    # Assert
+    plan.save.assert_called_once()
+
+
+def test_run_should_await_connect_data_stream_writer_termination():
+    # Arrange
+    runner: SparkRunner = SparkRunner().__wrapped__
+    plan = MagicMock(spec=ConnectDataStreamWriter)
+
+    # Act
+    runner.run(plan)
+
+    # Assert
+    plan.start.return_value.awaitTermination.assert_called_once()
