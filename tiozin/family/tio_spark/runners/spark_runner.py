@@ -147,14 +147,17 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
             builder = builder.master(self.master)
 
         if self.endpoint:
-            self.info(f"🔌 Connecting to the Spark Connect server at {self.endpoint}")
+            self.info(f"🔌 Connecting to the Spark Connect server at {self.endpoint.split(';')[0]}")
             builder = builder.remote(self.endpoint)
 
         for name, value in self.options.items():
             builder = builder.config(name, value)
 
         self._spark = builder.getOrCreate()
-        self._spark.sparkContext.setLogLevel(self.log_level)
+
+        if not self.endpoint:
+            self._spark.sparkContext.setLogLevel(self.log_level)
+
         self.info(f"🔥 SparkSession ready for {self.context.name}")
 
     def run(self, execution_plan: SparkPlan) -> None:
