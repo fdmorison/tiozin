@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import wrapt
 from pyspark.sql import DataFrame
+from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 
 from tiozin import Schema
 from tiozin.utils.runtime import tio_alias
@@ -64,7 +65,7 @@ class SparkStepProxy(wrapt.ObjectProxy):
         """
         Registers a DataFrame as a Spark temporary view using the step name.
         """
-        if not isinstance(df, DataFrame):
+        if not isinstance(df, (DataFrame, ConnectDataFrame)):
             return df
 
         step: SparkEtlStep = self.__wrapped__
