@@ -2662,6 +2662,16 @@ dependencies = [
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/80/5a/3806f44eb47387e8af803508cdd6bbc0df784febf4dc010700be04a1ff89/pyspark-3.5.8.tar.gz", hash = "sha256:54cca0767b21b40e3953ad1d30f8601c53abf9cbda763653289cdcfcac52313c", size = 317817299, upload-time = "2026-01-15T11:46:14.487Z" }
 
+[package.optional-dependencies]
+connect = [
+    { name = "googleapis-common-protos" },
+    { name = "grpcio" },
+    { name = "grpcio-status" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pyarrow" },
+]
+
 [[package]]
 name = "pytest"
 version = "8.4.2"
@@ -3192,7 +3202,7 @@ tio-kernel = [
 ]
 tio-spark = [
     { name = "databricks-sdk" },
-    { name = "pyspark" },
+    { name = "pyspark", extra = ["connect"] },
 ]
 
 [package.dev-dependencies]
@@ -3247,7 +3257,7 @@ requires-dist = [
     { name = "pydantic", specifier = "~=2.12" },
     { name = "pydantic-settings", specifier = "~=2.13.1" },
     { name = "pyiceberg", extras = ["pyarrow", "sql-sqlite"], marker = "extra == 'tio-kernel'", specifier = ">=0.7.0,<1.0.0" },
-    { name = "pyspark", marker = "extra == 'tio-spark'", specifier = ">=3.5.0,<4.0.0" },
+    { name = "pyspark", extras = ["connect"], marker = "extra == 'tio-spark'", specifier = ">=3.5.0,<4.0.0" },
     { name = "python-benedict", specifier = "~=0.38.0" },
     { name = "python-rapidjson", specifier = "~=1.23" },
     { name = "python-slugify", specifier = "~=8.0.4" },
