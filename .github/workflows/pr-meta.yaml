@@ -11,7 +11,7 @@ permissions:
 jobs:
   meta:
     if: ${{ !startsWith(github.head_ref, 'release-please--') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Setup environment
         uses: fdmorison/tiozin/.github/actions/setup-env@main
