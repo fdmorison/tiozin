@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from tiozin.exceptions import NotInitializedError
@@ -136,3 +138,36 @@ def test_spark_runner_session_should_raise_not_initialized_error_before_setup():
     # Act & Assert
     with pytest.raises(NotInitializedError):
         _ = runner.session
+
+
+# ============================================================================
+# Testing SparkRunner setup
+# ============================================================================
+@patch("tiozin.family.tio_spark.runners.spark_runner.SparkSession")
+def test_setup_should_not_log_endpoint_parameters(_: MagicMock):
+    # Arrange
+    runner: SparkRunner = SparkRunner(endpoint="sc://localhost:15002/;token=abc123").__wrapped__
+
+    # Act
+    with patch.object(runner, "info") as info:
+        runner.setup()
+
+    # Assert
+    assert "abc123" not in str(info.call_args_list)
+
+
+@patch("tiozin.family.tio_spark.runners.spark_runner.SparkSession")
+def test_setup_should_not_set_log_level_when_endpoint_is_set(spark_session_cls: MagicMock):
+    # Arrange
+    builder = spark_session_cls.builder
+    builder.appName.return_value = builder
+    builder.config.return_value = builder
+    builder.remote.return_value = builder
+    session = builder.getOrCreate.return_value
+    runner: SparkRunner = SparkRunner(endpoint="sc://localhost:15002").__wrapped__
+
+    # Act
+    runner.setup()
+
+    # Assert
+    session.sparkContext.setLogLevel.assert_not_called()
