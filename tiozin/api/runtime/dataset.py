@@ -192,6 +192,17 @@ class Dataset(wrapt.ObjectProxy, Generic[TData]):
     def cassandra(host: str, port: int, keyspace: str, table: str) -> Dataset:
         return Dataset(data=[], namespace=f"cassandra://{host}:{port}", name=f"{keyspace}.{table}")
 
+    # --- catalog tables (catalog.schema.table) ---
+
+    @staticmethod
+    def catalog_table(catalog: str, schema: str, table: str) -> Dataset:
+        RequiredArgumentError.raise_if_missing(
+            catalog=catalog,
+            table=table,
+        )
+        name = f"{schema}.{table}" if schema else table
+        return Dataset(data=[], namespace=catalog, name=name)
+
     # --- cloud warehouses ---
 
     @staticmethod
