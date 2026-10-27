@@ -32,16 +32,26 @@ from .transforms.schema_inference_transform import SparkSchemaInferenceTransform
 from .transforms.sql_transform import SparkSqlTransform
 from .transforms.word_count_transform import SparkWordCountTransform
 
+# Writers
+from .writers.table_writer import TioSparkTableWriter
+
 __all__ = [
+    # Public base abstractions
     "SparkInput",
     "SparkTransform",
     "SparkCoTransform",
     "SparkOutput",
+    # Runners
     "SparkRunner",
     "SparkIcebergRunner",
+    # Inputs
     "SparkFileInput",
+    # Outputs
     "SparkFileOutput",
+    # Transforms
     "SparkSchemaInferenceTransform",
     "SparkSqlTransform",
     "SparkWordCountTransform",
+    # Writers
+    "TioSparkTableWriter",
 ]
