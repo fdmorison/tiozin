@@ -1894,6 +1894,17 @@ wheels = [
 ]
 
 [[package]]
+name = "openlineage-sql"
+version = "1.45.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/17/5b/766d294e699871c4c831ee4741e81ecf2b03affe761bb7803233259cb654/openlineage_sql-1.45.0.tar.gz", hash = "sha256:a6707a3b604b028a4350e7fe703360852a777d4d54ac8b1fa0e7873a5ed2227a", size = 40389, upload-time = "2026-03-11T15:40:12.266Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/f0/50afa3f02b28af18974fe8ecf17f9382c50c4cee557f38823240e3a3c9e5/openlineage_sql-1.45.0-cp39-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:a9ee32250f051433cd63ad38afa4156781f92b893a8bd0ce0b15036ccedcc4d3", size = 4895465, upload-time = "2026-03-11T15:40:08.26Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/14/6724b3948f58dcd80bf1a0b68927680de0ee2fa71a3349262b36e4b52540/openlineage_sql-1.45.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:5dfb07b2ec7e89363ebac65b35b5ad5e0368d84669f156652b348b1993ae4346", size = 2446317, upload-time = "2026-03-11T15:40:09.931Z" },
+    { url = "https://files.pythonhosted.org/packages/10/6f/1d167ed8d2254c7a650aa4729390b54da3f92639dd7f5addaddf3df1a7a8/openlineage_sql-1.45.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:44612c3632f614cdee9d46b2c889453bd04d95c82764d75df6667bc90ff3cf40", size = 2611656, upload-time = "2026-03-11T15:40:11.01Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3171,6 +3182,7 @@ dependencies = [
     { name = "inflection" },
     { name = "jinja2" },
     { name = "openlineage-python" },
+    { name = "openlineage-sql" },
     { name = "pendulum" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -3253,6 +3265,7 @@ requires-dist = [
     { name = "inflection", specifier = "~=0.5.1" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "openlineage-python", specifier = "~=1.45.0" },
+    { name = "openlineage-sql", specifier = "~=1.45.0" },
     { name = "pendulum", specifier = "~=3.1.0" },
     { name = "pydantic", specifier = "~=2.12" },
     { name = "pydantic-settings", specifier = "~=2.13.1" },

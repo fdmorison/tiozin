@@ -39,6 +39,7 @@ dependencies = [
   "inflection ~=0.5.1",
   "python-rapidjson ~=1.23",
   "python-benedict ~=0.38.0",
+  "openlineage-sql ~=1.45.0",
   # Temporary — to be removed once schema converters are rewritten
   "datacontract-cli ~=0.11.7",
 ]
