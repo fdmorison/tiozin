@@ -7,6 +7,7 @@ from pyspark.sql.connect.streaming.readwriter import DataStreamWriter as Connect
 
 from tiozin.exceptions import NotInitializedError
 from tiozin.family.tio_spark.runners.spark_runner import DEFAULT_LOGLEVEL, SparkRunner
+from tiozin.family.tio_spark.writers.table_writer import TioSparkTableWriter
 
 
 # ============================================================================
@@ -195,6 +196,18 @@ def test_run_should_save_connect_dataframe_writer():
     # Arrange
     runner: SparkRunner = SparkRunner().__wrapped__
     plan = MagicMock(spec=ConnectDataFrameWriter)
+
+    # Act
+    runner.run(plan)
+
+    # Assert
+    plan.save.assert_called_once()
+
+
+def test_run_should_save_table_writer():
+    # Arrange
+    runner: SparkRunner = SparkRunner().__wrapped__
+    plan = MagicMock(spec=TioSparkTableWriter)
 
     # Act
     runner.run(plan)
