@@ -19,6 +19,7 @@ from .bases import (
 
 # Inputs
 from .inputs.file_input import SparkFileInput
+from .inputs.table_input import SparkTableInput
 
 # Outputs
 from .outputs.file_output import SparkFileOutput
@@ -47,6 +48,7 @@ __all__ = [
     "SparkIcebergRunner",
     # Inputs
     "SparkFileInput",
+    "SparkTableInput",
     # Outputs
     "SparkFileOutput",
     "SparkTableOutput",
