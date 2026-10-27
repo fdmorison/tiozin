@@ -38,6 +38,7 @@ This view registration happens at the framework level for all inputs and transfo
 - [SparkSchemaInferenceTransform](schema-inference-transform.md)
 - [SparkSqlTransform](sql-transform.md)
 - [SparkFileOutput](file-output.md)
+- [SparkTableOutput](table-output.md)
 - [SparkWordCountTransform](../examples.md#shakespeare)
 
 To implement a custom Input, Transform, or Output from scratch, see [Creating Pluggable Tiozins](../extending/tiozins.md).

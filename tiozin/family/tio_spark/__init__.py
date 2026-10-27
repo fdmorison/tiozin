@@ -22,6 +22,7 @@ from .inputs.file_input import SparkFileInput
 
 # Outputs
 from .outputs.file_output import SparkFileOutput
+from .outputs.table_output import SparkTableOutput
 from .runners.spark_iceberg_runner import SparkIcebergRunner
 
 # Runners
@@ -48,6 +49,7 @@ __all__ = [
     "SparkFileInput",
     # Outputs
     "SparkFileOutput",
+    "SparkTableOutput",
     # Transforms
     "SparkSchemaInferenceTransform",
     "SparkSqlTransform",
