@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from pyspark.sql import DataFrame, DataFrameWriter
 from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
@@ -7,6 +7,9 @@ from pyspark.sql.connect.streaming.readwriter import DataStreamWriter as Connect
 from pyspark.sql.streaming.readwriter import DataStreamWriter
 
 from .bases import SparkCoTransform, SparkInput, SparkOutput, SparkTransform
+
+if TYPE_CHECKING:
+    from .writers.table_writer import TioSparkTableWriter
 
 SparkEtlStep: TypeAlias = SparkInput | SparkTransform | SparkCoTransform | SparkOutput
 
@@ -33,6 +36,14 @@ SparkWriteMode = Literal[
     "ignore",
 ]
 
+TioSparkTableOutputMode = Literal[
+    "append",
+    "overwrite",
+    "truncate",
+    "overwrite_partitions",
+    "merge",
+]
+
 SparkIcebergCatalogType = Literal[
     "hive",
     "hadoop",
@@ -48,11 +59,12 @@ SparkIcebergClass = Literal[
 ]
 
 SparkPlan: TypeAlias = (
-    DataFrame
-    | DataFrameWriter
-    | DataStreamWriter
-    | ConnectDataFrame
-    | ConnectDataFrameWriter
-    | ConnectDataStreamWriter
-    | None
+    "DataFrame"
+    " | DataFrameWriter"
+    " | TioSparkTableWriter"
+    " | DataStreamWriter"
+    " | ConnectDataFrame"
+    " | ConnectDataFrameWriter"
+    " | ConnectDataStreamWriter"
+    " | None"
 )
