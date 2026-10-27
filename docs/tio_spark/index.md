@@ -35,6 +35,7 @@ This view registration happens at the framework level for all inputs and transfo
 - [SparkRunner](runner.md)
 - [SparkIcebergRunner](iceberg-runner.md)
 - [SparkFileInput](file-input.md)
+- [SparkTableInput](table-input.md)
 - [SparkSchemaInferenceTransform](schema-inference-transform.md)
 - [SparkSqlTransform](sql-transform.md)
 - [SparkFileOutput](file-output.md)
