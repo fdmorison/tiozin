@@ -82,6 +82,73 @@ def get_field(df: DataFrame, field: str) -> StructField | None:
     return child
 
 
+def list_fields(
+    df: DataFrame | StructType,
+    leaves_only: bool = False,
+    stop_at_arrays: bool = False,
+) -> dict[str, str]:
+    """
+    Lists all fields in a DataFrame schema with their DDL types, including nested fields.
+
+    Walks the schema depth-first, descending into structs and into the element
+    type of arrays of structs. Nested fields are named by their dotted path.
+
+    Args:
+        df:
+            The DataFrame or schema to inspect.
+        leaves_only:
+            Whether to omit the fields that have children. Defaults to False.
+        stop_at_arrays:
+            Whether to list arrays without descending into their elements.
+            Defaults to False.
+
+    Returns:
+        The field names mapped to their DDL types, sorted by name.
+
+    Example:
+        ```python
+        list_fields(df)
+        # -> {
+        #     "address": "struct<city:string>",
+        #     "address.city": "string",
+        #     "id": "bigint",
+        #     "items": "array<struct<sku:string>>",
+        #     "items.sku": "string",
+        # }
+
+        list_fields(df, leaves_only=True)
+        # -> {"address.city": "string", "id": "bigint", "items.sku": "string"}
+
+        list_fields(df, stop_at_arrays=True)
+        # -> {
+        #     "address": "struct<city:string>",
+        #     "address.city": "string",
+        #     "id": "bigint",
+        #     "items": "array<struct<sku:string>>",
+        # }
+
+        list_fields(df, leaves_only=True, stop_at_arrays=True)
+        # -> {"address.city": "string", "id": "bigint", "items": "array<struct<sku:string>>"}
+        ```
+    """
+
+    def walk(schema: StructType, path: list[str]):
+        for field in schema.fields:
+            field_path = [*path, field.name]
+            field_name = join_field(field_path)
+            field_type = field.dataType
+            if isinstance(field_type, ArrayType) and not stop_at_arrays:
+                field_type = field_type.elementType
+            is_leaf = not isinstance(field_type, StructType)
+            if is_leaf or not leaves_only:
+                yield field_name, field.dataType.simpleString()
+            if not is_leaf:
+                yield from walk(field_type, field_path)
+
+    schema = df if isinstance(df, StructType) else df.schema
+    return dict(sorted(walk(schema, [])))
+
+
 def with_field(
     df: DataFrame,
     field: str,

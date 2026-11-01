@@ -2,12 +2,13 @@ import pytest
 from dateutil.parser import parse
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as sf
-from pyspark.sql.types import StringType, StructField
+from pyspark.sql.types import StringType, StructField, StructType
 from pyspark.testing import assertDataFrameEqual
 
 from tiozin.family.tio_spark.functions import (
     get_field,
     has_timezone,
+    list_fields,
     to_auto_timestamp,
     with_field,
 )
@@ -149,6 +150,135 @@ def test_get_field_should_return_none_when_descending_past_primitive(spark: Spar
 
     # Assert
     assert actual is None
+
+
+# ============================================================================
+# list_fields
+# ============================================================================
+
+
+def test_list_fields_should_include_fields() -> None:
+    # Arrange
+    schema = StructType(
+        [
+            StructField("name", StringType()),
+            StructField("id", StringType()),
+        ]
+    )
+
+    # Act
+    result = list_fields(schema)
+
+    # Assert
+    actual = list(result.items())
+    expected = [("id", "string"), ("name", "string")]
+    assert actual == expected
+
+
+def test_list_fields_should_include_struct_fields(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [({"geo": {"lat": 40.7}},)],
+        schema="address STRUCT<geo STRUCT<lat DOUBLE>>",
+    )
+
+    # Act
+    result = list_fields(df)
+
+    # Assert
+    actual = result
+    expected = {
+        "address": "struct<geo:struct<lat:double>>",
+        "address.geo": "struct<lat:double>",
+        "address.geo.lat": "double",
+    }
+    assert actual == expected
+
+
+def test_list_fields_should_not_descend_map_fields(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [({"color": {"x": 1}},)],
+        schema="attrs MAP<STRING, STRUCT<x INT>>",
+    )
+
+    # Act
+    result = list_fields(df)
+
+    # Assert
+    actual = result
+    expected = {"attrs": "map<string,struct<x:int>>"}
+    assert actual == expected
+
+
+def test_list_fields_should_include_array_of_struct_fields(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [([{"sku": "A1"}], [[{"x": 1}]])],
+        schema="items ARRAY<STRUCT<sku STRING>>, matrix ARRAY<ARRAY<STRUCT<x INT>>>",
+    )
+
+    # Act
+    result = list_fields(df)
+
+    # Assert
+    actual = result
+    expected = {
+        "items": "array<struct<sku:string>>",
+        "items.sku": "string",
+        "matrix": "array<array<struct<x:int>>>",
+    }
+    assert actual == expected
+
+
+def test_list_fields_should_not_descend_arrays_when_stop_at_arrays(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [([{"sku": "A1"}],)],
+        schema="items ARRAY<STRUCT<sku STRING>>",
+    )
+
+    # Act
+    result = list_fields(df, stop_at_arrays=True)
+
+    # Assert
+    actual = result
+    expected = {"items": "array<struct<sku:string>>"}
+    assert actual == expected
+
+
+def test_list_fields_should_omit_parents_when_leaves_only(spark: SparkSession) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [({"city": "New York"}, [{"sku": "A1"}])],
+        schema="address STRUCT<city STRING>, items ARRAY<STRUCT<sku STRING>>",
+    )
+
+    # Act
+    result = list_fields(df, leaves_only=True)
+
+    # Assert
+    actual = result
+    expected = {"address.city": "string", "items.sku": "string"}
+    assert actual == expected
+
+
+def test_list_fields_should_list_arrays_as_leaves_when_leaves_only_and_stop_at_arrays(
+    spark: SparkSession,
+) -> None:
+    # Arrange
+    df = spark.createDataFrame(
+        [({"city": "New York"}, [{"sku": "A1"}])],
+        schema="address STRUCT<city STRING>, items ARRAY<STRUCT<sku STRING>>",
+    )
+
+    # Act
+    result = list_fields(df, leaves_only=True, stop_at_arrays=True)
+
+    # Assert
+    actual = result
+    expected = {"address.city": "string", "items": "array<struct<sku:string>>"}
+    assert actual == expected
 
 
 # ============================================================================
