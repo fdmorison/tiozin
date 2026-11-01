@@ -42,6 +42,7 @@ class SparkTableOutput(SparkOutput):
             - `append`: adds the rows to the table.
             - `truncate`: replaces all rows, preserving the table definition and history
             - `overwrite`: replaces all rows and the table definition, keeping the history.
+            - `drop_overwrite`: drops the table and creates it again, losing the history.
             - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
             - `merge`: updates the rows that match `keys` and inserts the others.
 

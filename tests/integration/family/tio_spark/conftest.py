@@ -3,10 +3,13 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
+from packaging.version import Version
 from pyspark.sql import SparkSession
 
 from tests.stubs import JobStub, RunnerStub
 from tiozin import Context
+
+DELTA_VERSION = "3.2.0"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -25,7 +28,7 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, A
             .config(
                 "spark.jars.packages",
                 "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1,"
-                "io.delta:delta-spark_2.12:3.2.0,"
+                f"io.delta:delta-spark_2.12:{DELTA_VERSION},"
                 "org.xerial:sqlite-jdbc:3.46.1.3",
             )
             # Extensions
@@ -48,6 +51,18 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, A
         )
     yield spark
     spark.stop()
+
+
+@pytest.fixture
+def skip_delta_replace_bug(spark: SparkSession, table_format: str) -> None:
+    """Skips Delta cases while the running versions cannot `replace()` an existing table."""
+    has_bug = (
+        table_format == "delta"
+        and Version(spark.version) >= Version("3.5.6")
+        and Version(DELTA_VERSION) <= Version("3.3.2")
+    )
+    if has_bug:
+        pytest.skip(f"delta-io/delta#4671: Spark {spark.version} with Delta {DELTA_VERSION}")
 
 
 @pytest.fixture(autouse=True)

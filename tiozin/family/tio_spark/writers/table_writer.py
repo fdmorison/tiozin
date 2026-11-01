@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Self, get_args
 
-from pyspark.errors import AnalysisException
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as sf
 
@@ -13,7 +12,6 @@ from ..typehints import TioSparkTableOutputMode
 
 DEFAULT_WRITE_MODE = "append"
 DEFAULT_TABLE_FORMAT = "iceberg"
-DELTA_REPLACE_BUG_MESSAGE = "does not support truncate in batch mode"
 ICEBERG_FORMAT = "iceberg"
 ICEBERG_ACCEPT_ANY_SCHEMA = "write.spark.accept-any-schema"
 
@@ -30,11 +28,12 @@ class TioSparkTableWriter:
     with `format()`, `options()` and `mode()`, although the writer is implemented
     on top of `DataFrameWriterV2`.
 
-    It also adds the `truncate`, `overwrite_partitions` and `merge` modes:
+    It also adds the `truncate`, `drop_overwrite`, `overwrite_partitions` and `merge` modes:
 
     - `append`: adds the rows to the table.
     - `truncate`: replaces all rows, preserving the table definition and history
     - `overwrite`: replaces all rows, replacing the table definition, but keeping the history.
+    - `drop_overwrite`: drops the table and creates it again, losing the history.
     - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
     - `merge`: updates the rows that match `keys` and inserts the others.
 
@@ -102,8 +101,8 @@ class TioSparkTableWriter:
         Adds a table property, such as `write.format.default` in Iceberg.
 
         Properties are set only when the table is created, or recreated by the
-        `overwrite` mode. Other modes leave the properties of an existing table
-        unchanged.
+        `overwrite` and `drop_overwrite` modes. Other modes leave the properties
+        of an existing table unchanged.
         """
         self._properties[property] = value
         return self
@@ -183,7 +182,11 @@ class TioSparkTableWriter:
         for property, value in self._properties.items():
             writer = writer.tableProperty(property, value)
 
-        if self._schema_evolution and table_exists and self._mode != "overwrite":
+        if (
+            self._schema_evolution
+            and table_exists
+            and self._mode not in ("overwrite", "drop_overwrite")
+        ):
             self._evolve_schema()
 
         match self._mode:
@@ -194,15 +197,12 @@ class TioSparkTableWriter:
             case "overwrite":
                 # Although Spark calls this `replace`, it is more like an `overwrite` operation,
                 # since both rows and table definition are not preserved.
-                # Exception: `replace()` fails on Delta up to 3.3.2 with Spark 3.5.6+
-                # (delta-io/delta#4671). The fix applies drop+create, which loses the history.
-                try:
-                    writer.replace()
-                except AnalysisException as e:
-                    if DELTA_REPLACE_BUG_MESSAGE not in str(e):
-                        raise
-                    spark.sql(f"DROP TABLE {self._table}")
-                    writer.create()
+                writer.replace()
+            case "drop_overwrite":
+                # `replace()` fails on Delta up to 3.3.2 with Spark 3.5.6+ (delta-io/delta#4671).
+                # This mode avoids it, at the cost of losing the history.
+                spark.sql(f"DROP TABLE {self._table}")
+                writer.create()
             case "truncate":
                 # Although Spark calls this `overwrite`, it is more like a `truncate` operation,
                 # since the table definition is preserved but rows aren't.

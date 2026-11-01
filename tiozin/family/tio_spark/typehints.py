@@ -39,6 +39,7 @@ SparkWriteMode = Literal[
 TioSparkTableOutputMode = Literal[
     "append",
     "overwrite",
+    "drop_overwrite",
     "truncate",
     "overwrite_partitions",
     "merge",
