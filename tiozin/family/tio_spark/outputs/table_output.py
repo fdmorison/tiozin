@@ -24,6 +24,9 @@ class SparkTableOutput(SparkOutput):
 
     The table is always created when it does not exist, whatever the mode.
 
+    Schema evolution is always on: new DataFrame columns, nested ones included, are
+    added to the table, whatever the mode. Rows kept by the mode get NULL in them.
+
     Args:
         table:
             Table name, qualified as `catalog.schema.table`. Names without a
@@ -37,8 +40,8 @@ class SparkTableOutput(SparkOutput):
             How the DataFrame is written to the table. Defaults to `append`. Optional.
 
             - `append`: adds the rows to the table.
-            - `truncate`: replaces all rows, keeping the table schema and properties.
-            - `overwrite`: replaces all rows, replacing the table schema and properties.
+            - `truncate`: replaces all rows, preserving the table definition and history
+            - `overwrite`: replaces all rows and the table definition, keeping the history.
             - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
             - `merge`: updates the rows that match `keys` and inserts the others.
 
@@ -136,4 +139,5 @@ class SparkTableOutput(SparkOutput):
             .options(**self.options)
             .tableProperties(**self.properties)
             .mode(self.mode, keys=self.keys)
+            .withSchemaEvolution()
         )
