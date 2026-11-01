@@ -55,23 +55,28 @@ When the table already exists, `mode` decides what happens.
 
 ## mode
 
-Five modes are supported. Mode names are case-insensitive.
+Six modes are supported. Mode names are case-insensitive.
 
 | Mode | Behavior on an existing table |
 |---|---|
 | `append` | Adds the rows to the table |
 | `truncate` | Replaces all rows, preserving the table definition and history |
 | `overwrite` | Replaces all rows and the table definition, keeping the history |
+| `drop_overwrite` | Drops the table and creates it again, replacing all rows and the table definition and losing the history |
 | `overwrite_partitions` | Replaces only the partitions present in the `DataFrame` |
 | `merge` | Updates the rows that match `keys` and inserts the others |
 
 Any other value raises a `TiozinInputError` that lists the supported modes. This error surfaces when the output runs, not when the job is built.
 
+Both `overwrite` and `drop_overwrite` replace the rows and the table definition. The difference is the history: `overwrite` always keeps it, and `drop_overwrite` loses it.
+
+> **Note:** On an existing [Delta Lake](https://docs.delta.io/latest/index.html) table, the `overwrite` mode fails with a `does not support truncate in batch mode` error on Spark 3.5.6+ with Delta 3.3.2 or older. This is a known Delta bug, [delta-io/delta#4671](https://github.com/delta-io/delta/issues/4671). On Spark 3.5.8, the write fails on Delta 3.2.0 and 3.3.2 and works on Delta 3.3.3. There are two ways out: upgrade Delta to 3.3.3, or use `drop_overwrite`, which loses the history.
+
 For format-specific write behavior, see the [Iceberg Spark writes](https://iceberg.apache.org/docs/latest/spark-writes/) or [Delta Lake](https://docs.delta.io/latest/index.html) documentation.
 
 ## partition_by
 
-Partition columns are applied when the table is created, or recreated by the `overwrite` mode. A single column name or a list is accepted.
+Partition columns are applied when the table is created, or recreated by the `overwrite` and `drop_overwrite` modes. A single column name or a list is accepted.
 
 ```yaml
 outputs:
@@ -105,7 +110,7 @@ For format-specific merge behavior, see [Iceberg `MERGE INTO`](https://iceberg.a
 
 ## properties
 
-Table properties are set only when the table is created, or recreated by the `overwrite` mode. Other modes leave the properties of an existing table unchanged.
+Table properties are set only when the table is created, or recreated by the `overwrite` and `drop_overwrite` modes. Other modes leave the properties of an existing table unchanged.
 
 ```yaml
 outputs:
@@ -126,7 +131,7 @@ Rows kept by the mode get `NULL` in the new columns. For example, `merge` keeps 
 
 The column order of the `DataFrame` does not need to match the table.
 
-Because `overwrite` replaces the table definition, it also accepts changed column types. In the other modes, a column type that cannot be changed fails the write. On Iceberg, for example, the error reads `Cannot change column type: id: string -> int`.
+Because `overwrite` and `drop_overwrite` replace the table definition, they also accept changed column types. In the other modes, a column type that cannot be changed fails the write. On Iceberg, for example, the error reads `Cannot change column type: id: string -> int`.
 
 ## Passing Extra Write Options
 
