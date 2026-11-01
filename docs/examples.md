@@ -94,9 +94,15 @@ A realistic multi-job data pipeline using the complete works of Shakespeare as t
 
 ## Iceberg
 
-**[`spark/iceberg/example_iceberg_job.yaml`](../examples/jobs/spark/iceberg/example_iceberg_job.yaml)**
+Three Spark jobs that read and write [Apache Iceberg](https://iceberg.apache.org/) tables. All of them use [`SparkIcebergRunner`](tio_spark/iceberg-runner.md) with a `hadoop` catalog named `example`, a warehouse at `.output/iceberg`, and `iceberg-spark-runtime-3.5_2.12:1.7.1` in `jars_packages`.
 
-Minimal Spark + Iceberg pipeline using AWS Glue as the catalog. Shows `SparkIcebergRunner` configuration: `catalog_name`, `catalog_type`, and the `jars_packages` needed for the Iceberg AWS bundle.
+| File | What it shows |
+|---|---|
+| [`spark/iceberg/ingestion_customers_job.yaml`](../examples/jobs/spark/iceberg/ingestion_customers_job.yaml) | CSV ingestion with `SparkFileInput`, written to `example.ecommerce_raw.storefront_customers` with `SparkTableOutput` and `mode: truncate` |
+| [`spark/iceberg/ingestion_orders_job.yaml`](../examples/jobs/spark/iceberg/ingestion_orders_job.yaml) | Same ingestion pattern for orders, written to `example.ecommerce_raw.storefront_orders` |
+| [`spark/iceberg/refined_orders_job.yaml`](../examples/jobs/spark/iceberg/refined_orders_job.yaml) | Both raw tables read with `SparkTableInput`, joined and filtered in SQL, and written to `example.ecommerce_refined.storefront_high_value_orders` partitioned by `country` with `mode: truncate` |
+
+Run both ingestion jobs before `refined_orders_job.yaml`, which reads the tables they write.
 
 ## DuckDB + PostgreSQL
 

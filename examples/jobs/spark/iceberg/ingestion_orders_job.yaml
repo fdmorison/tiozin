@@ -1,0 +1,54 @@
+kind: LinearJob
+name: order_ingestion_iceberg_job
+description: Ingests order data from source to an Iceberg table in the raw layer.
+
+owner: data@tiozin.com
+maintainer: tiozin
+cost_center: tio_scrooge
+
+org: tiozin
+region: eu
+domain: ecommerce
+subdomain: sales
+layer: raw
+product: storefront
+model: orders
+
+runner:
+  kind: SparkIcebergRunner
+  catalog_name: example
+  catalog_type: hadoop
+  catalog_warehouse: .output/iceberg
+  jars_packages:
+    - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1
+
+inputs:
+  - kind: SparkFileInput
+    name: load_orders
+    description: Order transactions from source system.
+    path: examples/data/ecommerce/orders.csv
+    format: csv
+    header: true
+    inferSchema: true
+    schema_subject: auto
+
+transforms:
+  - kind: SparkSqlTransform
+    name: add_metadata
+    description: Adds ingestion metadata
+    query: |-
+      SELECT
+          *,
+          '{{job.run_id}}'       AS _{{layer}}_run_id,
+          '{{job.nominal_time}}' AS _{{layer}}_nominal_date,
+          current_timestamp()    AS _{{layer}}_created_at,
+          created_at             AS _source_created_at
+      FROM @data
+
+outputs:
+  - kind: SparkTableOutput
+    name: save_orders
+    description: Raw order data in an Iceberg table.
+    table: example.{{domain}}_{{layer}}.{{product}}_{{model}}
+    format: iceberg
+    mode: truncate
