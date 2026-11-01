@@ -13,7 +13,7 @@ from tiozin.family.tio_spark.writers.table_writer import TioSparkTableWriter
 
 @pytest.mark.parametrize(
     "mode",
-    ["append", "overwrite", "truncate", "overwrite_partitions", "merge"],
+    ["append", "overwrite", "drop_overwrite", "truncate", "overwrite_partitions", "merge"],
 )
 def test_save_should_create_table_when_table_is_missing(spark: SparkSession, mode: str):
     """Creates a missing table with the DataFrame rows, whatever the mode."""
@@ -396,6 +396,7 @@ def test_save_should_evolve_schema_when_mode_is_append(
 # ============================================================================
 
 
+@pytest.mark.usefixtures("skip_delta_replace_bug")
 @pytest.mark.parametrize(
     "catalog, table_format",
     [
@@ -441,6 +442,7 @@ def test_save_should_recreate_table_when_mode_is_overwrite(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
+@pytest.mark.usefixtures("skip_delta_replace_bug")
 @pytest.mark.parametrize(
     "catalog, table_format",
     [
@@ -488,6 +490,7 @@ def test_save_should_add_new_column_when_mode_is_overwrite(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
+@pytest.mark.usefixtures("skip_delta_replace_bug")
 @pytest.mark.parametrize(
     "catalog, table_format",
     [
@@ -531,6 +534,87 @@ def test_save_should_change_column_type_when_mode_is_overwrite(
         schema="id INT, name STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+# ============================================================================
+# Testing TioSparkTableWriter - Drop Overwrite
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_recreate_table_when_mode_is_drop_overwrite(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Replaces the schema and rows of an existing table in the `drop_overwrite` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_drop_overwritten"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'old')
+        AS t(id, name)
+        """
+    )
+    replacement_data = spark.createDataFrame(
+        [
+            (2, "new@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=replacement_data,
+        table=target_table,
+    ).format(table_format).mode("drop_overwrite").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (2, "new@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+def test_save_should_restart_delta_history_when_mode_is_drop_overwrite(spark: SparkSession):
+    """Keeps only the new table's version in the Delta history in the `drop_overwrite` mode."""
+    # Arrange
+    target_table = "spark_catalog.default.writer_drop_overwritten_history"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING delta
+        AS SELECT * FROM VALUES
+            (1, 'old')
+        AS t(id, name)
+        """
+    )
+    replacement_data = spark.createDataFrame(
+        [
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=replacement_data,
+        table=target_table,
+    ).format("delta").mode("drop_overwrite").save()
+
+    # Assert
+    actual = [row["version"] for row in spark.sql(f"DESCRIBE HISTORY {target_table}").collect()]
+    expected = [0]
+    assert actual == expected
 
 
 # ============================================================================
