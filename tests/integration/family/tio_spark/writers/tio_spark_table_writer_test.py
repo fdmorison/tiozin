@@ -956,6 +956,158 @@ def test_save_should_evolve_schema_when_mode_is_merge(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_preserve_excluded_column_when_mode_is_merge(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Keeps the table value of an excluded column, even NULL, on matched rows only."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_merged_excluded_column"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'original@example.com', '2025-01-01'),
+            (2, 'original@example.com', '2025-01-02'),
+            (3, 'original@example.com', CAST(NULL AS STRING))
+        AS t(id, email, created_at)
+        """
+    )
+    merge_data = spark.createDataFrame(
+        [
+            (2, "updated@example.com", "2026-06-01"),
+            (3, "updated@example.com", "2026-06-01"),
+            (4, "inserted@example.com", "2026-06-01"),
+        ],
+        schema="id INT, email STRING, created_at STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=merge_data,
+        table=target_table,
+    ).format(table_format).mode(
+        "merge",
+        merge_keys="id",
+        merge_exclude_fields="created_at",
+    ).save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "original@example.com", "2025-01-01"),
+            (2, "updated@example.com", "2025-01-02"),
+            (3, "updated@example.com", None),
+            (4, "inserted@example.com", "2026-06-01"),
+        ],
+        schema="id INT, email STRING, created_at STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_preserve_excluded_struct_column_when_mode_is_merge(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Keeps every field of an excluded struct column on matched rows."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_merged_excluded_struct"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'original@example.com', named_struct('created_at', '2025-01-01', 'source', 'crm'))
+        AS t(id, email, audit)
+        """
+    )
+    merge_data = spark.createDataFrame(
+        [
+            (1, "updated@example.com", ("2026-06-01", "web")),
+            (2, "inserted@example.com", ("2026-06-01", "web")),
+        ],
+        schema="id INT, email STRING, audit STRUCT<created_at: STRING, source: STRING>",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=merge_data,
+        table=target_table,
+    ).format(table_format).mode(
+        "merge",
+        merge_keys="id",
+        merge_exclude_fields=["audit"],
+    ).save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "updated@example.com", ("2025-01-01", "crm")),
+            (2, "inserted@example.com", ("2026-06-01", "web")),
+        ],
+        schema="id INT, email STRING, audit STRUCT<created_at: STRING, source: STRING>",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+@pytest.mark.parametrize(
+    "mode",
+    ["append", "truncate", "overwrite_partitions", "drop_overwrite"],
+)
+def test_save_should_ignore_merge_exclude_fields_when_mode_is_not_merge(
+    spark: SparkSession, catalog: str, table_format: str, mode: str
+):
+    """Writes excluded columns and accepts unknown names outside the `merge` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_ignored_exclude_fields_{mode}"
+    spark.sql(f"CREATE TABLE {target_table} (id INT, email STRING) USING {table_format}")
+    input_data = spark.createDataFrame(
+        [
+            (1, "new@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).format(table_format).mode(
+        mode,
+        merge_exclude_fields=["email", "unknown"],
+    ).save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "new@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
 @pytest.mark.parametrize("merge_keys", [None, []])
 def test_mode_should_raise_required_argument_error_when_merge_keys_are_missing(
     spark: SparkSession, merge_keys: list[str]
@@ -976,3 +1128,28 @@ def test_mode_should_raise_required_argument_error_when_merge_keys_are_missing(
     # Act / Assert
     with pytest.raises(RequiredArgumentError):
         writer.mode("merge", merge_keys=merge_keys)
+
+
+@pytest.mark.parametrize(
+    "merge_exclude_fields",
+    ["unknown", "audit.created_at", ["email", "unknown"]],
+)
+def test_mode_should_raise_input_error_when_merge_exclude_field_is_not_top_level_column(
+    spark: SparkSession, merge_exclude_fields: str | list[str]
+):
+    # Arrange
+    target_table = "iceberg.default.writer_merge_with_invalid_exclude_field"
+    merge_data = spark.createDataFrame(
+        [
+            (1, "hello@example.com", ("2026-06-01",)),
+        ],
+        schema="id INT, email STRING, audit STRUCT<created_at: STRING>",
+    )
+    writer = TioSparkTableWriter(
+        df=merge_data,
+        table=target_table,
+    )
+
+    # Act / Assert
+    with pytest.raises(TiozinInputError):
+        writer.mode("merge", merge_keys="id", merge_exclude_fields=merge_exclude_fields)

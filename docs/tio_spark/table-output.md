@@ -21,6 +21,7 @@ This appends the rows to `my_catalog.default.sales`. If the table does not exist
 | `format` | no | `iceberg` | Table format used when the table is created or recreated, such as `delta` or `iceberg` |
 | `mode` | no | `append` | How the `DataFrame` is written to the table |
 | `merge_keys` | no | | Column or list of columns that identify a row. Required by the `merge` mode and ignored by the others |
+| `merge_exclude_fields` | no | | Column or list of columns excluded from updates, such as `created_at`. They are still written when a row is inserted. Nested fields are not supported. Ignored by modes other than `merge` |
 | `partition_by` | no | | Column name or list of column names used to partition the table when it is created or recreated |
 | `properties` | no | | Table properties set when the table is created or recreated |
 | `**options` | no | | Write options passed directly to Spark |
@@ -102,11 +103,33 @@ outputs:
     merge_keys: [customer_id]
 ```
 
-A row matches when it has the same values as a table row in all key columns. Matching rows are updated with every column from the `DataFrame`, and the rest are inserted. Rows already in the table that have no match in the `DataFrame` are kept.
+A row matches when it has the same values as a table row in all key columns. Matching rows are updated with every column from the `DataFrame`, except those listed in [`merge_exclude_fields`](#merge_exclude_fields), and the rest are inserted. Rows already in the table that have no match in the `DataFrame` are kept.
 
 If `mode` is `merge` and `merge_keys` is empty, a `RequiredArgumentError` is raised when the output runs. Other modes ignore `merge_keys`.
 
 For format-specific merge behavior, see [Iceberg `MERGE INTO`](https://iceberg.apache.org/docs/latest/spark-writes/#merge-into) or [Delta Lake merge](https://docs.delta.io/latest/delta-update.html#upsert-into-a-table-using-merge).
+
+## merge_exclude_fields
+
+The `merge` mode can leave some columns out of its updates. Name them in `merge_exclude_fields`, as a single column name or a list.
+
+```yaml
+outputs:
+  - kind: SparkTableOutput
+    name: customers
+    table: my_catalog.default.customers
+    mode: merge
+    merge_keys: [customer_id]
+    merge_exclude_fields: [created_at]
+```
+
+When a row matches, every `DataFrame` column except `created_at` is updated, and the row keeps the `created_at` value it has in the table. A value that is `NULL` in the table stays `NULL` on update.
+
+When a row has no match, it is inserted with all its columns, including `created_at`.
+
+A whole struct column can be excluded by its top-level name. Nested fields are not supported.
+
+If `mode` is `merge` and a name is not a top-level `DataFrame` column, a `TiozinInputError` is raised when the output runs. This includes dotted names such as `audit.created_at`. Other modes ignore `merge_exclude_fields`.
 
 ## properties
 

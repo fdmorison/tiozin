@@ -58,7 +58,11 @@ class TioSparkTableWriter:
         (
             TioSparkTableWriter(df, "my_catalog.default.customers")
             .format("delta")
-            .mode("merge", merge_keys=["customer_id"])
+            .mode(
+                "merge",
+                merge_keys=["customer_id"],
+                merge_exclude_fields=["created_at"],
+            )
             .save()
         )
         ```
@@ -69,6 +73,7 @@ class TioSparkTableWriter:
         self._table = table
         self._mode: TioSparkTableOutputMode = DEFAULT_WRITE_MODE
         self._merge_keys: list[str] = []
+        self._merge_exclude_fields: list[str] = []
         self._format: str = DEFAULT_TABLE_FORMAT
         self._properties: dict[str, str] = {}
         self._options: dict[str, Any] = {}
@@ -133,7 +138,12 @@ class TioSparkTableWriter:
         self._schema_evolution = True
         return self
 
-    def mode(self, mode: TioSparkTableOutputMode, merge_keys: str | list[str] = None) -> Self:
+    def mode(
+        self,
+        mode: TioSparkTableOutputMode,
+        merge_keys: str | list[str] = None,
+        merge_exclude_fields: str | list[str] = None,
+    ) -> Self:
         """
         Sets how `save()` writes the table.
 
@@ -145,11 +155,19 @@ class TioSparkTableWriter:
                 Column or list of columns that identify a row. Required by the
                 `merge` mode and ignored by the others.
 
+            merge_exclude_fields:
+                Column or list of columns excluded from updates, such as
+                `created_at`. They are still written when a row is inserted.
+                Nested fields are not supported. Ignored by modes other than
+                `merge`.
+
         Raises:
-            TiozinInputError: If the mode is not supported.
+            TiozinInputError: If the mode is not supported, or `merge_exclude_fields`
+                has a name that is not a top-level column of the DataFrame.
             RequiredArgumentError: If the mode is `merge` and no `merge_keys` are given.
         """
         modes = get_args(TioSparkTableOutputMode)
+        merge_exclude_fields = as_list(merge_exclude_fields, [])
         TiozinInputError.raise_if(
             mode not in modes,
             f"Unsupported write mode: '{mode}'. Supported: {', '.join(modes)}",
@@ -158,8 +176,13 @@ class TioSparkTableWriter:
             mode == "merge" and not merge_keys,
             "`merge_keys` is required by the `merge` mode",
         )
+        TiozinInputError.raise_if(
+            mode == "merge" and not set(merge_exclude_fields) <= set(self._df.columns),
+            f"`merge_exclude_fields` must name top-level DataFrame columns: {merge_exclude_fields}",
+        )
         self._mode = mode
         self._merge_keys = as_list(merge_keys, [])
+        self._merge_exclude_fields = merge_exclude_fields
         return self
 
     def save(self) -> None:
@@ -212,13 +235,22 @@ class TioSparkTableWriter:
             case "merge":
                 source = f"__merge_{slugify(self._table)}"
                 condition = " AND ".join(f"target.{key} = source.{key}" for key in self._merge_keys)
+                fields = (
+                    ", ".join(
+                        f"target.`{field}` = source.`{field}`"
+                        for field in self._df.columns
+                        if field not in self._merge_exclude_fields
+                    )
+                    if self._merge_exclude_fields
+                    else "*"
+                )
                 self._df.createOrReplaceTempView(source)
                 try:
                     spark.sql(
                         f"MERGE INTO {self._table} AS target "
                         f"USING {source} AS source "
                         f"ON {condition} "
-                        "WHEN MATCHED THEN UPDATE SET * "
+                        f"WHEN MATCHED THEN UPDATE SET {fields} "
                         "WHEN NOT MATCHED THEN INSERT *"
                     )
                 finally:

@@ -92,6 +92,50 @@ def test_output_should_create_table(spark: SparkSession):
     assertDataFrameEqual(actual, expected)
 
 
+def test_output_should_preserve_merge_exclude_fields(spark: SparkSession):
+    """
+    Ensures `merge_exclude_fields` reaches the merge: matched rows keep the table
+    value of the excluded column, and new rows get the DataFrame value.
+    """
+    # Arrange
+    target_table = "iceberg.default.table_output_merged_excluded_column"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING iceberg
+        AS SELECT * FROM VALUES
+            (1, 'original@example.com', '2025-01-01')
+        AS t(id, email, created_at)
+        """
+    )
+    input_data = spark.createDataFrame(
+        [
+            (1, "updated@example.com", "2026-06-01"),
+            (2, "inserted@example.com", "2026-06-01"),
+        ],
+        schema="id INT, email STRING, created_at STRING",
+    )
+
+    # Act
+    SparkTableOutput(
+        name="test",
+        table=target_table,
+        mode="merge",
+        merge_keys="id",
+        merge_exclude_fields="created_at",
+    ).write(input_data).save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "updated@example.com", "2025-01-01"),
+            (2, "inserted@example.com", "2026-06-01"),
+        ],
+        schema="id INT, email STRING, created_at STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
 # ============================================================================
 # Testing SparkTableOutput - Lineage
 # ============================================================================
