@@ -12,6 +12,7 @@ from tiozin.utils import as_list, slugify
 from ..typehints import TioSparkTableOutputMode
 
 DEFAULT_WRITE_MODE = "append"
+DEFAULT_TABLE_FORMAT = "iceberg"
 DELTA_REPLACE_BUG_MESSAGE = "does not support truncate in batch mode"
 
 
@@ -68,26 +69,30 @@ class TioSparkTableWriter:
         self._writer = df.writeTo(table)
         self._mode: TioSparkTableOutputMode = DEFAULT_WRITE_MODE
         self._keys: list[str] = []
+        self._format: str = DEFAULT_TABLE_FORMAT
+        self._properties: dict[str, str] = {}
+        self._options: dict[str, Any] = {}
+        self._partition_by: list[Column] = []
 
     def format(self, format: str) -> Self:
         """
         Sets the table format used when the table is created, such as `delta` or `iceberg`.
         """
-        self._writer.using(format)
+        self._format = format
         return self
 
     def option(self, key: str, value: Any) -> Self:
         """
         Adds a write option.
         """
-        self._writer.option(key, value)
+        self._options[key] = value
         return self
 
     def options(self, **options) -> Self:
         """
         Adds write options.
         """
-        self._writer.options(**options)
+        self._options.update(options)
         return self
 
     def tableProperty(self, property: str, value: str) -> Self:
@@ -98,7 +103,7 @@ class TioSparkTableWriter:
         `overwrite` mode. Other modes leave the properties of an existing table
         unchanged.
         """
-        self._writer.tableProperty(property, value)
+        self._properties[property] = value
         return self
 
     def tableProperties(self, **properties) -> Self:
@@ -110,15 +115,14 @@ class TioSparkTableWriter:
         added as in `tableProperty()`, so the same rules about when properties
         are set apply.
         """
-        for property, value in properties.items():
-            self._writer.tableProperty(property, value)
+        self._properties.update(properties)
         return self
 
     def partitionedBy(self, col: Column, *cols: Column) -> Self:
         """
         Partitions the table by the given columns.
         """
-        self._writer.partitionedBy(col, *cols)
+        self._partition_by = [col, *cols]
         return self
 
     def mode(self, mode: TioSparkTableOutputMode, keys: str | list[str] = None) -> Self:
@@ -155,6 +159,15 @@ class TioSparkTableWriter:
         Writes the table using the configured mode.
         """
         spark = self._df.sparkSession
+
+        self._writer.using(self._format)
+        self._writer.options(**self._options)
+
+        if self._partition_by:
+            self._writer.partitionedBy(*self._partition_by)
+
+        for property, value in self._properties.items():
+            self._writer.tableProperty(property, value)
 
         match self._mode:
             case _ if not spark.catalog.tableExists(self._table):
