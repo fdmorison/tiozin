@@ -7,82 +7,8 @@ from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.family.tio_spark.writers.table_writer import TioSparkTableWriter
 
 # ============================================================================
-# Testing TioSparkTableWriter - Modes
+# Testing TioSparkTableWriter - Generic
 # ============================================================================
-
-
-def test_save_should_append_rows_by_default(spark: SparkSession):
-    """Adds rows to an existing table when no mode is set."""
-    # Arrange
-    target_table = "iceberg.default.writer_appended_by_default"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            (1, 'old')
-        AS t(id, name)
-        """
-    )
-    appended_data = spark.createDataFrame(
-        [
-            (2, "new"),
-        ],
-        schema="id INT, name STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=appended_data,
-        table=target_table,
-    ).save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (1, "old"),
-            (2, "new"),
-        ],
-        schema="id INT, name STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-def test_save_should_append_rows(spark: SparkSession):
-    """Adds rows to an existing table in the `append` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_appended"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            (1, 'old')
-        AS t(id, name)
-        """
-    )
-    appended_data = spark.createDataFrame(
-        [
-            (2, "new"),
-        ],
-        schema="id INT, name STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=appended_data,
-        table=target_table,
-    ).mode("append").save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (1, "old"),
-            (2, "new"),
-        ],
-        schema="id INT, name STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
 @pytest.mark.parametrize(
@@ -115,206 +41,6 @@ def test_save_should_create_table_when_table_is_missing(spark: SparkSession, mod
         schema="id INT, name STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-def test_save_should_recreate_table_when_mode_is_overwrite(spark: SparkSession):
-    """Replaces the schema and rows of an existing table in the `overwrite` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_overwritten"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            (1, 'old')
-        AS t(id, name)
-        """
-    )
-    replacement_data = spark.createDataFrame(
-        [
-            (2, "new@example.com"),
-        ],
-        schema="id INT, email STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=replacement_data,
-        table=target_table,
-    ).mode("overwrite").save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (2, "new@example.com"),
-        ],
-        schema="id INT, email STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-def test_save_should_replace_all_rows_when_mode_is_truncate(spark: SparkSession):
-    """Replaces every row of an existing table in the `truncate` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_truncated"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            (1, 'BR'),
-            (2, 'US')
-        AS t(id, region)
-        """
-    )
-    replacement_data = spark.createDataFrame(
-        [
-            (3, "BR"),
-        ],
-        schema="id INT, region STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=replacement_data,
-        table=target_table,
-    ).mode("truncate").save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (3, "BR"),
-        ],
-        schema="id INT, region STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-def test_save_should_overwrite_partitions_present_in_dataframe(spark: SparkSession):
-    """Replaces only the partitions present in the DataFrame in the `overwrite_partitions` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_overwritten_partitions"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        PARTITIONED BY (region)
-        AS SELECT * FROM VALUES
-            (1, 'BR'),
-            (2, 'US')
-        AS t(id, region)
-        """
-    )
-    replacement_data = spark.createDataFrame(
-        [
-            (3, "BR"),
-        ],
-        schema="id INT, region STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=replacement_data,
-        table=target_table,
-    ).mode("overwrite_partitions").save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (2, "US"),
-            (3, "BR"),
-        ],
-        schema="id INT, region STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-# ============================================================================
-# Testing TioSparkTableWriter - Merge
-# ============================================================================
-
-
-def test_save_should_merge_rows_by_key(spark: SparkSession):
-    """Updates the rows that match the key and inserts the others in the `merge` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_merged"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            (1, 'original@example.com'),
-            (2, 'original@example.com')
-        AS t(id, email)
-        """
-    )
-    merge_data = spark.createDataFrame(
-        [
-            (2, "updated@example.com"),
-            (3, "inserted@example.com"),
-        ],
-        schema="id INT, email STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
-    ).mode("merge", keys="id").save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (1, "original@example.com"),
-            (2, "updated@example.com"),
-            (3, "inserted@example.com"),
-        ],
-        schema="id INT, email STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
-    """Matches a row only when every key matches in the `merge` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_merged_by_keys"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            ('BR', 1, 'old'),
-            ('US', 1, 'kept')
-        AS t(region, id, name)
-        """
-    )
-    merge_data = spark.createDataFrame(
-        [
-            ("BR", 1, "new"),
-        ],
-        schema="region STRING, id INT, name STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
-    ).mode("merge", keys=["region", "id"]).save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            ("BR", 1, "new"),
-            ("US", 1, "kept"),
-        ],
-        schema="region STRING, id INT, name STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-# ============================================================================
-# Testing TioSparkTableWriter - Builder Settings
-# ============================================================================
 
 
 @pytest.mark.parametrize(
@@ -511,11 +237,6 @@ def test_save_should_apply_write_options(spark: SparkSession):
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
-# ============================================================================
-# Testing TioSparkTableWriter - Errors
-# ============================================================================
-
-
 def test_mode_should_raise_input_error_when_mode_is_unsupported(spark: SparkSession):
     # Arrange
     target_table = "iceberg.default.writer_unsupported_mode"
@@ -533,6 +254,336 @@ def test_mode_should_raise_input_error_when_mode_is_unsupported(spark: SparkSess
     # Act / Assert
     with pytest.raises(TiozinInputError):
         writer.mode("upsert")
+
+
+# ============================================================================
+# Testing TioSparkTableWriter - Append
+# ============================================================================
+
+
+def test_save_should_append_rows_by_default(spark: SparkSession):
+    """Adds rows to an existing table when no mode is set."""
+    # Arrange
+    target_table = "iceberg.default.writer_appended_by_default"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING iceberg
+        AS SELECT * FROM VALUES
+            (1, 'old')
+        AS t(id, name)
+        """
+    )
+    appended_data = spark.createDataFrame(
+        [
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=appended_data,
+        table=target_table,
+    ).save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "old"),
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_append_rows(spark: SparkSession, catalog: str, table_format: str):
+    """Adds rows to an existing table in the `append` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_appended"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'old')
+        AS t(id, name)
+        """
+    )
+    appended_data = spark.createDataFrame(
+        [
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=appended_data,
+        table=target_table,
+    ).format(table_format).mode("append").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "old"),
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+# ============================================================================
+# Testing TioSparkTableWriter - Overwrite
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_recreate_table_when_mode_is_overwrite(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Replaces the schema and rows of an existing table in the `overwrite` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_overwritten"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'old')
+        AS t(id, name)
+        """
+    )
+    replacement_data = spark.createDataFrame(
+        [
+            (2, "new@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=replacement_data,
+        table=target_table,
+    ).format(table_format).mode("overwrite").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (2, "new@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+# ============================================================================
+# Testing TioSparkTableWriter - Truncate
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_replace_all_rows_when_mode_is_truncate(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Replaces every row of an existing table in the `truncate` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_truncated"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    replacement_data = spark.createDataFrame(
+        [
+            (3, "BR"),
+        ],
+        schema="id INT, region STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=replacement_data,
+        table=target_table,
+    ).format(table_format).mode("truncate").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (3, "BR"),
+        ],
+        schema="id INT, region STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+# ============================================================================
+# Testing TioSparkTableWriter - Overwrite Partitions
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_overwrite_partitions_present_in_dataframe(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Replaces only the partitions present in the DataFrame in the `overwrite_partitions` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_overwritten_partitions"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        PARTITIONED BY (region)
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    replacement_data = spark.createDataFrame(
+        [
+            (3, "BR"),
+        ],
+        schema="id INT, region STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=replacement_data,
+        table=target_table,
+    ).format(table_format).mode("overwrite_partitions").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (2, "US"),
+            (3, "BR"),
+        ],
+        schema="id INT, region STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+# ============================================================================
+# Testing TioSparkTableWriter - Merge
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_merge_rows_by_key(spark: SparkSession, catalog: str, table_format: str):
+    """Updates the rows that match the key and inserts the others in the `merge` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_merged"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'original@example.com'),
+            (2, 'original@example.com')
+        AS t(id, email)
+        """
+    )
+    merge_data = spark.createDataFrame(
+        [
+            (2, "updated@example.com"),
+            (3, "inserted@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=merge_data,
+        table=target_table,
+    ).format(table_format).mode("merge", keys="id").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "original@example.com"),
+            (2, "updated@example.com"),
+            (3, "inserted@example.com"),
+        ],
+        schema="id INT, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
+    """Matches a row only when every key matches in the `merge` mode."""
+    # Arrange
+    target_table = "iceberg.default.writer_merged_by_keys"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING iceberg
+        AS SELECT * FROM VALUES
+            ('BR', 1, 'old'),
+            ('US', 1, 'kept')
+        AS t(region, id, name)
+        """
+    )
+    merge_data = spark.createDataFrame(
+        [
+            ("BR", 1, "new"),
+        ],
+        schema="region STRING, id INT, name STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=merge_data,
+        table=target_table,
+    ).mode("merge", keys=["region", "id"]).save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            ("BR", 1, "new"),
+            ("US", 1, "kept"),
+        ],
+        schema="region STRING, id INT, name STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
 @pytest.mark.parametrize("keys", [None, []])
