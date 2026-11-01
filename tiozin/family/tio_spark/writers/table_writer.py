@@ -14,6 +14,8 @@ from ..typehints import TioSparkTableOutputMode
 DEFAULT_WRITE_MODE = "append"
 DEFAULT_TABLE_FORMAT = "iceberg"
 DELTA_REPLACE_BUG_MESSAGE = "does not support truncate in batch mode"
+ICEBERG_FORMAT = "iceberg"
+ICEBERG_ACCEPT_ANY_SCHEMA = "write.spark.accept-any-schema"
 
 
 class TioSparkTableWriter:
@@ -31,8 +33,8 @@ class TioSparkTableWriter:
     It also adds the `truncate`, `overwrite_partitions` and `merge` modes:
 
     - `append`: adds the rows to the table.
-    - `truncate`: replaces all rows, keeping the table schema and properties.
-    - `overwrite`: replaces all rows, replacing the table schema and properties.
+    - `truncate`: replaces all rows, preserving the table definition and history
+    - `overwrite`: replaces all rows, replacing the table definition, but keeping the history.
     - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
     - `merge`: updates the rows that match `keys` and inserts the others.
 
@@ -66,13 +68,13 @@ class TioSparkTableWriter:
     def __init__(self, df: DataFrame, table: str) -> None:
         self._df = df
         self._table = table
-        self._writer = df.writeTo(table)
         self._mode: TioSparkTableOutputMode = DEFAULT_WRITE_MODE
         self._keys: list[str] = []
         self._format: str = DEFAULT_TABLE_FORMAT
         self._properties: dict[str, str] = {}
         self._options: dict[str, Any] = {}
         self._partition_by: list[Column] = []
+        self._schema_evolution: bool = False
 
     def format(self, format: str) -> Self:
         """
@@ -125,6 +127,13 @@ class TioSparkTableWriter:
         self._partition_by = [col, *cols]
         return self
 
+    def withSchemaEvolution(self) -> Self:
+        """
+        Adds the new DataFrame columns to an existing table before the write.
+        """
+        self._schema_evolution = True
+        return self
+
     def mode(self, mode: TioSparkTableOutputMode, keys: str | list[str] = None) -> Self:
         """
         Sets how `save()` writes the table.
@@ -159,43 +168,48 @@ class TioSparkTableWriter:
         Writes the table using the configured mode.
         """
         spark = self._df.sparkSession
+        table_exists = spark.catalog.tableExists(self._table)
 
-        self._writer.using(self._format)
-        self._writer.options(**self._options)
+        writer = (
+            self._df.writeTo(self._table)
+            .using(self._format)
+            .option("check-ordering", "false")
+            .options(**self._options)
+        )
 
         if self._partition_by:
-            self._writer.partitionedBy(*self._partition_by)
+            writer = writer.partitionedBy(*self._partition_by)
 
         for property, value in self._properties.items():
-            self._writer.tableProperty(property, value)
+            writer = writer.tableProperty(property, value)
+
+        if self._schema_evolution and table_exists and self._mode != "overwrite":
+            self._evolve_schema()
 
         match self._mode:
-            case _ if not spark.catalog.tableExists(self._table):
-                # Creates the table if not exists, regardless of the mode.
-                self._writer.create()
+            case _ if not table_exists:
+                writer.create()
             case "append":
-                # Adds the new rows to the end of the table.
-                self._writer.append()
+                writer.append()
             case "overwrite":
-                # Hard overwrite: replaces the whole table data and definition, keeping the history.
+                # Although Spark calls this `replace`, it is more like an `overwrite` operation,
+                # since both rows and table definition are not preserved.
                 # Exception: `replace()` fails on Delta up to 3.3.2 with Spark 3.5.6+
                 # (delta-io/delta#4671). The fix applies drop+create, which loses the history.
                 try:
-                    self._writer.replace()
+                    writer.replace()
                 except AnalysisException as e:
                     if DELTA_REPLACE_BUG_MESSAGE not in str(e):
                         raise
                     spark.sql(f"DROP TABLE {self._table}")
-                    self._writer.create()
+                    writer.create()
             case "truncate":
-                # Soft overwrite: replaces all rows and keeps the table definition.
-                # Although Spark calls this `overwrite`, it is more like a `truncate` operation.
-                self._writer.overwrite(sf.lit(True))
+                # Although Spark calls this `overwrite`, it is more like a `truncate` operation,
+                # since the table definition is preserved but rows aren't.
+                writer.overwrite(sf.lit(True))
             case "overwrite_partitions":
-                # Replaces only the partitions present in the DataFrame and keeps the others.
-                self._writer.overwritePartitions()
+                writer.overwritePartitions()
             case "merge":
-                # Updates the rows that match the keys and inserts the others.
                 source = f"__merge_{slugify(self._table)}"
                 condition = " AND ".join(f"target.{key} = source.{key}" for key in self._keys)
                 self._df.createOrReplaceTempView(source)
@@ -209,3 +223,36 @@ class TioSparkTableWriter:
                     )
                 finally:
                     spark.catalog.dropTempView(source)
+
+    def _evolve_schema(self) -> None:
+        spark = self._df.sparkSession
+
+        if self._df.schema == spark.table(self._table).schema:
+            return
+
+        accepts_any_schema = bool(
+            spark.sql(f"SHOW TBLPROPERTIES {self._table}")
+            .filter(f"key = '{ICEBERG_ACCEPT_ANY_SCHEMA}' AND value = 'true'")
+            .first()
+        )
+
+        toggle_property = self._format == ICEBERG_FORMAT and not accepts_any_schema
+
+        if toggle_property:
+            spark.sql(
+                f"ALTER TABLE {self._table} "
+                f"SET TBLPROPERTIES ('{ICEBERG_ACCEPT_ANY_SCHEMA}'='true')"
+            )
+        try:
+            (
+                spark.createDataFrame([], self._df.schema)
+                .writeTo(self._table)
+                .option("mergeSchema", "true")
+                .option("check-ordering", "false")
+                .append()
+            )
+        finally:
+            if toggle_property:
+                spark.sql(
+                    f"ALTER TABLE {self._table} UNSET TBLPROPERTIES ('{ICEBERG_ACCEPT_ANY_SCHEMA}')"
+                )

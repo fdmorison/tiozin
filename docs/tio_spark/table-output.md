@@ -60,8 +60,8 @@ Five modes are supported. Mode names are case-insensitive.
 | Mode | Behavior on an existing table |
 |---|---|
 | `append` | Adds the rows to the table |
-| `truncate` | Replaces all rows, keeping the table schema and properties |
-| `overwrite` | Replaces all rows, replacing the table schema and properties |
+| `truncate` | Replaces all rows, preserving the table definition and history |
+| `overwrite` | Replaces all rows and the table definition, keeping the history |
 | `overwrite_partitions` | Replaces only the partitions present in the `DataFrame` |
 | `merge` | Updates the rows that match `keys` and inserts the others |
 
@@ -117,6 +117,16 @@ outputs:
 ```
 
 Property names are format-specific. See the [Iceberg table properties](https://iceberg.apache.org/docs/latest/configuration/#table-properties) for the ones Iceberg accepts.
+
+## Schema Evolution
+
+`SparkTableOutput` always adds new `DataFrame` columns to an existing table, whatever the mode. This cannot be turned off. It covers nested fields in structs and in arrays of structs, on both [Iceberg](https://iceberg.apache.org/docs/latest/) and [Delta Lake](https://docs.delta.io/latest/index.html) tables.
+
+Rows kept by the mode get `NULL` in the new columns. For example, `merge` keeps the rows with no match in the `DataFrame`, and those rows get `NULL`.
+
+The column order of the `DataFrame` does not need to match the table.
+
+Because `overwrite` replaces the table definition, it also accepts changed column types. In the other modes, a column type that cannot be changed fails the write. On Iceberg, for example, the error reads `Cannot change column type: id: string -> int`.
 
 ## Passing Extra Write Options
 

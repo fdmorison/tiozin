@@ -176,7 +176,7 @@ def test_save_should_apply_write_option(spark: SparkSession):
     # Arrange
     target_table = "iceberg.default.writer_with_option"
     spark.sql(f"CREATE TABLE {target_table} (id INT, name STRING) USING iceberg")
-    appended_data = spark.createDataFrame(
+    input_data = spark.createDataFrame(
         [
             (1, "hello"),
         ],
@@ -185,7 +185,7 @@ def test_save_should_apply_write_option(spark: SparkSession):
 
     # Act
     TioSparkTableWriter(
-        df=appended_data,
+        df=input_data,
         table=target_table,
     ).option("snapshot-property.tiozin.run", "run-1").save()
 
@@ -205,7 +205,7 @@ def test_save_should_apply_write_options(spark: SparkSession):
     # Arrange
     target_table = "iceberg.default.writer_with_options"
     spark.sql(f"CREATE TABLE {target_table} (id INT, name STRING) USING iceberg")
-    appended_data = spark.createDataFrame(
+    input_data = spark.createDataFrame(
         [
             (1, "hello"),
         ],
@@ -214,7 +214,7 @@ def test_save_should_apply_write_options(spark: SparkSession):
 
     # Act
     TioSparkTableWriter(
-        df=appended_data,
+        df=input_data,
         table=target_table,
     ).options(
         **{
@@ -273,7 +273,7 @@ def test_save_should_append_rows_by_default(spark: SparkSession):
         AS t(id, name)
         """
     )
-    appended_data = spark.createDataFrame(
+    input_data = spark.createDataFrame(
         [
             (2, "new"),
         ],
@@ -282,7 +282,7 @@ def test_save_should_append_rows_by_default(spark: SparkSession):
 
     # Act
     TioSparkTableWriter(
-        df=appended_data,
+        df=input_data,
         table=target_table,
     ).save()
 
@@ -317,7 +317,7 @@ def test_save_should_append_rows(spark: SparkSession, catalog: str, table_format
         AS t(id, name)
         """
     )
-    appended_data = spark.createDataFrame(
+    input_data = spark.createDataFrame(
         [
             (2, "new"),
         ],
@@ -326,7 +326,7 @@ def test_save_should_append_rows(spark: SparkSession, catalog: str, table_format
 
     # Act
     TioSparkTableWriter(
-        df=appended_data,
+        df=input_data,
         table=target_table,
     ).format(table_format).mode("append").save()
 
@@ -338,6 +338,55 @@ def test_save_should_append_rows(spark: SparkSession, catalog: str, table_format
             (2, "new"),
         ],
         schema="id INT, name STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_evolve_schema_when_mode_is_append(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Adds a new column in the `append` mode, and kept rows get NULL."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_evolved_column_append"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        PARTITIONED BY (region)
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    input_data = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).format(table_format).withSchemaEvolution().mode("append").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "BR", None),
+            (2, "US", None),
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
@@ -388,6 +437,98 @@ def test_save_should_recreate_table_when_mode_is_overwrite(
             (2, "new@example.com"),
         ],
         schema="id INT, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_add_new_column_when_mode_is_overwrite(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Adds a new column in the `overwrite` mode, and no previous row is kept."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_evolved_column_overwrite"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        PARTITIONED BY (region)
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    input_data = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).format(table_format).mode("overwrite").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_change_column_type_when_mode_is_overwrite(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Replaces the type of an existing column in the `overwrite` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_overwritten_column_type"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            ('1', 'old')
+        AS t(id, name)
+        """
+    )
+    replacement_data = spark.createDataFrame(
+        [
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=replacement_data,
+        table=target_table,
+    ).format(table_format).mode("overwrite").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
@@ -443,6 +584,53 @@ def test_save_should_replace_all_rows_when_mode_is_truncate(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_evolve_schema_when_mode_is_truncate(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Adds a new column in the `truncate` mode, and no previous row is kept."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_evolved_column_truncate"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        PARTITIONED BY (region)
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    input_data = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).format(table_format).withSchemaEvolution().mode("truncate").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
 # ============================================================================
 # Testing TioSparkTableWriter - Overwrite Partitions
 # ============================================================================
@@ -492,6 +680,55 @@ def test_save_should_overwrite_partitions_present_in_dataframe(
             (3, "BR"),
         ],
         schema="id INT, region STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_evolve_schema_when_mode_is_overwrite_partitions(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Adds a new column in the `overwrite_partitions` mode, and kept rows get NULL."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_evolved_column_overwrite_partitions"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        PARTITIONED BY (region)
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    input_data = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).format(table_format).withSchemaEvolution().mode("overwrite_partitions").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "BR", None),
+            (2, "US", None),
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
@@ -582,6 +819,55 @@ def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
             ("US", 1, "kept"),
         ],
         schema="region STRING, id INT, name STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_save_should_evolve_schema_when_mode_is_merge(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Adds a new column in the `merge` mode, and kept rows get NULL."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_evolved_column_merge"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        PARTITIONED BY (region)
+        AS SELECT * FROM VALUES
+            (1, 'BR'),
+            (2, 'US')
+        AS t(id, region)
+        """
+    )
+    input_data = spark.createDataFrame(
+        [
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).format(table_format).withSchemaEvolution().mode("merge", keys="id").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "BR", None),
+            (2, "US", None),
+            (3, "JP", "new@example.com"),
+        ],
+        schema="id INT, region STRING, email STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
