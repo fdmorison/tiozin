@@ -97,7 +97,7 @@ class SparkIcebergRunner(SparkRunner):
         self.iceberg_class = trim(iceberg_class or self._DEFAULT_SPARK_ICEBERG_CLASS)
 
     def setup(self) -> None:
-        if self.session:
+        if self._spark:
             return
 
         self.info(f"Setting up Iceberg catalog: {self.catalog_name}")
