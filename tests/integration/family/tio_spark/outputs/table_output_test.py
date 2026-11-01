@@ -70,7 +70,7 @@ def test_output_should_create_table(spark: SparkSession):
         table=target_table,
         format="delta",
         mode="merge",
-        keys="id",
+        merge_keys="id",
         partition_by="region",
         properties={
             "tiozin.layer": "gold",

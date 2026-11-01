@@ -44,9 +44,9 @@ class SparkTableOutput(SparkOutput):
             - `overwrite`: replaces all rows and the table definition, keeping the history.
             - `drop_overwrite`: drops the table and creates it again, losing the history.
             - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
-            - `merge`: updates the rows that match `keys` and inserts the others.
+            - `merge`: updates the rows that match `merge_keys` and inserts the others.
 
-        keys:
+        merge_keys:
             Column or list of columns that identify a row. Required by the
             `merge` mode and ignored by the others.
 
@@ -84,7 +84,7 @@ class SparkTableOutput(SparkOutput):
           - kind: SparkTableOutput
             table: my_catalog.default.customers
             mode: merge
-            keys: [customer_id]
+            merge_keys: [customer_id]
         ```
 
         ```yaml
@@ -101,7 +101,7 @@ class SparkTableOutput(SparkOutput):
         table: str = None,
         format: str = None,
         mode: TioSparkTableOutputMode = None,
-        keys: str | list[str] = None,
+        merge_keys: str | list[str] = None,
         partition_by: str | list[str] = None,
         properties: dict[str, str] = None,
         **options,
@@ -117,7 +117,7 @@ class SparkTableOutput(SparkOutput):
         self.table = trim(table)
         self.format = trim_lower(default(format, DEFAULT_FORMAT))
         self.mode = trim_lower(default(mode, DEFAULT_WRITE_MODE))
-        self.keys = as_list(keys, [])
+        self.merge_keys = as_list(merge_keys, [])
         self.partition_by = as_list(partition_by, [])
         self.properties = properties or {}
 
@@ -139,6 +139,6 @@ class SparkTableOutput(SparkOutput):
             writer.format(self.format)
             .options(**self.options)
             .tableProperties(**self.properties)
-            .mode(self.mode, keys=self.keys)
+            .mode(self.mode, merge_keys=self.merge_keys)
             .withSchemaEvolution()
         )
