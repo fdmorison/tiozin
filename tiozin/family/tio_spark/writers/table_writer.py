@@ -35,7 +35,7 @@ class TioSparkTableWriter:
     - `overwrite`: replaces all rows, replacing the table definition, but keeping the history.
     - `drop_overwrite`: drops the table and creates it again, losing the history.
     - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
-    - `merge`: updates the rows that match `keys` and inserts the others.
+    - `merge`: updates the rows that match `merge_keys` and inserts the others.
 
     Works with both classic and Spark Connect sessions.
 
@@ -58,7 +58,7 @@ class TioSparkTableWriter:
         (
             TioSparkTableWriter(df, "my_catalog.default.customers")
             .format("delta")
-            .mode("merge", keys=["customer_id"])
+            .mode("merge", merge_keys=["customer_id"])
             .save()
         )
         ```
@@ -68,7 +68,7 @@ class TioSparkTableWriter:
         self._df = df
         self._table = table
         self._mode: TioSparkTableOutputMode = DEFAULT_WRITE_MODE
-        self._keys: list[str] = []
+        self._merge_keys: list[str] = []
         self._format: str = DEFAULT_TABLE_FORMAT
         self._properties: dict[str, str] = {}
         self._options: dict[str, Any] = {}
@@ -133,7 +133,7 @@ class TioSparkTableWriter:
         self._schema_evolution = True
         return self
 
-    def mode(self, mode: TioSparkTableOutputMode, keys: str | list[str] = None) -> Self:
+    def mode(self, mode: TioSparkTableOutputMode, merge_keys: str | list[str] = None) -> Self:
         """
         Sets how `save()` writes the table.
 
@@ -141,13 +141,13 @@ class TioSparkTableWriter:
             mode:
                 Write mode, one of the modes described in the class docstring.
 
-            keys:
+            merge_keys:
                 Column or list of columns that identify a row. Required by the
                 `merge` mode and ignored by the others.
 
         Raises:
             TiozinInputError: If the mode is not supported.
-            RequiredArgumentError: If the mode is `merge` and no keys are given.
+            RequiredArgumentError: If the mode is `merge` and no `merge_keys` are given.
         """
         modes = get_args(TioSparkTableOutputMode)
         TiozinInputError.raise_if(
@@ -155,11 +155,11 @@ class TioSparkTableWriter:
             f"Unsupported write mode: '{mode}'. Supported: {', '.join(modes)}",
         )
         RequiredArgumentError.raise_if(
-            mode == "merge" and not keys,
-            "`keys` is required by the `merge` mode",
+            mode == "merge" and not merge_keys,
+            "`merge_keys` is required by the `merge` mode",
         )
         self._mode = mode
-        self._keys = as_list(keys, [])
+        self._merge_keys = as_list(merge_keys, [])
         return self
 
     def save(self) -> None:
@@ -211,7 +211,7 @@ class TioSparkTableWriter:
                 writer.overwritePartitions()
             case "merge":
                 source = f"__merge_{slugify(self._table)}"
-                condition = " AND ".join(f"target.{key} = source.{key}" for key in self._keys)
+                condition = " AND ".join(f"target.{key} = source.{key}" for key in self._merge_keys)
                 self._df.createOrReplaceTempView(source)
                 try:
                     spark.sql(

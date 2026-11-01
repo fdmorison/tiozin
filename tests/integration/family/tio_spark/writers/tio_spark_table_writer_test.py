@@ -30,7 +30,7 @@ def test_save_should_create_table_when_table_is_missing(spark: SparkSession, mod
     TioSparkTableWriter(
         df=initial_data,
         table=target_table,
-    ).mode(mode, keys="id").save()
+    ).mode(mode, merge_keys="id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -854,7 +854,7 @@ def test_save_should_merge_rows_by_key(spark: SparkSession, catalog: str, table_
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).format(table_format).mode("merge", keys="id").save()
+    ).format(table_format).mode("merge", merge_keys="id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -893,7 +893,7 @@ def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).mode("merge", keys=["region", "id"]).save()
+    ).mode("merge", merge_keys=["region", "id"]).save()
 
     # Assert
     actual = spark.table(target_table)
@@ -941,7 +941,7 @@ def test_save_should_evolve_schema_when_mode_is_merge(
     TioSparkTableWriter(
         df=input_data,
         table=target_table,
-    ).format(table_format).withSchemaEvolution().mode("merge", keys="id").save()
+    ).format(table_format).withSchemaEvolution().mode("merge", merge_keys="id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -956,9 +956,9 @@ def test_save_should_evolve_schema_when_mode_is_merge(
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
-@pytest.mark.parametrize("keys", [None, []])
+@pytest.mark.parametrize("merge_keys", [None, []])
 def test_mode_should_raise_required_argument_error_when_merge_keys_are_missing(
-    spark: SparkSession, keys: list[str]
+    spark: SparkSession, merge_keys: list[str]
 ):
     # Arrange
     target_table = "iceberg.default.writer_merge_without_keys"
@@ -975,4 +975,4 @@ def test_mode_should_raise_required_argument_error_when_merge_keys_are_missing(
 
     # Act / Assert
     with pytest.raises(RequiredArgumentError):
-        writer.mode("merge", keys=keys)
+        writer.mode("merge", merge_keys=merge_keys)

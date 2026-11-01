@@ -20,7 +20,7 @@ This appends the rows to `my_catalog.default.sales`. If the table does not exist
 | `table` | yes | | Table name, qualified as `catalog.schema.table` |
 | `format` | no | `iceberg` | Table format used when the table is created or recreated, such as `delta` or `iceberg` |
 | `mode` | no | `append` | How the `DataFrame` is written to the table |
-| `keys` | no | | Column or list of columns that identify a row. Required by the `merge` mode and ignored by the others |
+| `merge_keys` | no | | Column or list of columns that identify a row. Required by the `merge` mode and ignored by the others |
 | `partition_by` | no | | Column name or list of column names used to partition the table when it is created or recreated |
 | `properties` | no | | Table properties set when the table is created or recreated |
 | `**options` | no | | Write options passed directly to Spark |
@@ -64,7 +64,7 @@ Six modes are supported. Mode names are case-insensitive.
 | `overwrite` | Replaces all rows and the table definition, keeping the history |
 | `drop_overwrite` | Drops the table and creates it again, replacing all rows and the table definition and losing the history |
 | `overwrite_partitions` | Replaces only the partitions present in the `DataFrame` |
-| `merge` | Updates the rows that match `keys` and inserts the others |
+| `merge` | Updates the rows that match `merge_keys` and inserts the others |
 
 Any other value raises a `TiozinInputError` that lists the supported modes. This error surfaces when the output runs, not when the job is built.
 
@@ -89,9 +89,9 @@ outputs:
 
 With `overwrite_partitions`, each run replaces only the `country` and `day` partitions present in the `DataFrame`. Other partitions stay untouched.
 
-## keys
+## merge_keys
 
-The `merge` mode uses `keys` to decide which incoming rows already exist in the table. A single column name or a list is accepted.
+The `merge` mode uses `merge_keys` to decide which incoming rows already exist in the table. A single column name or a list is accepted.
 
 ```yaml
 outputs:
@@ -99,12 +99,12 @@ outputs:
     name: customers
     table: my_catalog.default.customers
     mode: merge
-    keys: [customer_id]
+    merge_keys: [customer_id]
 ```
 
 A row matches when it has the same values as a table row in all key columns. Matching rows are updated with every column from the `DataFrame`, and the rest are inserted. Rows already in the table that have no match in the `DataFrame` are kept.
 
-If `mode` is `merge` and `keys` is empty, a `RequiredArgumentError` is raised when the output runs. Other modes ignore `keys`.
+If `mode` is `merge` and `merge_keys` is empty, a `RequiredArgumentError` is raised when the output runs. Other modes ignore `merge_keys`.
 
 For format-specific merge behavior, see [Iceberg `MERGE INTO`](https://iceberg.apache.org/docs/latest/spark-writes/#merge-into) or [Delta Lake merge](https://docs.delta.io/latest/delta-update.html#upsert-into-a-table-using-merge).
 
