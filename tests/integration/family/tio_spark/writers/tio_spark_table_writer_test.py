@@ -30,7 +30,7 @@ def test_save_should_create_table_when_table_is_missing(spark: SparkSession, mod
     TioSparkTableWriter(
         df=initial_data,
         table=target_table,
-    ).mode(mode, merge_keys="id").save()
+    ).mode(mode).onMergeInto(keys="id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -854,7 +854,7 @@ def test_save_should_merge_rows_by_key(spark: SparkSession, catalog: str, table_
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).format(table_format).mode("merge", merge_keys="id").save()
+    ).format(table_format).mode("merge").onMergeInto(keys="id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -893,7 +893,7 @@ def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).mode("merge", merge_keys=["region", "id"]).save()
+    ).mode("merge").onMergeInto(keys=["region", "id"]).save()
 
     # Assert
     actual = spark.table(target_table)
@@ -941,7 +941,7 @@ def test_save_should_merge_rows_when_key_needs_quoting(
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).format(table_format).mode("merge", merge_keys="customer-id").save()
+    ).format(table_format).mode("merge").onMergeInto(keys="customer-id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -990,7 +990,7 @@ def test_save_should_evolve_schema_when_mode_is_merge(
     TioSparkTableWriter(
         df=input_data,
         table=target_table,
-    ).format(table_format).withSchemaEvolution().mode("merge", merge_keys="id").save()
+    ).format(table_format).withSchemaEvolution().mode("merge").onMergeInto(keys="id").save()
 
     # Assert
     actual = spark.table(target_table)
@@ -1041,10 +1041,9 @@ def test_save_should_preserve_excluded_column_when_mode_is_merge(
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).format(table_format).mode(
-        "merge",
-        merge_keys="id",
-        merge_exclude_fields="created_at",
+    ).format(table_format).mode("merge").onMergeInto(
+        keys="id",
+        exclude_fields="created_at",
     ).save()
 
     # Assert
@@ -1094,10 +1093,9 @@ def test_save_should_preserve_excluded_struct_column_when_mode_is_merge(
     TioSparkTableWriter(
         df=merge_data,
         table=target_table,
-    ).format(table_format).mode(
-        "merge",
-        merge_keys="id",
-        merge_exclude_fields=["audit"],
+    ).format(table_format).mode("merge").onMergeInto(
+        keys="id",
+        exclude_fields=["audit"],
     ).save()
 
     # Assert
@@ -1141,9 +1139,8 @@ def test_save_should_ignore_merge_exclude_fields_when_mode_is_not_merge(
     TioSparkTableWriter(
         df=input_data,
         table=target_table,
-    ).format(table_format).mode(
-        mode,
-        merge_exclude_fields=["email", "unknown"],
+    ).format(table_format).mode(mode).onMergeInto(
+        exclude_fields=["email", "unknown"],
     ).save()
 
     # Assert
@@ -1158,7 +1155,7 @@ def test_save_should_ignore_merge_exclude_fields_when_mode_is_not_merge(
 
 
 @pytest.mark.parametrize("merge_keys", [None, []])
-def test_mode_should_raise_required_argument_error_when_merge_keys_are_missing(
+def test_save_should_raise_required_argument_error_when_merge_keys_are_missing(
     spark: SparkSession, merge_keys: list[str]
 ):
     # Arrange
@@ -1169,21 +1166,25 @@ def test_mode_should_raise_required_argument_error_when_merge_keys_are_missing(
         ],
         schema="id INT, name STRING",
     )
-    writer = TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
+    writer = (
+        TioSparkTableWriter(
+            df=merge_data,
+            table=target_table,
+        )
+        .mode("merge")
+        .onMergeInto(keys=merge_keys)
     )
 
     # Act / Assert
     with pytest.raises(RequiredArgumentError):
-        writer.mode("merge", merge_keys=merge_keys)
+        writer.save()
 
 
 @pytest.mark.parametrize(
     "merge_exclude_fields",
     ["unknown", "audit.created_at", ["email", "unknown"]],
 )
-def test_mode_should_raise_input_error_when_merge_exclude_field_is_not_top_level_column(
+def test_save_should_raise_input_error_when_merge_exclude_field_is_not_top_level_column(
     spark: SparkSession, merge_exclude_fields: str | list[str]
 ):
     # Arrange
@@ -1194,11 +1195,15 @@ def test_mode_should_raise_input_error_when_merge_exclude_field_is_not_top_level
         ],
         schema="id INT, email STRING, audit STRUCT<created_at: STRING>",
     )
-    writer = TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
+    writer = (
+        TioSparkTableWriter(
+            df=merge_data,
+            table=target_table,
+        )
+        .mode("merge")
+        .onMergeInto(keys="id", exclude_fields=merge_exclude_fields)
     )
 
     # Act / Assert
     with pytest.raises(TiozinInputError):
-        writer.mode("merge", merge_keys="id", merge_exclude_fields=merge_exclude_fields)
+        writer.save()
