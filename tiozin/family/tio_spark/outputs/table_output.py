@@ -50,6 +50,11 @@ class SparkTableOutput(SparkOutput):
             Column or list of columns that identify a row. Required by the
             `merge` mode and ignored by the others.
 
+        merge_exclude_fields:
+            Column or list of columns excluded from updates, such as `created_at`.
+            They are still written when a row is inserted. Nested fields are not
+            supported. Ignored by modes other than `merge`. Optional.
+
         partition_by:
             Column name or list of column names used to partition the table
             when it is created or recreated. Optional.
@@ -85,6 +90,7 @@ class SparkTableOutput(SparkOutput):
             table: my_catalog.default.customers
             mode: merge
             merge_keys: [customer_id]
+            merge_exclude_fields: [created_at]
         ```
 
         ```yaml
@@ -102,6 +108,7 @@ class SparkTableOutput(SparkOutput):
         format: str = None,
         mode: TioSparkTableOutputMode = None,
         merge_keys: str | list[str] = None,
+        merge_exclude_fields: str | list[str] = None,
         partition_by: str | list[str] = None,
         properties: dict[str, str] = None,
         **options,
@@ -118,6 +125,7 @@ class SparkTableOutput(SparkOutput):
         self.format = trim_lower(default(format, DEFAULT_FORMAT))
         self.mode = trim_lower(default(mode, DEFAULT_WRITE_MODE))
         self.merge_keys = as_list(merge_keys, [])
+        self.merge_exclude_fields = as_list(merge_exclude_fields, [])
         self.partition_by = as_list(partition_by, [])
         self.properties = properties or {}
 
@@ -139,6 +147,10 @@ class SparkTableOutput(SparkOutput):
             writer.format(self.format)
             .options(**self.options)
             .tableProperties(**self.properties)
-            .mode(self.mode, merge_keys=self.merge_keys)
+            .mode(
+                self.mode,
+                merge_keys=self.merge_keys,
+                merge_exclude_fields=self.merge_exclude_fields,
+            )
             .withSchemaEvolution()
         )
