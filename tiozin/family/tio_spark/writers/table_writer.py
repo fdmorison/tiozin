@@ -234,7 +234,7 @@ class TioSparkTableWriter:
                 writer.overwritePartitions()
             case "merge":
                 source = f"__merge_{slugify(self._table)}"
-                condition = " AND ".join(f"target.{key} = source.{key}" for key in self._merge_keys)
+                condition = " AND ".join(f"target.`{k}` = source.`{k}`" for k in self._merge_keys)
                 fields = (
                     ", ".join(
                         f"target.`{field}` = source.`{field}`"
