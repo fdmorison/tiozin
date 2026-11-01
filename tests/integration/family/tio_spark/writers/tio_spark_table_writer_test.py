@@ -914,6 +914,55 @@ def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
         ("iceberg", "iceberg"),
     ],
 )
+def test_save_should_merge_rows_when_key_needs_quoting(
+    spark: SparkSession, catalog: str, table_format: str
+):
+    """Matches rows by a key whose column name needs quoting in the `merge` mode."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_merged_by_quoted_key"
+    spark.sql(
+        f"""
+        CREATE TABLE {target_table} USING {table_format}
+        AS SELECT * FROM VALUES
+            (1, 'original@example.com'),
+            (2, 'original@example.com')
+        AS t(`customer-id`, email)
+        """
+    )
+    merge_data = spark.createDataFrame(
+        [
+            (2, "updated@example.com"),
+            (3, "inserted@example.com"),
+        ],
+        schema="`customer-id` INT, email STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=merge_data,
+        table=target_table,
+    ).format(table_format).mode("merge", merge_keys="customer-id").save()
+
+    # Assert
+    actual = spark.table(target_table)
+    expected = spark.createDataFrame(
+        [
+            (1, "original@example.com"),
+            (2, "updated@example.com"),
+            (3, "inserted@example.com"),
+        ],
+        schema="`customer-id` INT, email STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "catalog, table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
 def test_save_should_evolve_schema_when_mode_is_merge(
     spark: SparkSession, catalog: str, table_format: str
 ):
