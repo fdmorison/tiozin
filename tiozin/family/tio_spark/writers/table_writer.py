@@ -35,7 +35,7 @@ class TioSparkTableWriter:
     - `overwrite`: replaces all rows, replacing the table definition, but keeping the history.
     - `drop_overwrite`: drops the table and creates it again, losing the history.
     - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
-    - `merge`: updates the rows that match `merge_keys` and inserts the others.
+    - `merge`: updates the rows that match the keys set by `onMergeInto()` and inserts the others.
 
     Works with both classic and Spark Connect sessions.
 
@@ -58,11 +58,8 @@ class TioSparkTableWriter:
         (
             TioSparkTableWriter(df, "my_catalog.default.customers")
             .format("delta")
-            .mode(
-                "merge",
-                merge_keys=["customer_id"],
-                merge_exclude_fields=["created_at"],
-            )
+            .mode("merge")
+            .onMergeInto(keys="customer_id", exclude_fields="created_at")
             .save()
         )
         ```
@@ -138,12 +135,7 @@ class TioSparkTableWriter:
         self._schema_evolution = True
         return self
 
-    def mode(
-        self,
-        mode: TioSparkTableOutputMode,
-        merge_keys: str | list[str] = None,
-        merge_exclude_fields: str | list[str] = None,
-    ) -> Self:
+    def mode(self, mode: TioSparkTableOutputMode) -> Self:
         """
         Sets how `save()` writes the table.
 
@@ -151,44 +143,56 @@ class TioSparkTableWriter:
             mode:
                 Write mode, one of the modes described in the class docstring.
 
-            merge_keys:
-                Column or list of columns that identify a row. Required by the
-                `merge` mode and ignored by the others.
-
-            merge_exclude_fields:
-                Column or list of columns excluded from updates, such as
-                `created_at`. They are still written when a row is inserted.
-                Nested fields are not supported. Ignored by modes other than
-                `merge`.
-
         Raises:
-            TiozinInputError: If the mode is not supported, or `merge_exclude_fields`
-                has a name that is not a top-level column of the DataFrame.
-            RequiredArgumentError: If the mode is `merge` and no `merge_keys` are given.
+            TiozinInputError: If the mode is not supported.
         """
         modes = get_args(TioSparkTableOutputMode)
-        merge_exclude_fields = as_list(merge_exclude_fields, [])
         TiozinInputError.raise_if(
             mode not in modes,
             f"Unsupported write mode: '{mode}'. Supported: {', '.join(modes)}",
         )
-        RequiredArgumentError.raise_if(
-            mode == "merge" and not merge_keys,
-            "`merge_keys` is required by the `merge` mode",
-        )
-        TiozinInputError.raise_if(
-            mode == "merge" and not set(merge_exclude_fields) <= set(self._df.columns),
-            f"`merge_exclude_fields` must name top-level DataFrame columns: {merge_exclude_fields}",
-        )
         self._mode = mode
-        self._merge_keys = as_list(merge_keys, [])
-        self._merge_exclude_fields = merge_exclude_fields
+        return self
+
+    def onMergeInto(
+        self,
+        keys: str | list[str] = None,
+        exclude_fields: str | list[str] = None,
+    ) -> Self:
+        """
+        Sets how the `merge` mode matches and updates rows. Ignored by other modes.
+
+        Args:
+            keys:
+                Column or list of columns that identify a row. Required by the
+                `merge` mode.
+
+            exclude_fields:
+                Column or list of columns excluded from updates, such as
+                `created_at`. They are still written when a row is inserted.
+                Nested fields are not supported.
+        """
+        self._merge_keys = as_list(keys, [])
+        self._merge_exclude_fields = as_list(exclude_fields, [])
         return self
 
     def save(self) -> None:
         """
         Writes the table using the configured mode.
+
+        Raises:
+            RequiredArgumentError: If the mode is `merge` and no keys are given.
+            TiozinInputError: If the mode is `merge` and `exclude_fields` has a
+                name that is not a top-level column of the DataFrame.
         """
+        RequiredArgumentError.raise_if(
+            self._mode == "merge" and not self._merge_keys,
+            "`keys` is required by the `merge` mode, set it with `onMergeInto()`",
+        )
+        TiozinInputError.raise_if(
+            self._mode == "merge" and not set(self._merge_exclude_fields) <= set(self._df.columns),
+            f"`exclude_fields` must name top-level DataFrame columns: {self._merge_exclude_fields}",
+        )
         spark = self._df.sparkSession
         table_exists = spark.catalog.tableExists(self._table)
 

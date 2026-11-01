@@ -147,10 +147,7 @@ class SparkTableOutput(SparkOutput):
             writer.format(self.format)
             .options(**self.options)
             .tableProperties(**self.properties)
-            .mode(
-                self.mode,
-                merge_keys=self.merge_keys,
-                merge_exclude_fields=self.merge_exclude_fields,
-            )
+            .mode(self.mode)
+            .onMergeInto(self.merge_keys, self.merge_exclude_fields)
             .withSchemaEvolution()
         )
