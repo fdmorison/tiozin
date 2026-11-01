@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Self, get_args
 
+from pyspark.errors import AnalysisException
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as sf
 
@@ -11,6 +12,7 @@ from tiozin.utils import as_list, slugify
 from ..typehints import TioSparkTableOutputMode
 
 DEFAULT_WRITE_MODE = "append"
+DELTA_REPLACE_BUG_MESSAGE = "does not support truncate in batch mode"
 
 
 class TioSparkTableWriter:
@@ -156,16 +158,31 @@ class TioSparkTableWriter:
 
         match self._mode:
             case _ if not spark.catalog.tableExists(self._table):
+                # Creates the table if not exists, regardless of the mode.
                 self._writer.create()
             case "append":
+                # Adds the new rows to the end of the table.
                 self._writer.append()
             case "overwrite":
-                self._writer.createOrReplace()
+                # Hard overwrite: replaces the whole table data and definition, keeping the history.
+                # Exception: `replace()` fails on Delta up to 3.3.2 with Spark 3.5.6+
+                # (delta-io/delta#4671). The fix applies drop+create, which loses the history.
+                try:
+                    self._writer.replace()
+                except AnalysisException as e:
+                    if DELTA_REPLACE_BUG_MESSAGE not in str(e):
+                        raise
+                    spark.sql(f"DROP TABLE {self._table}")
+                    self._writer.create()
             case "truncate":
+                # Soft overwrite: replaces all rows and keeps the table definition.
+                # Although Spark calls this `overwrite`, it is more like a `truncate` operation.
                 self._writer.overwrite(sf.lit(True))
             case "overwrite_partitions":
+                # Replaces only the partitions present in the DataFrame and keeps the others.
                 self._writer.overwritePartitions()
             case "merge":
+                # Updates the rows that match the keys and inserts the others.
                 source = f"__merge_{slugify(self._table)}"
                 condition = " AND ".join(f"target.{key} = source.{key}" for key in self._keys)
                 self._df.createOrReplaceTempView(source)
