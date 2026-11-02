@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -27,6 +28,11 @@ class TiozinTemplateOverlay:
     ``context.template_vars``. This includes nested dicts, lists, and child
     Tiozin plugins. When the overlay exits, all attributes are restored to
     their original template strings.
+
+    Lists and dicts holding templates are replaced by rendered copies instead of
+    being changed, so one handed out during the overlay keeps its rendered values
+    after exit. A tuple holding them is exposed as a list during the overlay,
+    since a tuple cannot have its items replaced.
 
     This makes it possible to use templated configuration values during
     execution without mutating the plugin permanently.
@@ -56,13 +62,20 @@ class TiozinTemplateOverlay:
             case str() if TEMPLATE_PATTERN.search(obj):
                 self._templates.append((*parents, obj))
             case list():
+                if TEMPLATE_PATTERN.search(str(obj)):
+                    self._templates.append((*parents, obj))
                 for index, value in enumerate(obj):
                     self._scan_templates(value, *parents, index)
             case tuple():
+                has_mutable = any(isinstance(value, (list, tuple, dict)) for value in obj)
+                if has_mutable and TEMPLATE_PATTERN.search(str(obj)):
+                    self._templates.append((*parents, obj))
                 for index, value in enumerate(obj):
                     if isinstance(value, (list, tuple, dict)):
                         self._scan_templates(value, *parents, index)
             case dict():
+                if TEMPLATE_PATTERN.search(str(obj)):
+                    self._templates.append((*parents, obj))
                 for field, value in obj.items():
                     self._scan_templates(value, *parents, field)
             case Tiozin() if isinstance(obj, self._tiozin.tiozin_role_class):
@@ -77,7 +90,12 @@ class TiozinTemplateOverlay:
             for key in path:
                 obj = reflection.get(obj, key)
             try:
-                rendered = JINJA_ENV.from_string(template).render(self._template_vars)
+                if isinstance(template, tuple):
+                    rendered = list(template)
+                elif isinstance(template, (list, dict)):
+                    rendered = copy.copy(template)
+                else:
+                    rendered = JINJA_ENV.from_string(template).render(self._template_vars)
                 reflection.set_field(obj, field, rendered)
             except (TemplateError, TiozinError) as e:
                 raise TiozinInputError(f"Cannot render `{template}` because {e}") from e
@@ -90,7 +108,8 @@ class TiozinTemplateOverlay:
             obj = self._tiozin
             for key in path:
                 obj = reflection.get(obj, key)
-            reflection.set_field(obj, field, original)
+            if not isinstance(obj, tuple):
+                reflection.set_field(obj, field, original)
 
     def __enter__(self) -> TiozinTemplateOverlay:
         self._render_templates()
