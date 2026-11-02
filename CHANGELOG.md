@@ -1,5 +1,30 @@
 # Changelog
 
+## [4.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v4.0.0...tiozin-v4.1.0) (2026-11-02)
+
+
+### Features
+
+* **core:** Add catalog table lineage and OpenLineage SQL parser ([#349](https://github.com/fdmorison/tiozin/issues/349)) ([7889dc0](https://github.com/fdmorison/tiozin/commit/7889dc02577ab2b10dcca73f355d66446ff67e44))
+* **tio_spark:** Add listing of nested Spark schema fields and types ([#361](https://github.com/fdmorison/tiozin/issues/361)) ([03b8faf](https://github.com/fdmorison/tiozin/commit/03b8faf9a6669f4ebde98f7e80f3eff529c14e86))
+* **tio_spark:** Add merge_exclude_fields to SparkTableOutput ([#358](https://github.com/fdmorison/tiozin/issues/358)) ([16601a1](https://github.com/fdmorison/tiozin/commit/16601a12ee7c56d2364e334f2263c6ba02868a52))
+* **tio_spark:** Add partition expressions to SparkTableOutput ([#362](https://github.com/fdmorison/tiozin/issues/362)) ([5301678](https://github.com/fdmorison/tiozin/commit/530167898041aa9dc34dea822f03ca4576ba9871))
+* **tio_spark:** Add schema evolution to SparkTableOutput ([#355](https://github.com/fdmorison/tiozin/issues/355)) ([52834d5](https://github.com/fdmorison/tiozin/commit/52834d56d6a6e690d65692bdbec1d96e04c5bd83))
+* **tio_spark:** Add SparkTableInput for catalog table reads ([#351](https://github.com/fdmorison/tiozin/issues/351)) ([849ff9a](https://github.com/fdmorison/tiozin/commit/849ff9a26083c18f8d6a73d6885fb03908ec74db))
+* **tio_spark:** Add SparkTableOutput for catalog table writes ([#350](https://github.com/fdmorison/tiozin/issues/350)) ([5fbeaeb](https://github.com/fdmorison/tiozin/commit/5fbeaeb1793855914346af2847cde49d3fa57b59))
+* **tio_spark:** Add TioSparkTableWriter for lazy table writes ([#348](https://github.com/fdmorison/tiozin/issues/348)) ([981122f](https://github.com/fdmorison/tiozin/commit/981122fef6830e87ea34d382754938bab5a3e6f2))
+* **tio_spark:** Add write metrics to SparkTableOutput ([#365](https://github.com/fdmorison/tiozin/issues/365)) ([f95e38f](https://github.com/fdmorison/tiozin/commit/f95e38f786c4674c0501edacf14851a31a8c1560))
+
+
+### Bug Fixes
+
+* **core-compose:** Render merge_exclude_fields in lazy SparkTableOutput merges ([#364](https://github.com/fdmorison/tiozin/issues/364)) ([2f298bb](https://github.com/fdmorison/tiozin/commit/2f298bb7822fd81cc5bf2e5f928eac92202aead7))
+* **tio_spark:** Fix SparkIcebergRunner failing on startup ([#353](https://github.com/fdmorison/tiozin/issues/353)) ([fbc3630](https://github.com/fdmorison/tiozin/commit/fbc3630f23acec6371ccd5cd367341b2e61f75c1))
+* **tio_spark:** Fix TioSparkTableWriter overwrite on existing Delta tables ([#352](https://github.com/fdmorison/tiozin/issues/352)) ([9d0a5ec](https://github.com/fdmorison/tiozin/commit/9d0a5ec7c5bc7c2cd79ce5d0a955b9d1e7e07a3f))
+* **tio_spark:** Quote merge keys in SparkTableOutput ([#359](https://github.com/fdmorison/tiozin/issues/359)) ([9764f00](https://github.com/fdmorison/tiozin/commit/9764f00ed7c51081c7457b01c0e13bb1779a9134))
+* **tio_spark:** Support Spark Connect DataFrames in SparkRunner and Spark steps ([#347](https://github.com/fdmorison/tiozin/issues/347)) ([cc6d1cb](https://github.com/fdmorison/tiozin/commit/cc6d1cbd23db5addb3de99170d8e933e78526370))
+* **tio_spark:** Support Spark Connect sessions in SparkRunner ([#344](https://github.com/fdmorison/tiozin/issues/344)) ([fe3e166](https://github.com/fdmorison/tiozin/commit/fe3e166fe31b3cedd6c7d86b4186f4531f7c4be8))
+
 ## [4.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v3.3.1...tiozin-v4.0.0) (2026-08-01)
 
 
