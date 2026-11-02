@@ -18,7 +18,7 @@ This appends the rows to `my_catalog.default.sales`. If the table does not exist
 | Property | Required | Default | Description |
 | -------- | -------- | ------- | ----------- |
 | `table` | yes | | Table name, qualified as `catalog.schema.table` |
-| `format` | no | `iceberg` | Table format used when the table is created or recreated, such as `delta` or `iceberg` |
+| `format` | no | `iceberg` | Table format, such as `delta` or `iceberg` |
 | `mode` | no | `append` | How the `DataFrame` is written to the table |
 | `merge_keys` | no | | Column or list of columns that identify a row. Required by the `merge` mode and ignored by the others |
 | `merge_exclude_fields` | no | | Column or list of columns excluded from updates, such as `created_at`. They are still written when a row is inserted. Nested fields are not supported. Ignored by modes other than `merge` |
@@ -161,13 +161,15 @@ Property names are format-specific. See the [Iceberg table properties](https://i
 
 ## Schema Evolution
 
-`SparkTableOutput` always adds new `DataFrame` columns to an existing table, whatever the mode. This cannot be turned off. It covers nested fields in structs and in arrays of structs, on both [Iceberg](https://iceberg.apache.org/docs/latest/) and [Delta Lake](https://docs.delta.io/latest/index.html) tables.
+On [Iceberg](https://iceberg.apache.org/docs/latest/) and [Delta Lake](https://docs.delta.io/latest/index.html) tables, new `DataFrame` columns are always added to an existing table, whatever the mode. This cannot be turned off. It covers nested fields in structs and in arrays of structs.
 
 Rows kept by the mode get `NULL` in the new columns. For example, `merge` keeps the rows with no match in the `DataFrame`, and those rows get `NULL`.
 
-The column order of the `DataFrame` does not need to match the table.
+The column order of the `DataFrame` does not need to match the table on these two formats.
 
 Because `overwrite` and `drop_overwrite` replace the table definition, they also accept changed column types. In the other modes, a column type that cannot be changed fails the write. On Iceberg, for example, the error reads `Cannot change column type: id: string -> int`.
+
+Other table formats do not support schema evolution. With any other `format`, writing to an existing table raises a `TiozinInputError` when the output runs, even if the schema is unchanged. For `format: parquet`, the error reads `Schema evolution is not supported for format: 'parquet'`. The `overwrite` and `drop_overwrite` modes do not raise this error, and creating a new table is not affected.
 
 ## Passing Extra Write Options
 
@@ -184,6 +186,34 @@ outputs:
 ## Deferred Writes
 
 The output returns a lazy writer instead of writing right away. Nothing is written to the table until the `save()` action is called on that writer.
+
+## Write Summary
+
+After each table write, the job logs a line with the message `📊 Table write summary` and the fields below. Appending two rows to an Iceberg table logs a line like this:
+
+```text
+📊 Table write summary dataset=my_catalog.default.sales mode=append format=iceberg rows_written=2 rows_total=5 bytes_written=1268 bytes_total=2543
+```
+
+| Field | Description |
+|---|---|
+| `dataset` | Name of the table written |
+| `mode` | Write mode used |
+| `format` | Table format |
+| `rows_written` | Rows written by the write, including rows rewritten by `merge`. A `merge` can report more rows than the `DataFrame` has |
+| `rows_total` | Rows in the table after the write |
+| `bytes_written` | Bytes of the files added by the write |
+| `bytes_total` | Size of the table after the write |
+
+The metrics describe the latest commit of the table. If an empty write to an existing table creates no commit, those metrics belong to an earlier write.
+
+Every table format logs the same fields. A metric is `None` when it is unknown, which is different from 0. Support varies by format:
+
+- [Iceberg](https://iceberg.apache.org/docs/latest/) tables report all four metrics when recorded. A commit that adds no rows or bytes reports 0 for `rows_written` and `bytes_written`.
+- [Delta Lake](https://docs.delta.io/latest/index.html) tables do not report `rows_total`, so it is always `None`.
+- Any other format reports every metric as `None`.
+
+If the metrics cannot be read, a warning is logged, every metric is `None`, and the job continues. The write is not affected.
 
 ## Lineage
 
