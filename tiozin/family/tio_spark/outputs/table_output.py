@@ -56,8 +56,9 @@ class SparkTableOutput(SparkOutput):
             supported. Ignored by modes other than `merge`. Optional.
 
         partition_by:
-            Column name or list of column names used to partition the table
-            when it is created or recreated. Optional.
+            Column or list of columns to partition the table by, applied when
+            the table is created or recreated. Also accepts the transform
+            functions `years`, `months`, `days`, `hours`, and `bucket`. Optional.
 
         properties:
             Table properties set when the table is created or recreated, such as
@@ -99,6 +100,16 @@ class SparkTableOutput(SparkOutput):
             table: my_catalog.default.events
             mode: overwrite_partitions
             partition_by: [country, day]
+        ```
+
+        ```yaml
+        outputs:
+          - kind: SparkTableOutput
+            table: my_catalog.default.events
+            mode: overwrite
+            partition_by:
+              - days(created_at)
+              - bucket(16, customer_id)
         ```
     """
 

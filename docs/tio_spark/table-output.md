@@ -22,7 +22,7 @@ This appends the rows to `my_catalog.default.sales`. If the table does not exist
 | `mode` | no | `append` | How the `DataFrame` is written to the table |
 | `merge_keys` | no | | Column or list of columns that identify a row. Required by the `merge` mode and ignored by the others |
 | `merge_exclude_fields` | no | | Column or list of columns excluded from updates, such as `created_at`. They are still written when a row is inserted. Nested fields are not supported. Ignored by modes other than `merge` |
-| `partition_by` | no | | Column name or list of column names used to partition the table when it is created or recreated |
+| `partition_by` | no | | Column or list of columns to partition the table by, applied when the table is created or recreated. Also accepts the transform functions `years`, `months`, `days`, `hours`, and `bucket` |
 | `properties` | no | | Table properties set when the table is created or recreated |
 | `**options` | no | | Write options passed directly to Spark |
 
@@ -77,7 +77,7 @@ For format-specific write behavior, see the [Iceberg Spark writes](https://icebe
 
 ## partition_by
 
-Partition columns are applied when the table is created, or recreated by the `overwrite` and `drop_overwrite` modes. A single column name or a list is accepted.
+Partition expressions are applied when the table is created, or recreated by the `overwrite` and `drop_overwrite` modes. An expression is a column name or a transform, such as `days(created_at)` or `bucket(16, customer_id)`. A single expression or a list is accepted. If an expression cannot be parsed or names an unknown transform, a `TiozinInputError` is raised when the output runs.
 
 ```yaml
 outputs:
@@ -89,6 +89,19 @@ outputs:
 ```
 
 With `overwrite_partitions`, each run replaces only the `country` and `day` partitions present in the `DataFrame`. Other partitions stay untouched.
+
+If a transform contains a comma, such as `bucket(16, customer_id)`, use a block list, because YAML splits the transform inside `[...]`.
+
+```yaml
+outputs:
+  - kind: SparkTableOutput
+    name: events
+    table: my_catalog.default.events
+    mode: overwrite
+    partition_by:
+      - days(created_at)
+      - bucket(16, customer_id)
+```
 
 ## merge_keys
 

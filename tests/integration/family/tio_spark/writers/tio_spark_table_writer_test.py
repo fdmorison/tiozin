@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as sf
@@ -171,6 +173,73 @@ def test_save_should_create_table_partitioned_by_columns(spark: SparkSession):
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
 
+def test_save_should_create_table_partitioned_by_column_name(spark: SparkSession):
+    """Creates the table partitioned by a column given by name."""
+    # Arrange
+    target_table = "iceberg.default.writer_partitioned_by_name"
+    initial_data = spark.createDataFrame(
+        [
+            (1, "BR"),
+            (2, "US"),
+        ],
+        schema="id INT, region STRING",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=initial_data,
+        table=target_table,
+    ).partitionedBy("region").save()
+
+    # Assert
+    actual = spark.sql(f"SELECT partition.region FROM {target_table}.partitions")
+    expected = spark.createDataFrame(
+        [
+            ("BR",),
+            ("US",),
+        ],
+        schema="region STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
+@pytest.mark.parametrize(
+    "transform, expression",
+    [
+        ("days", "days(created_at)"),
+        ("bucket", "bucket(16, id)"),
+    ],
+)
+def test_save_should_create_table_partitioned_by_transform(
+    spark: SparkSession, transform: str, expression: str
+):
+    """Creates the table partitioned by a transform given as an expression."""
+    # Arrange
+    target_table = f"iceberg.default.writer_partitioned_by_{transform}"
+    initial_data = spark.createDataFrame(
+        [
+            (1, date(2026, 1, 15)),
+        ],
+        schema="id INT, created_at DATE",
+    )
+
+    # Act
+    TioSparkTableWriter(
+        df=initial_data,
+        table=target_table,
+    ).partitionedBy(expression).save()
+
+    # Assert
+    actual = spark.sql(f"DESCRIBE TABLE {target_table}").where("col_name = 'Part 0'")
+    expected = spark.createDataFrame(
+        [
+            ("Part 0", expression, ""),
+        ],
+        schema="col_name STRING, data_type STRING, comment STRING",
+    )
+    assertDataFrameEqual(actual, expected, checkRowOrder=False)
+
+
 def test_save_should_apply_write_option(spark: SparkSession):
     """Applies a write option, observed as a custom Iceberg snapshot property."""
     # Arrange
@@ -254,6 +323,30 @@ def test_mode_should_raise_input_error_when_mode_is_unsupported(spark: SparkSess
     # Act / Assert
     with pytest.raises(TiozinInputError):
         writer.mode("upsert")
+
+
+def test_save_should_raise_input_error_when_partition_expression_is_invalid(spark: SparkSession):
+    # Arrange
+    target_table = "iceberg.default.writer_invalid_partition_expression"
+    input_data = spark.createDataFrame(
+        [
+            (1, "hello"),
+        ],
+        schema="id INT, name STRING",
+    )
+    writer = TioSparkTableWriter(
+        df=input_data,
+        table=target_table,
+    ).partitionedBy("days()")
+
+    # Act
+    with pytest.raises(TiozinInputError) as exc_info:
+        writer.save()
+
+    # Assert
+    actual = str(exc_info.value)
+    expected = "Invalid partition expression: 'days()'"
+    assert actual == expected
 
 
 # ============================================================================

@@ -98,7 +98,7 @@ Three Spark jobs that read and write [Apache Iceberg](https://iceberg.apache.org
 
 | File | What it shows |
 |---|---|
-| [`spark/iceberg/ingestion_customers_job.yaml`](../examples/jobs/spark/iceberg/ingestion_customers_job.yaml) | CSV ingestion with `SparkFileInput`, written to `example.ecommerce_raw.storefront_customers` with `SparkTableOutput` and `mode: truncate` |
+| [`spark/iceberg/ingestion_customers_job.yaml`](../examples/jobs/spark/iceberg/ingestion_customers_job.yaml) | CSV ingestion with `SparkFileInput`, written to `example.ecommerce_raw.storefront_customers` with `SparkTableOutput` and `mode: overwrite`, partitioned by `days(created_at)` |
 | [`spark/iceberg/ingestion_orders_job.yaml`](../examples/jobs/spark/iceberg/ingestion_orders_job.yaml) | Same ingestion pattern for orders, written to `example.ecommerce_raw.storefront_orders` |
 | [`spark/iceberg/refined_orders_job.yaml`](../examples/jobs/spark/iceberg/refined_orders_job.yaml) | Both raw tables read with `SparkTableInput`, joined and filtered in SQL, and written to `example.ecommerce_refined.storefront_high_value_orders` partitioned by `country` with `mode: truncate` |
 
