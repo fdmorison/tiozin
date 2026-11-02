@@ -7,12 +7,14 @@ objects.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as sf
 from pyspark.sql.types import ArrayType, StructField, StructType
 
+from tiozin.exceptions import TiozinInputError
 from tiozin.utils import as_list
 
 from .utils import join_field, split_field
@@ -36,6 +38,8 @@ TIMESTAMP_FORMATS = [
     "dd MMM yyyy HH:mm:ss[ ][XXX][x][O][z]",
 ]
 EPOCH_PATTERN = r"^\d+$"
+
+PARTITION_EXPR = re.compile(r"(?:(?P<transform>\w+)\()?(?P<arguments>[^()]+)\)?")
 
 
 def get_field(df: DataFrame, field: str) -> StructField | None:
@@ -204,6 +208,62 @@ def with_field(
 
     path = join_field(nested)
     return df.withColumn(root, sf.col(root).withField(path, column))
+
+
+def to_partition_column(expr: str | Column) -> Column:
+    """
+    Converts a partition expression into a column for `DataFrameWriterV2.partitionedBy()`.
+
+    An expression is either a column name or a call to a function from
+    `pyspark.sql.functions`. Call arguments are passed to the function.
+
+    Args:
+        expr:
+            The partition expression. A `Column` is returned as is.
+
+    Returns:
+        The column or transform to partition by.
+
+    Raises:
+        TiozinInputError: If the expression cannot be parsed or names an unknown function.
+
+    Example:
+        ```python
+        to_partition_column("created_at")
+        # -> col("created_at")
+
+        to_partition_column("days(created_at)")
+        # -> days("created_at")
+
+        to_partition_column("bucket(16, customer_id)")
+        # -> bucket(16, col("customer_id"))
+        ```
+    """
+    if isinstance(expr, Column):
+        return expr
+
+    match = PARTITION_EXPR.fullmatch(expr.strip())
+    TiozinInputError.raise_if(
+        match is None,
+        f"Invalid partition expression: '{expr}'",
+    )
+
+    transform = match["transform"] or "col"
+    arguments = match["arguments"] or ""
+
+    function = getattr(sf, transform, None)
+    TiozinInputError.raise_if(
+        function is None,
+        f"Unknown partition transform: '{transform}'",
+    )
+
+    args = tuple(arg.strip() for arg in arguments.split(","))
+
+    if function == sf.bucket:
+        num_buckets, col = args
+        return function(int(num_buckets), sf.col(col))
+
+    return function(*args)
 
 
 def has_timezone(field: str | Column) -> Column:

@@ -5,11 +5,13 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import StringType, StructField, StructType
 from pyspark.testing import assertDataFrameEqual
 
+from tiozin.exceptions import TiozinInputError
 from tiozin.family.tio_spark.functions import (
     get_field,
     has_timezone,
     list_fields,
     to_auto_timestamp,
+    to_partition_column,
     with_field,
 )
 
@@ -360,6 +362,107 @@ def test_with_field_should_apply_function_to_nested_field(spark: SparkSession) -
         schema="event STRUCT<created_at TIMESTAMP, id STRING>",
     )
     assertDataFrameEqual(actual, expected)
+
+
+# ============================================================================
+# to_partition_column
+# ============================================================================
+
+
+def test_to_partition_column_should_return_column() -> None:
+    # Arrange
+    expr = "created_at"
+
+    # Act
+    result = to_partition_column(expr)
+
+    # Assert
+    actual = str(result)
+    expected = "Column<'created_at'>"
+    assert actual == expected
+
+
+def test_to_partition_column_should_return_given_column_as_is() -> None:
+    # Arrange
+    expr = sf.col("created_at")
+
+    # Act
+    result = to_partition_column(expr)
+
+    # Assert
+    assert result is expr
+
+
+def test_to_partition_column_should_strip_surrounding_whitespace() -> None:
+    # Arrange
+    expr = "  created_at  "
+
+    # Act
+    result = to_partition_column(expr)
+
+    # Assert
+    actual = str(result)
+    expected = "Column<'created_at'>"
+    assert actual == expected
+
+
+def test_to_partition_column_should_apply_transform() -> None:
+    # Arrange
+    expr = "days(created_at)"
+
+    # Act
+    result = to_partition_column(expr)
+
+    # Assert
+    actual = str(result)
+    expected = "Column<'days(created_at)'>"
+    assert actual == expected
+
+
+def test_to_partition_column_should_apply_bucket_count_and_column() -> None:
+    # Arrange
+    expr = "bucket(16, customer_id)"
+
+    # Act
+    result = to_partition_column(expr)
+
+    # Assert
+    actual = result._jc.expr().toString()
+    expected = "bucket(16, 'customer_id)"
+    assert actual == expected
+
+
+def test_to_partition_column_should_raise_input_error_when_transform_unknown() -> None:
+    # Arrange
+    expr = "foo(created_at)"
+
+    # Act
+    with pytest.raises(TiozinInputError) as exc_info:
+        to_partition_column(expr)
+
+    # Assert
+    actual = str(exc_info.value)
+    expected = "Unknown partition transform: 'foo'"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "expr, expected",
+    [
+        ("", "Invalid partition expression: ''"),
+        ("days()", "Invalid partition expression: 'days()'"),
+    ],
+)
+def test_to_partition_column_should_raise_input_error_when_expression_malformed(
+    expr: str, expected: str
+) -> None:
+    # Act
+    with pytest.raises(TiozinInputError) as exc_info:
+        to_partition_column(expr)
+
+    # Assert
+    actual = str(exc_info.value)
+    assert actual == expected
 
 
 # ============================================================================
