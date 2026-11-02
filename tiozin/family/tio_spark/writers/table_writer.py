@@ -8,6 +8,7 @@ from pyspark.sql import functions as sf
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, slugify
 
+from ..functions import to_partition_column
 from ..typehints import TioSparkTableOutputMode
 
 DEFAULT_WRITE_MODE = "append"
@@ -74,7 +75,7 @@ class TioSparkTableWriter:
         self._format: str = DEFAULT_TABLE_FORMAT
         self._properties: dict[str, str] = {}
         self._options: dict[str, Any] = {}
-        self._partition_by: list[Column] = []
+        self._partition_by: list[str | Column] = []
         self._schema_evolution: bool = False
 
     def format(self, format: str) -> Self:
@@ -121,9 +122,11 @@ class TioSparkTableWriter:
         self._properties.update(properties)
         return self
 
-    def partitionedBy(self, col: Column, *cols: Column) -> Self:
+    def partitionedBy(self, col: str | Column, *cols: str | Column) -> Self:
         """
-        Partitions the table by the given columns.
+        Partitions the table by the given columns, applied when the table is
+        created or recreated. Also accepts the transform functions `years`,
+        `months`, `days`, `hours`, and `bucket`.
         """
         self._partition_by = [col, *cols]
         return self
@@ -204,7 +207,7 @@ class TioSparkTableWriter:
         )
 
         if self._partition_by:
-            writer = writer.partitionedBy(*self._partition_by)
+            writer = writer.partitionedBy(*[to_partition_column(c) for c in self._partition_by])
 
         for property, value in self._properties.items():
             writer = writer.tableProperty(property, value)
