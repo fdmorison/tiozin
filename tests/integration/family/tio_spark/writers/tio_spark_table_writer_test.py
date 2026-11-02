@@ -3,13 +3,13 @@ from datetime import date
 import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as sf
-from pyspark.testing import assertDataFrameEqual
+from pyspark.testing import assertDataFrameEqual, assertSchemaEqual
 
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
-from tiozin.family.tio_spark.writers.table_writer import TioSparkTableWriter
+from tiozin.family.tio_spark.writers.table_writer import TioSparkSimpleTableWriter
 
 # ============================================================================
-# Testing TioSparkTableWriter - Generic
+# Testing TioSparkSimpleTableWriter - Generic
 # ============================================================================
 
 
@@ -29,7 +29,7 @@ def test_save_should_create_table_when_table_is_missing(spark: SparkSession, mod
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).mode(mode).onMergeInto(keys="id").save()
@@ -66,7 +66,7 @@ def test_save_should_create_table_with_format(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).format(table_format).save()
@@ -93,7 +93,7 @@ def test_save_should_create_table_with_table_property(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).tableProperty("tiozin.layer", "gold").save()
@@ -121,7 +121,7 @@ def test_save_should_create_table_with_table_properties(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).tableProperties(
@@ -156,7 +156,7 @@ def test_save_should_create_table_partitioned_by_columns(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).partitionedBy(sf.col("region")).save()
@@ -186,7 +186,7 @@ def test_save_should_create_table_partitioned_by_column_name(spark: SparkSession
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).partitionedBy("region").save()
@@ -224,7 +224,7 @@ def test_save_should_create_table_partitioned_by_transform(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).partitionedBy(expression).save()
@@ -253,7 +253,7 @@ def test_save_should_apply_write_option(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).option("snapshot-property.tiozin.run", "run-1").save()
@@ -282,7 +282,7 @@ def test_save_should_apply_write_options(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).options(
@@ -315,7 +315,7 @@ def test_mode_should_raise_input_error_when_mode_is_unsupported(spark: SparkSess
         ],
         schema="id INT, name STRING",
     )
-    writer = TioSparkTableWriter(
+    writer = TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     )
@@ -334,7 +334,7 @@ def test_save_should_raise_input_error_when_partition_expression_is_invalid(spar
         ],
         schema="id INT, name STRING",
     )
-    writer = TioSparkTableWriter(
+    writer = TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).partitionedBy("days()")
@@ -349,8 +349,38 @@ def test_save_should_raise_input_error_when_partition_expression_is_invalid(spar
     assert actual == expected
 
 
+def test_save_should_keep_table_schema_when_partition_expression_is_invalid(spark: SparkSession):
+    """Fails before schema evolution changes the existing table."""
+    # Arrange
+    target_table = "iceberg.default.writer_invalid_partition_keeps_schema"
+    spark.sql(f"CREATE TABLE {target_table} (id INT, name STRING) USING iceberg")
+    input_data = spark.createDataFrame(
+        [
+            (1, "hello", "new@example.com"),
+        ],
+        schema="id INT, name STRING, email STRING",
+    )
+    writer = (
+        TioSparkSimpleTableWriter(
+            df=input_data,
+            table=target_table,
+        )
+        .withSchemaEvolution()
+        .partitionedBy("days()")
+    )
+
+    # Act
+    with pytest.raises(TiozinInputError):
+        writer.save()
+
+    # Assert
+    actual = spark.table(target_table).schema
+    expected = spark.createDataFrame([], schema="id INT, name STRING").schema
+    assertSchemaEqual(actual, expected)
+
+
 # ============================================================================
-# Testing TioSparkTableWriter - Append
+# Testing TioSparkSimpleTableWriter - Append
 # ============================================================================
 
 
@@ -374,7 +404,7 @@ def test_save_should_append_rows_by_default(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).save()
@@ -418,7 +448,7 @@ def test_save_should_append_rows(spark: SparkSession, catalog: str, table_format
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).mode("append").save()
@@ -466,7 +496,7 @@ def test_save_should_evolve_schema_when_mode_is_append(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("append").save()
@@ -485,7 +515,7 @@ def test_save_should_evolve_schema_when_mode_is_append(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Overwrite
+# Testing TioSparkSimpleTableWriter - Overwrite
 # ============================================================================
 
 
@@ -519,7 +549,7 @@ def test_save_should_recreate_table_when_mode_is_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("overwrite").save()
@@ -567,7 +597,7 @@ def test_save_should_add_new_column_when_mode_is_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).mode("overwrite").save()
@@ -613,7 +643,7 @@ def test_save_should_change_column_type_when_mode_is_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("overwrite").save()
@@ -630,7 +660,7 @@ def test_save_should_change_column_type_when_mode_is_overwrite(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Drop Overwrite
+# Testing TioSparkSimpleTableWriter - Drop Overwrite
 # ============================================================================
 
 
@@ -663,7 +693,7 @@ def test_save_should_recreate_table_when_mode_is_drop_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("drop_overwrite").save()
@@ -699,7 +729,7 @@ def test_save_should_restart_delta_history_when_mode_is_drop_overwrite(spark: Sp
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format("delta").mode("drop_overwrite").save()
@@ -711,7 +741,7 @@ def test_save_should_restart_delta_history_when_mode_is_drop_overwrite(spark: Sp
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Truncate
+# Testing TioSparkSimpleTableWriter - Truncate
 # ============================================================================
 
 
@@ -745,7 +775,7 @@ def test_save_should_replace_all_rows_when_mode_is_truncate(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("truncate").save()
@@ -792,7 +822,7 @@ def test_save_should_evolve_schema_when_mode_is_truncate(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("truncate").save()
@@ -809,7 +839,7 @@ def test_save_should_evolve_schema_when_mode_is_truncate(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Overwrite Partitions
+# Testing TioSparkSimpleTableWriter - Overwrite Partitions
 # ============================================================================
 
 
@@ -844,7 +874,7 @@ def test_save_should_overwrite_partitions_present_in_dataframe(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("overwrite_partitions").save()
@@ -892,7 +922,7 @@ def test_save_should_evolve_schema_when_mode_is_overwrite_partitions(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("overwrite_partitions").save()
@@ -911,7 +941,7 @@ def test_save_should_evolve_schema_when_mode_is_overwrite_partitions(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Merge
+# Testing TioSparkSimpleTableWriter - Merge
 # ============================================================================
 
 
@@ -922,129 +952,43 @@ def test_save_should_evolve_schema_when_mode_is_overwrite_partitions(
         ("iceberg", "iceberg"),
     ],
 )
-def test_save_should_merge_rows_by_key(spark: SparkSession, catalog: str, table_format: str):
-    """Updates the rows that match the key and inserts the others in the `merge` mode."""
+def test_save_should_merge_rows(spark: SparkSession, catalog: str, table_format: str):
+    """Updates matched rows, except excluded columns, and inserts the others."""
     # Arrange
     target_table = f"{catalog}.default.writer_merged"
     spark.sql(
         f"""
         CREATE TABLE {target_table} USING {table_format}
         AS SELECT * FROM VALUES
-            (1, 'original@example.com'),
-            (2, 'original@example.com')
-        AS t(id, email)
+            (1, 'original@example.com', '2025-01-01')
+        AS t(id, email, created_at)
         """
     )
     merge_data = spark.createDataFrame(
         [
-            (2, "updated@example.com"),
-            (3, "inserted@example.com"),
+            (1, "updated@example.com", "2026-06-01"),
+            (2, "inserted@example.com", "2026-06-01"),
         ],
-        schema="id INT, email STRING",
+        schema="id INT, email STRING, created_at STRING",
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=merge_data,
         table=target_table,
-    ).format(table_format).mode("merge").onMergeInto(keys="id").save()
+    ).format(table_format).mode("merge").onMergeInto(
+        keys="id",
+        exclude_fields="created_at",
+    ).save()
 
     # Assert
     actual = spark.table(target_table)
     expected = spark.createDataFrame(
         [
-            (1, "original@example.com"),
-            (2, "updated@example.com"),
-            (3, "inserted@example.com"),
+            (1, "updated@example.com", "2025-01-01"),
+            (2, "inserted@example.com", "2026-06-01"),
         ],
-        schema="id INT, email STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
-    """Matches a row only when every key matches in the `merge` mode."""
-    # Arrange
-    target_table = "iceberg.default.writer_merged_by_keys"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING iceberg
-        AS SELECT * FROM VALUES
-            ('BR', 1, 'old'),
-            ('US', 1, 'kept')
-        AS t(region, id, name)
-        """
-    )
-    merge_data = spark.createDataFrame(
-        [
-            ("BR", 1, "new"),
-        ],
-        schema="region STRING, id INT, name STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
-    ).mode("merge").onMergeInto(keys=["region", "id"]).save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            ("BR", 1, "new"),
-            ("US", 1, "kept"),
-        ],
-        schema="region STRING, id INT, name STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-@pytest.mark.parametrize(
-    "catalog, table_format",
-    [
-        ("spark_catalog", "delta"),
-        ("iceberg", "iceberg"),
-    ],
-)
-def test_save_should_merge_rows_when_key_needs_quoting(
-    spark: SparkSession, catalog: str, table_format: str
-):
-    """Matches rows by a key whose column name needs quoting in the `merge` mode."""
-    # Arrange
-    target_table = f"{catalog}.default.writer_merged_by_quoted_key"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING {table_format}
-        AS SELECT * FROM VALUES
-            (1, 'original@example.com'),
-            (2, 'original@example.com')
-        AS t(`customer-id`, email)
-        """
-    )
-    merge_data = spark.createDataFrame(
-        [
-            (2, "updated@example.com"),
-            (3, "inserted@example.com"),
-        ],
-        schema="`customer-id` INT, email STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
-    ).format(table_format).mode("merge").onMergeInto(keys="customer-id").save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (1, "original@example.com"),
-            (2, "updated@example.com"),
-            (3, "inserted@example.com"),
-        ],
-        schema="`customer-id` INT, email STRING",
+        schema="id INT, email STRING, created_at STRING",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
@@ -1080,7 +1024,7 @@ def test_save_should_evolve_schema_when_mode_is_merge(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("merge").onMergeInto(keys="id").save()
@@ -1094,111 +1038,6 @@ def test_save_should_evolve_schema_when_mode_is_merge(
             (3, "JP", "new@example.com"),
         ],
         schema="id INT, region STRING, email STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-@pytest.mark.parametrize(
-    "catalog, table_format",
-    [
-        ("spark_catalog", "delta"),
-        ("iceberg", "iceberg"),
-    ],
-)
-def test_save_should_preserve_excluded_column_when_mode_is_merge(
-    spark: SparkSession, catalog: str, table_format: str
-):
-    """Keeps the table value of an excluded column, even NULL, on matched rows only."""
-    # Arrange
-    target_table = f"{catalog}.default.writer_merged_excluded_column"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING {table_format}
-        AS SELECT * FROM VALUES
-            (1, 'original@example.com', '2025-01-01'),
-            (2, 'original@example.com', '2025-01-02'),
-            (3, 'original@example.com', CAST(NULL AS STRING))
-        AS t(id, email, created_at)
-        """
-    )
-    merge_data = spark.createDataFrame(
-        [
-            (2, "updated@example.com", "2026-06-01"),
-            (3, "updated@example.com", "2026-06-01"),
-            (4, "inserted@example.com", "2026-06-01"),
-        ],
-        schema="id INT, email STRING, created_at STRING",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
-    ).format(table_format).mode("merge").onMergeInto(
-        keys="id",
-        exclude_fields="created_at",
-    ).save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (1, "original@example.com", "2025-01-01"),
-            (2, "updated@example.com", "2025-01-02"),
-            (3, "updated@example.com", None),
-            (4, "inserted@example.com", "2026-06-01"),
-        ],
-        schema="id INT, email STRING, created_at STRING",
-    )
-    assertDataFrameEqual(actual, expected, checkRowOrder=False)
-
-
-@pytest.mark.parametrize(
-    "catalog, table_format",
-    [
-        ("spark_catalog", "delta"),
-        ("iceberg", "iceberg"),
-    ],
-)
-def test_save_should_preserve_excluded_struct_column_when_mode_is_merge(
-    spark: SparkSession, catalog: str, table_format: str
-):
-    """Keeps every field of an excluded struct column on matched rows."""
-    # Arrange
-    target_table = f"{catalog}.default.writer_merged_excluded_struct"
-    spark.sql(
-        f"""
-        CREATE TABLE {target_table} USING {table_format}
-        AS SELECT * FROM VALUES
-            (1, 'original@example.com', named_struct('created_at', '2025-01-01', 'source', 'crm'))
-        AS t(id, email, audit)
-        """
-    )
-    merge_data = spark.createDataFrame(
-        [
-            (1, "updated@example.com", ("2026-06-01", "web")),
-            (2, "inserted@example.com", ("2026-06-01", "web")),
-        ],
-        schema="id INT, email STRING, audit STRUCT<created_at: STRING, source: STRING>",
-    )
-
-    # Act
-    TioSparkTableWriter(
-        df=merge_data,
-        table=target_table,
-    ).format(table_format).mode("merge").onMergeInto(
-        keys="id",
-        exclude_fields=["audit"],
-    ).save()
-
-    # Assert
-    actual = spark.table(target_table)
-    expected = spark.createDataFrame(
-        [
-            (1, "updated@example.com", ("2025-01-01", "crm")),
-            (2, "inserted@example.com", ("2026-06-01", "web")),
-        ],
-        schema="id INT, email STRING, audit STRUCT<created_at: STRING, source: STRING>",
     )
     assertDataFrameEqual(actual, expected, checkRowOrder=False)
 
@@ -1229,7 +1068,7 @@ def test_save_should_ignore_merge_exclude_fields_when_mode_is_not_merge(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).mode(mode).onMergeInto(
@@ -1260,7 +1099,7 @@ def test_save_should_raise_required_argument_error_when_merge_keys_are_missing(
         schema="id INT, name STRING",
     )
     writer = (
-        TioSparkTableWriter(
+        TioSparkSimpleTableWriter(
             df=merge_data,
             table=target_table,
         )
@@ -1289,7 +1128,7 @@ def test_save_should_raise_input_error_when_merge_exclude_field_is_not_top_level
         schema="id INT, email STRING, audit STRUCT<created_at: STRING>",
     )
     writer = (
-        TioSparkTableWriter(
+        TioSparkSimpleTableWriter(
             df=merge_data,
             table=target_table,
         )

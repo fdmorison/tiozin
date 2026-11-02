@@ -35,7 +35,7 @@ from .transforms.sql_transform import SparkSqlTransform
 from .transforms.word_count_transform import SparkWordCountTransform
 
 # Writers
-from .writers.table_writer import TioSparkTableWriter
+from .writers.table_writer import TioSparkSimpleTableWriter
 
 __all__ = [
     # Public base abstractions
@@ -57,5 +57,5 @@ __all__ = [
     "SparkSqlTransform",
     "SparkWordCountTransform",
     # Writers
-    "TioSparkTableWriter",
+    "TioSparkSimpleTableWriter",
 ]

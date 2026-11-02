@@ -22,7 +22,7 @@ Inherits all [SparkRunner](runner.md) options, plus:
 | `catalog_impl` | Fully qualified custom catalog class name. Required unless `catalog_type` is set | |
 | `catalog_uri` | Catalog URI (Hive metastore `thrift://`, REST endpoint, etc.) | |
 | `catalog_warehouse` | Warehouse path for the catalog | |
-| `iceberg_class` | Spark catalog class used to register the Iceberg catalog | `org.apache.iceberg.spark.SparkSessionCatalog` |
+| `iceberg_class` | Spark catalog class used to register the Iceberg catalog | `org.apache.iceberg.spark.SparkCatalog` |
 
 ## Catalog types
 
@@ -85,9 +85,8 @@ runner:
 
 ## Choosing an iceberg_class
 
-`iceberg_class` controls which Spark catalog class Iceberg registers under `catalog_name`.
+By default, `SparkIcebergRunner` registers the catalog with `org.apache.iceberg.spark.SparkCatalog`. This class works with any `catalog_name`, and tables are addressed by that name, such as `example.db.table`. That is why it is the default for an Iceberg runner.
 
-| Value | Use when |
-|---|---|
-| `org.apache.iceberg.spark.SparkSessionCatalog` (default) | Replacing the default Spark `spark_catalog`. Allows using unqualified table names |
-| `org.apache.iceberg.spark.SparkCatalog` | Adding a new named catalog alongside the existing Spark catalog |
+If Iceberg and non-Iceberg tables must share Spark's default catalog, or tables must be reachable by unqualified names, set `iceberg_class` to `org.apache.iceberg.spark.SparkSessionCatalog`. This class requires `catalog_name: spark_catalog`. Under any other catalog name, it fails with `Delegated SessionCatalog is missing` when looking up a table that does not exist.
+
+For more on these classes, see the [Iceberg Spark configuration docs](https://iceberg.apache.org/docs/latest/spark-configuration/).

@@ -87,5 +87,4 @@ outputs:
     table: example.{{domain}}_{{layer}}.{{product}}_{{model}}
     format: iceberg
     mode: truncate
-    partition_by:
-      - country
+    partition_by: days(created_at)

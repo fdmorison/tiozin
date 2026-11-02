@@ -9,7 +9,7 @@ from pyspark.sql.streaming.readwriter import DataStreamWriter
 from .bases import SparkCoTransform, SparkInput, SparkOutput, SparkTransform
 
 if TYPE_CHECKING:
-    from .writers.table_writer import TioSparkTableWriter
+    from .writers.table_writer import TioSparkSimpleTableWriter
 
 SparkEtlStep: TypeAlias = SparkInput | SparkTransform | SparkCoTransform | SparkOutput
 
@@ -62,7 +62,7 @@ SparkIcebergClass = Literal[
 SparkPlan: TypeAlias = (
     "DataFrame"
     " | DataFrameWriter"
-    " | TioSparkTableWriter"
+    " | TioSparkSimpleTableWriter"
     " | DataStreamWriter"
     " | ConnectDataFrame"
     " | ConnectDataFrameWriter"

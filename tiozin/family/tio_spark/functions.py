@@ -15,7 +15,7 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import ArrayType, StructField, StructType
 
 from tiozin.exceptions import TiozinInputError
-from tiozin.utils import as_list
+from tiozin.utils import as_list, slugify
 
 from .utils import join_field, split_field
 
@@ -264,6 +264,62 @@ def to_partition_column(expr: str | Column) -> Column:
         return function(int(num_buckets), sf.col(col))
 
     return function(*args)
+
+
+def merge_into(
+    df: DataFrame,
+    table: str,
+    keys: list[str],
+    exclude_fields: list[str] = None,
+) -> None:
+    """
+    Merges a DataFrame into an existing table, executing the write immediately.
+
+    Rows that match the keys are updated and the others are inserted.
+
+    Args:
+        df:
+            The DataFrame holding the source rows.
+        table:
+            Target table name, qualified as `catalog.schema.table`.
+        keys:
+            Columns that identify a row.
+        exclude_fields:
+            Top-level columns excluded from updates. They are still written
+            when a row is inserted.
+
+    Example:
+        ```python
+        merge_into(df, "my_catalog.default.customers", ["customer_id"])
+        # updates every column of matched rows
+
+        merge_into(df, "my_catalog.default.customers", ["customer_id"], ["created_at"])
+        # keeps created_at unchanged on matched rows
+        ```
+    """
+    spark = df.sparkSession
+    source = f"__merge_{slugify(table)}"
+    condition = " AND ".join(f"target.`{key}` = source.`{key}`" for key in keys)
+    fields = "*"
+
+    if exclude_fields:
+        fields = ", ".join(
+            f"target.`{field}` = source.`{field}`"
+            for field in df.columns
+            if field not in exclude_fields
+        )
+
+    df.createOrReplaceTempView(source)
+    try:
+        spark.sql(
+            f"MERGE INTO {table} AS target "
+            f"USING {source} AS source "
+            f"ON {condition} "
+            f"WHEN MATCHED THEN UPDATE SET {fields} "
+            "WHEN NOT MATCHED THEN INSERT *"
+        )
+    finally:
+        spark.catalog.dropTempView(source)
 
 
 def has_timezone(field: str | Column) -> Column:
