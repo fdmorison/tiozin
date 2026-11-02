@@ -51,4 +51,9 @@ outputs:
     description: Raw order data in an Iceberg table.
     table: example.{{domain}}_{{layer}}.{{product}}_{{model}}
     format: iceberg
-    mode: truncate
+    mode: merge
+    merge_keys: id
+    merge_exclude_fields:
+      - created_at
+      - _{{layer}}_created_at
+    partition_by: days(created_at)
