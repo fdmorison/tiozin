@@ -29,6 +29,7 @@ inputs:
     path: examples/data/ecommerce/customers.csv
     format: csv
     header: true
+    inferSchema: true
     schema_subject: auto
 
 transforms:
@@ -50,4 +51,5 @@ outputs:
     description: Raw customer data in an Iceberg table.
     table: example.{{domain}}_{{layer}}.{{product}}_{{model}}
     format: iceberg
-    mode: truncate
+    mode: overwrite
+    partition_by: days(created_at)
