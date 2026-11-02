@@ -61,7 +61,7 @@ class SparkIcebergRunner(SparkRunner):
 
     _CATALOG_TYPES = {"hive", "hadoop", "rest", "glue", "nessie", "jdbc"}
     _SPARK_SQL_EXTENSIONS = "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
-    _DEFAULT_SPARK_ICEBERG_CLASS = "org.apache.iceberg.spark.SparkSessionCatalog"
+    _DEFAULT_SPARK_ICEBERG_CLASS = "org.apache.iceberg.spark.SparkCatalog"
 
     def __init__(
         self,
