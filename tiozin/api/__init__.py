@@ -50,6 +50,7 @@ from .runtime.transform.base import Transform, CoTransform
 from .runtime.output.base import Output
 from .runtime.job.base import Job
 from .runtime.dataset import Dataset, Datasets
+from .runtime.metrics import OutputMetrics
 
 # Type aliases
 EtlStep: TypeAlias = Transform | Input | Output
@@ -92,6 +93,7 @@ __all__ = [
     "Input",
     "Job",
     "Output",
+    "OutputMetrics",
     "Runner",
     "Transform",
     "CoTransform",
