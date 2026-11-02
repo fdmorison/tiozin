@@ -2,19 +2,20 @@ from __future__ import annotations
 
 from typing import Any, Self, get_args
 
-from pyspark.sql import Column, DataFrame
+from pyspark.sql import Column, DataFrame, DataFrameWriterV2
 from pyspark.sql import functions as sf
 
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
-from tiozin.utils import as_list, slugify
+from tiozin.utils import as_list
 
-from ..functions import to_partition_column
+from ..functions import merge_into, to_partition_column
 from ..typehints import TioSparkTableOutputMode
 
 DEFAULT_WRITE_MODE = "append"
 DEFAULT_TABLE_FORMAT = "iceberg"
 ICEBERG_FORMAT = "iceberg"
 ICEBERG_ACCEPT_ANY_SCHEMA = "write.spark.accept-any-schema"
+RECREATE_MODES = ("overwrite", "drop_overwrite")
 
 
 class TioSparkSimpleTableWriter:
@@ -183,6 +184,14 @@ class TioSparkSimpleTableWriter:
         """
         Writes the table using the configured mode.
 
+        Mode names differ from the `DataFrameWriterV2` methods on purpose. Spark calls
+        `replace` what is really an `overwrite`, since neither rows nor table definition
+        are preserved, and `overwrite` what is really a `truncate`, since the table
+        definition is preserved but rows aren't.
+
+        `replace()` fails on Delta up to 3.3.2 with Spark 3.5.6+ (delta-io/delta#4671).
+        The `drop_overwrite` mode avoids it, at the cost of losing the history.
+
         Raises:
             RequiredArgumentError: If the mode is `merge` and no keys are given.
             TiozinInputError: If the mode is `merge` and `exclude_fields` has a
@@ -198,7 +207,31 @@ class TioSparkSimpleTableWriter:
         )
         spark = self._df.sparkSession
         table_exists = spark.catalog.tableExists(self._table)
+        writer = self._build_writer()
 
+        if not table_exists:
+            writer.create()
+            return
+
+        if self._schema_evolution and self._mode not in RECREATE_MODES:
+            self._evolve_schema()
+
+        match self._mode:
+            case "append":
+                writer.append()
+            case "overwrite":
+                writer.replace()
+            case "drop_overwrite":
+                spark.sql(f"DROP TABLE {self._table}")
+                writer.create()
+            case "truncate":
+                writer.overwrite(sf.lit(True))
+            case "overwrite_partitions":
+                writer.overwritePartitions()
+            case "merge":
+                merge_into(self._df, self._table, self._merge_keys, self._merge_exclude_fields)
+
+    def _build_writer(self) -> DataFrameWriterV2:
         writer = (
             self._df.writeTo(self._table)
             .using(self._format)
@@ -212,56 +245,7 @@ class TioSparkSimpleTableWriter:
         for property, value in self._properties.items():
             writer = writer.tableProperty(property, value)
 
-        if (
-            self._schema_evolution
-            and table_exists
-            and self._mode not in ("overwrite", "drop_overwrite")
-        ):
-            self._evolve_schema()
-
-        match self._mode:
-            case _ if not table_exists:
-                writer.create()
-            case "append":
-                writer.append()
-            case "overwrite":
-                # Although Spark calls this `replace`, it is more like an `overwrite` operation,
-                # since both rows and table definition are not preserved.
-                writer.replace()
-            case "drop_overwrite":
-                # `replace()` fails on Delta up to 3.3.2 with Spark 3.5.6+ (delta-io/delta#4671).
-                # This mode avoids it, at the cost of losing the history.
-                spark.sql(f"DROP TABLE {self._table}")
-                writer.create()
-            case "truncate":
-                # Although Spark calls this `overwrite`, it is more like a `truncate` operation,
-                # since the table definition is preserved but rows aren't.
-                writer.overwrite(sf.lit(True))
-            case "overwrite_partitions":
-                writer.overwritePartitions()
-            case "merge":
-                source = f"__merge_{slugify(self._table)}"
-                condition = " AND ".join(f"target.`{k}` = source.`{k}`" for k in self._merge_keys)
-                fields = (
-                    ", ".join(
-                        f"target.`{field}` = source.`{field}`"
-                        for field in self._df.columns
-                        if field not in self._merge_exclude_fields
-                    )
-                    if self._merge_exclude_fields
-                    else "*"
-                )
-                self._df.createOrReplaceTempView(source)
-                try:
-                    spark.sql(
-                        f"MERGE INTO {self._table} AS target "
-                        f"USING {source} AS source "
-                        f"ON {condition} "
-                        f"WHEN MATCHED THEN UPDATE SET {fields} "
-                        "WHEN NOT MATCHED THEN INSERT *"
-                    )
-                finally:
-                    spark.catalog.dropTempView(source)
+        return writer
 
     def _evolve_schema(self) -> None:
         spark = self._df.sparkSession
