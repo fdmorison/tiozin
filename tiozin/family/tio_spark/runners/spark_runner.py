@@ -178,6 +178,7 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
                 case TioSparkSimpleTableWriter():
                     self.info("Running Spark Table Writer")
                     result.save()
+                    self.info("📊 Table write summary", **result.metrics().to_dict())
                 case DataStreamWriter() | ConnectDataStreamWriter():
                     self.info("Running Spark Streaming Query")
                     result.start().awaitTermination()

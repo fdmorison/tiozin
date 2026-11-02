@@ -1,10 +1,11 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 from pyspark.sql.connect.readwriter import DataFrameWriter as ConnectDataFrameWriter
 from pyspark.sql.connect.streaming.readwriter import DataStreamWriter as ConnectDataStreamWriter
 
+from tiozin import OutputMetrics
 from tiozin.exceptions import NotInitializedError
 from tiozin.family.tio_spark.runners.spark_runner import DEFAULT_LOGLEVEL, SparkRunner
 from tiozin.family.tio_spark.writers.table_writer import TioSparkSimpleTableWriter
@@ -214,6 +215,54 @@ def test_run_should_save_table_writer():
 
     # Assert
     plan.save.assert_called_once()
+
+
+def test_run_should_log_table_writer_metrics():
+    # Arrange
+    runner: SparkRunner = SparkRunner().__wrapped__
+    plan = MagicMock(spec=TioSparkSimpleTableWriter)
+    plan.metrics.return_value = OutputMetrics(
+        dataset="iceberg.default.sales",
+        mode="append",
+        format="iceberg",
+        rows_written=2,
+        rows_total=3,
+        bytes_written=100,
+        bytes_total=150,
+    )
+
+    # Act
+    with patch.object(runner, "info") as info:
+        runner.run(plan)
+
+    # Assert
+    actual = info.call_args
+    expected = call(
+        "📊 Table write summary",
+        dataset="iceberg.default.sales",
+        mode="append",
+        format="iceberg",
+        rows_written=2,
+        rows_total=3,
+        bytes_written=100,
+        bytes_total=150,
+    )
+    assert actual == expected
+
+
+def test_run_should_read_table_writer_metrics_after_saving():
+    # Arrange
+    runner: SparkRunner = SparkRunner().__wrapped__
+    plan = MagicMock(spec=TioSparkSimpleTableWriter)
+    plan.metrics.return_value = OutputMetrics(dataset="iceberg.default.sales")
+
+    # Act
+    runner.run(plan)
+
+    # Assert
+    actual = plan.method_calls
+    expected = [call.save(), call.metrics()]
+    assert actual == expected
 
 
 def test_run_should_await_connect_data_stream_writer_termination():
