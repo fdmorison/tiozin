@@ -17,7 +17,7 @@ ICEBERG_FORMAT = "iceberg"
 ICEBERG_ACCEPT_ANY_SCHEMA = "write.spark.accept-any-schema"
 
 
-class TioSparkTableWriter:
+class TioSparkSimpleTableWriter:
     """
     Writes a DataFrame to a table registered in a catalog.
 
@@ -50,14 +50,14 @@ class TioSparkTableWriter:
     Examples:
 
         ```python
-        TioSparkTableWriter(df, "my_catalog.default.sales")
+        TioSparkSimpleTableWriter(df, "my_catalog.default.sales")
             .mode("append")
             .save()
         ```
 
         ```python
         (
-            TioSparkTableWriter(df, "my_catalog.default.customers")
+            TioSparkSimpleTableWriter(df, "my_catalog.default.customers")
             .format("delta")
             .mode("merge")
             .onMergeInto(keys="customer_id", exclude_fields="created_at")

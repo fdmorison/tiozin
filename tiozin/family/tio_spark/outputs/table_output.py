@@ -9,7 +9,7 @@ from tiozin.utils import as_list, default, trim, trim_lower
 
 from .. import SparkOutput
 from ..typehints import TioSparkTableOutputMode
-from ..writers.table_writer import TioSparkTableWriter
+from ..writers.table_writer import TioSparkSimpleTableWriter
 
 DEFAULT_FORMAT = "iceberg"
 DEFAULT_WRITE_MODE = "append"
@@ -146,10 +146,10 @@ class SparkTableOutput(SparkOutput):
             outputs=[Dataset.catalog_table(t.database, t.schema, t.name) for t in lineage.in_tables]
         )
 
-    def write(self, data: DataFrame) -> TioSparkTableWriter:
+    def write(self, data: DataFrame) -> TioSparkSimpleTableWriter:
         self.info(f"Writing table `{self.table}` with mode `{self.mode}`")
 
-        writer = TioSparkTableWriter(data, self.table)
+        writer = TioSparkSimpleTableWriter(data, self.table)
 
         if self.partition_by:
             writer = writer.partitionedBy(*self.partition_by)

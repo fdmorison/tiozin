@@ -11,7 +11,7 @@ from tiozin.exceptions import JobError, NotInitializedError
 from tiozin.utils import as_list, trim
 
 from ..typehints import SparkPlan
-from ..writers.table_writer import TioSparkTableWriter
+from ..writers.table_writer import TioSparkSimpleTableWriter
 
 DEFAULT_LOGLEVEL = "WARN"
 
@@ -175,7 +175,7 @@ class SparkRunner(Runner[SparkPlan, SparkSession, None]):
                 case DataFrameWriter() | ConnectDataFrameWriter():
                     self.info("Running Spark DataFrameWriter")
                     result.save()
-                case TioSparkTableWriter():
+                case TioSparkSimpleTableWriter():
                     self.info("Running Spark Table Writer")
                     result.save()
                 case DataStreamWriter() | ConnectDataStreamWriter():

@@ -6,10 +6,10 @@ from pyspark.sql import functions as sf
 from pyspark.testing import assertDataFrameEqual
 
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
-from tiozin.family.tio_spark.writers.table_writer import TioSparkTableWriter
+from tiozin.family.tio_spark.writers.table_writer import TioSparkSimpleTableWriter
 
 # ============================================================================
-# Testing TioSparkTableWriter - Generic
+# Testing TioSparkSimpleTableWriter - Generic
 # ============================================================================
 
 
@@ -29,7 +29,7 @@ def test_save_should_create_table_when_table_is_missing(spark: SparkSession, mod
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).mode(mode).onMergeInto(keys="id").save()
@@ -66,7 +66,7 @@ def test_save_should_create_table_with_format(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).format(table_format).save()
@@ -93,7 +93,7 @@ def test_save_should_create_table_with_table_property(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).tableProperty("tiozin.layer", "gold").save()
@@ -121,7 +121,7 @@ def test_save_should_create_table_with_table_properties(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).tableProperties(
@@ -156,7 +156,7 @@ def test_save_should_create_table_partitioned_by_columns(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).partitionedBy(sf.col("region")).save()
@@ -186,7 +186,7 @@ def test_save_should_create_table_partitioned_by_column_name(spark: SparkSession
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).partitionedBy("region").save()
@@ -224,7 +224,7 @@ def test_save_should_create_table_partitioned_by_transform(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=initial_data,
         table=target_table,
     ).partitionedBy(expression).save()
@@ -253,7 +253,7 @@ def test_save_should_apply_write_option(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).option("snapshot-property.tiozin.run", "run-1").save()
@@ -282,7 +282,7 @@ def test_save_should_apply_write_options(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).options(
@@ -315,7 +315,7 @@ def test_mode_should_raise_input_error_when_mode_is_unsupported(spark: SparkSess
         ],
         schema="id INT, name STRING",
     )
-    writer = TioSparkTableWriter(
+    writer = TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     )
@@ -334,7 +334,7 @@ def test_save_should_raise_input_error_when_partition_expression_is_invalid(spar
         ],
         schema="id INT, name STRING",
     )
-    writer = TioSparkTableWriter(
+    writer = TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).partitionedBy("days()")
@@ -350,7 +350,7 @@ def test_save_should_raise_input_error_when_partition_expression_is_invalid(spar
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Append
+# Testing TioSparkSimpleTableWriter - Append
 # ============================================================================
 
 
@@ -374,7 +374,7 @@ def test_save_should_append_rows_by_default(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).save()
@@ -418,7 +418,7 @@ def test_save_should_append_rows(spark: SparkSession, catalog: str, table_format
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).mode("append").save()
@@ -466,7 +466,7 @@ def test_save_should_evolve_schema_when_mode_is_append(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("append").save()
@@ -485,7 +485,7 @@ def test_save_should_evolve_schema_when_mode_is_append(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Overwrite
+# Testing TioSparkSimpleTableWriter - Overwrite
 # ============================================================================
 
 
@@ -519,7 +519,7 @@ def test_save_should_recreate_table_when_mode_is_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("overwrite").save()
@@ -567,7 +567,7 @@ def test_save_should_add_new_column_when_mode_is_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).mode("overwrite").save()
@@ -613,7 +613,7 @@ def test_save_should_change_column_type_when_mode_is_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("overwrite").save()
@@ -630,7 +630,7 @@ def test_save_should_change_column_type_when_mode_is_overwrite(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Drop Overwrite
+# Testing TioSparkSimpleTableWriter - Drop Overwrite
 # ============================================================================
 
 
@@ -663,7 +663,7 @@ def test_save_should_recreate_table_when_mode_is_drop_overwrite(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("drop_overwrite").save()
@@ -699,7 +699,7 @@ def test_save_should_restart_delta_history_when_mode_is_drop_overwrite(spark: Sp
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format("delta").mode("drop_overwrite").save()
@@ -711,7 +711,7 @@ def test_save_should_restart_delta_history_when_mode_is_drop_overwrite(spark: Sp
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Truncate
+# Testing TioSparkSimpleTableWriter - Truncate
 # ============================================================================
 
 
@@ -745,7 +745,7 @@ def test_save_should_replace_all_rows_when_mode_is_truncate(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("truncate").save()
@@ -792,7 +792,7 @@ def test_save_should_evolve_schema_when_mode_is_truncate(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("truncate").save()
@@ -809,7 +809,7 @@ def test_save_should_evolve_schema_when_mode_is_truncate(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Overwrite Partitions
+# Testing TioSparkSimpleTableWriter - Overwrite Partitions
 # ============================================================================
 
 
@@ -844,7 +844,7 @@ def test_save_should_overwrite_partitions_present_in_dataframe(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=replacement_data,
         table=target_table,
     ).format(table_format).mode("overwrite_partitions").save()
@@ -892,7 +892,7 @@ def test_save_should_evolve_schema_when_mode_is_overwrite_partitions(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("overwrite_partitions").save()
@@ -911,7 +911,7 @@ def test_save_should_evolve_schema_when_mode_is_overwrite_partitions(
 
 
 # ============================================================================
-# Testing TioSparkTableWriter - Merge
+# Testing TioSparkSimpleTableWriter - Merge
 # ============================================================================
 
 
@@ -944,7 +944,7 @@ def test_save_should_merge_rows_by_key(spark: SparkSession, catalog: str, table_
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=merge_data,
         table=target_table,
     ).format(table_format).mode("merge").onMergeInto(keys="id").save()
@@ -983,7 +983,7 @@ def test_save_should_merge_rows_by_all_keys(spark: SparkSession):
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=merge_data,
         table=target_table,
     ).mode("merge").onMergeInto(keys=["region", "id"]).save()
@@ -1031,7 +1031,7 @@ def test_save_should_merge_rows_when_key_needs_quoting(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=merge_data,
         table=target_table,
     ).format(table_format).mode("merge").onMergeInto(keys="customer-id").save()
@@ -1080,7 +1080,7 @@ def test_save_should_evolve_schema_when_mode_is_merge(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).withSchemaEvolution().mode("merge").onMergeInto(keys="id").save()
@@ -1131,7 +1131,7 @@ def test_save_should_preserve_excluded_column_when_mode_is_merge(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=merge_data,
         table=target_table,
     ).format(table_format).mode("merge").onMergeInto(
@@ -1183,7 +1183,7 @@ def test_save_should_preserve_excluded_struct_column_when_mode_is_merge(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=merge_data,
         table=target_table,
     ).format(table_format).mode("merge").onMergeInto(
@@ -1229,7 +1229,7 @@ def test_save_should_ignore_merge_exclude_fields_when_mode_is_not_merge(
     )
 
     # Act
-    TioSparkTableWriter(
+    TioSparkSimpleTableWriter(
         df=input_data,
         table=target_table,
     ).format(table_format).mode(mode).onMergeInto(
@@ -1260,7 +1260,7 @@ def test_save_should_raise_required_argument_error_when_merge_keys_are_missing(
         schema="id INT, name STRING",
     )
     writer = (
-        TioSparkTableWriter(
+        TioSparkSimpleTableWriter(
             df=merge_data,
             table=target_table,
         )
@@ -1289,7 +1289,7 @@ def test_save_should_raise_input_error_when_merge_exclude_field_is_not_top_level
         schema="id INT, email STRING, audit STRUCT<created_at: STRING>",
     )
     writer = (
-        TioSparkTableWriter(
+        TioSparkSimpleTableWriter(
             df=merge_data,
             table=target_table,
         )
