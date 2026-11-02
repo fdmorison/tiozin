@@ -1139,3 +1139,117 @@ def test_save_should_raise_input_error_when_merge_exclude_field_is_not_top_level
     # Act / Assert
     with pytest.raises(TiozinInputError):
         writer.save()
+
+
+# ============================================================================
+# Testing TioSparkSimpleTableWriter - Metrics
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "catalog,table_format",
+    [
+        ("spark_catalog", "delta"),
+        ("iceberg", "iceberg"),
+    ],
+)
+def test_metrics_should_report_saved_write(spark: SparkSession, catalog: str, table_format: str):
+    """Reports the table, mode and format of the writer with the metrics of its write."""
+    # Arrange
+    target_table = f"{catalog}.default.writer_metrics_saved_write"
+    new_data = spark.createDataFrame(
+        [
+            (1, "new"),
+            (2, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+    writer = TioSparkSimpleTableWriter(
+        df=new_data,
+        table=target_table,
+    ).format(table_format)
+    writer.save()
+
+    # Act
+    result = writer.metrics()
+
+    # Assert
+    actual = (
+        result.dataset,
+        result.mode,
+        result.format,
+        result.rows_written,
+    )
+    expected = (
+        f"{catalog}.default.writer_metrics_saved_write",
+        "append",
+        table_format,
+        2,
+    )
+    assert actual == expected
+
+
+def test_metrics_should_report_configured_mode(spark: SparkSession):
+    # Arrange
+    target_table = "iceberg.default.writer_metrics_configured_mode"
+    spark.sql(f"CREATE TABLE {target_table} (id INT, name STRING) USING iceberg")
+    new_data = spark.createDataFrame(
+        [
+            (1, "new"),
+        ],
+        schema="id INT, name STRING",
+    )
+    writer = (
+        TioSparkSimpleTableWriter(
+            df=new_data,
+            table=target_table,
+        )
+        .format("iceberg")
+        .mode("merge")
+        .onMergeInto(keys="id")
+    )
+    writer.save()
+
+    # Act
+    result = writer.metrics()
+
+    # Assert
+    actual = result.mode
+    expected = "merge"
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "catalog,table_format,expected_format",
+    [
+        ("spark_catalog", "DELTA", "delta"),
+        ("iceberg", "ICEBERG", "iceberg"),
+    ],
+)
+def test_metrics_should_accept_case_insensitive_format(
+    spark: SparkSession, catalog: str, table_format: str, expected_format: str
+):
+    # Arrange
+    target_table = f"{catalog}.default.writer_metrics_upper_format"
+    data = spark.createDataFrame(
+        [
+            (1, "hello"),
+        ],
+        schema="id INT, name STRING",
+    )
+    writer = TioSparkSimpleTableWriter(
+        df=data,
+        table=target_table,
+    ).format(table_format)
+    writer.save()
+
+    # Act
+    result = writer.metrics()
+
+    # Assert
+    actual = (
+        result.format,
+        result.rows_written,
+    )
+    expected = (expected_format, 1)
+    assert actual == expected

@@ -5,16 +5,16 @@ from typing import Any, Self, get_args
 from pyspark.sql import Column, DataFrame, DataFrameWriterV2
 from pyspark.sql import functions as sf
 
+from tiozin import OutputMetrics
 from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list
 
 from ..functions import merge_into, to_partition_column
+from ..table_utils import evolve_schema, output_metrics
 from ..typehints import TioSparkTableOutputMode
 
 DEFAULT_WRITE_MODE = "append"
 DEFAULT_TABLE_FORMAT = "iceberg"
-ICEBERG_FORMAT = "iceberg"
-ICEBERG_ACCEPT_ANY_SCHEMA = "write.spark.accept-any-schema"
 RECREATE_MODES = ("overwrite", "drop_overwrite")
 
 
@@ -100,7 +100,7 @@ class TioSparkSimpleTableWriter:
         """
         Sets the table format used when the table is created, such as `delta` or `iceberg`.
         """
-        self._format = format
+        self._format = format.lower()
         return self
 
     def option(self, key: str, value: Any) -> Self:
@@ -231,7 +231,7 @@ class TioSparkSimpleTableWriter:
             return
 
         if self._schema_evolution and self._mode not in RECREATE_MODES:
-            self._evolve_schema()
+            evolve_schema(self._df, self._table, self._format)
 
         match self._mode:
             case "append":
@@ -264,35 +264,11 @@ class TioSparkSimpleTableWriter:
 
         return writer
 
-    def _evolve_schema(self) -> None:
-        spark = self._df.sparkSession
+    def metrics(self) -> OutputMetrics:
+        """
+        Returns the metrics of the latest write to the table. Call it after `save()`.
 
-        if self._df.schema == spark.table(self._table).schema:
-            return
-
-        accepts_any_schema = bool(
-            spark.sql(f"SHOW TBLPROPERTIES {self._table}")
-            .filter(f"key = '{ICEBERG_ACCEPT_ANY_SCHEMA}' AND value = 'true'")
-            .first()
-        )
-
-        toggle_property = self._format == ICEBERG_FORMAT and not accepts_any_schema
-
-        if toggle_property:
-            spark.sql(
-                f"ALTER TABLE {self._table} "
-                f"SET TBLPROPERTIES ('{ICEBERG_ACCEPT_ANY_SCHEMA}'='true')"
-            )
-        try:
-            (
-                spark.createDataFrame([], self._df.schema)
-                .writeTo(self._table)
-                .option("mergeSchema", "true")
-                .option("check-ordering", "false")
-                .append()
-            )
-        finally:
-            if toggle_property:
-                spark.sql(
-                    f"ALTER TABLE {self._table} UNSET TBLPROPERTIES ('{ICEBERG_ACCEPT_ANY_SCHEMA}')"
-                )
+        A metric is None when the table format does not record it or when it
+        cannot be read, so a failure here never affects a write already saved.
+        """
+        return output_metrics(self._df.sparkSession, self._format, self._table, self._mode)
