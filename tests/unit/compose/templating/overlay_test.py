@@ -179,6 +179,68 @@ def test_overlay_should_render_and_restore_nested_list_templates(fake_domain: di
     assert actual == expected
 
 
+def test_overlay_should_keep_dict_reference_rendered_after_exit(fake_domain: dict):
+    # Arrange
+    tiozin = NoOpInput(name="test")
+    tiozin.some_field = {
+        "path": "./data/{{domain}}",
+        "region": "{{region}}",
+    }
+
+    # Act
+    with TiozinTemplateOverlay(tiozin, fake_domain):
+        rendered = tiozin.some_field
+    restored = tiozin.some_field
+
+    # Assert
+    actual = (
+        rendered,
+        restored,
+    )
+    expected = (
+        {
+            "path": "./data/ecommerce",
+            "region": "latam",
+        },
+        {
+            "path": "./data/{{domain}}",
+            "region": "{{region}}",
+        },
+    )
+    assert actual == expected
+
+
+def test_overlay_should_keep_list_reference_rendered_after_exit(fake_domain: dict):
+    # Arrange
+    tiozin = NoOpInput(name="test")
+    tiozin.some_field = [
+        "./{{layer}}/data",
+        "./output/{{domain}}",
+    ]
+
+    # Act
+    with TiozinTemplateOverlay(tiozin, fake_domain):
+        rendered = tiozin.some_field
+    restored = tiozin.some_field
+
+    # Assert
+    actual = (
+        rendered,
+        restored,
+    )
+    expected = (
+        [
+            "./raw/data",
+            "./output/ecommerce",
+        ],
+        [
+            "./{{layer}}/data",
+            "./output/{{domain}}",
+        ],
+    )
+    assert actual == expected
+
+
 def test_overlay_should_render_and_restore_nested_tiozins(fake_domain: dict):
     # Arrange
     tiozin = NoOpInput(name="test")
@@ -441,7 +503,7 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
 ):
     # Arrange
     tiozin = NoOpInput(name="test")
-    tiozin.data = (
+    tiozin.some_field = (
         {"path": "./data/{{domain}}"},
         ["./{{layer}}/data", "./output/{{region}}"],
         "static_value",
@@ -449,8 +511,8 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
 
     # Act
     with TiozinTemplateOverlay(tiozin, fake_domain):
-        rendered = copy.deepcopy(tiozin.data)
-    restored = tiozin.data
+        rendered = tiozin.some_field
+    restored = tiozin.some_field
 
     # Assert
     actual = (
@@ -458,11 +520,11 @@ def test_overlay_should_render_and_restore_mutable_objects_inside_immutable_tupl
         restored,
     )
     expected = (
-        (
+        [
             {"path": "./data/ecommerce"},
             ["./raw/data", "./output/latam"],
             "static_value",
-        ),
+        ],
         (
             {"path": "./data/{{domain}}"},
             ["./{{layer}}/data", "./output/{{region}}"],
