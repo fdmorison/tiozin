@@ -20,48 +20,65 @@ RECREATE_MODES = ("overwrite", "drop_overwrite")
 
 class TioSparkSimpleTableWriter:
     """
-    Writes a DataFrame to a table registered in a catalog.
+    Writes a DataFrame to a catalog table lazily: no data is written until `save()` is called. This
+    lets output plugins like `SparkTableOutput` return it as a plan for the runner to execute.
 
-    `DataFrameWriterV2` writes as soon as a mode is called. This writer fixes
-    that by being lazy: nothing is written until `save()` is called. Also, the
-    table is created when it does not exist, whatever the mode.
+    The table is created automatically if it does not exist. Otherwise, the selected write mode
+    determines whether rows are added, replaced, updated, or merged with existing data.
 
-    The fluent interface intentionally follows the classic Spark `DataFrameWriter`,
-    with `format()`, `options()` and `mode()`, although the writer is implemented
-    on top of `DataFrameWriterV2`.
+    Available write modes:
 
-    It also adds the `truncate`, `drop_overwrite`, `overwrite_partitions` and `merge` modes:
+    - `append`: adds new rows without removing existing data.
+    - `truncate`: replaces all rows while preserving the table definition and history.
+    - `overwrite`: replaces the table definition and its data while preserving its history.
+    - `drop_overwrite`: drops the table and creates it again, removing its previous history.
+    - `overwrite_partitions`: replaces only the partitions represented in the incoming DataFrame.
+    - `merge`: updates existing rows that match the configured keys and inserts rows that do not
+      match.
 
-    - `append`: adds the rows to the table.
-    - `truncate`: replaces all rows, preserving the table definition and history
-    - `overwrite`: replaces all rows, replacing the table definition, but keeping the history.
-    - `drop_overwrite`: drops the table and creates it again, losing the history.
-    - `overwrite_partitions`: replaces only the partitions present in the DataFrame.
-    - `merge`: updates the rows that match the keys set by `onMergeInto()` and inserts the others.
+    The writer also supports configuring the table format, write options, table properties,
+    partitioning, and hidden partitioning. Schema evolution can be enabled to add new columns to an
+    existing table before writing.
 
-    Works with both classic and Spark Connect sessions.
+    The fluent interface intentionally follows the classic Spark `DataFrameWriter`, with `format()`,
+    `options()` and `mode()`, although the writer is implemented on top of `DataFrameWriterV2`.
+
+    Supports both classic Spark and Spark Connect sessions.
 
     Args:
-        df:
-            DataFrame to write.
-
-        table:
-            Table name, qualified as `catalog.schema.table`.
+        df: DataFrame containing the data to write.
+        table: Fully qualified table name in the form `catalog.schema.table`.
 
     Examples:
+        Append rows to a table:
 
         ```python
-        TioSparkSimpleTableWriter(df, "my_catalog.default.sales")
-            .mode("append")
+        TioSparkSimpleTableWriter(df, "my_catalog.default.sales") \
+            .mode("append") \
             .save()
         ```
+
+        Partition a table by a column and by a transform of another column:
+
+        ```python
+        (
+            TioSparkSimpleTableWriter(df, "my_catalog.default.orders")
+            .partitionedBy("region", "days(created_at)")
+            .mode("append")
+            .save()
+        )
+        ```
+
+        Merge rows using a key, excluding selected fields from updates:
 
         ```python
         (
             TioSparkSimpleTableWriter(df, "my_catalog.default.customers")
-            .format("delta")
             .mode("merge")
-            .onMergeInto(keys="customer_id", exclude_fields="created_at")
+            .onMergeInto(
+                keys="customer_id",
+                exclude_fields="created_at",
+            )
             .save()
         )
         ```
