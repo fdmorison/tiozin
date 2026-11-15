@@ -186,3 +186,29 @@ def __init__(self, location: str = None, **options) -> None:
 def __init__(self, location: str = None, **kwargs) -> None:
     ...
 ```
+
+## 10. Exception guards, not `if ... raise`
+
+Validate with the exception's guard helpers (`raise_if`, `raise_if_not_in`, `raise_if_missing`),
+never with an external `if` followed by `raise`. Put each guard argument on its own line.
+
+When a guard returns the exception class, chain the next guard of the same class onto it. Chain
+only guards that return the class; otherwise, call each guard separately.
+
+```python
+# ✔ Correct
+TiozinInputError.raise_if_not_in(
+    keep,
+    KEEP_OPTIONS,
+    allow_none=True,
+).raise_if(
+    keep is not None and not order_by,
+    "`keep` requires `order_by`",
+)
+
+# ❌ Incorrect
+TiozinInputError.raise_if_not_in(keep, KEEP_OPTIONS, allow_none=True)
+
+if keep is not None and not order_by:
+    raise TiozinInputError("`keep` requires `order_by`")
+```
