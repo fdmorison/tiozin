@@ -124,10 +124,14 @@ class SparkDeduplicateTransform(SparkTransform):
         **options,
     ) -> None:
         super().__init__(**options)
-        TiozinInputError.raise_if_not_in(keep, KEEP_OPTIONS, allow_none=True)
-
-        if keep is not None and not order_by:
-            raise TiozinInputError("`keep` requires `order_by`")
+        TiozinInputError.raise_if_not_in(
+            keep,
+            KEEP_OPTIONS,
+            allow_none=True,
+        ).raise_if(
+            keep is not None and not order_by,
+            "`keep` requires `order_by`",
+        )
 
         self.keys = as_list(keys, [])
         self.order_by = as_list(order_by, [])
