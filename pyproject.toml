@@ -50,7 +50,9 @@ tio_kernel = [
   "boto3 ~=1.38",
   "google-cloud-secret-manager ~=2.23",
 ]
+tio_spark_base = []
 tio_spark = [
+  "tiozin[tio_spark_base]",
   "pyspark[connect] >=3.5.0,<4.0.0",
   # NOTE: Temporary dependencies (to be removed)
   # Required due to unnecessary runtime imports in datacontract-cli schema converters
