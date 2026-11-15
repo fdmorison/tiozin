@@ -43,6 +43,15 @@ tio_dilbert = "tio_dilbert"
 
 The key is the family name (the package name). The value is the Python import path of the package's `__init__.py`, which defines the family's public API.
 
+The family package can sit at the top level, as above, or inside another package. When it is nested, the last segment of the import path must match the family name:
+
+```toml
+[project.entry-points."tiozin.family"]
+tio_dilbert = "my_company.tio_dilbert"
+```
+
+If the value points anywhere else, such as `"my_company.dilbert"` or `"foo_tio_dilbert"`, Tiozin logs a warning and skips the family at discovery.
+
 This single declaration is the entire registration contract. Tiozin discovers all installed families at startup by scanning packages registered under `tiozin.family`, imports each one, and makes all their exported Tiozins available by class name. The entry point declaration is the only registration step a family needs.
 
 ## Public API
