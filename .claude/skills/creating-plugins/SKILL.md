@@ -73,13 +73,21 @@ user-invocable: true
 2. Identify the family: existing or new.
 3. Create the plugin file.
 4. Implement the required method and declare `external_datasets` when applicable.
-5. Register the class in the family's `__init__.py`.
-6. If the family is new, register it as an entry point in `pyproject.toml`:
+5. Review the public API before writing tests or docs:
+   - Each parameter serves the purpose the plugin's name promises. A parameter that breaks
+     that promise belongs in another plugin.
+   - No parameter only takes effect in combination with a non-default value of another.
+   - Parameter names and scope match how popular tools (pandas, Polars, Spark, SQL) expose
+     the same operation.
+   - Edge values passed to the engine (empty lists, None) behave as documented.
+6. Register the class in the family's `__init__.py`.
+7. If the family is new, register it as an entry point in `pyproject.toml`:
    ```toml
    [project.entry-points."tiozin.family"]
    tio_john = "tio_john"
    tia_cassandra = "data_platform_utils.tia_cassandra"
    ```
-7. Delegate test writing to the `tester` agent.
-8. Self-review: check for unnecessary methods, parameters, or abstractions not required by the task.
-9. Run `make format`.
+8. Write unit tests for the plugin.
+9. Write the plugin's documentation page at `docs/{family}/{purpose}-{role}.md` and add it to
+   the family's `docs/{family}/index.md`.
+10. Run `make format`.
