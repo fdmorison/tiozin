@@ -30,6 +30,7 @@ from .runners.spark_iceberg_runner import SparkIcebergRunner
 from .runners.spark_runner import SparkRunner
 
 # Transforms
+from .transforms.deduplicate_transform import SparkDeduplicateTransform
 from .transforms.schema_inference_transform import SparkSchemaInferenceTransform
 from .transforms.sql_transform import SparkSqlTransform
 from .transforms.word_count_transform import SparkWordCountTransform
@@ -53,6 +54,7 @@ __all__ = [
     "SparkFileOutput",
     "SparkTableOutput",
     # Transforms
+    "SparkDeduplicateTransform",
     "SparkSchemaInferenceTransform",
     "SparkSqlTransform",
     "SparkWordCountTransform",
