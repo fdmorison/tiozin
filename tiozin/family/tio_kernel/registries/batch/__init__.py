@@ -1,7 +1,12 @@
-from .iceberg import IcebergBatchRegistry
+from contextlib import suppress
+
 from .noop_registry import NoOpBatchRegistry
 
 __all__ = [
-    "IcebergBatchRegistry",
     "NoOpBatchRegistry",
 ]
+
+with suppress(ImportError):
+    from .iceberg import IcebergBatchRegistry
+
+    __all__ += ["IcebergBatchRegistry"]
