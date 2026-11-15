@@ -1,5 +1,5 @@
 name: "Check release intent"
-description: "Fails if the PR title's release-impacting type disagrees with whether production code changed"
+description: "Fails if the PR title's type disagrees with whether production code changed"
 
 runs:
   using: composite
@@ -21,18 +21,18 @@ runs:
         TOUCHED_PRODUCTION: ${{ steps.filter.outputs.release }}
       with:
         script: |
-          const RELEASE_IMPACTING_TYPE = /^(feat|fix|perf|refactor|build|docs)(\(.+\))?!?:/;
+          const PRODUCTION_CHANGE_TYPE = /^(feat|fix|perf|refactor|style|build|docs)(\(.+\))?!?:/;
 
           const { data: pr } = await github.rest.pulls.get({
             ...context.repo,
             pull_number: context.payload.pull_request.number,
           });
           const title = pr.title;
-          const titleImpactsRelease = RELEASE_IMPACTING_TYPE.test(title);
-          const codeImpactsRelease = process.env.TOUCHED_PRODUCTION === "true";
+          const titleChangesProduction = PRODUCTION_CHANGE_TYPE.test(title);
+          const codeChangesProduction = process.env.TOUCHED_PRODUCTION === "true";
 
-          if (titleImpactsRelease === codeImpactsRelease) {
-            console.log("✅ Title and code changes agree on release impact");
+          if (titleChangesProduction === codeChangesProduction) {
+            console.log("✅ Title and code changes agree on production changes");
             return;
           }
-          core.setFailed(`PR title "${title}" and the files it touches disagree on release impact`);
+          core.setFailed(`PR title "${title}" and the files it touches disagree on production changes`);
