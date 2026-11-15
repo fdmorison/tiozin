@@ -8,6 +8,7 @@ from tiozin.exceptions import RequiredArgumentError, TiozinInputError
 from tiozin.utils import as_list, default, trim, trim_lower
 
 from .. import SparkOutput
+from ..table_utils import SCHEMA_EVOLUTION_FORMATS
 from ..typehints import TioSparkTableOutputMode
 from ..writers.table_writer import TioSparkSimpleTableWriter
 
@@ -17,7 +18,7 @@ DEFAULT_WRITE_MODE = "append"
 
 class SparkTableOutput(SparkOutput):
     """
-    Writes a Spark DataFrame to a table registered in a catalog.
+    Writes a Spark DataFrame to an Iceberg or Delta table registered in a catalog.
 
     The table is addressed by name, so the catalog decides where the data is
     stored. This makes the output suitable for managed tables.
@@ -33,8 +34,8 @@ class SparkTableOutput(SparkOutput):
             catalog or a schema are rejected. Required.
 
         format:
-            Table format used when the table is created or recreated, such as
-            `delta` or `iceberg`. Defaults to `iceberg`. Optional.
+            Table format, `iceberg` or `delta`. Other formats are rejected.
+            Defaults to `iceberg`. Optional.
 
         mode:
             How the DataFrame is written to the table. Defaults to `append`. Optional.
@@ -131,6 +132,9 @@ class SparkTableOutput(SparkOutput):
         TiozinInputError.raise_if(
             trim(table).count(".") != 2,
             f"Table must be qualified as `catalog.schema.table`: '{table}'",
+        ).raise_if_not_in(
+            trim_lower(default(format, DEFAULT_FORMAT)),
+            SCHEMA_EVOLUTION_FORMATS,
         )
         self.table = trim(table)
         self.format = trim_lower(default(format, DEFAULT_FORMAT))

@@ -1,6 +1,6 @@
 # SparkTableOutput
 
-Writes a Spark `DataFrame` to a table registered in a catalog.
+Writes a Spark `DataFrame` to an [Apache Iceberg](https://iceberg.apache.org/docs/latest/) or [Delta Lake](https://docs.delta.io/latest/index.html) table registered in a catalog.
 
 The table is addressed by name, so the catalog decides where the data is stored. This makes the output suitable for managed tables.
 
@@ -18,7 +18,7 @@ This appends the rows to `my_catalog.default.sales`. If the table does not exist
 | Property | Required | Default | Description |
 | -------- | -------- | ------- | ----------- |
 | `table` | yes | | Table name, qualified as `catalog.schema.table` |
-| `format` | no | `iceberg` | Table format, such as `delta` or `iceberg` |
+| `format` | no | `iceberg` | Table format, `iceberg` or `delta` |
 | `mode` | no | `append` | How the `DataFrame` is written to the table |
 | `merge_keys` | no | | Column or list of columns that identify a row. Required by the `merge` mode and ignored by the others |
 | `merge_exclude_fields` | no | | Column or list of columns excluded from updates, such as `created_at`. They are still written when a row is inserted. Nested fields are not supported. Ignored by modes other than `merge` |
@@ -38,6 +38,16 @@ Table names follow the `catalog.schema.table` syntax. Any other shape is rejecte
 - `my_catalog.default.sales.v2` is rejected because it has too many parts.
 
 If `table` is missing, a `RequiredArgumentError` is raised instead.
+
+## format
+
+The output is built for Iceberg and Delta Lake tables, so `format` accepts only `iceberg` or `delta`. Format names are case-insensitive. Any other value, such as `parquet` or `avro`, raises a `TiozinInputError` when the job is built:
+
+```text
+Invalid value 'parquet'. Must be one of: delta, iceberg
+```
+
+To write plain files such as Parquet or Avro, use [SparkFileOutput](file-output.md) instead.
 
 ## Table Creation
 
@@ -161,15 +171,13 @@ Property names are format-specific. See the [Iceberg table properties](https://i
 
 ## Schema Evolution
 
-On [Iceberg](https://iceberg.apache.org/docs/latest/) and [Delta Lake](https://docs.delta.io/latest/index.html) tables, new `DataFrame` columns are always added to an existing table, whatever the mode. This cannot be turned off. It covers nested fields in structs and in arrays of structs.
+New `DataFrame` columns are always added to an existing [Iceberg](https://iceberg.apache.org/docs/latest/) or [Delta Lake](https://docs.delta.io/latest/index.html) table, whatever the mode. This cannot be turned off. It covers nested fields in structs and in arrays of structs.
 
 Rows kept by the mode get `NULL` in the new columns. For example, `merge` keeps the rows with no match in the `DataFrame`, and those rows get `NULL`.
 
-The column order of the `DataFrame` does not need to match the table on these two formats.
+The column order of the `DataFrame` does not need to match the table.
 
 Because `overwrite` and `drop_overwrite` replace the table definition, they also accept changed column types. In the other modes, a column type that cannot be changed fails the write. On Iceberg, for example, the error reads `Cannot change column type: id: string -> int`.
-
-Other table formats do not support schema evolution. With any other `format`, writing to an existing table raises a `TiozinInputError` when the output runs, even if the schema is unchanged. For `format: parquet`, the error reads `Schema evolution is not supported for format: 'parquet'`. The `overwrite` and `drop_overwrite` modes do not raise this error, and creating a new table is not affected.
 
 ## Passing Extra Write Options
 
@@ -207,11 +215,10 @@ After each table write, the job logs a line with the message `📊 Table write s
 
 The metrics describe the latest commit of the table. If an empty write to an existing table creates no commit, those metrics belong to an earlier write.
 
-Every table format logs the same fields. A metric is `None` when it is unknown, which is different from 0. Support varies by format:
+Both formats log the same fields. A metric is `None` when it is unknown, which is different from 0. Support varies by format:
 
 - [Iceberg](https://iceberg.apache.org/docs/latest/) tables report all four metrics when recorded. A commit that adds no rows or bytes reports 0 for `rows_written` and `bytes_written`.
 - [Delta Lake](https://docs.delta.io/latest/index.html) tables do not report `rows_total`, so it is always `None`.
-- Any other format reports every metric as `None`.
 
 If the metrics cannot be read, a warning is logged, every metric is `None`, and the job continues. The write is not affected.
 
