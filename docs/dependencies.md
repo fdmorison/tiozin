@@ -6,7 +6,7 @@ A reference for contributors and platform engineers. After reading, you will kno
 
 ## How Dependencies Are Grouped
 
-Tiozin has a core set and three optional extras, one per provider family.
+Tiozin has a core set and one optional extra per provider family. The Spark family also has `tio_spark_base`, an empty extra described under [Tio Spark](#tio-spark).
 
 The core installs with `pip install tiozin` and carries everything the framework needs to parse jobs, render templates, and run the compose engine. It does not include any execution engine.
 
@@ -18,6 +18,7 @@ The core installs with `pip install tiozin` and carries everything the framework
 | `pip install tiozin[tio_kernel]` | External libs for state and secret backends | ~230 MB |
 | `pip install tiozin[tio_duckdb]` | DuckDB engine | ~56 MB |
 | `pip install tiozin[tio_spark]` | Spark engine | ~350 MB |
+| `pip install tiozin[tio_spark_base]` | No packages | None |
 
 ## Core Dependencies
 
@@ -71,6 +72,8 @@ The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyar
 |---------|------------------|------|
 | [pyspark](https://spark.apache.org/docs/latest/api/python/) | ~340 MB | The [Apache Spark](https://spark.apache.org/docs/latest/) execution engine |
 | [databricks-sdk](https://databricks-sdk-py.readthedocs.io/) | ~11 MB | Present only because of runtime imports in `datacontract-cli` |
+
+`tio_spark` includes `tio_spark_base`, an extra that installs no packages. Depending on `tiozin[tio_spark_base]` lets a package rely on the Spark family without installing `pyspark` or `databricks-sdk`, for environments that provide PySpark another way. Those environments must provide any other packages they need themselves.
 
 ## Related
 
