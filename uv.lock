@@ -3277,11 +3277,12 @@ requires-dist = [
     { name = "ruamel-yaml", specifier = "~=0.18" },
     { name = "single-source", specifier = "~=0.4" },
     { name = "structlog", specifier = "~=25.5" },
+    { name = "tiozin", extras = ["tio-spark-base"], marker = "extra == 'tio-spark'" },
     { name = "typer", specifier = "~=0.20" },
     { name = "uuid-utils", specifier = "~=0.12" },
     { name = "wrapt", specifier = "~=2.0.1" },
 ]
-provides-extras = ["tio-kernel", "tio-spark", "tio-duckdb", "aws", "gcp"]
+provides-extras = ["tio-kernel", "tio-spark-base", "tio-spark", "tio-duckdb", "aws", "gcp"]
 
 [package.metadata.requires-dev]
 dev = [
