@@ -186,6 +186,25 @@ def test_provider_name_policy_should_allow_name_with_valid_prefix(provider_name:
 
 
 @pytest.mark.parametrize(
+    "provider_name",
+    ["tio_my_provider", "tia_my_provider"],
+)
+def test_provider_name_policy_should_allow_top_level_package(provider_name: str):
+    # Arrange
+    provider = Mock(spec=EntryPoint)
+    provider.name = provider_name
+    provider.value = provider_name
+
+    # Act
+    result = FamilyNamePolicy.eval(provider)
+
+    # Assert
+    actual = result.decision
+    expected = PolicyDecision.ALLOW
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
     "provider_name,provider_value",
     [
         ("tio_my_provider", "my.namespace.tia_my_provider"),
@@ -235,6 +254,27 @@ def test_provider_name_policy_should_skip_package_without_provider_name_suffix(
     provider = Mock(spec=EntryPoint)
     provider.name = provider_name
     provider.value = "some.package.wrong_name"
+
+    # Act
+    result = FamilyNamePolicy.eval(provider)
+
+    # Assert
+    actual = result.decision
+    expected = PolicyDecision.SKIP
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "provider_value",
+    ["foo_tia_my_provider", "some.package.foo_tia_my_provider"],
+)
+def test_provider_name_policy_should_skip_package_ending_with_provider_name_without_dot(
+    provider_value: str,
+):
+    # Arrange
+    provider = Mock(spec=EntryPoint)
+    provider.name = "tia_my_provider"
+    provider.value = provider_value
 
     # Act
     result = FamilyNamePolicy.eval(provider)
