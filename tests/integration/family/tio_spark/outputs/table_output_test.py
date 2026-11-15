@@ -137,6 +137,33 @@ def test_output_should_preserve_merge_exclude_fields(spark: SparkSession):
 
 
 # ============================================================================
+# Testing SparkTableOutput - Format
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "format,expected",
+    [
+        (None, "iceberg"),
+        ("iceberg", "iceberg"),
+        ("delta", "delta"),
+        (" Delta ", "delta"),
+    ],
+)
+def test_output_should_accept_open_table_format(format: str, expected: str):
+    # Act
+    result = SparkTableOutput(
+        name="test",
+        table="iceberg.default.sales",
+        format=format,
+    )
+
+    # Assert
+    actual = result.format
+    assert actual == expected
+
+
+# ============================================================================
 # Testing SparkTableOutput - Lineage
 # ============================================================================
 
@@ -173,3 +200,18 @@ def test_output_should_raise_input_error_when_table_is_not_fully_qualified(table
             name="test",
             table=table,
         )
+
+
+def test_output_should_raise_input_error_when_format_is_not_open_table_format():
+    # Act
+    with pytest.raises(TiozinInputError) as exc_info:
+        SparkTableOutput(
+            name="test",
+            table="iceberg.default.sales",
+            format="parquet",
+        )
+
+    # Assert
+    actual = str(exc_info.value)
+    expected = "Invalid value 'parquet'. Must be one of: delta, iceberg"
+    assert actual == expected
