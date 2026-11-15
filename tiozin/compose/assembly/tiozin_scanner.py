@@ -34,6 +34,11 @@ class TiozinScanner(Loggable):
             # Family must load successfully
             try:
                 family = entrypoint.load()
+            except ImportError as e:
+                self.warning(
+                    f"🧓 Skipping family `{entrypoint.name}` because a dependency is missing: {e}"
+                )
+                continue
             except Exception as e:
                 self.exception(f"💥 Family `{entrypoint.name}` failed to load: {e}")
                 continue
