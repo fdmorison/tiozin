@@ -58,7 +58,7 @@ class FamilyNamePolicy:
     @classmethod
     def eval(cls, family: EntryPoint) -> PolicyResult:
         name_ok = family.name.startswith(cls.prefixes)
-        package_ok = family.value.endswith(f".{family.name}")
+        package_ok = family.value == family.name or family.value.endswith(f".{family.name}")
         reserved_ok = any(
             [
                 family.name not in cls.core_names,
