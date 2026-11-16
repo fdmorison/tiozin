@@ -369,3 +369,16 @@ def test_load_should_not_override_explicit_arguments_with_defaults(
     actual = result.verbose
     expected = True
     assert actual == expected
+
+
+def test_load_should_not_pass_kind_from_defaults_as_option(factory: TiozinRegistry):
+    # Arrange
+    factory.with_defaults([{"kind": "NoOpInput", "verbose": False}])
+
+    # Act
+    result = factory.load("NoOpInput", name="test")
+
+    # Assert
+    actual = result.options
+    expected = {}
+    assert actual == expected

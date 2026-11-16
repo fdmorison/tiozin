@@ -167,6 +167,7 @@ class TiozinRegistry(Loggable):
         )
 
         arguments = default(arguments, self._defaults.get(kind))
+        arguments.pop("kind", None)
         params = arguments.copy()
         params.pop("description", None)
 
