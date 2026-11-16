@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/fdmorison/tiozin/compare/tiozin-v4.1.0...tiozin-v4.1.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **core-compose:** Keep runtime default kind out of plugin options ([#375](https://github.com/fdmorison/tiozin/issues/375)) ([9099484](https://github.com/fdmorison/tiozin/commit/90994842c2feef40e66218c350d40d611975d4a9))
+
 ## [4.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v4.0.0...tiozin-v4.1.0) (2026-11-15)
 
 
