@@ -22,24 +22,24 @@ classifiers = [
 dependencies = [
   # Structural — framework won't work without these
   "pydantic ~=2.12",
-  "pydantic-settings ~=2.14.2",
+  "pydantic-settings>=2.14.2,<2.17.0",
   "environs ~=14.3",
   "single-source ~=0.4",
   "structlog ~=25.5",
   "jinja2 ~=3.1.6",
   "ruamel-yaml ~=0.18",
-  "pendulum ~=3.1.0",
-  "wrapt ~=2.0.1",
+  "pendulum>=3.1,<3.4",
+  "wrapt>=2.0.1,<2.6.0",
   "fsspec[s3,gcs,adl,sftp] ~=2026.6.0",
-  "openlineage-python ~=1.45.0",
+  "openlineage-python>=1.45,<1.56",
   # Utilities — small helpers with focused roles
   "typer ~=0.20",
   "uuid-utils ~=0.12",
   "python-slugify ~=8.0.4",
   "inflection ~=0.5.1",
   "python-rapidjson ~=1.23",
-  "python-benedict ~=0.38.0",
-  "openlineage-sql ~=1.45.0",
+  "python-benedict>=0.38,<0.41",
+  "openlineage-sql>=1.45,<1.56",
   # Temporary — to be removed once schema converters are rewritten
   "datacontract-cli ~=0.11.9",
 ]
@@ -56,7 +56,7 @@ tio_spark = [
   "pyspark[connect] >=3.5.0,<4.0.0",
   # NOTE: Temporary dependencies (to be removed)
   # Required due to unnecessary runtime imports in datacontract-cli schema converters
-  "databricks-sdk ~=0.102.0",
+  "databricks-sdk>=0.102,<0.168",
 ]
 tio_duckdb = [
   "duckdb>=1.4.4,<2.0.0",
