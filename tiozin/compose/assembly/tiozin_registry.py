@@ -38,7 +38,7 @@ class TiozinRegistry(Loggable):
 
         [project.entry-points."tiozin.family"]
         tio_aws   = "tiozin.family.tio_aws"
-        tio_spark = "tiozin.family.tio_spark"
+        tio_spark = "tio_spark"
         tio_john  = "mycompany.myteam.tio_john"
 
     Providers are encouraged to organize their Tiozin plugins in a familiar directory structure:

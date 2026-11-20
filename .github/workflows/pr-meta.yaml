@@ -44,8 +44,6 @@ jobs:
             core-utils
             core-compose
             tio_kernel
-            tio_duckdb
-            tio_spark
             harness
           requireScope: true
 
