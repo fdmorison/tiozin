@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v4.1.2...tiozin-v5.0.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** Move Spark and DuckDB families to standalone packages ([#391](https://github.com/fdmorison/tiozin/issues/391))
+
+### Code Refactoring
+
+* **core:** Move Spark and DuckDB families to standalone packages ([#391](https://github.com/fdmorison/tiozin/issues/391)) ([4d802d0](https://github.com/fdmorison/tiozin/commit/4d802d0696d7d7b40658c39e2d424e253f3cb1a1))
+
 ## [4.1.2](https://github.com/fdmorison/tiozin/compare/tiozin-v4.1.1...tiozin-v4.1.2) (2026-11-20)
 
 
