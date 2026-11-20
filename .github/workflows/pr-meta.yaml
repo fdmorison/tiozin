@@ -13,10 +13,13 @@ jobs:
     if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-24.04
     steps:
-      - name: Setup environment
-        uses: fdmorison/tiozin/.github/actions/setup-env@main
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
 
       - name: Check PR Title
         uses: amannn/action-semantic-pull-request@v5
@@ -50,4 +53,4 @@ jobs:
         uses: wagoid/commitlint-github-action@v6
 
       - name: Check Release Intent
-        uses: fdmorison/tiozin/.github/actions/check-release-intent@main
+        uses: ./.github/actions/check-release-intent

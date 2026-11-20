@@ -1,19 +1,9 @@
 name: "Setup environment"
-description: "Checkout repo, setup Python from pyproject.toml, setup uv, and restore caches"
-
-inputs:
-  fetch-depth:
-    description: "Git fetch depth"
-    default: "1"
+description: "Setup Python from pyproject.toml, setup uv, and restore caches. Requires the repository to be checked out first."
 
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
-
     - name: Set up Python
       uses: actions/setup-python@v6
 
