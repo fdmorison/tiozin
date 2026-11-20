@@ -26,7 +26,7 @@ The project ships [Claude Code](https://claude.ai/code) agents and skills that e
 **Packages**
 
 - `tiozin/api/` holds the core abstractions (base classes, contracts, context types).
-- `tiozin/family/` holds the built-in provider families: `tio_kernel`, `tio_spark`, `tio_duckdb`.
+- `tiozin/family/` holds `tio_kernel`, the built-in provider family. The reference families [tio_spark](https://github.com/fdmorison/tio_spark) and [tio_duckdb](https://github.com/fdmorison/tio_duckdb) live in their own repositories.
 - `tiozin/compose/` holds code that assembles jobs from definitions.
 - `tests/` holds unit and integration tests mirroring the package layout.
 

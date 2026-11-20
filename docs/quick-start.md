@@ -195,7 +195,7 @@ tiozin run jobs/orders_daily_summary.yaml
 
 ## Next steps
 
-Swap the `NoOp*` kinds for a provider from a [Tiozin Family](concepts/family.md). Spark and DuckDB families are included. Other families can be installed as packages.
+Swap the `NoOp*` kinds for plugins from a [Tiozin Family](concepts/family.md). The reference families [tio_spark](https://github.com/fdmorison/tio_spark) and [tio_duckdb](https://github.com/fdmorison/tio_duckdb) run jobs on Spark and DuckDB, and each one installs as a Tiozin extra.
 
 - [Working with Jobs](working-with-jobs.md): all ways to define a job, pipeline shapes, and templating
 - [Jobs](concepts/jobs.md): full field reference and execution model

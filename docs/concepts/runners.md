@@ -93,5 +93,5 @@ The choice is determined by what `write()` returns and what `run()` knows how to
 Runners are provided by provider families:
 
 - **`NoOpRunner`** from `tio_kernel`: accepts any plan and returns an empty list without executing anything. Use for testing, dry-runs, and local development.
-- **`SparkRunner`** and **`SparkIcebergRunner`** from `tio_spark`. See [tio_spark](../tio_spark/index.md).
-- **`DuckdbRunner`** from `tio_duckdb`. See [tio_duckdb](../tio_duckdb/index.md).
+- **`SparkRunner`** and **`SparkIcebergRunner`** from `tio_spark`. See [tio_spark](https://github.com/fdmorison/tio_spark).
+- **`DuckdbRunner`** from `tio_duckdb`. See [tio_duckdb](https://github.com/fdmorison/tio_duckdb).
