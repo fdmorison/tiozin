@@ -76,16 +76,16 @@ dev = [
   { include-group = "test" },
 ]
 test = [
-  "pytest ==9.0.3",
-  "pytest-cov ==7.0.0",
+  "pytest==9.2.0",
+  "pytest-cov==7.1.0",
   "freezegun ==1.5.5",
   "assertpy ==1.1",
   "pyarrow ==23.0.1",
   "tiozin[tio_kernel]",
 ]
 lint = [
-  "ruff ==0.14.10",
-  "pre-commit ==4.3.0",
+  "ruff==0.17.5",
+  "pre-commit==4.7.0",
   "pyarrow-stubs>=20.0.0.20260625",
 ]
 
