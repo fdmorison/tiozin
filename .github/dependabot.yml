@@ -4,17 +4,20 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    versioning-strategy: "increase"
+    versioning-strategy: "increase-if-necessary"
     commit-message:
       prefix: "fix(core)"
       prefix-development: "chore(core)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
-      runtime-minor-patch:
+      runtime-patch:
         dependency-type: "production"
-        update-types: ["minor", "patch"]
-      dev-minor-patch:
+        update-types: ["patch"]
+      dev-patch:
         dependency-type: "development"
-        update-types: ["minor", "patch"]
+        update-types: ["patch"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
