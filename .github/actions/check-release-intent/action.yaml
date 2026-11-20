@@ -21,18 +21,32 @@ runs:
         TOUCHED_PRODUCTION: ${{ steps.filter.outputs.release }}
       with:
         script: |
-          const PRODUCTION_CHANGE_TYPE = /^(feat|fix|perf|refactor|style|build|docs)(\(.+\))?!?:/;
+          const PRODUCTION_TYPES = ["feat", "fix", "perf", "refactor", "style", "build", "docs"];
+          const NON_PRODUCTION_TYPES = ["chore", "test", "ci"];
+          const PRODUCTION_PATHS = ["tiozin/**/*.py", "pyproject.toml", "docs/**", "README.md"];
+          const TITLE_TYPE = /^(\w+)(\(.+\))?!?:/;
 
           const { data: pr } = await github.rest.pulls.get({
             ...context.repo,
             pull_number: context.payload.pull_request.number,
           });
           const title = pr.title;
-          const titleChangesProduction = PRODUCTION_CHANGE_TYPE.test(title);
+          const type = title.match(TITLE_TYPE)?.[1];
+          const titleChangesProduction = PRODUCTION_TYPES.includes(type);
           const codeChangesProduction = process.env.TOUCHED_PRODUCTION === "true";
 
           if (titleChangesProduction === codeChangesProduction) {
             console.log("✅ Title and code changes agree on production changes");
             return;
           }
-          core.setFailed(`PR title "${title}" and the files it touches disagree on production changes`);
+          if (codeChangesProduction) {
+            core.setFailed(
+              `PR touches production files (${PRODUCTION_PATHS.join(", ")}); ` +
+              `its title type must be one of: ${PRODUCTION_TYPES.join(", ")}`
+            );
+            return;
+          }
+          core.setFailed(
+            `PR title type "${type}" is for production changes, but the PR touches no production files; ` +
+            `use one of: ${NON_PRODUCTION_TYPES.join(", ")}`
+          );
