@@ -2,6 +2,16 @@
 
 All examples live under [`examples/jobs/`](../examples/jobs/) in the repository. Each is a self-contained job manifest runnable directly with `tiozin run`.
 
+## Installing the Families
+
+The `dummy.yaml` job runs on `tio_kernel` alone, which ships with Tiozin. The Spark and DuckDB jobs run on the reference families [tio_spark](https://github.com/fdmorison/tio_spark) and [tio_duckdb](https://github.com/fdmorison/tio_duckdb). Install both before running them:
+
+```bash
+pip install "tiozin[tio_spark35,tio_duckdb]"
+```
+
+The Iceberg jobs load `iceberg-spark-runtime-3.5_2.12`, the [Iceberg runtime](https://iceberg.apache.org/multi-engine-support/) built for Spark 3.5, so they need the `tio_spark35` extra.
+
 ## How the folder structure works
 
 The `examples/jobs/` tree is also a reference for how to organize jobs in a real repository. Jobs are grouped by engine and then by data product, and each job within a product gets its own YAML file named after its layer or purpose:
@@ -94,7 +104,7 @@ A realistic multi-job data pipeline using the complete works of Shakespeare as t
 
 ## Iceberg
 
-Three Spark jobs that read and write [Apache Iceberg](https://iceberg.apache.org/) tables. All of them use [`SparkIcebergRunner`](tio_spark/iceberg-runner.md) with a `hadoop` catalog named `example`, a warehouse at `.output/iceberg`, and `iceberg-spark-runtime-3.5_2.12:1.7.1` in `jars_packages`.
+Three Spark jobs that read and write [Apache Iceberg](https://iceberg.apache.org/) tables. All of them use [`SparkIcebergRunner`](https://github.com/fdmorison/tio_spark/blob/main/docs/iceberg-runner.md) with a `hadoop` catalog named `example`, a warehouse at `.output/iceberg`, and `iceberg-spark-runtime-3.5_2.12:1.7.1` in `jars_packages`.
 
 | File | What it shows |
 |---|---|

@@ -87,12 +87,14 @@ Families are independent packages. Users install Tiozin and any families they ne
 pip install tiozin tio_dilbert
 ```
 
-The first-party families `tio_spark` and `tio_duckdb` can also be installed as extras, which is a convenience alias for the same packages:
+The reference families [tio_spark](https://github.com/fdmorison/tio_spark) and [tio_duckdb](https://github.com/fdmorison/tio_duckdb) live in their own repositories, like any other family. Tiozin also offers them as extras, which install the same packages:
 
 ```bash
-pip install tiozin[tio_spark]
-pip install tiozin[tio_duckdb]
+pip install "tiozin[tio_duckdb]"
+pip install "tiozin[tio_spark35]"
 ```
+
+The Spark family has one extra per PySpark choice. See [tio_spark](https://github.com/fdmorison/tio_spark/blob/main/docs/installation.md) for all of them.
 
 `tio_kernel` is the exception: it ships with Tiozin and requires no separate installation. The next section explains what it provides.
 
@@ -164,7 +166,7 @@ These no-ops allow Tiozin to boot, validate configurations, and run dry-runs wit
 
 ### No-ops are not for production execution
 
-The no-op execution plugins listed above are not intended for production workloads. For real execution, install a provider family such as `tio_spark` or `tio_duckdb`.
+The no-op execution plugins listed above are not intended for production workloads. For real execution, install a provider family such as [tio_spark](https://github.com/fdmorison/tio_spark) or [tio_duckdb](https://github.com/fdmorison/tio_duckdb).
 
 Other `tio_kernel` plugins are production-ready. `FileJobRegistry`, for example, reads job manifests from local paths or any object storage bucket on AWS, GCP, or Azure.
 

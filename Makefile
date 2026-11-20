@@ -12,7 +12,7 @@ install:
 	@uv pip install -e .
 
 install-dev:
-	@uv sync --all-groups
+	@uv sync --extra tio_spark35 --extra tio_duckdb
 	@uv pip install -e .
 	@uv run pre-commit install
 	@rm -rf *.egg-info
@@ -26,7 +26,7 @@ check:
 	@uv run ruff format --check
 
 test: clean
-	@uv run pytest -vvv .
+	@uv run --extra tio_spark35 pytest -vvv .
 
 build:
 	@uv build

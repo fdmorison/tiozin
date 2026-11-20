@@ -6,19 +6,20 @@ A reference for contributors and platform engineers. After reading, you will kno
 
 ## How Dependencies Are Grouped
 
-Tiozin has a core set and one optional extra per provider family. The Spark family also has `tio_spark_base`, an empty extra described under [Tio Spark](#tio-spark).
+Tiozin has a core set and optional extras per provider family. The Spark family has three extras, described under [Tio Spark](#tio-spark).
 
 The core installs with `pip install tiozin` and carries everything the framework needs to parse jobs, render templates, and run the compose engine. It does not include any execution engine.
 
-`tio_kernel` is always installed as a family. The `tiozin[tio_kernel]` extra installs only the external libraries required by tio_kernel plugins that depend on them (state and secret backends). `tio_duckdb` and `tio_spark` follow the same pattern for their execution engines.
+`tio_kernel` is always installed as a family. The `tiozin[tio_kernel]` extra installs only the external libraries required by tio_kernel plugins that depend on them (state and secret backends). The `tio_duckdb` and `tio_spark` extras install the reference families [tio_duckdb](https://github.com/fdmorison/tio_duckdb) and [tio_spark](https://github.com/fdmorison/tio_spark), which are published as their own packages.
 
 | Install | Adds | Approximate footprint |
 |---------|------|-----------------------|
 | `pip install tiozin` | Core framework | ~15 MB |
 | `pip install tiozin[tio_kernel]` | External libs for state and secret backends | ~230 MB |
-| `pip install tiozin[tio_duckdb]` | DuckDB engine | ~56 MB |
-| `pip install tiozin[tio_spark]` | Spark engine | ~350 MB |
-| `pip install tiozin[tio_spark_base]` | No packages | None |
+| `pip install tiozin[tio_duckdb]` | The `tio_duckdb` family and the DuckDB engine | ~56 MB |
+| `pip install tiozin[tio_spark]` | The `tio_spark` family, without PySpark | < 1 MB |
+| `pip install tiozin[tio_spark35]` | The `tio_spark` family and PySpark 3.5 | ~350 MB |
+| `pip install tiozin[tio_spark40]` | The `tio_spark` family and PySpark 4.0 | ~470 MB |
 
 ## Core Dependencies
 
@@ -41,6 +42,8 @@ These install with every Tiozin and total roughly 15 MB. None of them is an exec
 | [single-source](https://github.com/rabbit72/single-source) | < 0.1 MB | Foundation for Tiozin version tracking, so it never falls out of sync with the installed package |
 | [python-slugify](https://github.com/un33k/python-slugify) | < 0.1 MB | Utility for creating normalized, filesystem-safe and database-safe slugs for naming ETL steps (Inputs, Transforms, Outputs) and jobs |
 | [pyhumps](https://humps.readthedocs.io/) | < 0.1 MB | Utility for splitting camelCase and PascalCase words when job and step names are slugified, and for converting snake_case plugin options into the camelCase reader options Spark expects during schema inference |
+| [datacontract-cli](https://cli.datacontract.com/) | - | Temporary, used by the schema converters until they are rewritten |
+| [databricks-sdk](https://databricks-sdk-py.readthedocs.io/) | ~11 MB | Temporary, present only because of runtime imports in `datacontract-cli` |
 
 ## Optional Family Dependencies
 
@@ -54,11 +57,11 @@ These install with every Tiozin and total roughly 15 MB. None of them is an exec
 | [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) | ~1 MB direct, ~25 MB with transitives | Backs the AWS Parameter Store secret registry. Most of the weight is `botocore` (~23 MB) |
 | [google-cloud-secret-manager](https://cloud.google.com/secret-manager/docs/reference/libraries) | ~1 MB direct, ~35 MB with transitives | Backs the [GCP Secret Manager](https://cloud.google.com/secret-manager/docs) registry. Pulls `grpc` (~16 MB) and the Google API/auth/protobuf stack |
 
-The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyarrow]`. If `pyarrow` is already present in the environment (e.g. the image already has `tio_spark` installed), that cost is not duplicated.
+The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyarrow]`. If `pyarrow` is already present in the environment (e.g. the image already has `tio_spark35` or `tio_spark40` installed), that cost is not duplicated.
 
 ### Tio DuckDB
 
-`pip install tiozin[tio_duckdb]` adds the embedded analytical engine, roughly 56 MB.
+`pip install tiozin[tio_duckdb]` installs the `tio_duckdb` family, which brings the embedded analytical engine, roughly 56 MB.
 
 | Library | Approximate size | Role |
 |---------|------------------|------|
@@ -66,14 +69,21 @@ The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyar
 
 ### Tio Spark
 
-`pip install tiozin[tio_spark]` adds the Spark engine, roughly 350 MB.
+Each Spark extra installs the `tio_spark` family. They differ in the PySpark version they bring, if any.
+
+| Install | PySpark | Approximate footprint |
+|---------|---------|-----------------------|
+| `pip install tiozin[tio_spark]` | None | < 1 MB |
+| `pip install tiozin[tio_spark35]` | 3.5 | ~350 MB |
+| `pip install tiozin[tio_spark40]` | 4.0 | ~470 MB |
+
+`tiozin[tio_spark]` is for clusters that already provide Spark, such as EMR, Dataproc, or Databricks. Those environments must provide PySpark and any other packages they need themselves.
+
+`tio_spark35` and `tio_spark40` pin different PySpark versions, so they cannot be installed together. Both install this library:
 
 | Library | Approximate size | Role |
 |---------|------------------|------|
-| [pyspark](https://spark.apache.org/docs/latest/api/python/) | ~340 MB | The [Apache Spark](https://spark.apache.org/docs/latest/) execution engine |
-| [databricks-sdk](https://databricks-sdk-py.readthedocs.io/) | ~11 MB | Present only because of runtime imports in `datacontract-cli` |
-
-`tio_spark` includes `tio_spark_base`, an extra that installs no packages. Depending on `tiozin[tio_spark_base]` lets a package rely on the Spark family without installing `pyspark` or `databricks-sdk`, for environments that provide PySpark another way. Those environments must provide any other packages they need themselves.
+| [pyspark](https://spark.apache.org/docs/latest/api/python/) | ~340 MB on 3.5, ~460 MB on 4.0 | The [Apache Spark](https://spark.apache.org/docs/latest/) execution engine |
 
 ## Related
 

@@ -5,7 +5,7 @@ When adding a plugin to the `tio_spark` family, use its convenience bases instea
 ```python
 from pyspark.sql import DataFrame
 
-from tiozin.family.tio_spark import SparkTransform
+from tio_spark import SparkTransform
 
 
 class AcmeSparkTransform(SparkTransform):

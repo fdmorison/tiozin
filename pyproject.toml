@@ -42,6 +42,7 @@ dependencies = [
   "openlineage-sql ~=1.45.0",
   # Temporary — to be removed once schema converters are rewritten
   "datacontract-cli ~=0.11.9",
+  "databricks-sdk ~=0.102.0",
 ]
 
 [project.optional-dependencies]
@@ -50,16 +51,17 @@ tio_kernel = [
   "boto3 ~=1.38",
   "google-cloud-secret-manager ~=2.23",
 ]
-tio_spark_base = []
 tio_spark = [
-  "tiozin[tio_spark_base]",
-  "pyspark[connect] >=3.5.0,<4.0.0",
-  # NOTE: Temporary dependencies (to be removed)
-  # Required due to unnecessary runtime imports in datacontract-cli schema converters
-  "databricks-sdk ~=0.102.0",
+  "tio_spark",
+]
+tio_spark35 = [
+  "tio_spark[pyspark35]",
+]
+tio_spark40 = [
+  "tio_spark[pyspark40]",
 ]
 tio_duckdb = [
-  "duckdb>=1.4.4,<2.0.0",
+  "tio_duckdb",
 ]
 aws = [
   "boto3 ~=1.38",
@@ -77,13 +79,9 @@ test = [
   "pytest ==9.0.3",
   "pytest-cov ==7.0.0",
   "freezegun ==1.5.5",
-  "testcontainers ==4.13.2",
-  "psycopg2-binary ==2.9.11",
   "assertpy ==1.1",
-  "pandas ==2.3.3",
   "pyarrow ==23.0.1",
-  "numpy ==1.26.4",
-  "tiozin[tio_spark,tio_duckdb,tio_kernel]",
+  "tiozin[tio_kernel]",
 ]
 lint = [
   "ruff ==0.14.10",
@@ -96,8 +94,6 @@ tiozin = "tiozin.cli:main"
 
 [project.entry-points."tiozin.family"]
 tio_kernel = "tiozin.family.tio_kernel"
-tio_spark = "tiozin.family.tio_spark"
-tio_duckdb = "tiozin.family.tio_duckdb"
 
 [project.urls]
 Homepage = "https://github.com/fdmorison/tiozin"
@@ -106,7 +102,12 @@ Issues = "https://github.com/fdmorison/tiozin/issues"
 
 [tool.uv]
 required-version = ">=0.8.1"
-
+conflicts = [
+  [
+    { extra = "tio_spark35" },
+    { extra = "tio_spark40" },
+  ],
+]
 
 [[tool.uv.index]]
 name = "pypi"

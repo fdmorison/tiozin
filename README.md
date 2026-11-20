@@ -119,8 +119,8 @@ Tiozin is built around a small set of principles that are not features but const
 - [Creating Pluggable Tiozins](https://github.com/fdmorison/tiozin/blob/main/docs/extending/tiozins.md)
 - [Tio Proxy: Adding Cross Cutting Family Features](https://github.com/fdmorison/tiozin/blob/main/docs/extending/proxies.md)
 - [Tio Kernel - The Core Family](https://github.com/fdmorison/tiozin/blob/main/docs/tio_kernel/index.md)
-- [Tio Spark - Spark Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_spark/index.md)
-- [Tio Duckdb - DuckDB Family Example](https://github.com/fdmorison/tiozin/blob/main/docs/tio_duckdb/index.md)
+- [Tio Spark - Spark Reference Family](https://github.com/fdmorison/tio_spark)
+- [Tio Duckdb - DuckDB Reference Family](https://github.com/fdmorison/tio_duckdb)
 
 ### How-to Guides
 - [How to Work with Incremental Backlogs](https://github.com/fdmorison/tiozin/blob/main/docs/how-to/batches.md)
