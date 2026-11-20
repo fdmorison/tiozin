@@ -22,8 +22,11 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Setup environment
-        uses: fdmorison/tiozin/.github/actions/setup-env@main
+        uses: ./.github/actions/setup-env
 
       - name: Build Package
         run: make build
@@ -41,10 +44,13 @@ jobs:
       released: ${{ steps.rp.outputs.release_created }}
       tag: ${{ steps.rp.outputs.tag_name }}
     steps:
-      - name: Setup environment
-        uses: fdmorison/tiozin/.github/actions/setup-env@main
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
 
       - name: Release Please (draft)
         uses: googleapis/release-please-action@v4
@@ -59,8 +65,11 @@ jobs:
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Setup environment
-        uses: fdmorison/tiozin/.github/actions/setup-env@main
+        uses: ./.github/actions/setup-env
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
