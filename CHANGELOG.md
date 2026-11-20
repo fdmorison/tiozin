@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.2](https://github.com/fdmorison/tiozin/compare/tiozin-v4.1.1...tiozin-v4.1.2) (2026-11-20)
+
+
+### Bug Fixes
+
+* **core:** Bump dependencies to resolve Dependabot security alerts ([#377](https://github.com/fdmorison/tiozin/issues/377)) ([917be88](https://github.com/fdmorison/tiozin/commit/917be8869ea3a0a0ea10cbc65f890b9aa9e281c5))
+
 ## [4.1.1](https://github.com/fdmorison/tiozin/compare/tiozin-v4.1.0...tiozin-v4.1.1) (2026-11-16)
 
 
