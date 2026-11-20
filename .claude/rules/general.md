@@ -36,9 +36,7 @@ is defined by:
 - `tiozin/__init__.py`
 - `tiozin/api/__init__.py`
 - `tiozin/utils/__init__.py`
-- `tiozin/family/tio_duckdb/__init__.py`
 - `tiozin/family/tio_kernel/__init__.py`
-- `tiozin/family/tio_spark/__init__.py`
 
 ## 6. `Input`, `Transform`, and `Output` Tiozins must remain stateless
 

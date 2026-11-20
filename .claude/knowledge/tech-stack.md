@@ -20,9 +20,9 @@ Any filesystem or protocol supported by `fsspec`.
 
 ## Engines
 
-Built-in families currently target:
-- Spark
-- DuckDB
+The reference families, maintained in their own repositories, target:
+- Spark (`tio_spark`): https://github.com/fdmorison/tio_spark
+- DuckDB (`tio_duckdb`): https://github.com/fdmorison/tio_duckdb
 
 Other families may target technologies such as:
 - Flink

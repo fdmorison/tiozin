@@ -7,7 +7,7 @@ When adding a plugin to the `tio_duckdb` family, use its convenience bases inste
 ```python
 from duckdb import DuckDBPyRelation
 
-from tiozin.family.tio_duckdb import DuckdbTransform
+from tio_duckdb import DuckdbTransform
 
 
 class AcmeDuckdbTransform(DuckdbTransform):
