@@ -34,7 +34,7 @@ dependencies = [
   "openlineage-python ~=1.45.0",
   # Utilities — small helpers with focused roles
   "typer ~=0.20",
-  "uuid-utils ~=0.12",
+  "uuid-utils>=0.12,<2.0",
   "python-slugify ~=8.0.4",
   "inflection ~=0.5.1",
   "python-rapidjson ~=1.23",
