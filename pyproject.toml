@@ -82,7 +82,7 @@ test = [
   "assertpy ==1.1",
   "pandas ==2.3.3",
   "pyarrow ==23.0.1",
-  "numpy ==1.26.4",
+  "numpy==2.4.6",
   "tiozin[tio_spark,tio_duckdb,tio_kernel]",
 ]
 lint = [
