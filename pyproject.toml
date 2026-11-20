@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
   # Structural — framework won't work without these
   "pydantic ~=2.12",
-  "pydantic-settings ~=2.13.1",
+  "pydantic-settings ~=2.14.2",
   "environs ~=14.3",
   "single-source ~=0.4",
   "structlog ~=25.5",
@@ -30,7 +30,7 @@ dependencies = [
   "ruamel-yaml ~=0.18",
   "pendulum ~=3.1.0",
   "wrapt ~=2.0.1",
-  "fsspec[s3,gcs,adl,sftp] ~=2026.2.0",
+  "fsspec[s3,gcs,adl,sftp] ~=2026.6.0",
   "openlineage-python ~=1.45.0",
   # Utilities — small helpers with focused roles
   "typer ~=0.20",
@@ -41,7 +41,7 @@ dependencies = [
   "python-benedict ~=0.38.0",
   "openlineage-sql ~=1.45.0",
   # Temporary — to be removed once schema converters are rewritten
-  "datacontract-cli ~=0.11.7",
+  "datacontract-cli ~=0.11.9",
 ]
 
 [project.optional-dependencies]
@@ -74,14 +74,14 @@ dev = [
   { include-group = "test" },
 ]
 test = [
-  "pytest ==8.4.2",
+  "pytest ==9.0.3",
   "pytest-cov ==7.0.0",
   "freezegun ==1.5.5",
   "testcontainers ==4.13.2",
   "psycopg2-binary ==2.9.11",
   "assertpy ==1.1",
   "pandas ==2.3.3",
-  "pyarrow ==23.0.0",
+  "pyarrow ==23.0.1",
   "numpy ==1.26.4",
   "tiozin[tio_spark,tio_duckdb,tio_kernel]",
 ]
