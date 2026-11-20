@@ -55,10 +55,10 @@ tio_spark = [
   "tio_spark",
 ]
 tio_spark35 = [
-  "tio_spark[pyspark35] >=0.1.1",
+  "tio_spark[pyspark35]",
 ]
 tio_spark40 = [
-  "tio_spark[pyspark40] >=0.1.1",
+  "tio_spark[pyspark40]",
 ]
 tio_duckdb = [
   "tio_duckdb",
@@ -81,7 +81,6 @@ test = [
   "freezegun ==1.5.5",
   "assertpy ==1.1",
   "pyarrow ==23.0.1",
-  "pyspark >=3.5.0",
   "tiozin[tio_kernel]",
 ]
 lint = [

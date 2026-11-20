@@ -2912,7 +2912,7 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "py4j", marker = "extra == 'extra-6-tiozin-tio-spark35'" },
+    { name = "py4j" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/95/ce/81e53e729790556e3983e95de1a7d5df91a34adfcd34b5a5ab0e0c6e9b33/pyspark-3.5.9.tar.gz", hash = "sha256:ea27adc39ddac9413b8951e45aa748cbed6c785971b81386efc41938f6243d93", size = 317858593, upload-time = "2026-07-16T08:52:04.494Z" }
 
@@ -2937,7 +2937,7 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "py4j", marker = "extra == 'extra-6-tiozin-tio-spark40' or extra != 'extra-6-tiozin-tio-spark35'" },
+    { name = "py4j" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3e/ee/2377eee07ee94739e953231558040a5ee671092780a3eed0a9e175f059e7/pyspark-4.0.5.tar.gz", hash = "sha256:a0d44b0e7faf0458ad83b7aa664e7ed8b96beed8a55d66ce3b0dfac2309dfca6", size = 434376598, upload-time = "2026-10-27T18:39:58.059Z" }
 
@@ -3659,8 +3659,6 @@ dev = [
     { name = "pre-commit" },
     { name = "pyarrow" },
     { name = "pyarrow-stubs" },
-    { name = "pyspark", version = "3.5.9", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-6-tiozin-tio-spark35'" },
-    { name = "pyspark", version = "4.0.5", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-6-tiozin-tio-spark40' or extra != 'extra-6-tiozin-tio-spark35'" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -3675,8 +3673,6 @@ test = [
     { name = "assertpy" },
     { name = "freezegun" },
     { name = "pyarrow" },
-    { name = "pyspark", version = "3.5.9", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-6-tiozin-tio-spark35'" },
-    { name = "pyspark", version = "4.0.5", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-6-tiozin-tio-spark40' or extra != 'extra-6-tiozin-tio-spark35'" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "tiozin", extra = ["tio-kernel"] },
@@ -3708,8 +3704,8 @@ requires-dist = [
     { name = "structlog", specifier = "~=25.5" },
     { name = "tio-duckdb", marker = "extra == 'tio-duckdb'" },
     { name = "tio-spark", marker = "extra == 'tio-spark'" },
-    { name = "tio-spark", extras = ["pyspark35"], marker = "extra == 'tio-spark35'", specifier = ">=0.1.1" },
-    { name = "tio-spark", extras = ["pyspark40"], marker = "extra == 'tio-spark40'", specifier = ">=0.1.1" },
+    { name = "tio-spark", extras = ["pyspark35"], marker = "extra == 'tio-spark35'" },
+    { name = "tio-spark", extras = ["pyspark40"], marker = "extra == 'tio-spark40'" },
     { name = "typer", specifier = "~=0.20" },
     { name = "uuid-utils", specifier = "~=0.12" },
     { name = "wrapt", specifier = "~=2.0.1" },
@@ -3723,7 +3719,6 @@ dev = [
     { name = "pre-commit", specifier = "==4.3.0" },
     { name = "pyarrow", specifier = "==23.0.1" },
     { name = "pyarrow-stubs", specifier = ">=20.0.0.20260625" },
-    { name = "pyspark", specifier = ">=3.5.0" },
     { name = "pytest", specifier = "==9.0.3" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "ruff", specifier = "==0.14.10" },
@@ -3738,7 +3733,6 @@ test = [
     { name = "assertpy", specifier = "==1.1" },
     { name = "freezegun", specifier = "==1.5.5" },
     { name = "pyarrow", specifier = "==23.0.1" },
-    { name = "pyspark", specifier = ">=3.5.0" },
     { name = "pytest", specifier = "==9.0.3" },
     { name = "pytest-cov", specifier = "==7.0.0" },
     { name = "tiozin", extras = ["tio-kernel"] },
