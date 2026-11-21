@@ -40,9 +40,6 @@ dependencies = [
   "python-rapidjson ~=1.23",
   "python-benedict ~=0.38.0",
   "openlineage-sql ~=1.45.0",
-  # Temporary — to be removed once schema converters are rewritten
-  "datacontract-cli ~=0.11.9",
-  "databricks-sdk ~=0.102.0",
 ]
 
 [project.optional-dependencies]
@@ -80,6 +77,7 @@ test = [
   "pytest-cov ==7.0.0",
   "freezegun ==1.5.5",
   "assertpy ==1.1",
+  "jsonschema ==4.26.0",
   "pyarrow ==23.0.1",
   "tiozin[tio_kernel]",
 ]

@@ -42,8 +42,6 @@ These install with every Tiozin and total roughly 15 MB. None of them is an exec
 | [single-source](https://github.com/rabbit72/single-source) | < 0.1 MB | Foundation for Tiozin version tracking, so it never falls out of sync with the installed package |
 | [python-slugify](https://github.com/un33k/python-slugify) | < 0.1 MB | Utility for creating normalized, filesystem-safe and database-safe slugs for naming ETL steps (Inputs, Transforms, Outputs) and jobs |
 | [pyhumps](https://humps.readthedocs.io/) | < 0.1 MB | Utility for splitting camelCase and PascalCase words when job and step names are slugified, and for converting snake_case plugin options into the camelCase reader options Spark expects during schema inference |
-| [datacontract-cli](https://cli.datacontract.com/) | - | Temporary, used by the schema converters until they are rewritten |
-| [databricks-sdk](https://databricks-sdk-py.readthedocs.io/) | ~11 MB | Temporary, present only because of runtime imports in `datacontract-cli` |
 
 ## Optional Family Dependencies
 
