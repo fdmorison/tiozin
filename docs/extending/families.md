@@ -87,11 +87,11 @@ Families are independent packages. Users install Tiozin and any families they ne
 pip install tiozin tio_dilbert
 ```
 
-The reference families [tio_spark](https://github.com/fdmorison/tio_spark) and [tio_duckdb](https://github.com/fdmorison/tio_duckdb) live in their own repositories, like any other family. Tiozin also offers them as extras, which install the same packages:
+The reference families [tio_spark](https://github.com/fdmorison/tio_spark) and [tio_duckdb](https://github.com/fdmorison/tio_duckdb) live in their own repositories and install like any other family:
 
 ```bash
-pip install "tiozin[tio_duckdb]"
-pip install "tiozin[tio_spark35]"
+pip install tio_duckdb
+pip install "tio_spark[pyspark35]"
 ```
 
 The Spark family has one extra per PySpark choice. See [tio_spark](https://github.com/fdmorison/tio_spark/blob/main/docs/installation.md) for all of them.

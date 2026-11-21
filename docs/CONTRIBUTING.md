@@ -49,6 +49,8 @@ Install dependencies and pre-commit hooks:
 make install-dev
 ```
 
+This also installs the reference families [tio_spark](https://github.com/fdmorison/tio_spark), with PySpark 3.5, and [tio_duckdb](https://github.com/fdmorison/tio_duckdb), which the [example jobs](examples.md) run on. The [tia_databricks](https://github.com/fdmorison/tia_databricks) family comes along too, without [Databricks Connect](https://docs.databricks.com/aws/en/dev-tools/databricks-connect/).
+
 To install only runtime dependencies, run `make install` instead.
 
 ## Testing
@@ -58,6 +60,8 @@ Run the full suite with:
 ```bash
 make test
 ```
+
+The suite runs with core dependencies only and removes every family that `make install-dev` adds, so run `make install-dev` again before running the [example jobs](examples.md).
 
 Tests are split across two trees:
 
