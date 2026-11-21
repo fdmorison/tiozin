@@ -56,9 +56,23 @@ Each event follows the OpenLineage `RunEvent` spec:
       "facets": {
         "schema": {
           "fields": [
-            {"name": "order_id"   , "type": "long"},
-            {"name": "customer.id", "type": "long"},
-            {"name": "items[].sku", "type": "string"}
+            {"name": "order_id", "type": "integer", "fields": []},
+            {
+              "name": "customer",
+              "type": "object",
+              "fields": [{"name": "id", "type": "integer", "fields": []}]
+            },
+            {
+              "name": "items",
+              "type": "array",
+              "fields": [
+                {
+                  "name": "_element",
+                  "type": "object",
+                  "fields": [{"name": "sku", "type": "string", "fields": []}]
+                }
+              ]
+            }
           ]
         }
       }
@@ -79,7 +93,7 @@ The job `namespace` comes from the job's `namespace` field. When not set explici
 
 Inputs and outputs in the event are the physical datasets reported by each step. File plugins report the actual paths. Postgres plugins report the target table. Steps that do not override `external_datasets()` fall back to a logical dataset derived from the step's taxonomy fields.
 
-When a dataset carries a `schema`, it is emitted as a `SchemaDatasetFacet`. Nested structs are flattened with dot notation (`customer.id`). Array elements use bracket notation (`items[].sku`). Arrays of scalar values use the `array<type>` format (`array<string>`). Datasets without a schema emit an empty `facets` object.
+When a dataset carries a `schema`, it is emitted as a [`SchemaDatasetFacet`](https://openlineage.io/docs/spec/facets/dataset-facets/schema). Each field holds the name, logical type, and description of a property. Nested properties sit under the `fields` of their parent: an object lists its properties, an array has one field named `_element` for its elements, and a map has a `key` field and a `value` field. Datasets without a schema emit an empty `facets` object.
 
 
 ## Authentication
