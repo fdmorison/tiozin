@@ -17,6 +17,8 @@ properties:
       - name: age
         logicalType: integer
         physicalType: int
+        logicalTypeOptions:
+          format: i32
 
   - name: friends
     logicalType: array

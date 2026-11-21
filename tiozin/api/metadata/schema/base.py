@@ -27,7 +27,7 @@ class SchemaRegistry(Registry[Schema]):
     (e.g., subject_template, default_version) via `config`.
 
     Attributes:
-        show_schema: If True, logs schemas after `get()`.
+        show_schema: If True, prints schemas after `get()`.
         subject_template: Template to resolve subject when not provided.
         default_version: Default schema version (e.g., "latest").
 

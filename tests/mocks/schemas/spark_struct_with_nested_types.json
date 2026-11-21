@@ -1,0 +1,58 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "address",
+      "type": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "city",
+            "type": "string",
+            "nullable": false,
+            "metadata": {
+              "comment": "City name"
+            }
+          }
+        ]
+      },
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "friends",
+      "type": {
+        "type": "array",
+        "elementType": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "name",
+              "type": "string",
+              "nullable": true,
+              "metadata": {}
+            }
+          ]
+        },
+        "containsNull": false
+      },
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "scores",
+      "type": {
+        "type": "map",
+        "keyType": "string",
+        "valueType": {
+          "type": "array",
+          "elementType": "long",
+          "containsNull": true
+        },
+        "valueContainsNull": true
+      },
+      "nullable": false,
+      "metadata": {}
+    }
+  ]
+}

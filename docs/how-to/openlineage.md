@@ -42,8 +42,12 @@ Each event follows the [OpenLineage RunEvent spec](https://openlineage.io/docs/s
       "facets": {
         "schema": {
           "fields": [
-            {"name": "order_id", "type": "long"},
-            {"name": "customer.id", "type": "long"}
+            {"name": "order_id", "type": "integer", "fields": []},
+            {
+              "name": "customer",
+              "type": "object",
+              "fields": [{"name": "id", "type": "integer", "fields": []}]
+            }
           ]
         }
       }
@@ -63,7 +67,7 @@ The job `namespace` comes from the job's `namespace` field. When not set, it is 
 
 By default, each step reports a logical dataset derived from the job's taxonomy. Override `external_datasets()` to report the physical dataset the step actually touches (a table, a path, a topic).
 
-When a dataset has a schema attached, it is included in the lineage event. Nested structs use dot notation (`customer.id`). Array elements use bracket notation (`items[].sku`).
+When a dataset has a schema attached, it is included in the lineage event as a [schema facet](https://openlineage.io/docs/spec/facets/dataset-facets/schema). Each field carries the name, logical type, and description of a property, and nested properties appear under the `fields` of their parent. An array has one nested field named `_element`, and a map has two, `key` and `value`.
 
 ## Emit level
 

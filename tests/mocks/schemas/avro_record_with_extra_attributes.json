@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "name": "customer",
+  "connect.name": "com.acme.Customer",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long",
+      "pii": false
+    },
+    {
+      "name": "email",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "avro.java.string": "String"
+        }
+      ],
+      "default": null,
+      "pii": true
+    },
+    {
+      "name": "created_at",
+      "type": {
+        "type": "long",
+        "connect.name": "org.apache.kafka.connect.data.Timestamp",
+        "connect.version": 1
+      }
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "Status",
+        "symbols": [
+          "ACTIVE",
+          "INACTIVE"
+        ],
+        "default": "ACTIVE",
+        "doc": "Status"
+      }
+    },
+    {
+      "name": "nanos",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-nanos"
+      }
+    }
+  ]
+}

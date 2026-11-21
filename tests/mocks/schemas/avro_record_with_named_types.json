@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "User",
+  "namespace": "com.acme",
+  "aliases": ["Person"],
+  "doc": "A user",
+  "fields": [
+    {"name": "id", "type": "long", "order": "descending", "aliases": ["user_id"]},
+    {"name": "age", "type": "int", "default": 18},
+    {"name": "nick", "type": ["string", "null"], "default": "anon"},
+    {"name": "note", "type": ["null", "string"], "default": null},
+    {"name": "hash", "type": {"type": "fixed", "name": "MD5", "size": 16}},
+    {"name": "status", "type": {"type": "enum", "name": "Status", "symbols": ["A", "B"]}},
+    {
+      "name": "home",
+      "type": {
+        "type": "record",
+        "name": "Address",
+        "namespace": "com.acme.geo",
+        "fields": [{"name": "city", "type": "string"}]
+      }
+    },
+    {"name": "work", "type": ["null", "com.acme.geo.Address"], "default": null},
+    {"name": "old_status", "type": "Status"},
+    {"name": "other_hash", "type": ["null", "MD5"], "default": null},
+    {"name": "places", "type": {"type": "array", "items": "com.acme.geo.Address"}}
+  ]
+}

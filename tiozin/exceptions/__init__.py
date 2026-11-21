@@ -37,6 +37,7 @@ from tiozin.api.runtime.job.exceptions import (
     JobRuntimeError,
 )
 from tiozin.api.metadata.schema.exceptions import (
+    PropertyNotFoundError,
     SchemaError,
     SchemaNotFoundError,
     SchemaViolationError,
@@ -78,6 +79,7 @@ __all__ = [
     "JobError",
     "JobNotFoundError",
     "JobAlreadyExistsError",
+    "PropertyNotFoundError",
     "SchemaError",
     "SchemaViolationError",
     "SchemaNotFoundError",

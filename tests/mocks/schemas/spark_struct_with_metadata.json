@@ -1,0 +1,32 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "email",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "comment": "Email address",
+        "classification": "pii",
+        "tags": [
+          "contact"
+        ],
+        "source": "crm"
+      }
+    },
+    {
+      "name": "phone",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "customProperties": [
+          {
+            "property": "source",
+            "value": "crm",
+            "description": "Origin"
+          }
+        ]
+      }
+    }
+  ]
+}

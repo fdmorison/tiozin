@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "name": "payments",
+  "fields": [
+    {
+      "name": "amount",
+      "type": {
+        "type": "fixed",
+        "name": "payments.amount",
+        "size": 8,
+        "logicalType": "decimal",
+        "precision": 18,
+        "scale": 4
+      }
+    },
+    {
+      "name": "paid_at",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    },
+    {
+      "name": "booked_at",
+      "type": [
+        "null",
+        {
+          "type": "long",
+          "logicalType": "local-timestamp-micros"
+        }
+      ],
+      "default": null
+    }
+  ]
+}
