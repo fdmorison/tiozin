@@ -1,31 +1,26 @@
-name: ''
-physicalName: ''
-physicalType: table
-logicalType: object
-description: null
-
 properties:
 
   - name: name
     logicalType: string
-    physicalType: StringType()
+    physicalType: string
 
   - name: profile
     logicalType: object
-    physicalType: StructType([StructField('age', IntegerType(), True)])
+    physicalType: '{"type": "struct", "fields": [{"name": "age", "type": "integer", "nullable": true, "metadata": {}}]}'
     properties:
       - name: age
         logicalType: integer
-        physicalType: IntegerType()
+        physicalType: integer
+        logicalTypeOptions:
+          format: i32
 
   - name: friends
     logicalType: array
-    physicalType: "ArrayType(StructType([StructField('name', StringType(), True)]), True)"
+    physicalType: '{"type": "array", "elementType": {"type": "struct", "fields": [{"name": "name", "type": "string", "nullable": true, "metadata": {}}]}, "containsNull": true}'
     items:
-      name: items
       logicalType: object
-      physicalType: StructType([StructField('name', StringType(), True)])
+      physicalType: '{"type": "struct", "fields": [{"name": "name", "type": "string", "nullable": true, "metadata": {}}]}'
       properties:
         - name: name
           logicalType: string
-          physicalType: StringType()
+          physicalType: string

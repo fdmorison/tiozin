@@ -1,0 +1,85 @@
+{
+  "type": "record",
+  "name": "events",
+  "fields": [
+    {
+      "name": "id",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "sequence",
+      "type": "int"
+    },
+    {
+      "name": "score",
+      "type": [
+        "null",
+        "float"
+      ],
+      "default": null
+    },
+    {
+      "name": "payload",
+      "type": "bytes"
+    },
+    {
+      "name": "event_date",
+      "type": {
+        "type": "int",
+        "logicalType": "date"
+      }
+    },
+    {
+      "name": "event_time",
+      "type": {
+        "type": "int",
+        "logicalType": "time-millis"
+      }
+    },
+    {
+      "name": "created_at",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    },
+    {
+      "name": "received_at",
+      "type": [
+        "null",
+        {
+          "type": "long",
+          "logicalType": "local-timestamp-micros"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "amount",
+      "type": {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 10,
+        "scale": 2
+      }
+    },
+    {
+      "name": "status",
+      "type": [
+        "null",
+        {
+          "type": "enum",
+          "name": "events.status",
+          "symbols": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        }
+      ],
+      "default": null
+    }
+  ]
+}

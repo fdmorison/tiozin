@@ -4,17 +4,25 @@ from datetime import datetime
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 from openlineage.client.generated.base import InputDataset, OutputDataset
+from openlineage.client.generated.schema_dataset import (
+    SchemaDatasetFacet,
+    SchemaDatasetFacetFields,
+)
 from pydantic import Field
 
 from tiozin import config
 from tiozin.utils import utcnow
 
 from ..model import Metadata
-from ..schema.model import Schema
+from ..schema.model import Property, Schema
 from .enums import JobType, ProcessingType, RunEventType
 
 if TYPE_CHECKING:
     from tiozin.api import Context, Dataset
+
+ARRAY_ELEMENT_FIELD = "_element"
+MAP_KEY_FIELD = "key"
+MAP_VALUE_FIELD = "value"
 
 
 class LineageDataset(Metadata):
@@ -54,7 +62,41 @@ class LineageDataset(Metadata):
         )
 
     def facets(self) -> dict:
-        return {"schema": self.schema.export("openlineage")} if self.schema else {}
+        if self.schema is None:
+            return {}
+
+        fields = [
+            self.to_facet_field(property.name, property)
+            for property in self.schema.properties or []
+        ]
+
+        return {"schema": SchemaDatasetFacet(fields=fields)}
+
+    def to_facet_field(self, name: str, property: Property) -> SchemaDatasetFacetFields:
+        """
+        Converts a property to a schema facet field, with its nested fields. An
+        array has one nested field named `_element`, and a map has `key` and
+        `value`.
+        """
+        children = [(child.name, child) for child in property.properties or []]
+
+        if property.items is not None:
+            children.append((ARRAY_ELEMENT_FIELD, property.items))
+
+        if property.map is not None:
+            children.append((MAP_KEY_FIELD, property.map.key))
+            children.append((MAP_VALUE_FIELD, property.map.value))
+
+        return SchemaDatasetFacetFields(
+            name=name,
+            type=property.logicalType,
+            description=property.description,
+            fields=[
+                self.to_facet_field(child_name, child)
+                for child_name, child in children
+                if child is not None
+            ],
+        )
 
 
 class LineageJob(Metadata):

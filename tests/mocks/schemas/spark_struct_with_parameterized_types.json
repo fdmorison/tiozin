@@ -1,0 +1,35 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long",
+      "nullable": false,
+      "metadata": {}
+    },
+    {
+      "name": "price",
+      "type": "decimal(10,2)",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "code",
+      "type": "char(3)",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "label",
+      "type": "varchar(10)",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "created",
+      "type": "timestamp_ntz",
+      "nullable": true,
+      "metadata": {}
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 import pendulum
 import pytest
+from openlineage.client.generated.schema_dataset import SchemaDatasetFacet, SchemaDatasetFacetFields
 
 from tests import config
-from tiozin import Context, Dataset, LineageRunEvent
+from tiozin import Context, Dataset, LineageDataset, LineageRunEvent, Schema
 
 # ============================================================================
 # LineageRunEvent.from_context — job identity and fields
@@ -269,4 +270,177 @@ def test_from_context_should_use_streaming_when_runner_is_streaming(
     # Assert
     actual = result.job.processing_type
     expected = "STREAMING"
+    assert actual == expected
+
+
+# ============================================================================
+# LineageDataset.facets — schema facet
+# ============================================================================
+
+
+def test_facets_should_write_schema_field_per_property():
+    # Arrange
+    dataset = LineageDataset(
+        namespace="s3://my-bucket",
+        name="sales/customers",
+        schema=Schema(name="customers").string("name", description="Full name").integer("age"),
+    )
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {
+        "schema": SchemaDatasetFacet(
+            fields=[
+                SchemaDatasetFacetFields(
+                    name="name",
+                    type="string",
+                    description="Full name",
+                    fields=[],
+                ),
+                SchemaDatasetFacetFields(name="age", type="integer", fields=[]),
+            ]
+        )
+    }
+    assert actual == expected
+
+
+def test_facets_should_be_empty_when_dataset_has_no_schema():
+    # Arrange
+    dataset = LineageDataset(namespace="s3://my-bucket", name="sales/customers")
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {}
+    assert actual == expected
+
+
+def test_facets_should_use_logical_type_as_field_type():
+    # Arrange
+    dataset = LineageDataset(
+        namespace="s3://my-bucket",
+        name="sales/customers",
+        schema=Schema(name="customers").integer("id", physicalType="bigint"),
+    )
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {
+        "schema": SchemaDatasetFacet(
+            fields=[SchemaDatasetFacetFields(name="id", type="integer", fields=[])]
+        )
+    }
+    assert actual == expected
+
+
+def test_facets_should_leave_field_type_unset_when_property_has_no_logical_type():
+    # Arrange
+    dataset = LineageDataset(
+        namespace="s3://my-bucket",
+        name="sales/customers",
+        schema=Schema(name="customers", properties=[{"name": "id", "physicalType": "bigint"}]),
+    )
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {
+        "schema": SchemaDatasetFacet(
+            fields=[SchemaDatasetFacetFields(name="id", type=None, fields=[])]
+        )
+    }
+    assert actual == expected
+
+
+def test_facets_should_nest_object_properties_under_their_field():
+    # Arrange
+    dataset = LineageDataset(
+        namespace="s3://my-bucket",
+        name="sales/customers",
+        schema=Schema(name="customers").object("address").string("address.city"),
+    )
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {
+        "schema": SchemaDatasetFacet(
+            fields=[
+                SchemaDatasetFacetFields(
+                    name="address",
+                    type="object",
+                    fields=[SchemaDatasetFacetFields(name="city", type="string", fields=[])],
+                )
+            ]
+        )
+    }
+    assert actual == expected
+
+
+def test_facets_should_nest_array_items_as_element_field():
+    # Arrange
+    dataset = LineageDataset(
+        namespace="s3://my-bucket",
+        name="sales/customers",
+        schema=Schema(name="customers").array("tags", of="string"),
+    )
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {
+        "schema": SchemaDatasetFacet(
+            fields=[
+                SchemaDatasetFacetFields(
+                    name="tags",
+                    type="array",
+                    fields=[SchemaDatasetFacetFields(name="_element", type="string", fields=[])],
+                )
+            ]
+        )
+    }
+    assert actual == expected
+
+
+def test_facets_should_nest_map_key_and_value_as_fields():
+    # Arrange
+    dataset = LineageDataset(
+        namespace="s3://my-bucket",
+        name="sales/customers",
+        schema=Schema(name="customers").map("scores", value="integer"),
+    )
+
+    # Act
+    result = dataset.facets()
+
+    # Assert
+    actual = result
+    expected = {
+        "schema": SchemaDatasetFacet(
+            fields=[
+                SchemaDatasetFacetFields(
+                    name="scores",
+                    type="map",
+                    fields=[
+                        SchemaDatasetFacetFields(name="key", type="string", fields=[]),
+                        SchemaDatasetFacetFields(name="value", type="integer", fields=[]),
+                    ],
+                )
+            ]
+        )
+    }
     assert actual == expected

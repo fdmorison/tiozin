@@ -1,0 +1,83 @@
+{
+  "type": "record",
+  "name": "users",
+  "doc": "Registered users",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long"
+    },
+    {
+      "name": "address",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "users.address",
+          "fields": [
+            {
+              "name": "city",
+              "type": "string",
+              "doc": "City name"
+            },
+            {
+              "name": "geo",
+              "type": {
+                "type": "record",
+                "name": "users.address.geo",
+                "fields": [
+                  {
+                    "name": "lat",
+                    "type": "double"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "friends",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "users.friends.items",
+          "fields": [
+            {
+              "name": "name",
+              "type": [
+                "null",
+                "string"
+              ],
+              "default": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "tags",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "string"
+        ]
+      }
+    },
+    {
+      "name": "scores",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": "long"
+        }
+      ],
+      "default": null
+    }
+  ]
+}

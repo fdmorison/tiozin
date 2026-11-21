@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from typing import Self
 
-from tiozin.exceptions.base import TiozinUsageError
 from tiozin.exceptions.categories import TiozinInputError, TiozinNotFoundError
 
 
-class SchemaError(TiozinUsageError):
+class SchemaError(TiozinInputError):
     """
-    Base exception for schema registry errors.
+    Raised when a schema is invalid or an operation cannot be applied to it.
     """
 
-    message = "The schema validation failed."
+    message = "The schema is invalid."
 
 
 class SchemaViolationError(SchemaError, TiozinInputError):
@@ -37,3 +36,14 @@ class SchemaNotFoundError(SchemaError, TiozinNotFoundError):
         if condition:
             raise cls(subject)
         return cls
+
+
+class PropertyNotFoundError(SchemaError, TiozinNotFoundError):
+    """
+    Raised when no property exists at the given path.
+    """
+
+    message = "Property `{path}` not found."
+
+    def __init__(self, path: object) -> None:
+        super().__init__(path=path)
