@@ -1,25 +1,25 @@
 # Dependencies
 
-A reference for contributors and platform engineers. After reading, you will know what each library does, why it was chosen, and how much disk space each install group costs including transitive dependencies. Use it to evaluate the cost of adding or removing a dependency, or to decide which extras belong in a given Docker image or cluster environment.
+A reference for contributors and platform engineers. After reading, you will know what each library does, why it was chosen, and how much disk space each install group costs including transitive dependencies. Use it to evaluate the cost of adding or removing a dependency, or to decide which extras and families belong in a given Docker image or cluster environment.
 
 5 min read. Sizes are approximate and exclude package versions, which drift.
 
 ## How Dependencies Are Grouped
 
-Tiozin has a core set and optional extras per provider family. The Spark family has three extras, described under [Tio Spark](#tio-spark).
+Tiozin has a core set, an optional extra for `tio_kernel`, and reference families that install from their own packages. The Spark family has several install options, described under [Tio Spark](#tio-spark).
 
 The core installs with `pip install tiozin` and carries everything the framework needs to parse jobs, render templates, and run the compose engine. It does not include any execution engine.
 
-`tio_kernel` is always installed as a family. The `tiozin[tio_kernel]` extra installs only the external libraries required by tio_kernel plugins that depend on them (state and secret backends). The `tio_duckdb` and `tio_spark` extras install the reference families [tio_duckdb](https://github.com/fdmorison/tio_duckdb) and [tio_spark](https://github.com/fdmorison/tio_spark), which are published as their own packages.
+`tio_kernel` is always installed as a family. The `tiozin[tio_kernel]` extra installs only the external libraries required by tio_kernel plugins that depend on them (state and secret backends). The reference families [tio_duckdb](https://github.com/fdmorison/tio_duckdb) and [tio_spark](https://github.com/fdmorison/tio_spark) are published as their own packages and install directly from them. Each family declares which Tiozin versions it supports.
 
 | Install | Adds | Approximate footprint |
 |---------|------|-----------------------|
 | `pip install tiozin` | Core framework | ~15 MB |
 | `pip install tiozin[tio_kernel]` | External libs for state and secret backends | ~230 MB |
-| `pip install tiozin[tio_duckdb]` | The `tio_duckdb` family and the DuckDB engine | ~56 MB |
-| `pip install tiozin[tio_spark]` | The `tio_spark` family, without PySpark | < 1 MB |
-| `pip install tiozin[tio_spark35]` | The `tio_spark` family and PySpark 3.5 | ~350 MB |
-| `pip install tiozin[tio_spark40]` | The `tio_spark` family and PySpark 4.0 | ~470 MB |
+| `pip install tio_duckdb` | The `tio_duckdb` family and the DuckDB engine | ~56 MB |
+| `pip install tio_spark` | The `tio_spark` family, without PySpark | < 1 MB |
+| `pip install "tio_spark[pyspark35]"` | The `tio_spark` family and PySpark 3.5 | ~350 MB |
+| `pip install "tio_spark[pyspark40]"` | The `tio_spark` family and PySpark 4.0 | ~470 MB |
 
 ## Core Dependencies
 
@@ -55,11 +55,11 @@ These install with every Tiozin and total roughly 15 MB. None of them is an exec
 | [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) | ~1 MB direct, ~25 MB with transitives | Backs the AWS Parameter Store secret registry. Most of the weight is `botocore` (~23 MB) |
 | [google-cloud-secret-manager](https://cloud.google.com/secret-manager/docs/reference/libraries) | ~1 MB direct, ~35 MB with transitives | Backs the [GCP Secret Manager](https://cloud.google.com/secret-manager/docs) registry. Pulls `grpc` (~16 MB) and the Google API/auth/protobuf stack |
 
-The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyarrow]`. If `pyarrow` is already present in the environment (e.g. the image already has `tio_spark35` or `tio_spark40` installed), that cost is not duplicated.
+The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyarrow]`. If `pyarrow` is already present in the environment (e.g. the image already has `tio_spark[pyspark35]` or `tio_spark[pyspark40]` installed), that cost is not duplicated.
 
 ### Tio DuckDB
 
-`pip install tiozin[tio_duckdb]` installs the `tio_duckdb` family, which brings the embedded analytical engine, roughly 56 MB.
+`pip install tio_duckdb` installs the `tio_duckdb` family, which brings the embedded analytical engine, roughly 56 MB.
 
 | Library | Approximate size | Role |
 |---------|------------------|------|
@@ -67,17 +67,19 @@ The dominant cost is `pyarrow` (~143 MB), pulled transitively by `pyiceberg[pyar
 
 ### Tio Spark
 
-Each Spark extra installs the `tio_spark` family. They differ in the PySpark version they bring, if any.
+Each option installs the `tio_spark` family. They differ in the PySpark version they bring, if any.
 
 | Install | PySpark | Approximate footprint |
 |---------|---------|-----------------------|
-| `pip install tiozin[tio_spark]` | None | < 1 MB |
-| `pip install tiozin[tio_spark35]` | 3.5 | ~350 MB |
-| `pip install tiozin[tio_spark40]` | 4.0 | ~470 MB |
+| `pip install tio_spark` | None | < 1 MB |
+| `pip install "tio_spark[pyspark35]"` | 3.5 | ~350 MB |
+| `pip install "tio_spark[pyspark40]"` | 4.0 | ~470 MB |
 
-`tiozin[tio_spark]` is for clusters that already provide Spark, such as EMR, Dataproc, or Databricks. Those environments must provide PySpark and any other packages they need themselves.
+The family's [installation guide](https://github.com/fdmorison/tio_spark/blob/main/docs/installation.md) lists all of its extras.
 
-`tio_spark35` and `tio_spark40` pin different PySpark versions, so they cannot be installed together. Both install this library:
+`tio_spark` without an extra is for clusters that already provide Spark, such as EMR, Dataproc, or Databricks. Those environments must provide PySpark and any other packages they need themselves.
+
+`pyspark35` and `pyspark40` pin different PySpark versions, so they cannot be installed together. Both install this library:
 
 | Library | Approximate size | Role |
 |---------|------------------|------|
