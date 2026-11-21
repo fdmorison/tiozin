@@ -53,7 +53,7 @@ jobs:
         uses: ./.github/actions/setup-env
 
       - name: Release Please (draft)
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         id: rp
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
