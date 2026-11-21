@@ -27,6 +27,7 @@ registries:
     failfast: false
     subject_template: "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
     default_version: latest
+    show_schema: true
 
   lineage:
     kind: NoOpLineageRegistry

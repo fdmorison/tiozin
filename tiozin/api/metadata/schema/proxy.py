@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import wrapt
 
 from tiozin.exceptions import RequiredArgumentError
+from tiozin.utils import default
 
 from .exceptions import SchemaNotFoundError
 from .model import Schema
@@ -48,7 +49,12 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
             return None
 
         if registry.show_schema:
-            registry.info(f"Showing schema `{subject}`:\n{schema.to_yaml()}")
+            schema_name = default(schema.name, subject)
+            registry.info(
+                f"📄 `{registry.context.name}` received schema `{schema_name}` "
+                f"with {len(schema.flatten())} properties"
+            )
+            schema.show()
 
         return schema
 
