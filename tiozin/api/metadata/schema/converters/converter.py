@@ -24,13 +24,6 @@ class SchemaConverter(ABC, Generic[T]):
 
     Examples:
 
-        Built-in formats are "spark" and "avro":
-
-        ```python
-        schema = Schema.from_format("spark", struct_json)
-        avro = schema.to_format("avro")
-        ```
-
         Another package adds a format by implementing dump and load, then
         registering the converter:
 
@@ -60,15 +53,8 @@ class SchemaConverter(ABC, Generic[T]):
         """
         Converts the schema to this format.
 
-        Options are settings specific to this format, such as the target Spark
-        version for the "spark" format. Each converter declares the options it
-        supports and ignores the others.
-
-        Examples:
-
-            ```python
-            SchemaConverter.for_format("spark").dump(schema, version="4.1")
-            ```
+        Options are settings specific to this format. Each converter declares
+        the options it supports and ignores the others.
         """
         pass
 
@@ -108,9 +94,9 @@ class SchemaConverter(ABC, Generic[T]):
         Examples:
 
             ```python
-            converter = SchemaConverter.for_format("spark")
+            converter = SchemaConverter.for_format("csv-header")
             converter.dump(schema)
-            # {"type": "struct", "fields": [...]}
+            # "id,email"
             ```
         """
         if format not in cls._registry:

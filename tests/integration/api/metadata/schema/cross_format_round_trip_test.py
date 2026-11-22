@@ -40,7 +40,7 @@ def test_avro_schema_should_survive_spark_round_trip(schema_file):
     schema = Schema.from_avro(json.loads(Path(f"tests/mocks/schemas/{schema_file}").read_text()))
 
     # Act
-    result = Schema.from_spark(schema.to_spark(version="4.1"))
+    result = Schema.from_spark(schema.to_spark(time_type="time"))
 
     # Assert
     actual = without_physical_type(result.model_dump(mode="json", exclude_unset=True))
@@ -61,7 +61,7 @@ def test_avro_schema_should_survive_spark_round_trip(schema_file):
 def test_avro_schema_should_be_written_back_after_spark_round_trip(schema_file):
     # Arrange
     avro_schema = json.loads(Path(f"tests/mocks/schemas/{schema_file}").read_text())
-    schema = Schema.from_spark(Schema.from_avro(avro_schema).to_spark(version="4.1"))
+    schema = Schema.from_spark(Schema.from_avro(avro_schema).to_spark(time_type="time"))
 
     # Act
     result = schema.to_avro()

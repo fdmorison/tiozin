@@ -39,8 +39,8 @@ class SparkSchemaConverter(SchemaConverter[dict[str, Any]]):
 
     format = "spark"
 
-    def dump(self, schema: Schema, version: str = None, **options) -> dict[str, Any]:
-        return SparkSchemaWriter(version).write(schema)
+    def dump(self, schema: Schema, time_type: str = None, **options) -> dict[str, Any]:
+        return SparkSchemaWriter(time_type).write(schema)
 
     def load(self, schema: dict[str, Any] | str, **options) -> Schema:
         struct = json.loads(schema) if isinstance(schema, str) else schema

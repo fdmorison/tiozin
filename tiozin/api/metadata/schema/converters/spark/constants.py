@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from importlib.metadata import PackageNotFoundError, version
 
 from ...model import LogicalType, Property
 from .. import conventions as conv
@@ -80,15 +79,12 @@ STRUCTURAL_ATTRIBUTES = {"required", "properties", "items", "map"}
 DEFAULT_DECIMAL_SCALE = 0
 SPARK_TIMESTAMP_WITHOUT_TIMEZONE = "timestamp_ntz"
 SPARK_VARIABLE_LENGTH_TYPE = "varchar"
-PYSPARK_PACKAGE = "pyspark"
-FALLBACK_SPARK_VERSION = "3.5"
-SPARK_VERSION_PATTERN = re.compile(r"v?(\d+)\.(\d+)")
-SPARK_TIME_MIN_VERSION = (4, 1)
-
-try:
-    DEFAULT_SPARK_VERSION = version(PYSPARK_PACKAGE)
-except PackageNotFoundError:
-    DEFAULT_SPARK_VERSION = FALLBACK_SPARK_VERSION
-
+TIME_AS_TIME = "time"
+TIME_AS_TIMESTAMP_NTZ = "timestamp_ntz"
+TIME_AS_LONG = "long"
+TIME_AS_STRING = "string"
+TIME_TYPES = {TIME_AS_TIME, TIME_AS_TIMESTAMP_NTZ, TIME_AS_LONG, TIME_AS_STRING}
+MICROS_TIME_TYPES = {TIME_AS_TIME, TIME_AS_TIMESTAMP_NTZ}
+DEFAULT_TIME_TYPE = TIME_AS_TIMESTAMP_NTZ
 SPARK_TIME_PRECISION_BY_UNIT = {conv.MILLIS: 3, conv.MICROS: 6}
 SPARK_MAX_TIME_PRECISION = 6

@@ -154,7 +154,7 @@ class Schema(Element):
         - "avro": returns an Avro record schema in JSON, as a dict
 
         Each format also has a shortcut, such as `to_avro()`. Options are
-        settings specific to the format, such as `version` for "spark", and
+        settings specific to the format, such as `time_type` for "spark", and
         formats ignore the options they do not know.
 
         Raises SchemaError if the format is not supported.
@@ -167,7 +167,7 @@ class Schema(Element):
             schema.to_format("avro")["type"]
             # 'record'
 
-            schema.to_format("spark", version="4.1")
+            schema.to_format("spark", time_type="time")
 
             StructType.fromJson(schema.to_spark())
             # StructType([StructField('id', StringType(), True)])
@@ -214,16 +214,15 @@ class Schema(Element):
     def from_avro(cls, schema: dict[str, Any] | str, **options) -> Schema:
         return cls.from_format("avro", schema, **options)
 
-    def to_spark(self, version: str = None, **options) -> dict[str, Any]:
+    def to_spark(self, time_type: str = None, **options) -> dict[str, Any]:
         """
         Converts this schema to a Spark struct type in JSON, as a dict.
 
-        The version is the target Spark version, such as "4.1", and defaults
-        to the installed pyspark version, or "3.5" when pyspark is not
-        installed. Spark has a time type only from 4.1 on, so on older
-        versions a time is a timestamp_ntz.
+        The time type is the Spark type of a time property: "timestamp_ntz"
+        by default, or "time", "long" or "string". No single Spark type reads
+        a time from every source, so pick the one the source supports.
         """
-        return self.to_format("spark", version=version, **options)
+        return self.to_format("spark", time_type=time_type, **options)
 
     def to_avro(self, **options) -> dict[str, Any]:
         return self.to_format("avro", **options)

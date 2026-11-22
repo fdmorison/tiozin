@@ -27,11 +27,10 @@ class SparkSchemaWriter(Loggable):
       char when its `minLength` is the same, otherwise a varchar.
     - A timestamp is timestamp_ntz when its `timezone` option is false,
       otherwise timestamp.
-    - A time is time(3) in millis or time(6) in micros. Spark has a time type
-      only from 4.1 on. On older versions a time is a timestamp_ntz on
-      1970-01-01, as Spark reads a SQL TIME column over JDBC, and the field
-      metadata keeps the `time` logical type. A time in nanos gets the finest
-      precision Spark has, with a warning.
+    - A time is written as the type `time_type` names, and the field metadata
+      keeps the `time` logical type when the Spark type implies another one.
+      A time in nanos written as time or timestamp_ntz gets the finest
+      precision Spark has, micros, with a warning.
 
     The type carries everything that defines it, because Spark drops field
     metadata easily, such as in `withColumn`.
@@ -46,9 +45,10 @@ class SparkSchemaWriter(Loggable):
     goes through `StructType.fromJson()`.
 
     Attributes:
-        version: Spark version the struct type targets, such as "4.1". Defaults
-            to the installed pyspark version, or "3.5" when pyspark is not
-            installed. It must start with major.minor.
+        time_type: Spark type of a time, because no single Spark type reads a
+            time from every source. One of "time" (time(3) in millis, time(6)
+            otherwise, Spark 4.1 and later), "timestamp_ntz", "long" or
+            "string". Defaults to "timestamp_ntz".
 
     Examples:
 
@@ -76,17 +76,15 @@ class SparkSchemaWriter(Loggable):
         ```
     """
 
-    def __init__(self, version: str = None) -> None:
-        version = default(version, const.DEFAULT_SPARK_VERSION)
-        release = const.SPARK_VERSION_PATTERN.match(version)
+    def __init__(self, time_type: str = None) -> None:
+        time_type = default(time_type, const.DEFAULT_TIME_TYPE)
 
-        SchemaError.raise_if(
-            release is None,
-            f"Invalid Spark version `{version}`, expected major.minor such as 4.1",
+        SchemaError.raise_if_not_in(
+            time_type,
+            const.TIME_TYPES,
         )
 
-        self.version = version
-        self.release = tuple(int(part) for part in release.groups())
+        self.time_type = time_type
 
     def write(self, schema: Schema) -> dict[str, Any]:
         """
@@ -249,24 +247,39 @@ class SparkSchemaWriter(Loggable):
 
     def to_time_type_name(self, property: Property) -> str:
         """
-        The Spark time type of a time, with the precision of its `timeUnit`,
-        micros by default. Spark has a time type only from 4.1 on, so on older
-        versions it is timestamp_ntz.
+        The Spark type of a time, chosen by `time_type`.
 
-        Spark times go up to micros. A time in a finer unit, such as nanos, is
-        written with the finest precision Spark has, and a warning says that
-        Spark truncates its values when it reads the data.
+        Spark keeps at most micros, so a time in nanos written as "time" or
+        "timestamp_ntz" logs a warning.
+
+        Examples:
+
+            ```python
+            time = Property(name="starts_at", logicalType="time")
+
+            SparkSchemaWriter().to_time_type_name(time)
+            # "timestamp_ntz"
+
+            SparkSchemaWriter("time").to_time_type_name(time)
+            # "time(6)"
+
+            SparkSchemaWriter("long").to_time_type_name(time)
+            # "long"
+            ```
         """
         time_unit = default(property.timeUnit, conv.DEFAULT_TIME_UNIT)
 
-        if time_unit not in const.SPARK_TIME_PRECISION_BY_UNIT:
+        if (
+            self.time_type in const.MICROS_TIME_TYPES
+            and time_unit not in const.SPARK_TIME_PRECISION_BY_UNIT
+        ):
             self.warning(
                 f"Property `{property.name}` is a time in {time_unit}, but Spark times go up "
                 "to micros, so Spark truncates its values when it reads the data"
             )
 
-        if self.release < const.SPARK_TIME_MIN_VERSION:
-            return const.SPARK_TIMESTAMP_WITHOUT_TIMEZONE
+        if self.time_type != const.TIME_AS_TIME:
+            return self.time_type
 
         precision = const.SPARK_TIME_PRECISION_BY_UNIT.get(
             time_unit, const.SPARK_MAX_TIME_PRECISION

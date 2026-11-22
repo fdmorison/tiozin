@@ -935,7 +935,7 @@ def test_to_format_should_pass_options_to_format():
     schema = Schema(name="users").time("starts_at")
 
     # Act
-    result = schema.to_format("spark", version="4.1")
+    result = schema.to_format("spark", time_type="time")
 
     # Assert
     actual = result
@@ -1005,29 +1005,12 @@ def test_to_spark_should_convert_schema_to_spark():
     assert actual == expected
 
 
-def test_to_spark_should_target_given_spark_version():
+def test_to_spark_should_write_time_as_timestamp_ntz_by_default():
     # Arrange
     schema = Schema(name="users").time("starts_at")
 
     # Act
-    result = schema.to_spark(version="4.1")
-
-    # Assert
-    actual = result
-    expected = {
-        "type": "struct",
-        "fields": [{"name": "starts_at", "type": "time(6)", "nullable": True, "metadata": {}}],
-        "metadata": {"name": "users"},
-    }
-    assert actual == expected
-
-
-def test_to_spark_should_write_time_as_timestamp_ntz_when_target_version_has_no_time_type():
-    # Arrange
-    schema = Schema(name="users").time("starts_at")
-
-    # Act
-    result = schema.to_spark(version="3.5")
+    result = schema.to_spark()
 
     # Assert
     actual = result
@@ -1041,6 +1024,23 @@ def test_to_spark_should_write_time_as_timestamp_ntz_when_target_version_has_no_
                 "metadata": {"logicalType": "time"},
             }
         ],
+        "metadata": {"name": "users"},
+    }
+    assert actual == expected
+
+
+def test_to_spark_should_write_time_as_given_time_type():
+    # Arrange
+    schema = Schema(name="users").time("starts_at")
+
+    # Act
+    result = schema.to_spark(time_type="time")
+
+    # Assert
+    actual = result
+    expected = {
+        "type": "struct",
+        "fields": [{"name": "starts_at", "type": "time(6)", "nullable": True, "metadata": {}}],
         "metadata": {"name": "users"},
     }
     assert actual == expected

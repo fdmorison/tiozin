@@ -64,7 +64,7 @@ def test_load_should_restore_dumped_schema():
     )
 
     # Act
-    result = SparkSchemaConverter().load(SparkSchemaConverter().dump(schema, version="4.1"))
+    result = SparkSchemaConverter().load(SparkSchemaConverter().dump(schema, time_type="time"))
 
     # Assert
     actual = result.model_dump(exclude_unset=True)
@@ -117,13 +117,27 @@ def test_load_should_restore_dumped_schema():
     assert actual == expected
 
 
-@pytest.mark.parametrize("version", ["3.5", "4.1"])
-def test_load_should_restore_time_unit_finer_than_spark_time(version):
+@pytest.mark.parametrize("time_type", ["time", "timestamp_ntz", "long", "string"])
+def test_load_should_restore_time_dumped_as_any_time_type(time_type):
+    # Arrange
+    schema = Schema(name="users").time("starts_at")
+
+    # Act
+    result = SparkSchemaConverter().load(SparkSchemaConverter().dump(schema, time_type=time_type))
+
+    # Assert
+    actual = result.properties[0].logicalType
+    expected = "time"
+    assert actual == expected
+
+
+@pytest.mark.parametrize("time_type", ["time", "timestamp_ntz", "long", "string"])
+def test_load_should_restore_time_unit_finer_than_spark_time(time_type):
     # Arrange
     schema = Schema(name="users").time("starts_at", timeUnit="nanos")
 
     # Act
-    result = SparkSchemaConverter().load(SparkSchemaConverter().dump(schema, version=version))
+    result = SparkSchemaConverter().load(SparkSchemaConverter().dump(schema, time_type=time_type))
 
     # Assert
     actual = result.properties[0].timeUnit
@@ -152,12 +166,12 @@ def test_load_should_round_trip_spark_schema(schema_file):
     assert actual == expected
 
 
-def test_dump_should_write_time_as_timestamp_ntz_when_target_version_has_no_time_type():
+def test_dump_should_write_time_as_given_time_type():
     # Arrange
     schema = Schema(name="users").time("starts_at")
 
     # Act
-    result = SparkSchemaConverter().dump(schema, version="3.5")
+    result = SparkSchemaConverter().dump(schema, time_type="string")
 
     # Assert
     actual = result
@@ -166,7 +180,7 @@ def test_dump_should_write_time_as_timestamp_ntz_when_target_version_has_no_time
         "fields": [
             {
                 "name": "starts_at",
-                "type": "timestamp_ntz",
+                "type": "string",
                 "nullable": True,
                 "metadata": {"logicalType": "time"},
             }
@@ -181,7 +195,7 @@ def test_dump_should_ignore_unknown_options():
     schema = Schema(name="users").integer("id")
 
     # Act
-    result = SparkSchemaConverter().dump(schema, version="4.1", compression="zstd")
+    result = SparkSchemaConverter().dump(schema, compression="zstd")
 
     # Assert
     actual = result
