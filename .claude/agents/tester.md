@@ -114,11 +114,21 @@ Other `conftest.py` files may exist under `unit/` and `integration/` subdirector
   ```
 - Arrange should prefer explicitly constructed value objects over mocks and stubs when they are inexpensive to construct.
 - Arrange should reuse existing fixtures, mocks, and stubs before creating new ones.
-- Arrange should use `@pytest.mark.parametrize` to deduplicate tests.
-- Arrange should use `@pytest.mark.parametrize` when tests share the same contract but differ only by input.
+- Arrange should use `@pytest.mark.parametrize` when tests share the same contract but differ only by simple input values.
   - ✔ `@pytest.mark.parametrize("name", [None, ""]); def test_create_person_should_raise_when_name_not_provided()`
   - ✘ `def test_create_person_should_raise_when_name_not_provided()`
   - ✘ `def test_create_person_should_raise_when_name_is_empty()`
+- Parametrize only varies simple values (literals, names, flags, small dicts of the same shape). It never does the Arrange: no building schemas, entities, fixtures, mocks, or stubs inside the parametrize list.
+  - ✔ `@pytest.mark.parametrize("first, second", [("FirstName", "first_name"), ("%", "$")])`
+  - ✘ `@pytest.mark.parametrize("schema", [Schema(...).object(...), Schema.from_yaml("""...""")])`
+- Readability beats deduplication. Keep separate tests when cases differ in structure (object vs array vs map), in arrangement, or in which method/format runs.
+  - ✔ `test_to_spark_should_convert_schema_to_spark`, `test_to_avro_should_convert_schema_to_avro`
+  - ✘ `@pytest.mark.parametrize("shortcut", [Schema.to_spark, Schema.to_avro]); def test_to_shortcut_should_convert_schema_to_its_format()`
+- A test name that needs "and" covers two cases; split it into two tests.
+  - ✔ `test_children_should_go_through_arrays`, `test_children_should_go_through_maps`
+  - ✘ `test_children_should_go_through_arrays_and_maps`
+- Never rename merged cases to a generic name that hides the scenario.
+  - ✘ `test_merge_should_add_new_property_inside_nested_objects` (hides object, array of objects, map of objects)
 - Act should never arrange fixtures, mocks, and stubs.
   - ✘ `result = make_entity()`
   - ✘ `result = mock_entity()`
