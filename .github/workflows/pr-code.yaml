@@ -24,7 +24,7 @@ jobs:
         uses: ./.github/actions/setup-env
 
       - name: Install Dependencies
-        run: make install-dev
+        run: make install
 
       - name: Lint
         run: make check
