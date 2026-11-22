@@ -1,5 +1,27 @@
 # Changelog
 
+## [6.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v5.0.0...tiozin-v6.0.0) (2026-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** Remove the tio_spark and tio_duckdb extras ([#403](https://github.com/fdmorison/tiozin/issues/403))
+* **core:** Rewrite Schema on ODCS v3.2.0 without datacontract-cli ([#401](https://github.com/fdmorison/tiozin/issues/401))
+
+### Features
+
+* **core-api:** Add type shortcuts to the Schema builder ([#405](https://github.com/fdmorison/tiozin/issues/405)) ([1b8353a](https://github.com/fdmorison/tiozin/commit/1b8353a5a83bfce66e7e1127dd79aaa26a86c9a2))
+* **core-api:** Choose the Spark type of Schema times ([#407](https://github.com/fdmorison/tiozin/issues/407)) ([3bdfb6b](https://github.com/fdmorison/tiozin/commit/3bdfb6b41afd413c755195ac95d410dad692cdf2))
+* **core-api:** Write Schema times to any Spark version and unit ([#404](https://github.com/fdmorison/tiozin/issues/404)) ([3faaab4](https://github.com/fdmorison/tiozin/commit/3faaab43ebb5a7573428674e3d5a8b2c270b4b43))
+* **core:** Rewrite Schema on ODCS v3.2.0 without datacontract-cli ([#401](https://github.com/fdmorison/tiozin/issues/401)) ([49cae06](https://github.com/fdmorison/tiozin/commit/49cae06190cc3fce06a5e0127d8cd09a2ef383e9))
+
+
+### Bug Fixes
+
+* **core-api:** Pass the schema version to schema registries ([#406](https://github.com/fdmorison/tiozin/issues/406)) ([231bebb](https://github.com/fdmorison/tiozin/commit/231bebbab3228dceebaf0b07131f882770bbcc72))
+* **core-cli:** Hide library warnings during shell completion ([#409](https://github.com/fdmorison/tiozin/issues/409)) ([f0b6e92](https://github.com/fdmorison/tiozin/commit/f0b6e929d2f195c88a4a21dabf98434521ee4d40))
+* **core:** Remove the tio_spark and tio_duckdb extras ([#403](https://github.com/fdmorison/tiozin/issues/403)) ([8ed089c](https://github.com/fdmorison/tiozin/commit/8ed089cdf4270a7dcb18296096ff861528fe0500))
+
 ## [5.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v4.1.2...tiozin-v5.0.0) (2026-11-20)
 
 
