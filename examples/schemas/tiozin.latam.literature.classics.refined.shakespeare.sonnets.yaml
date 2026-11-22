@@ -1,0 +1,20 @@
+name: sonnets
+physicalName: sonnets
+physicalType: table
+description: Word counts of the Sonnets.
+
+properties:
+
+  - name: word
+    logicalType: string
+    physicalType: string
+    required: true
+    primaryKey: true
+    primaryKeyPosition: 1
+    description: A word found in the text, in lower case
+
+  - name: count
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    description: Number of times the word appears in the text
