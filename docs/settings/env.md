@@ -87,16 +87,37 @@ Available template variables for `TIO_JOB_NAMESPACE_TEMPLATE`: `org`, `region`, 
 
 ## .env Files
 
-Tiozin loads `.env` files automatically from these locations, in order:
+Tiozin loads `.env` files automatically at startup. It reads the shared files first and the project `.env` last.
+
+### Shared Files
+
+Tiozin reads these files in order:
 
 1. `/etc/tiozin/.env` (system-wide)
 2. `~/.env`
 3. `~/.config/tiozin/.env`
 4. `/config/.env`
 5. `/tiozin/.env`
-6. `.env` in the current directory and all parent directories
 
-Later files take precedence over earlier ones. A project `.env` overrides system defaults. Variables set directly in the shell always take precedence over `.env` files.
+A shared file never replaces a variable that is already set. A variable exported in the shell keeps its value. When two shared files set the same variable, the earlier file in the list wins, so `/etc/tiozin/.env` wins over `~/.env`.
+
+### The Project .env
+
+Tiozin looks for the project `.env` in the current working directory, then in each parent directory. It loads only the first `.env` it finds.
+
+The variables in the project `.env` replace values from the shell and from the shared files. Whoever writes the project `.env` sets those values on purpose. For example, when a shell profile exports `SPARK_HOME` and the project `.env` also sets it, Tiozin uses the value from the project `.env`.
+
+### Which Value Wins
+
+From highest to lowest precedence:
+
+1. The project `.env`
+2. The shell environment
+3. `/etc/tiozin/.env`
+4. `~/.env`
+5. `~/.config/tiozin/.env`
+6. `/config/.env`
+7. `/tiozin/.env`
 
 Copy `.env.example` from the project root to get started:
 

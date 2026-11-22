@@ -23,7 +23,7 @@ _env.read_env("/config/.env", recurse=False)
 _env.read_env("/tiozin/.env", recurse=False)
 
 # Project-level (PWD + parents)
-_env.read_env(recurse=True)
+_env.read_env(".env", recurse=True, override=True)
 
 # ===============================================
 #           General
