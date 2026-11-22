@@ -3,7 +3,15 @@
 Tiozin - A friendly ETL framework
 
 Public API for building data pipelines with Tiozin.
+
+During shell completion, stderr is silenced before any other import, so warnings and prints from
+libraries never leak into the terminal while the user presses TAB.
 """
+
+import os
+
+if "_TIOZIN_COMPLETE" in os.environ:
+    os.dup2(os.open(os.devnull, os.O_WRONLY), 2)
 
 # Bases
 from tiozin.api import Registry, Tiozin
