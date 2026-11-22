@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.2](https://github.com/fdmorison/tiozin/compare/tiozin-v6.0.1...tiozin-v6.0.2) (2026-11-22)
+
+
+### Bug Fixes
+
+* **core:** Let the project .env win over shell variables ([#413](https://github.com/fdmorison/tiozin/issues/413)) ([67fb1ce](https://github.com/fdmorison/tiozin/commit/67fb1ce25e029c1d1e4d2ca5d6810b38d79974e3))
+
 ## [6.0.1](https://github.com/fdmorison/tiozin/compare/tiozin-v6.0.0...tiozin-v6.0.1) (2026-11-22)
 
 
