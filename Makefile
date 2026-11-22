@@ -8,10 +8,6 @@ hooks:
 	@uv run pre-commit install
 
 install:
-	@uv sync
-	@uv pip install -e .
-
-install-dev:
 	@uv sync --group families
 	@uv pip install -e .
 	@uv run pre-commit install
