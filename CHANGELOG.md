@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/fdmorison/tiozin/compare/tiozin-v6.0.0...tiozin-v6.0.1) (2026-11-22)
+
+
+### Bug Fixes
+
+* **core-cli:** Run the CLI on typer releases without click ([#410](https://github.com/fdmorison/tiozin/issues/410)) ([162cd7d](https://github.com/fdmorison/tiozin/commit/162cd7d868127a20e5b5ddae151cbb019d181b87))
+
 ## [6.0.0](https://github.com/fdmorison/tiozin/compare/tiozin-v5.0.0...tiozin-v6.0.0) (2026-11-22)
 
 
