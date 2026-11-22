@@ -1,6 +1,5 @@
 import os
 
-import click
 import typer
 
 from .. import config
@@ -41,7 +40,7 @@ class TiozinCli(Loggable, typer.core.TyperGroup):
         except TiozinUsageError as e:
             self.error(e.message)
             raise SystemExit(2)
-        except (click.exceptions.Exit, click.exceptions.Abort, SystemExit):
+        except (typer.Exit, typer.Abort, SystemExit):
             raise
         except Exception as e:
             self.exception(f"Unexpected error: {e}")
