@@ -248,6 +248,67 @@ schema["address.city"].logicalType
 
 Keyword arguments set ODCS attributes on the new property, such as `required` or `description`. The builders are `string`, `integer`, `number`, `boolean`, `date`, `timestamp`, `time`, `object`, `array`, and `map`. `add()` accepts any logical type as its second argument, and `remove()` drops the property at a path.
 
+Some types need a logical type plus an option or attribute, such as a 32-bit integer or a timestamp without timezone. Shortcut builders add both in one call:
+
+| Shortcut | Adds |
+|---|---|
+| `int8`, `int16`, `int32`, `int64` | `integer` with the `format` option `i8`, `i16`, `i32`, or `i64` |
+| `float32`, `float64` | `number` with the `format` option `f32` or `f64` |
+| `decimal(path, precision, scale=None)` | `number` with `precision` and `scale` |
+| `uuid` | `string` with the `format` option `uuid` |
+| `varchar(path, length)` | `string` with the `maxLength` option |
+| `char(path, length)` | `string` with the `minLength` and `maxLength` options, both set to `length` |
+| `binary` | `string` with `binary: true`, for raw bytes |
+| `fixed(path, size)` | `binary` with `typeSize`, the size in bytes |
+| `time_millis`, `time_micros`, `time_nanos` | `time` with `timeUnit` set to `millis`, `micros`, or `nanos` |
+| `timestamp_millis`, `timestamp_micros`, `timestamp_nanos` | `timestamp` with `timeUnit` set to `millis`, `micros`, or `nanos` |
+| `timestamp_ntz` | `timestamp` with the `timezone` option set to `false` |
+
+Options such as `format` land in `logicalTypeOptions`, and attributes such as `precision` land in `customProperties`:
+
+```python
+schema = (
+    Schema(name="orders")
+    .uuid("id", required=True, primaryKey=True)
+    .int32("quantity")
+    .decimal("total", precision=10, scale=2)
+    .timestamp_ntz("created_at")
+)
+print(schema.to_yaml())
+```
+
+```yaml
+name: orders
+properties:
+- name: id
+  logicalType: string
+  logicalTypeOptions:
+    format: uuid
+  required: true
+  primaryKey: true
+- name: quantity
+  logicalType: integer
+  logicalTypeOptions:
+    format: i32
+- name: total
+  logicalType: number
+  customProperties:
+  - property: precision
+    value: 10
+  - property: scale
+    value: 2
+- name: created_at
+  logicalType: timestamp
+  logicalTypeOptions:
+    timezone: false
+```
+
+A `decimal` without `scale` has no digits after the point.
+
+The plain builders already have defaults. Spark and Avro conversions treat an `integer` as 64-bit, a `number` as a 64-bit float, and `time` and `timestamp` in microseconds, and a timestamp carries its timezone. `int64`, `float64`, `time_micros`, and `timestamp_micros` write those defaults into the schema explicitly.
+
+Shortcuts accept the same keyword attributes as the other builders. Options passed in `logicalTypeOptions` are kept next to the ones the shortcut adds. If both set the same option, the shortcut's value wins.
+
 A few operations reshape the whole schema. `normalize_field_names()` renames every property to snake case by default, or to another case such as `"camel"`. `sort()` orders properties by name at every level, and `show()` prints the schema as colored YAML:
 
 ```python

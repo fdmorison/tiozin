@@ -5,7 +5,7 @@ import jsonschema
 import pytest
 
 from tiozin import Schema
-from tiozin.api.metadata.schema.model import Context, Property
+from tiozin.api.metadata.schema.model import Context, Property, StringOptions
 from tiozin.exceptions import PropertyNotFoundError, SchemaError
 
 
@@ -121,6 +121,252 @@ def test_builder_should_add_property_of_its_type(builder, expected):
 
     # Assert
     actual = schema["field"].logicalType
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "shortcut, expected",
+    [
+        (
+            Schema.time_millis,
+            {
+                "logicalType": "time",
+                "customProperties": [{"property": "timeUnit", "value": "millis"}],
+            },
+        ),
+        (
+            Schema.time_micros,
+            {
+                "logicalType": "time",
+                "customProperties": [{"property": "timeUnit", "value": "micros"}],
+            },
+        ),
+        (
+            Schema.time_nanos,
+            {
+                "logicalType": "time",
+                "customProperties": [{"property": "timeUnit", "value": "nanos"}],
+            },
+        ),
+        (
+            Schema.timestamp_millis,
+            {
+                "logicalType": "timestamp",
+                "customProperties": [{"property": "timeUnit", "value": "millis"}],
+            },
+        ),
+        (
+            Schema.timestamp_micros,
+            {
+                "logicalType": "timestamp",
+                "customProperties": [{"property": "timeUnit", "value": "micros"}],
+            },
+        ),
+        (
+            Schema.timestamp_nanos,
+            {
+                "logicalType": "timestamp",
+                "customProperties": [{"property": "timeUnit", "value": "nanos"}],
+            },
+        ),
+        (
+            Schema.timestamp_ntz,
+            {"logicalType": "timestamp", "logicalTypeOptions": {"timezone": False}},
+        ),
+        (Schema.int8, {"logicalType": "integer", "logicalTypeOptions": {"format": "i8"}}),
+        (Schema.int16, {"logicalType": "integer", "logicalTypeOptions": {"format": "i16"}}),
+        (Schema.int32, {"logicalType": "integer", "logicalTypeOptions": {"format": "i32"}}),
+        (Schema.int64, {"logicalType": "integer", "logicalTypeOptions": {"format": "i64"}}),
+        (Schema.float32, {"logicalType": "number", "logicalTypeOptions": {"format": "f32"}}),
+        (Schema.float64, {"logicalType": "number", "logicalTypeOptions": {"format": "f64"}}),
+        (Schema.uuid, {"logicalType": "string", "logicalTypeOptions": {"format": "uuid"}}),
+        (
+            Schema.binary,
+            {"logicalType": "string", "customProperties": [{"property": "binary", "value": True}]},
+        ),
+    ],
+)
+def test_shortcut_should_add_property_of_its_type(shortcut, expected):
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    shortcut(schema, "field")
+
+    # Assert
+    actual = schema["field"].model_dump(mode="json", exclude_unset=True, exclude={"name"})
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "shortcut",
+    [
+        Schema.time_millis,
+        Schema.timestamp_ntz,
+        Schema.int32,
+        Schema.float64,
+        Schema.uuid,
+        Schema.binary,
+    ],
+)
+def test_shortcut_should_return_same_schema(shortcut):
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    result = shortcut(schema, "field")
+
+    # Assert
+    assert result is schema
+
+
+def test_decimal_should_add_number_with_precision_and_scale():
+    # Arrange
+    schema = Schema(name="orders")
+
+    # Act
+    schema.decimal("price", precision=10, scale=2)
+
+    # Assert
+    actual = schema["price"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "price",
+        "logicalType": "number",
+        "customProperties": [
+            {"property": "precision", "value": 10},
+            {"property": "scale", "value": 2},
+        ],
+    }
+    assert actual == expected
+
+
+def test_decimal_should_add_number_without_scale_when_scale_is_not_given():
+    # Arrange
+    schema = Schema(name="orders")
+
+    # Act
+    schema.decimal("quantity", precision=5)
+
+    # Assert
+    actual = schema["quantity"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "quantity",
+        "logicalType": "number",
+        "customProperties": [{"property": "precision", "value": 5}],
+    }
+    assert actual == expected
+
+
+def test_varchar_should_add_string_with_max_length():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.varchar("nickname", 20)
+
+    # Assert
+    actual = schema["nickname"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "nickname",
+        "logicalType": "string",
+        "logicalTypeOptions": {"maxLength": 20},
+    }
+    assert actual == expected
+
+
+def test_char_should_add_string_of_exact_length():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.char("country", 2)
+
+    # Assert
+    actual = schema["country"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "country",
+        "logicalType": "string",
+        "logicalTypeOptions": {"minLength": 2, "maxLength": 2},
+    }
+    assert actual == expected
+
+
+def test_fixed_should_add_binary_string_of_given_size():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.fixed("checksum", 16)
+
+    # Assert
+    actual = schema["checksum"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "checksum",
+        "logicalType": "string",
+        "customProperties": [
+            {"property": "binary", "value": True},
+            {"property": "typeSize", "value": 16},
+        ],
+    }
+    assert actual == expected
+
+
+def test_shortcut_should_set_attributes():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.uuid("id", required=True, description="User identifier")
+
+    # Assert
+    actual = schema["id"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "id",
+        "logicalType": "string",
+        "logicalTypeOptions": {"format": "uuid"},
+        "required": True,
+        "description": "User identifier",
+    }
+    assert actual == expected
+
+
+def test_shortcut_should_keep_given_logical_type_options():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.uuid("id", logicalTypeOptions={"pattern": "^[0-9a-f-]+$"})
+
+    # Assert
+    actual = schema["id"].logicalTypeOptions.model_dump(mode="json", exclude_unset=True)
+    expected = {"pattern": "^[0-9a-f-]+$", "format": "uuid"}
+    assert actual == expected
+
+
+def test_shortcut_should_keep_given_logical_type_options_when_given_as_options_model():
+    # Arrange
+    schema = Schema(name="users")
+    options = StringOptions(pattern="^[0-9a-f-]+$")
+
+    # Act
+    schema.uuid("id", logicalTypeOptions=options)
+
+    # Assert
+    actual = schema["id"].logicalTypeOptions.model_dump(mode="json", exclude_unset=True)
+    expected = {"pattern": "^[0-9a-f-]+$", "format": "uuid"}
+    assert actual == expected
+
+
+def test_shortcut_should_override_given_logical_type_option_with_its_own():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.uuid("id", logicalTypeOptions={"format": "email"})
+
+    # Assert
+    actual = schema["id"].logicalTypeOptions.model_dump(mode="json", exclude_unset=True)
+    expected = {"format": "uuid"}
     assert actual == expected
 
 
