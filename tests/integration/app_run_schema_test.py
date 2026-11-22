@@ -97,9 +97,9 @@ def test_app_should_get_schema_subject_when_explicitly_provided(_atexit, _signal
     # Assert
     schema_registry_get.assert_has_calls(
         [
-            call("my_input_schema_subject"),
-            call("my_transform_schema_subject"),
-            call("my_output_schema_subject"),
+            call("my_input_schema_subject", "latest"),
+            call("my_transform_schema_subject", "latest"),
+            call("my_output_schema_subject", "latest"),
         ]
     )
 
@@ -148,8 +148,8 @@ def test_app_should_get_auto_schema_subject_when_explicitly_provided(
     # Assert
     schema_registry_get.assert_has_calls(
         [
-            call("acme.us.sales.orders.raw.crm.daily"),
-            call("acme.us.sales.orders.raw.crm.daily"),
-            call("acme.us.sales.orders.raw.crm.daily"),
+            call("acme.us.sales.orders.raw.crm.daily", "latest"),
+            call("acme.us.sales.orders.raw.crm.daily", "latest"),
+            call("acme.us.sales.orders.raw.crm.daily", "latest"),
         ]
     )
