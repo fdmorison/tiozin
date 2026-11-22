@@ -776,13 +776,28 @@ def test_to_spark_should_target_given_spark_version():
     assert actual == expected
 
 
-def test_to_spark_should_raise_schema_error_when_target_version_has_no_time_type():
+def test_to_spark_should_write_time_as_timestamp_ntz_when_target_version_has_no_time_type():
     # Arrange
     schema = Schema(name="users").time("starts_at")
 
-    # Act / Assert
-    with pytest.raises(SchemaError, match=r"Spark 3\.5 has no time type"):
-        schema.to_spark(version="3.5")
+    # Act
+    result = schema.to_spark(version="3.5")
+
+    # Assert
+    actual = result
+    expected = {
+        "type": "struct",
+        "fields": [
+            {
+                "name": "starts_at",
+                "type": "timestamp_ntz",
+                "nullable": True,
+                "metadata": {"logicalType": "time"},
+            }
+        ],
+        "metadata": {"name": "users"},
+    }
+    assert actual == expected
 
 
 def test_from_spark_should_create_schema_from_spark():

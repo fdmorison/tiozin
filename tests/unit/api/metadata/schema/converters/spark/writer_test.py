@@ -1,4 +1,5 @@
 from importlib.metadata import version
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
@@ -719,23 +720,79 @@ def test_write_should_raise_schema_error_when_spark_has_no_type_for_format():
         SparkSchemaWriter().write(schema)
 
 
-def test_write_should_raise_schema_error_when_time_is_in_nanos():
+def test_write_should_write_time_in_nanos_as_finest_spark_time():
     # Arrange
     schema = Schema(name="users").time("starts_at", timeUnit="nanos")
 
-    # Act / Assert
-    with pytest.raises(SchemaError, match="Property `starts_at` is a time in nanos"):
-        SparkSchemaWriter(version="4.1").write(schema)
+    # Act
+    result = SparkSchemaWriter(version="4.1").write(schema)
+
+    # Assert
+    actual = result["fields"][0]
+    expected = {
+        "name": "starts_at",
+        "type": "time(6)",
+        "nullable": True,
+        "metadata": {"timeUnit": "nanos"},
+    }
+    assert actual == expected
+
+
+@pytest.mark.parametrize("spark_version", ["3.5", "4.1"])
+@patch("tiozin.api.loggable.logs.get_logger")
+def test_write_should_warn_that_spark_truncates_time_in_nanos(get_logger: MagicMock, spark_version):
+    # Arrange
+    schema = Schema(name="users").time("starts_at", timeUnit="nanos")
+
+    # Act
+    SparkSchemaWriter(version=spark_version).write(schema)
+
+    # Assert
+    actual = get_logger.return_value.warning.call_args_list
+    expected = [
+        call(
+            "Property `starts_at` is a time in nanos, but Spark times go up to micros, "
+            "so Spark truncates its values when it reads the data"
+        )
+    ]
+    assert actual == expected
 
 
 @pytest.mark.parametrize("spark_version", ["3.5", "4.0"])
-def test_write_should_raise_schema_error_when_spark_has_no_time_type(spark_version):
+def test_write_should_write_time_as_timestamp_ntz_when_spark_has_no_time_type(spark_version):
     # Arrange
     schema = Schema(name="users").time("starts_at")
 
-    # Act / Assert
-    with pytest.raises(SchemaError, match=r"has no time type; it needs Spark 4\.1 or later"):
-        SparkSchemaWriter(version=spark_version).write(schema)
+    # Act
+    result = SparkSchemaWriter(version=spark_version).write(schema)
+
+    # Assert
+    actual = result["fields"][0]
+    expected = {
+        "name": "starts_at",
+        "type": "timestamp_ntz",
+        "nullable": True,
+        "metadata": {"logicalType": "time"},
+    }
+    assert actual == expected
+
+
+def test_write_should_keep_time_unit_in_metadata_when_spark_has_no_time_type():
+    # Arrange
+    schema = Schema(name="users").time("starts_at", timeUnit="millis")
+
+    # Act
+    result = SparkSchemaWriter(version="3.5").write(schema)
+
+    # Assert
+    actual = result["fields"][0]
+    expected = {
+        "name": "starts_at",
+        "type": "timestamp_ntz",
+        "nullable": True,
+        "metadata": {"logicalType": "time", "timeUnit": "millis"},
+    }
+    assert actual == expected
 
 
 @pytest.mark.parametrize("spark_version", ["4", "abc"])
