@@ -41,11 +41,30 @@ def test_get_should_retrieve_schema_by_version():
     wrapped_registry.get.return_value = schema
 
     # Act
-    result = SchemaRegistryProxy(wrapped_registry).get(subject, version)
+    SchemaRegistryProxy(wrapped_registry).get(subject, version)
 
     # Assert
-    actual = result
-    expected = schema
+    actual = wrapped_registry.get.call_args
+    expected = call("acme.eu.sales.orders.raw.crm.order", "v2")
+    assert actual == expected
+
+
+def test_get_should_retrieve_schema_by_default_version_when_version_not_provided():
+    # Arrange
+    schema = Schema(name="orders").string("id")
+    subject = "acme.eu.sales.orders.raw.crm.order"
+
+    wrapped_registry = MagicMock()
+    wrapped_registry.default_version = "v7"
+    wrapped_registry.context.render.return_value = subject
+    wrapped_registry.get.return_value = schema
+
+    # Act
+    SchemaRegistryProxy(wrapped_registry).get(subject)
+
+    # Assert
+    actual = wrapped_registry.get.call_args
+    expected = call("acme.eu.sales.orders.raw.crm.order", "v7")
     assert actual == expected
 
 
