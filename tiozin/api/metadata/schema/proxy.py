@@ -39,7 +39,7 @@ class SchemaRegistryProxy(wrapt.ObjectProxy):
         registry.info(f"🔍 `{registry.context.name}` requested schema `{subject}`")
 
         try:
-            schema = registry.get(subject)
+            schema = registry.get(subject, version)
             if not schema:
                 raise SchemaNotFoundError(subject)
         except SchemaNotFoundError:
