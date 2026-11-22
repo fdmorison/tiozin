@@ -200,19 +200,28 @@ observed = Schema.from_spark(data.schema.jsonValue())
 
 Attributes that the target format cannot express travel inside the converted document, so converting that document back to a `Schema` restores them. Spark keeps schema-level attributes, such as the name, under a `metadata` key that `StructType.fromJson()` drops.
 
-The target Spark version only changes how the `time` logical type is mapped. `to_spark()` targets the installed PySpark version, or Spark 3.5 when PySpark is not installed.
-
-Spark has a native time type from Spark 4.1 on. On 4.1 and later, a `time` property becomes `time(6)` for microseconds (`micros`, the default unit) or `time(3)` for milliseconds (`millis`).
-
-On older Spark versions, a `time` property becomes `timestamp_ntz` on `1970-01-01`, the same way Spark reads a SQL `TIME` column over [JDBC](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html). The field metadata keeps the `time` logical type, so `Schema.from_spark()` reads it back as a time.
-
-Spark times stop at microseconds. A time in nanoseconds (`nanos`) gets the finest precision Spark has: `time(6)` on 4.1 and later, or `timestamp_ntz` before 4.1. The field metadata keeps the `nanos` unit, so `Schema.from_spark()` restores it. Tiozin also logs a warning that Spark truncates the values when it reads the data.
-
-To target a specific Spark version, pass the `version` argument. The version must start with major.minor, so `4.1`, `v4.1`, and `4.1rc1` all work, while `4` or `abc` raises `SchemaError`:
+A `time` property needs one extra decision. No single Spark type reads a time from every source, so the `time_type` argument of `to_spark()` picks the Spark type a `time` property becomes. It changes nothing else in the conversion:
 
 ```python
-schema.to_spark(version="4.1")
+schema.to_spark(time_type="time")
 ```
+
+Each value works for a different kind of source:
+
+| `time_type` | Spark type | Works for |
+|---|---|---|
+| `"timestamp_ntz"` (default) | `timestamp_ntz` | [JDBC](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html) sources on Spark 3.5 and 4.1 |
+| `"time"` | `time(3)` or `time(6)` | [Parquet](https://parquet.apache.org/docs/) `TIME` columns on Spark 4.1, with `spark.sql.timeType.enabled=true` |
+| `"long"` | `long` | Parquet `TIME` columns on Spark 3.5 and 4.1, read as the raw number of units since midnight |
+| `"string"` | `string` | JDBC sources on Spark 3.5 and 4.1, read as text such as `12:34:56` |
+
+Each type fails on the sources missing from its row. For example, `"time"` and `"long"` fail over JDBC, while `"timestamp_ntz"` and `"string"` fail on a Parquet `TIME` column. Any other value raises `SchemaError`.
+
+Spark has the `time` type from Spark 4.1 on. Its precision follows the property's `timeUnit`: `time(3)` for milliseconds (`millis`), and `time(6)` for microseconds (`micros`, the default unit) and nanoseconds (`nanos`).
+
+The field metadata keeps whatever the Spark type cannot express, such as the `time` logical type behind a `timestamp_ntz`, `long`, or `string` field. `Schema.from_spark()` reads that field back as a time. Over JDBC, the date part of a `timestamp_ntz` value depends on the driver.
+
+Spark times and timestamps stop at microseconds. With `"time"` or `"timestamp_ntz"`, a time in `nanos` gets microsecond precision, and Tiozin logs a warning that Spark truncates the values when it reads the data. With `"long"` and `"string"`, no warning is logged.
 
 Each shortcut also has a generic equivalent. `to_format()` and `from_format()` take the format name, `"spark"` or `"avro"`, as their first argument, followed by the same arguments as the shortcut. Any other format name raises `SchemaError`:
 
