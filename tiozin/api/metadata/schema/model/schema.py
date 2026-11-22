@@ -11,6 +11,7 @@ from rich.syntax import RICH_SYNTAX_THEMES, Syntax
 from tiozin.utils import default
 
 from ..converters import SchemaConverter
+from ..converters import conventions as conv
 from ..exceptions import SchemaError
 from ..merges import BackwardCompatibleEvolution, DocumentationMerge
 from ..utils import SchemaYamlLexer
@@ -25,6 +26,12 @@ from .relationship import Relationship
 TERMINAL_BACKGROUND = "default"
 DEFAULT_THEME = "solarized-dark"
 DEFAULT_PHYSICAL_TYPE = "table"
+INT8_FORMAT = "i8"
+INT16_FORMAT = "i16"
+INT32_FORMAT = "i32"
+INT64_FORMAT = "i64"
+FLOAT32_FORMAT = "f32"
+FLOAT64_FORMAT = "f64"
 
 
 class Schema(Element):
@@ -387,6 +394,75 @@ class Schema(Element):
     def time(self, path: str | Iterable[str], **attributes) -> Schema:
         return self.add(path, LogicalType.TIME, **attributes)
 
+    def time_millis(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.time(path, timeUnit=conv.MILLIS, **attributes)
+
+    def time_micros(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.time(path, timeUnit=conv.MICROS, **attributes)
+
+    def time_nanos(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.time(path, timeUnit=conv.NANOS, **attributes)
+
+    def timestamp_millis(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.timestamp(path, timeUnit=conv.MILLIS, **attributes)
+
+    def timestamp_micros(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.timestamp(path, timeUnit=conv.MICROS, **attributes)
+
+    def timestamp_nanos(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.timestamp(path, timeUnit=conv.NANOS, **attributes)
+
+    def timestamp_ntz(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, timezone=False)
+        return self.timestamp(path, logicalTypeOptions=options, **attributes)
+
+    def int8(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=INT8_FORMAT)
+        return self.integer(path, logicalTypeOptions=options, **attributes)
+
+    def int16(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=INT16_FORMAT)
+        return self.integer(path, logicalTypeOptions=options, **attributes)
+
+    def int32(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=INT32_FORMAT)
+        return self.integer(path, logicalTypeOptions=options, **attributes)
+
+    def int64(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=INT64_FORMAT)
+        return self.integer(path, logicalTypeOptions=options, **attributes)
+
+    def float32(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=FLOAT32_FORMAT)
+        return self.number(path, logicalTypeOptions=options, **attributes)
+
+    def float64(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=FLOAT64_FORMAT)
+        return self.number(path, logicalTypeOptions=options, **attributes)
+
+    def decimal(
+        self, path: str | Iterable[str], precision: int, scale: int = None, **attributes
+    ) -> Schema:
+        return self.number(path, precision=precision, scale=scale, **attributes)
+
+    def uuid(self, path: str | Iterable[str], **attributes) -> Schema:
+        options = with_options(attributes, format=conv.UUID_FORMAT)
+        return self.string(path, logicalTypeOptions=options, **attributes)
+
+    def varchar(self, path: str | Iterable[str], length: int, **attributes) -> Schema:
+        options = with_options(attributes, maxLength=length)
+        return self.string(path, logicalTypeOptions=options, **attributes)
+
+    def char(self, path: str | Iterable[str], length: int, **attributes) -> Schema:
+        options = with_options(attributes, minLength=length, maxLength=length)
+        return self.string(path, logicalTypeOptions=options, **attributes)
+
+    def binary(self, path: str | Iterable[str], **attributes) -> Schema:
+        return self.string(path, binary=True, **attributes)
+
+    def fixed(self, path: str | Iterable[str], size: int, **attributes) -> Schema:
+        return self.binary(path, typeSize=size, **attributes)
+
     def object(self, path: str | Iterable[str], **attributes) -> Schema:
         return self.add(path, LogicalType.OBJECT, **attributes)
 
@@ -484,3 +560,15 @@ class Schema(Element):
 
     def __contains__(self, path: str | Iterable[str]) -> bool:
         return path in self.root
+
+
+def with_options(attributes: dict[str, Any], **options) -> dict[str, Any]:
+    """
+    Removes the logical type options from the attributes and returns them
+    with the given options added, so a shortcut keeps the options a caller
+    passes.
+    """
+    given = attributes.pop("logicalTypeOptions", None)
+    if isinstance(given, pyd.BaseModel):
+        given = given.model_dump(exclude_unset=True)
+    return {**(given or {}), **options}
