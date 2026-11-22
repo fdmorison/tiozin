@@ -18,6 +18,7 @@ tools:
   - Bash(git push *)
   - Bash(gh api *)
   - Bash(make format)
+  - Bash(make test)
 ---
 
 ## Persona
@@ -88,17 +89,18 @@ Write a pull request a reviewer can understand without reading the diff. Assume 
 
 1. If on the default branch, create a feature branch.
 2. Commit any uncommitted changes using the committing skill.
-3. Infer the PR goal from the diff.
-4. Read `.claude/knowledge/pr-writing-guide.md` and draft the PR.
-5. Refine and shorten the PR by performing an editorial pass.
+3. Run the full test suite. If any test fails, stop and report the failures to the user instead of drafting the PR.
+4. Infer the PR goal from the diff.
+5. Read `.claude/knowledge/pr-writing-guide.md` and draft the PR.
+6. Refine and shorten the PR by performing an editorial pass.
    - Remove unnecessary complexity.
    - Eliminate awkward phrasing.
    - Shorten the text wherever possible.
    - Make the writing sound natural while preserving all verified facts.
-6. Self-review:
+7. Self-review:
    - Can a reviewer explain why the PR exists from the title and `Description` alone?
    - Is every section free of duplicated or unverified facts?
    - Does every `What` bullet describe exactly one concrete change?
    - Can any sentence be removed without losing information?
-7. Show the complete PR title and body to the user, then wait for approval.
-8. After approval, create or update the PR using the GitHub REST API via `gh api`, then print its URL.
+8. Show the complete PR title and body to the user, then wait for approval.
+9. After approval, create or update the PR using the GitHub REST API via `gh api`, then print its URL.
