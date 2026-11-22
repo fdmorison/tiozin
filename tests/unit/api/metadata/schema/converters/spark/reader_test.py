@@ -467,6 +467,35 @@ def test_read_should_prefer_metadata_custom_property_over_implied_parameter():
     assert actual == expected
 
 
+def test_read_should_read_time_written_as_timestamp_ntz():
+    # Arrange
+    spark_schema = {
+        "type": "struct",
+        "fields": [
+            {
+                "name": "starts_at",
+                "type": "timestamp_ntz",
+                "nullable": True,
+                "metadata": {"logicalType": "time"},
+            }
+        ],
+    }
+
+    # Act
+    result = SparkSchemaReader().read(spark_schema)
+
+    # Assert
+    actual = result["starts_at"].model_dump(exclude_unset=True)
+    expected = {
+        "name": "starts_at",
+        "logicalType": "time",
+        "physicalType": "timestamp_ntz",
+        "customProperties": [{"property": "timeUnit", "value": "micros"}],
+        "logicalTypeOptions": {"timezone": False},
+    }
+    assert actual == expected
+
+
 @pytest.mark.parametrize(
     "spark_schema",
     [

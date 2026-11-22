@@ -213,7 +213,8 @@ class Schema(Element):
 
         The version is the target Spark version, such as "4.1", and defaults
         to the installed pyspark version, or "3.5" when pyspark is not
-        installed. Spark has a time type only from 4.1 on.
+        installed. Spark has a time type only from 4.1 on, so on older
+        versions a time is a timestamp_ntz.
         """
         return self.to_format("spark", version=version, **options)
 

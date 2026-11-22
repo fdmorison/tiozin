@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from tiozin.api.loggable import Loggable
 from tiozin.utils import default
 
 from ...exceptions import SchemaError
@@ -11,7 +12,7 @@ from . import constants as const
 from .spark_type import SparkType
 
 
-class SparkSchemaWriter:
+class SparkSchemaWriter(Loggable):
     """
     Writes a schema as a Spark struct type in JSON.
 
@@ -27,8 +28,10 @@ class SparkSchemaWriter:
     - A timestamp is timestamp_ntz when its `timezone` option is false,
       otherwise timestamp.
     - A time is time(3) in millis or time(6) in micros. Spark has a time type
-      only from 4.1 on, so when the target Spark version is older the writer
-      raises SchemaError for a time.
+      only from 4.1 on. On older versions a time is a timestamp_ntz on
+      1970-01-01, as Spark reads a SQL TIME column over JDBC, and the field
+      metadata keeps the `time` logical type. A time in nanos gets the finest
+      precision Spark has, with a warning.
 
     The type carries everything that defines it, because Spark drops field
     metadata easily, such as in `withColumn`.
@@ -247,23 +250,29 @@ class SparkSchemaWriter:
     def to_time_type_name(self, property: Property) -> str:
         """
         The Spark time type of a time, with the precision of its `timeUnit`,
-        micros by default.
+        micros by default. Spark has a time type only from 4.1 on, so on older
+        versions it is timestamp_ntz.
 
-        Raises SchemaError when the target Spark version has no time type, which
-        came in Spark 4.1, or when Spark has no precision for the unit.
+        Spark times go up to micros. A time in a finer unit, such as nanos, is
+        written with the finest precision Spark has, and a warning says that
+        Spark truncates its values when it reads the data.
         """
         time_unit = default(property.timeUnit, conv.DEFAULT_TIME_UNIT)
 
-        SchemaError.raise_if(
-            self.release < const.SPARK_TIME_MIN_VERSION,
-            f"Property `{property.name}` is a time, but Spark {self.version} has no time "
-            "type; it needs Spark 4.1 or later",
-        ).raise_if(
-            time_unit not in const.SPARK_TIME_PRECISION_BY_UNIT,
-            f"Property `{property.name}` is a time in {time_unit}, but Spark times go up to micros",
+        if time_unit not in const.SPARK_TIME_PRECISION_BY_UNIT:
+            self.warning(
+                f"Property `{property.name}` is a time in {time_unit}, but Spark times go up "
+                "to micros, so Spark truncates its values when it reads the data"
+            )
+
+        if self.release < const.SPARK_TIME_MIN_VERSION:
+            return const.SPARK_TIMESTAMP_WITHOUT_TIMEZONE
+
+        precision = const.SPARK_TIME_PRECISION_BY_UNIT.get(
+            time_unit, const.SPARK_MAX_TIME_PRECISION
         )
 
-        return f"time({const.SPARK_TIME_PRECISION_BY_UNIT[time_unit]})"
+        return f"time({precision})"
 
     def to_string_type_name(self, property: Property) -> str:
         """
@@ -336,8 +345,11 @@ class SparkSchemaWriter:
             by_alias=True,
             exclude_unset=True,
             exclude_none=True,
-            exclude=const.STRUCTURAL_ATTRIBUTES | {"logicalType", "physicalType"},
+            exclude=const.STRUCTURAL_ATTRIBUTES | {"physicalType"},
         )
+
+        if metadata_attributes.get("logicalType") == spark_type.logical_type:
+            metadata_attributes.pop("logicalType")
 
         if metadata_attributes.get("logicalTypeOptions") == spark_type.logical_type_options:
             metadata_attributes.pop("logicalTypeOptions", None)

@@ -6,7 +6,6 @@ import pytest
 from tiozin import Schema
 from tiozin.api.metadata.schema.converters.spark import SparkSchemaConverter
 from tiozin.api.metadata.schema.model import Map, Property
-from tiozin.exceptions import SchemaError
 
 
 def test_load_should_accept_json_string():
@@ -118,6 +117,20 @@ def test_load_should_restore_dumped_schema():
     assert actual == expected
 
 
+@pytest.mark.parametrize("version", ["3.5", "4.1"])
+def test_load_should_restore_time_unit_finer_than_spark_time(version):
+    # Arrange
+    schema = Schema(name="users").time("starts_at", timeUnit="nanos")
+
+    # Act
+    result = SparkSchemaConverter().load(SparkSchemaConverter().dump(schema, version=version))
+
+    # Assert
+    actual = result.properties[0].timeUnit
+    expected = "nanos"
+    assert actual == expected
+
+
 @pytest.mark.parametrize(
     "schema_file",
     [
@@ -139,13 +152,28 @@ def test_load_should_round_trip_spark_schema(schema_file):
     assert actual == expected
 
 
-def test_dump_should_raise_schema_error_when_target_version_has_no_time_type():
+def test_dump_should_write_time_as_timestamp_ntz_when_target_version_has_no_time_type():
     # Arrange
     schema = Schema(name="users").time("starts_at")
 
-    # Act / Assert
-    with pytest.raises(SchemaError, match=r"Spark 3\.5 has no time type"):
-        SparkSchemaConverter().dump(schema, version="3.5")
+    # Act
+    result = SparkSchemaConverter().dump(schema, version="3.5")
+
+    # Assert
+    actual = result
+    expected = {
+        "type": "struct",
+        "fields": [
+            {
+                "name": "starts_at",
+                "type": "timestamp_ntz",
+                "nullable": True,
+                "metadata": {"logicalType": "time"},
+            }
+        ],
+        "metadata": {"name": "users"},
+    }
+    assert actual == expected
 
 
 def test_dump_should_ignore_unknown_options():
