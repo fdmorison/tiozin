@@ -1,0 +1,56 @@
+name: high_value_orders
+physicalName: high_value_orders
+physicalType: table
+description: High-value completed orders enriched with customer data.
+
+properties:
+
+  - name: customer_id
+    logicalType: integer
+    physicalType: integer
+    required: true
+    description: Unique customer identifier
+
+  - name: customer_name
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Full name of the customer
+
+  - name: country
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Country of the customer
+
+  - name: order_id
+    logicalType: integer
+    physicalType: integer
+    required: true
+    primaryKey: true
+    primaryKeyPosition: 1
+    description: Unique order identifier
+
+  - name: total
+    logicalType: number
+    physicalType: decimal
+    required: true
+    description: Total amount of the order
+
+  - name: status
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Current status of the order
+
+  - name: created_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    description: Timestamp when the order was placed
+
+  - name: segment
+    logicalType: string
+    physicalType: varchar
+    required: true
+    description: Customer value segment of the order
