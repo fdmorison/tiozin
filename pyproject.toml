@@ -76,7 +76,7 @@ families = [
   "tia_databricks",
 ]
 lint = [
-  "ruff ==0.14.10",
+  "ruff==0.14.14",
   "pre-commit ==4.3.0",
   "pyarrow-stubs>=20.0.0.20260625",
 ]
