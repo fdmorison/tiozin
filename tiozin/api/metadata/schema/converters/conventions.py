@@ -1,44 +1,46 @@
 """
-Custom properties that every converter reads and writes with the same meaning,
-so a schema keeps its type parameters when it goes from one format to another.
+Deprecated aliases of the schema conventions, kept for plugins that still
+import them. Use `TiozinCustomProperty`, `TimeUnit` and `StringFormat` from the
+schema model, and the defaults in `tiozin.config`.
 
-- `binary`: true for a string of raw bytes, which the standard has no logical
-  type for.
-- `precision` and `scale`: the digits of a decimal number.
-- `typeSize`: the size in bytes of a fixed-size binary type.
-- `timeUnit`: the unit of a timestamp or a time, one of millis, micros or nanos.
-
-They have no vendor. What the Open Data Contract Standard already covers stays
-in `logicalTypeOptions`: `format` for the size of an integer ("i32", "i64") or
-a number ("f32", "f64") and for a UUID ("uuid"), `minLength` and `maxLength`
-for the length of a string, and `timezone` for whether a timestamp carries its
-timezone.
-
-A converter picks the type it writes only from the logical type, the logical
-type options and these custom properties. It never reads the physical type to
-pick it: the physical type only says what the source stores.
+This module will be removed in the next major version.
 """
 
 from __future__ import annotations
 
-BINARY_PROPERTY = "binary"
-PRECISION_PROPERTY = "precision"
-SCALE_PROPERTY = "scale"
-TYPE_SIZE_PROPERTY = "typeSize"
-TIME_UNIT_PROPERTY = "timeUnit"
+import warnings
+
+from tiozin import config
+
+from ..model import StringFormat, TimeUnit, TiozinCustomProperty
+
+warnings.warn(
+    "`tiozin.api.metadata.schema.converters.conventions` is deprecated and will be removed "
+    "in the next major version. Use `TiozinCustomProperty`, `TimeUnit` and `StringFormat` "
+    "from `tiozin.api.metadata.schema.model`, and the defaults in "
+    "`tiozin.config`.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+BINARY_PROPERTY = TiozinCustomProperty.BINARY
+PRECISION_PROPERTY = TiozinCustomProperty.PRECISION
+SCALE_PROPERTY = TiozinCustomProperty.SCALE
+TYPE_SIZE_PROPERTY = TiozinCustomProperty.TYPE_SIZE
+TIME_UNIT_PROPERTY = TiozinCustomProperty.TIME_UNIT
 TYPE_PARAMETER_PROPERTIES = {
-    BINARY_PROPERTY,
-    PRECISION_PROPERTY,
-    SCALE_PROPERTY,
-    TYPE_SIZE_PROPERTY,
-    TIME_UNIT_PROPERTY,
+    TiozinCustomProperty.BINARY,
+    TiozinCustomProperty.PRECISION,
+    TiozinCustomProperty.SCALE,
+    TiozinCustomProperty.TYPE_SIZE,
+    TiozinCustomProperty.TIME_UNIT,
 }
 
-MILLIS = "millis"
-MICROS = "micros"
-NANOS = "nanos"
-DEFAULT_TIME_UNIT = MICROS
+MILLIS = TimeUnit.MILLIS
+MICROS = TimeUnit.MICROS
+NANOS = TimeUnit.NANOS
+DEFAULT_TIME_UNIT = config.default_schema_time_unit
 
-UUID_FORMAT = "uuid"
-DEFAULT_INTEGER_FORMAT = "i64"
-DEFAULT_NUMBER_FORMAT = "f64"
+UUID_FORMAT = StringFormat.UUID
+DEFAULT_INTEGER_FORMAT = config.default_schema_integer_format
+DEFAULT_NUMBER_FORMAT = config.default_schema_number_format
