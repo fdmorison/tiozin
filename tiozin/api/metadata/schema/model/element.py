@@ -37,6 +37,10 @@ class Element(Model):
         ```
     """
 
+    model_config = pyd.ConfigDict(
+        validate_assignment=True,
+    )
+
     custom_fields: ClassVar[tuple[str, ...]] = (
         TiozinCustomProperty.TYPE_NAME,
         TiozinCustomProperty.NAMESPACE,

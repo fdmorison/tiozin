@@ -564,6 +564,756 @@ def test_cast_should_raise_schema_error_when_logical_type_is_unknown():
         prop.cast("varchar")
 
 
+def test_retype_should_change_type():
+    # Arrange
+    prop = Property(name="active", logicalType="string")
+
+    # Act
+    result = prop.retype("boolean")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "active", "logicalType": "boolean"}
+    assert actual == expected
+
+
+def test_retype_should_return_same_property():
+    # Arrange
+    prop = Property(name="active", logicalType="string")
+
+    # Act
+    result = prop.retype("boolean")
+
+    # Assert
+    assert result is prop
+
+
+def test_retype_should_drop_physical_type():
+    # Arrange
+    prop = Property(name="age", logicalType="integer", physicalType="int")
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "age", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_type_options():
+    # Arrange
+    prop = Property(name="code", logicalType="string", logicalTypeOptions={"maxLength": 3})
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "code", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_conventions():
+    # Arrange
+    prop = Property(name="hash", logicalType="string", binary=True, typeSize=16)
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "hash", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_nested_properties():
+    # Arrange
+    prop = Property(
+        name="address",
+        logicalType="object",
+        properties=[Property(name="city", logicalType="string")],
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "address", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_items():
+    # Arrange
+    prop = Property(
+        name="tags",
+        logicalType="array",
+        items=Property(logicalType="string"),
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "tags", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_map():
+    # Arrange
+    prop = Property(
+        name="labels",
+        logicalType="map",
+        map=Map(key=Property(logicalType="string"), value=Property(logicalType="string")),
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "labels", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_vendor_custom_property():
+    # Arrange
+    prop = Property(
+        name="email",
+        logicalType="string",
+        customProperties=[{"property": "avro.java.string", "value": "String", "vendor": "avro"}],
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "email", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_drop_default():
+    # Arrange
+    prop = Property(
+        name="score",
+        logicalType="integer",
+        customProperties=[{"property": "default", "value": 0}],
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "score", "logicalType": "string"}
+    assert actual == expected
+
+
+def test_retype_should_keep_documentation():
+    # Arrange
+    prop = Property(
+        name="id",
+        logicalType="string",
+        description="User id",
+        examples=["42"],
+    )
+
+    # Act
+    result = prop.retype("boolean")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "id",
+        "logicalType": "boolean",
+        "description": "User id",
+        "examples": ["42"],
+    }
+    assert actual == expected
+
+
+def test_retype_should_keep_constraints():
+    # Arrange
+    prop = Property(
+        name="id",
+        logicalType="string",
+        required=True,
+        unique=True,
+        primaryKey=True,
+    )
+
+    # Act
+    result = prop.retype("boolean")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "id",
+        "logicalType": "boolean",
+        "required": True,
+        "unique": True,
+        "primaryKey": True,
+    }
+    assert actual == expected
+
+
+def test_retype_should_keep_custom_property_without_vendor():
+    # Arrange
+    prop = Property(
+        name="id",
+        logicalType="integer",
+        customProperties=[{"property": "order", "value": "descending"}],
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "id",
+        "logicalType": "string",
+        "customProperties": [{"property": "order", "value": "descending"}],
+    }
+    assert actual == expected
+
+
+def test_retype_should_keep_type_name_with_namespace():
+    # Arrange
+    prop = Property(
+        name="status",
+        logicalType="integer",
+        typeName="Status",
+        namespace="com.acme",
+    )
+
+    # Act
+    result = prop.retype("string")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "status",
+        "logicalType": "string",
+        "customProperties": [
+            {"property": "typeName", "value": "Status"},
+            {"property": "namespace", "value": "com.acme"},
+        ],
+    }
+    assert actual == expected
+
+
+def test_to_integer_should_write_i64_format():
+    # Arrange
+    prop = Property(name="age", logicalType="string")
+
+    # Act
+    result = prop.to_integer()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "age",
+        "logicalType": "integer",
+        "logicalTypeOptions": {"format": "i64"},
+    }
+    assert actual == expected
+
+
+def test_to_number_should_write_f64_format():
+    # Arrange
+    prop = Property(name="score", logicalType="string")
+
+    # Act
+    result = prop.to_number()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "score",
+        "logicalType": "number",
+        "logicalTypeOptions": {"format": "f64"},
+    }
+    assert actual == expected
+
+
+def test_to_time_should_write_micros():
+    # Arrange
+    prop = Property(name="opens_at", logicalType="string")
+
+    # Act
+    result = prop.to_time()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "opens_at",
+        "logicalType": "time",
+        "customProperties": [{"property": "timeUnit", "value": "micros"}],
+    }
+    assert actual == expected
+
+
+def test_to_timestamp_should_write_micros_with_timezone():
+    # Arrange
+    prop = Property(name="created_at", logicalType="string")
+
+    # Act
+    result = prop.to_timestamp()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "created_at",
+        "logicalType": "timestamp",
+        "logicalTypeOptions": {"timezone": True},
+        "customProperties": [{"property": "timeUnit", "value": "micros"}],
+    }
+    assert actual == expected
+
+
+def test_to_timestamp_ntz_should_write_micros_without_timezone():
+    # Arrange
+    prop = Property(name="created_at", logicalType="string")
+
+    # Act
+    result = prop.to_timestamp_ntz()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "created_at",
+        "logicalType": "timestamp",
+        "logicalTypeOptions": {"timezone": False},
+        "customProperties": [{"property": "timeUnit", "value": "micros"}],
+    }
+    assert actual == expected
+
+
+def test_to_decimal_should_default_to_ten_digits_without_scale():
+    # Arrange
+    prop = Property(name="price", logicalType="string")
+
+    # Act
+    result = prop.to_decimal()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "price",
+        "logicalType": "number",
+        "customProperties": [
+            {"property": "precision", "value": 10},
+            {"property": "scale", "value": 0},
+        ],
+    }
+    assert actual == expected
+
+
+def test_to_decimal_should_write_given_digits():
+    # Arrange
+    prop = Property(name="price", logicalType="string")
+
+    # Act
+    result = prop.to_decimal(precision=12, scale=2)
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "price",
+        "logicalType": "number",
+        "customProperties": [
+            {"property": "precision", "value": 12},
+            {"property": "scale", "value": 2},
+        ],
+    }
+    assert actual == expected
+
+
+def test_to_object_should_start_without_properties():
+    # Arrange
+    prop = Property(name="address", logicalType="string")
+
+    # Act
+    result = prop.to_object()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {"name": "address", "logicalType": "object", "properties": []}
+    assert actual == expected
+
+
+def test_to_array_should_default_items_to_string():
+    # Arrange
+    prop = Property(name="tags", logicalType="string")
+
+    # Act
+    result = prop.to_array()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "tags",
+        "logicalType": "array",
+        "items": {"logicalType": "string"},
+    }
+    assert actual == expected
+
+
+def test_to_array_should_retype_items_to_given_type():
+    # Arrange
+    prop = Property(name="scores", logicalType="string")
+
+    # Act
+    result = prop.to_array(of="int32")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "scores",
+        "logicalType": "array",
+        "items": {"logicalType": "integer", "logicalTypeOptions": {"format": "i32"}},
+    }
+    assert actual == expected
+
+
+def test_to_map_should_default_entries_to_string():
+    # Arrange
+    prop = Property(name="labels", logicalType="string")
+
+    # Act
+    result = prop.to_map()
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "labels",
+        "logicalType": "map",
+        "map": {
+            "key": {"logicalType": "string"},
+            "value": {"logicalType": "string"},
+        },
+    }
+    assert actual == expected
+
+
+def test_to_map_should_retype_keys_to_given_type():
+    # Arrange
+    prop = Property(name="labels", logicalType="string")
+
+    # Act
+    result = prop.to_map(key="int32")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "labels",
+        "logicalType": "map",
+        "map": {
+            "key": {"logicalType": "integer", "logicalTypeOptions": {"format": "i32"}},
+            "value": {"logicalType": "string"},
+        },
+    }
+    assert actual == expected
+
+
+def test_to_map_should_retype_values_to_given_type():
+    # Arrange
+    prop = Property(name="labels", logicalType="string")
+
+    # Act
+    result = prop.to_map(value="int32")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "labels",
+        "logicalType": "map",
+        "map": {
+            "key": {"logicalType": "string"},
+            "value": {"logicalType": "integer", "logicalTypeOptions": {"format": "i32"}},
+        },
+    }
+    assert actual == expected
+
+
+def test_retype_should_accept_tiozin_logical_type():
+    # Arrange
+    prop = Property(name="age", logicalType="string")
+
+    # Act
+    result = prop.retype("int32")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "age",
+        "logicalType": "integer",
+        "logicalTypeOptions": {"format": "i32"},
+    }
+    assert actual == expected
+
+
+def test_retype_should_turn_number_into_decimal_when_precision_is_given():
+    # Arrange
+    prop = Property(name="price", logicalType="string")
+
+    # Act
+    result = prop.retype("number", precision=12)
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "price",
+        "logicalType": "number",
+        "customProperties": [
+            {"property": "precision", "value": 12},
+            {"property": "scale", "value": 0},
+        ],
+    }
+    assert actual == expected
+
+
+def test_retype_should_turn_number_into_decimal_when_scale_is_given():
+    # Arrange
+    prop = Property(name="price", logicalType="string")
+
+    # Act
+    result = prop.retype("number", scale=2)
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "price",
+        "logicalType": "number",
+        "customProperties": [
+            {"property": "precision", "value": 10},
+            {"property": "scale", "value": 2},
+        ],
+    }
+    assert actual == expected
+
+
+def test_retype_should_turn_varchar_into_unbounded_string_when_length_is_not_given():
+    # Arrange
+    prop = Property(name="code", logicalType="integer")
+
+    # Act
+    result = prop.retype("varchar")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "code",
+        "logicalType": "string",
+    }
+    assert actual == expected
+
+
+def test_retype_should_pass_length_to_varchar():
+    # Arrange
+    prop = Property(name="code", logicalType="integer")
+
+    # Act
+    result = prop.retype("varchar", length=3)
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "code",
+        "logicalType": "string",
+        "logicalTypeOptions": {"maxLength": 3},
+    }
+    assert actual == expected
+
+
+def test_retype_should_write_char_of_length_one():
+    # Arrange
+    prop = Property(name="grade", logicalType="integer")
+
+    # Act
+    result = prop.retype("char")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "grade",
+        "logicalType": "string",
+        "logicalTypeOptions": {"minLength": 1, "maxLength": 1},
+    }
+    assert actual == expected
+
+
+def test_retype_should_pass_size_to_fixed():
+    # Arrange
+    prop = Property(name="hash", logicalType="integer")
+
+    # Act
+    result = prop.retype("fixed", size=16)
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "hash",
+        "logicalType": "string",
+        "customProperties": [
+            {"property": "binary", "value": True},
+            {"property": "typeSize", "value": 16},
+        ],
+    }
+    assert actual == expected
+
+
+def test_retype_should_pass_time_unit_to_timestamp_ntz():
+    # Arrange
+    prop = Property(name="created_at", logicalType="string")
+
+    # Act
+    result = prop.retype("timestamp_ntz", time_unit="millis")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "created_at",
+        "logicalType": "timestamp",
+        "logicalTypeOptions": {"timezone": False},
+        "customProperties": [{"property": "timeUnit", "value": "millis"}],
+    }
+    assert actual == expected
+
+
+def test_retype_should_pass_time_unit_to_time():
+    # Arrange
+    prop = Property(name="opens_at", logicalType="string")
+
+    # Act
+    result = prop.retype("time", time_unit="nanos")
+
+    # Assert
+    actual = result.model_dump(exclude_unset=True)
+    expected = {
+        "name": "opens_at",
+        "logicalType": "time",
+        "customProperties": [{"property": "timeUnit", "value": "nanos"}],
+    }
+    assert actual == expected
+
+
+def test_retype_should_raise_schema_error_when_type_is_unknown():
+    # Arrange
+    prop = Property(name="age", logicalType="integer")
+
+    # Act / Assert
+    with pytest.raises(SchemaError):
+        prop.retype("text")
+
+
+def test_retype_should_raise_schema_error_when_fixed_has_no_size():
+    # Arrange
+    prop = Property(name="hash", logicalType="integer")
+
+    # Act / Assert
+    with pytest.raises(SchemaError):
+        prop.retype("fixed")
+
+
+def test_retype_should_raise_type_error_when_argument_does_not_apply():
+    # Arrange
+    prop = Property(name="x")
+
+    # Act / Assert
+    with pytest.raises(TypeError):
+        prop.retype("int32", length=5)
+
+
+def test_retype_should_raise_type_error_when_char_has_length():
+    # Arrange
+    prop = Property(name="grade", logicalType="integer")
+
+    # Act / Assert
+    with pytest.raises(TypeError):
+        prop.retype("char", length=2)
+
+
+def test_retype_should_raise_schema_error_when_precision_is_zero():
+    # Arrange
+    prop = Property(name="price", logicalType="string")
+
+    # Act / Assert
+    with pytest.raises(SchemaError):
+        prop.retype("decimal", precision=0)
+
+
+@pytest.mark.parametrize(
+    "type, arguments",
+    [
+        ("number", {"precision": 0}),
+        ("decimal", {"scale": -1}),
+        ("number", {"scale": -1}),
+        ("fixed", {"size": 0}),
+        ("varchar", {"length": 0}),
+        ("array", {"of": "bad"}),
+        ("map", {"key": "bad"}),
+        ("map", {"value": "bad"}),
+        ("time", {"time_unit": "bad"}),
+        ("timestamp", {"time_unit": "bad"}),
+        ("timestamp_ntz", {"time_unit": "bad"}),
+    ],
+)
+def test_retype_should_raise_schema_error_when_argument_is_invalid(type, arguments):
+    # Arrange
+    prop = Property(name="code", logicalType="string")
+
+    # Act / Assert
+    with pytest.raises(SchemaError):
+        prop.retype(type, **arguments)
+
+
+@pytest.mark.parametrize(
+    "type, arguments",
+    [
+        ("fixed", {}),
+        ("decimal", {"precision": 0}),
+        ("number", {"precision": 0}),
+        ("decimal", {"scale": -1}),
+        ("number", {"scale": -1}),
+        ("fixed", {"size": 0}),
+        ("varchar", {"length": 0}),
+        ("array", {"of": "bad"}),
+        ("map", {"key": "bad"}),
+        ("map", {"value": "bad"}),
+        ("time", {"time_unit": "bad"}),
+        ("timestamp", {"time_unit": "bad"}),
+        ("timestamp_ntz", {"time_unit": "bad"}),
+    ],
+)
+def test_retype_should_leave_property_unchanged_when_argument_is_invalid(type, arguments):
+    # Arrange
+    prop = Property(
+        name="code",
+        description="Customer code",
+        logicalType="string",
+        logicalTypeOptions={"maxLength": 3},
+    )
+
+    # Act
+    with pytest.raises(SchemaError):
+        prop.retype(type, **arguments)
+
+    # Assert
+    actual = prop.model_dump(exclude_unset=True)
+    expected = {
+        "name": "code",
+        "description": "Customer code",
+        "logicalType": "string",
+        "logicalTypeOptions": {"maxLength": 3},
+    }
+    assert actual == expected
+
+
 def test_require_should_mark_property_as_required():
     # Arrange
     prop = Property(name="age", logicalType="integer")

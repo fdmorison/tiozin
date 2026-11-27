@@ -265,8 +265,8 @@ Some types need a logical type plus an option or attribute, such as a 32-bit int
 | `float32`, `float64` | `number` with the `format` option `f32` or `f64` |
 | `decimal(path, precision, scale=None)` | `number` with `precision` and `scale` |
 | `uuid` | `string` with the `format` option `uuid` |
-| `varchar(path, length)` | `string` with the `maxLength` option |
-| `char(path, length)` | `string` with the `minLength` and `maxLength` options, both set to `length` |
+| `varchar(path, length=None)` | `string` with the `maxLength` option set to `length` |
+| `char(path)` | `string` with the `minLength` and `maxLength` options, both set to 1 |
 | `binary` | `string` with `binary: true`, for raw bytes |
 | `fixed(path, size)` | `binary` with `typeSize`, the size in bytes |
 | `time_millis`, `time_micros`, `time_nanos` | `time` with `timeUnit` set to `millis`, `micros`, or `nanos` |
@@ -312,7 +312,9 @@ properties:
     timezone: false
 ```
 
-A `decimal` without `scale` has no digits after the point.
+A `decimal` without `scale` has no digits after the point. A `varchar` without `length` is a plain `string` with no length limit.
+
+A `char` always holds one character. `char` still accepts another `length` and emits a `DeprecationWarning`, but that argument goes away in the next major version. For longer text, use `string` or `varchar` instead.
 
 The plain builders already have defaults. Spark and Avro conversions treat an `integer` as 64-bit, a `number` as a 64-bit float, and `time` and `timestamp` in microseconds, and a timestamp carries its timezone. `int64`, `float64`, `time_micros`, and `timestamp_micros` write those defaults into the schema explicitly.
 
@@ -329,6 +331,56 @@ list(schema.normalize_field_names().flatten())
 ```
 
 Every operation in this section changes the schema in place and returns it. Call `clone()` first to keep the original.
+
+### Force the Logical Type of a Property
+
+`retype()` gives a property that already exists a new logical type, without checking whether the old one is compatible. It accepts any logical type or any shortcut name from the table above, changes the property in place, and returns the property:
+
+```python
+schema = (
+    Schema(name="orders")
+    .string("id", description="Order id", required=True)
+    .float32("total")
+)
+
+schema["id"].retype("int64")
+schema["total"].retype("decimal", precision=10, scale=2)
+print(schema.to_yaml())
+```
+
+```yaml
+name: orders
+properties:
+- name: id
+  logicalType: integer
+  description: Order id
+  logicalTypeOptions:
+    format: i64
+  required: true
+- name: total
+  logicalType: number
+  customProperties:
+  - property: precision
+    value: 10
+  - property: scale
+    value: 2
+```
+
+The new logical type replaces everything that belonged to the old one: the physical type, the type options, attributes such as `precision` or `timeUnit`, nested properties, the default value, and custom properties that carry a vendor, such as Avro's `avro.java.string`. That is why `total` lost its `f32` format. Documentation and constraints such as `required` stay, as `id` shows. The type name and namespace (`typeName` and `namespace`) stay too, and so do custom properties without a vendor.
+
+Each logical type writes its defaults into the schema. An `integer` gets the `i64` format and a `number` gets `f64`. A `time` or `timestamp` gets the `micros` unit, and so does a `timestamp_ntz`. A `timestamp` also gets `timezone: true`. An `object` starts with no nested properties.
+
+Some types take keyword arguments:
+
+- `precision` and `scale` for a `decimal`, 10 and 0 when not given. A `number` with `precision` or `scale` also becomes a decimal, so `retype("number", scale=2)` gives a decimal with precision 10 and scale 2. The precision must be at least 1 and the scale at least 0.
+- `length` for a `varchar`, its maximum length, at least 1. Without it, the `varchar` has no length limit. A `char` always has length 1.
+- `size` for a `fixed`, at least 1. It has no default, so a `fixed` always needs it.
+- `time_unit` for a `time`, `timestamp`, or `timestamp_ntz`, such as `retype("timestamp_ntz", time_unit="millis")`. It accepts `millis`, `micros`, or `nanos`, and defaults to `micros`.
+- `of` for the item type of an `array`, and `key` and `value` for the key and value types of a `map`. All three accept the same type names as `retype()` and default to `string`.
+
+An unknown type name raises `SchemaError`, and so does an argument with an invalid value, such as `retype("decimal", precision=0)` or `retype("fixed")`. In both cases the property stays unchanged. An argument that does not apply to the type raises `TypeError`, such as `retype("int32", length=5)`.
+
+Each type also has its own method, named after it with a `to_` prefix, such as `to_int64()`, `to_decimal(precision, scale)`, or `to_array(of)`. `retype()` calls these methods.
 
 ## Evolve a Schema and Copy Its Documentation
 
