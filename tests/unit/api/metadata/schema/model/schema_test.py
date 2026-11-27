@@ -258,6 +258,22 @@ def test_decimal_should_add_number_without_scale_when_scale_is_not_given():
     assert actual == expected
 
 
+def test_varchar_should_add_unbounded_string_when_length_is_not_given():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.varchar("nickname")
+
+    # Assert
+    actual = schema["nickname"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "nickname",
+        "logicalType": "string",
+    }
+    assert actual == expected
+
+
 def test_varchar_should_add_string_with_max_length():
     # Arrange
     schema = Schema(name="users")
@@ -275,12 +291,30 @@ def test_varchar_should_add_string_with_max_length():
     assert actual == expected
 
 
+def test_char_should_add_string_of_length_one():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act
+    schema.char("grade")
+
+    # Assert
+    actual = schema["grade"].model_dump(mode="json", exclude_unset=True)
+    expected = {
+        "name": "grade",
+        "logicalType": "string",
+        "logicalTypeOptions": {"minLength": 1, "maxLength": 1},
+    }
+    assert actual == expected
+
+
 def test_char_should_add_string_of_exact_length():
     # Arrange
     schema = Schema(name="users")
 
     # Act
-    schema.char("country", 2)
+    with pytest.warns(DeprecationWarning):
+        schema.char("country", 2)
 
     # Assert
     actual = schema["country"].model_dump(mode="json", exclude_unset=True)
@@ -290,6 +324,15 @@ def test_char_should_add_string_of_exact_length():
         "logicalTypeOptions": {"minLength": 2, "maxLength": 2},
     }
     assert actual == expected
+
+
+def test_char_should_warn_deprecation_when_length_is_not_one():
+    # Arrange
+    schema = Schema(name="users")
+
+    # Act / Assert
+    with pytest.warns(DeprecationWarning, match="`length` of `char` is deprecated"):
+        schema.char("country", 2)
 
 
 def test_fixed_should_add_binary_string_of_given_size():
