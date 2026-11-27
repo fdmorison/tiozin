@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import re
 
-from ...model import LogicalType, Property
-from .. import conventions as conv
+from ...model import IntegerFormat, LogicalType, NumberFormat, Property, TimeUnit
 
 COMMENT_KEY = "comment"
 CUSTOM_PROPERTIES_KEY = "customProperties"
@@ -44,12 +43,12 @@ SPARK_DEFAULT_TIME_PRECISION = 6
 SPARK_MILLIS_PRECISION = 3
 SPARK_TIMEZONE_BY_TYPE = {"timestamp": True, "timestamp_ntz": False}
 SPARK_FORMATS = {
-    "byte": "i8",
-    "short": "i16",
-    "integer": "i32",
-    "long": "i64",
-    "float": "f32",
-    "double": "f64",
+    "byte": IntegerFormat.INT8,
+    "short": IntegerFormat.INT16,
+    "integer": IntegerFormat.INT32,
+    "long": IntegerFormat.INT64,
+    "float": NumberFormat.FLOAT32,
+    "double": NumberFormat.FLOAT64,
 }
 SPARK_BINARY_TYPE = "binary"
 SPARK_FIXED_LENGTH_TYPE = "char"
@@ -66,15 +65,15 @@ LOGICAL_TO_SPARK = {
     LogicalType.TIMESTAMP: "timestamp",
 }
 SPARK_INTEGER_BY_FORMAT = {
-    "i8": "byte",
-    "i16": "short",
-    "i32": "integer",
-    "u8": "short",
-    "u16": "integer",
-    "i64": "long",
-    "u32": "long",
+    IntegerFormat.INT8: "byte",
+    IntegerFormat.INT16: "short",
+    IntegerFormat.INT32: "integer",
+    IntegerFormat.UINT8: "short",
+    IntegerFormat.UINT16: "integer",
+    IntegerFormat.INT64: "long",
+    IntegerFormat.UINT32: "long",
 }
-SPARK_NUMBER_BY_FORMAT = {"f32": "float", "f64": "double"}
+SPARK_NUMBER_BY_FORMAT = {NumberFormat.FLOAT32: "float", NumberFormat.FLOAT64: "double"}
 STRUCTURAL_ATTRIBUTES = {"required", "properties", "items", "map"}
 DEFAULT_DECIMAL_SCALE = 0
 SPARK_TIMESTAMP_WITHOUT_TIMEZONE = "timestamp_ntz"
@@ -86,5 +85,5 @@ TIME_AS_STRING = "string"
 TIME_TYPES = {TIME_AS_TIME, TIME_AS_TIMESTAMP_NTZ, TIME_AS_LONG, TIME_AS_STRING}
 MICROS_TIME_TYPES = {TIME_AS_TIME, TIME_AS_TIMESTAMP_NTZ}
 DEFAULT_TIME_TYPE = TIME_AS_TIMESTAMP_NTZ
-SPARK_TIME_PRECISION_BY_UNIT = {conv.MILLIS: 3, conv.MICROS: 6}
+SPARK_TIME_PRECISION_BY_UNIT = {TimeUnit.MILLIS: 3, TimeUnit.MICROS: 6}
 SPARK_MAX_TIME_PRECISION = 6

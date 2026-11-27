@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import re
 
-from ...model import LogicalType
-from .. import conventions as conv
+from ...model import IntegerFormat, LogicalType, NumberFormat, TimeUnit, TiozinCustomProperty
 
 AVRO_TO_LOGICAL = {
     "string": LogicalType.STRING,
@@ -39,30 +38,35 @@ AVRO_LOGICAL_TO_PRIMITIVE = {
     "local-timestamp-nanos": "long",
 }
 
-AVRO_FORMATS = {"int": "i32", "long": "i64", "float": "f32", "double": "f64"}
-AVRO_INTEGER_BY_FORMAT = {
-    "i8": "int",
-    "i16": "int",
-    "i32": "int",
-    "u8": "int",
-    "u16": "int",
-    "i64": "long",
-    "u32": "long",
+AVRO_FORMATS = {
+    "int": IntegerFormat.INT32,
+    "long": IntegerFormat.INT64,
+    "float": NumberFormat.FLOAT32,
+    "double": NumberFormat.FLOAT64,
 }
-AVRO_NUMBER_BY_FORMAT = {"f32": "float", "f64": "double"}
+AVRO_INTEGER_BY_FORMAT = {
+    IntegerFormat.INT8: "int",
+    IntegerFormat.INT16: "int",
+    IntegerFormat.INT32: "int",
+    IntegerFormat.UINT8: "int",
+    IntegerFormat.UINT16: "int",
+    IntegerFormat.INT64: "long",
+    IntegerFormat.UINT32: "long",
+}
+AVRO_NUMBER_BY_FORMAT = {NumberFormat.FLOAT32: "float", NumberFormat.FLOAT64: "double"}
 BYTES_TYPE = "bytes"
 AVRO_STRUCTURAL_TYPES = {"record", "array", "map"}
 UUID_LOGICAL_TYPE = "uuid"
 
 AVRO_TEMPORAL_TYPES = {
-    "time-millis": (LogicalType.TIME, None, conv.MILLIS),
-    "time-micros": (LogicalType.TIME, None, conv.MICROS),
-    "timestamp-millis": (LogicalType.TIMESTAMP, True, conv.MILLIS),
-    "timestamp-micros": (LogicalType.TIMESTAMP, True, conv.MICROS),
-    "timestamp-nanos": (LogicalType.TIMESTAMP, True, conv.NANOS),
-    "local-timestamp-millis": (LogicalType.TIMESTAMP, False, conv.MILLIS),
-    "local-timestamp-micros": (LogicalType.TIMESTAMP, False, conv.MICROS),
-    "local-timestamp-nanos": (LogicalType.TIMESTAMP, False, conv.NANOS),
+    "time-millis": (LogicalType.TIME, None, TimeUnit.MILLIS),
+    "time-micros": (LogicalType.TIME, None, TimeUnit.MICROS),
+    "timestamp-millis": (LogicalType.TIMESTAMP, True, TimeUnit.MILLIS),
+    "timestamp-micros": (LogicalType.TIMESTAMP, True, TimeUnit.MICROS),
+    "timestamp-nanos": (LogicalType.TIMESTAMP, True, TimeUnit.NANOS),
+    "local-timestamp-millis": (LogicalType.TIMESTAMP, False, TimeUnit.MILLIS),
+    "local-timestamp-micros": (LogicalType.TIMESTAMP, False, TimeUnit.MICROS),
+    "local-timestamp-nanos": (LogicalType.TIMESTAMP, False, TimeUnit.NANOS),
 }
 
 AVRO_COMPLEX_TO_LOGICAL = {
@@ -90,16 +94,14 @@ AVRO_KNOWN_TYPES = {NULL_TYPE, *AVRO_TO_LOGICAL, *AVRO_COMPLEX_TO_LOGICAL}
 
 DEFAULT_PROPERTY = "default"
 ORDER_PROPERTY = "order"
-TYPE_NAME_PROPERTY = "typeName"
-NAMESPACE_PROPERTY = "namespace"
 FIELD_PROPERTIES = {DEFAULT_PROPERTY, ORDER_PROPERTY}
-NAMED_TYPE_PROPERTIES = {TYPE_NAME_PROPERTY, NAMESPACE_PROPERTY}
-RECORD_PROPERTIES = {NAMESPACE_PROPERTY}
+NAMED_TYPE_PROPERTIES = {TiozinCustomProperty.TYPE_NAME, TiozinCustomProperty.NAMESPACE}
+RECORD_PROPERTIES = {TiozinCustomProperty.NAMESPACE}
 ALIAS_SOURCE = "avro"
 
 AVRO_VENDOR = "avro"
 FIELD_KEYS = {"name", "type", "doc", "aliases", DEFAULT_PROPERTY, ORDER_PROPERTY, ODCS_KEY}
-RECORD_KEYS = {"type", "name", "doc", "aliases", "fields", NAMESPACE_PROPERTY, ODCS_KEY}
+RECORD_KEYS = {"type", "name", "doc", "aliases", "fields", "namespace", ODCS_KEY}
 TYPE_KEYS = {
     "type",
     "name",
@@ -110,7 +112,7 @@ TYPE_KEYS = {
     "values",
     "precision",
     "scale",
-    NAMESPACE_PROPERTY,
+    "namespace",
     ODCS_KEY,
 }
 LOGICAL_TYPE_KEY = "logicalType"
@@ -122,4 +124,4 @@ MAP_KEY_LOGICAL_TYPES = {LogicalType.STRING, None}
 SCHEMA_NATIVE_ATTRIBUTES = {"description", "properties"}
 PROPERTY_NATIVE_ATTRIBUTES = {"name", "physicalType", "properties", "items", "map"}
 SCHEMA_RESERVED_KEYS = RECORD_KEYS | FIELD_PROPERTIES | NAMED_TYPE_PROPERTIES
-FIELD_RESERVED_KEYS = FIELD_KEYS | NAMED_TYPE_PROPERTIES | conv.TYPE_PARAMETER_PROPERTIES
+FIELD_RESERVED_KEYS = FIELD_KEYS | set(TiozinCustomProperty)

@@ -4,8 +4,7 @@ import json
 from typing import Any
 
 from ...exceptions import SchemaError
-from ...model import LogicalType
-from .. import conventions as conv
+from ...model import LogicalType, TimeUnit, TiozinCustomProperty
 from . import constants as const
 
 
@@ -142,19 +141,21 @@ class SparkType:
                 arguments = self.type_arguments
                 precision, scale = arguments + const.SPARK_DEFAULT_DECIMAL[len(arguments) :]
                 return [
-                    {"property": conv.PRECISION_PROPERTY, "value": precision},
-                    {"property": conv.SCALE_PROPERTY, "value": scale},
+                    {"property": TiozinCustomProperty.PRECISION, "value": precision},
+                    {"property": TiozinCustomProperty.SCALE, "value": scale},
                 ]
             case name if name in const.SPARK_TIMEZONE_BY_TYPE:
-                return [{"property": conv.TIME_UNIT_PROPERTY, "value": conv.MICROS}]
+                return [{"property": TiozinCustomProperty.TIME_UNIT, "value": TimeUnit.MICROS}]
             case name if name == const.SPARK_TIME_TYPE:
                 (precision,) = self.type_arguments or (const.SPARK_DEFAULT_TIME_PRECISION,)
                 time_unit = (
-                    conv.MILLIS if precision <= const.SPARK_MILLIS_PRECISION else conv.MICROS
+                    TimeUnit.MILLIS
+                    if precision <= const.SPARK_MILLIS_PRECISION
+                    else TimeUnit.MICROS
                 )
-                return [{"property": conv.TIME_UNIT_PROPERTY, "value": time_unit}]
+                return [{"property": TiozinCustomProperty.TIME_UNIT, "value": time_unit}]
             case name if name == const.SPARK_BINARY_TYPE:
-                return [{"property": conv.BINARY_PROPERTY, "value": True}]
+                return [{"property": TiozinCustomProperty.BINARY, "value": True}]
             case _:
                 return []
 

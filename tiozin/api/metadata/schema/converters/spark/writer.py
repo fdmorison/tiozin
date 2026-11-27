@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from tiozin import config
 from tiozin.api.loggable import Loggable
 from tiozin.utils import default
 
 from ...exceptions import SchemaError
 from ...model import CustomProperty, LogicalType, Map, Property, Schema
-from .. import conventions as conv
 from . import constants as const
 from .spark_type import SparkType
 
@@ -231,13 +231,15 @@ class SparkSchemaWriter(Loggable):
             case Property(logicalType=LogicalType.INTEGER):
                 return SparkType(
                     self.to_sized_type_name(
-                        property, const.SPARK_INTEGER_BY_FORMAT, conv.DEFAULT_INTEGER_FORMAT
+                        property,
+                        const.SPARK_INTEGER_BY_FORMAT,
+                        config.default_schema_integer_format,
                     )
                 )
             case Property(logicalType=LogicalType.NUMBER):
                 return SparkType(
                     self.to_sized_type_name(
-                        property, const.SPARK_NUMBER_BY_FORMAT, conv.DEFAULT_NUMBER_FORMAT
+                        property, const.SPARK_NUMBER_BY_FORMAT, config.default_schema_number_format
                     )
                 )
             case Property(logicalType=logical_type) if logical_type in const.LOGICAL_TO_SPARK:
@@ -267,7 +269,7 @@ class SparkSchemaWriter(Loggable):
             # "long"
             ```
         """
-        time_unit = default(property.timeUnit, conv.DEFAULT_TIME_UNIT)
+        time_unit = default(property.timeUnit, config.default_schema_time_unit)
 
         if (
             self.time_type in const.MICROS_TIME_TYPES
