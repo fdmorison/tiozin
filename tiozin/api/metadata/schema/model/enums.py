@@ -40,6 +40,75 @@ class LogicalType(StrEnum):
     VECTOR = "vector"
 
 
+class TiozinCustomProperty(StrEnum):
+    """
+    Attributes of a type that the Open Data Contract Standard has no place
+    for. Tiozin writes them as custom properties of the same name, without
+    vendor, and every converter reads and writes them with the same meaning.
+
+    - typeName and namespace: the name and namespace of a named type, such as
+      an Avro record, enum or fixed type.
+    - binary: true for a string of raw bytes.
+    - precision and scale: the digits of a decimal number.
+    - typeSize: the size in bytes of a fixed-size binary type.
+    - timeUnit: the unit of a timestamp or a time.
+    """
+
+    TYPE_NAME = "typeName"
+    NAMESPACE = "namespace"
+    BINARY = "binary"
+    PRECISION = "precision"
+    SCALE = "scale"
+    TYPE_SIZE = "typeSize"
+    TIME_UNIT = "timeUnit"
+
+
+class IntegerFormat(StrEnum):
+    """
+    Size and sign of an integer, named as the Rust integer types, as the Open
+    Data Contract Standard v3.2.0 defines them.
+    """
+
+    INT8 = "i8"
+    INT16 = "i16"
+    INT32 = "i32"
+    INT64 = "i64"
+    INT128 = "i128"
+    UINT8 = "u8"
+    UINT16 = "u16"
+    UINT32 = "u32"
+    UINT64 = "u64"
+    UINT128 = "u128"
+
+
+class NumberFormat(StrEnum):
+    """
+    Size of a floating point number, named as the Rust float types, as the
+    Open Data Contract Standard v3.2.0 defines them.
+    """
+
+    FLOAT32 = "f32"
+    FLOAT64 = "f64"
+
+
+class StringFormat(StrEnum):
+    """
+    Formats of a string that Tiozin knows.
+    """
+
+    UUID = "uuid"
+
+
+class TimeUnit(StrEnum):
+    """
+    Unit of a timestamp or a time.
+    """
+
+    MILLIS = "millis"
+    MICROS = "micros"
+    NANOS = "nanos"
+
+
 class Case(StrEnum):
     """
     Naming conventions that property names can be normalized to.

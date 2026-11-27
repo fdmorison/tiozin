@@ -8,7 +8,7 @@ import pydantic as pyd
 from ..exceptions import PropertyNotFoundError, SchemaError
 from .element import Element
 from .enum_value import EnumValue
-from .enums import Case, LogicalType
+from .enums import Case, LogicalType, TimeUnit, TiozinCustomProperty
 from .map import Map
 from .options import (
     ArrayOptions,
@@ -84,11 +84,11 @@ class Property(Element):
 
     custom_fields: ClassVar[tuple[str, ...]] = (
         *Element.custom_fields,
-        "binary",
-        "precision",
-        "scale",
-        "typeSize",
-        "timeUnit",
+        TiozinCustomProperty.BINARY,
+        TiozinCustomProperty.PRECISION,
+        TiozinCustomProperty.SCALE,
+        TiozinCustomProperty.TYPE_SIZE,
+        TiozinCustomProperty.TIME_UNIT,
     )
 
     logicalTypeOptions: pyd.SerializeAsAny[LogicalTypeOptions] | None = pyd.Field(
@@ -204,7 +204,7 @@ class Property(Element):
             "the `typeSize` custom property, and left out when not set."
         ),
     )
-    timeUnit: Literal["millis", "micros", "nanos"] | None = pyd.Field(
+    timeUnit: TimeUnit | None = pyd.Field(
         None,
         exclude=True,
         description=(
