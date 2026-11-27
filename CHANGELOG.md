@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.0](https://github.com/fdmorison/tiozin/compare/tiozin-v6.0.2...tiozin-v6.1.0) (2026-11-27)
+
+
+### Features
+
+* **core:** Add schema enums and deprecate the schema conventions module ([#416](https://github.com/fdmorison/tiozin/issues/416)) ([b5eec2d](https://github.com/fdmorison/tiozin/commit/b5eec2d8781e06ce3c954a60cf09ce7dd10e88f0))
+
 ## [6.0.2](https://github.com/fdmorison/tiozin/compare/tiozin-v6.0.1...tiozin-v6.0.2) (2026-11-22)
 
 
