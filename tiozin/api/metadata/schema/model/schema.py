@@ -21,7 +21,7 @@ from .enums import (
     IntegerFormat,
     LogicalType,
     NumberFormat,
-    TiozinStringFormat,
+    TiozinLogicalType,
     TiozinTimeUnit,
 )
 from .map import Map
@@ -445,7 +445,7 @@ class Schema(Element):
         return self.number(path, precision=precision, scale=scale, **attributes)
 
     def uuid(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=TiozinStringFormat.UUID)
+        options = with_options(attributes, format=TiozinLogicalType.UUID)
         return self.string(path, logicalTypeOptions=options, **attributes)
 
     def varchar(self, path: str | Iterable[str], length: int, **attributes) -> Schema:
