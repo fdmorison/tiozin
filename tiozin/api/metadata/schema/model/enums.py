@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import TypeAlias
 
 import inflection
 
@@ -174,6 +175,56 @@ class QualityMetric(StrEnum):
 # ===============================================
 
 
+class TiozinTimeUnit(StrEnum):
+    """
+    Unit of a timestamp or a time. A Tiozin convention, since the Open Data
+    Contract Standard has no place for it, written as the `timeUnit` custom
+    property.
+    """
+
+    MILLIS = "millis"
+    MICROS = "micros"
+    NANOS = "nanos"
+
+
+class TiozinLogicalType(StrEnum):
+    """
+    Logical types of Tiozin, named as the type shortcuts of the schema
+    builder, such as "int32" or "decimal". Each one is a logical type of the
+    standard with its options and conventions already set.
+
+    Examples:
+
+        ```python
+        schema["age"].retype(TiozinLogicalType.INT32)
+        schema["age"].retype("int32")
+        ```
+    """
+
+    TIME_MILLIS = f"time_{TiozinTimeUnit.MILLIS}"
+    TIME_MICROS = f"time_{TiozinTimeUnit.MICROS}"
+    TIME_NANOS = f"time_{TiozinTimeUnit.NANOS}"
+    TIMESTAMP_MILLIS = f"timestamp_{TiozinTimeUnit.MILLIS}"
+    TIMESTAMP_MICROS = f"timestamp_{TiozinTimeUnit.MICROS}"
+    TIMESTAMP_NANOS = f"timestamp_{TiozinTimeUnit.NANOS}"
+    TIMESTAMP_NTZ = "timestamp_ntz"
+    INT8 = "int8"
+    INT16 = "int16"
+    INT32 = "int32"
+    INT64 = "int64"
+    FLOAT32 = "float32"
+    FLOAT64 = "float64"
+    DECIMAL = "decimal"
+    UUID = "uuid"
+    VARCHAR = "varchar"
+    CHAR = "char"
+    BINARY = "binary"
+    FIXED = "fixed"
+
+
+TypeName: TypeAlias = LogicalType | TiozinLogicalType | str
+
+
 class TiozinCustomProperty(StrEnum):
     """
     Tiozin conventions: attributes of a type that the Open Data Contract
@@ -191,33 +242,29 @@ class TiozinCustomProperty(StrEnum):
 
     TYPE_NAME = "typeName"
     NAMESPACE = "namespace"
-    BINARY = "binary"
+    BINARY = TiozinLogicalType.BINARY
     PRECISION = "precision"
     SCALE = "scale"
     TYPE_SIZE = "typeSize"
     TIME_UNIT = "timeUnit"
 
 
-class TiozinTimeUnit(StrEnum):
+class TypeField(StrEnum):
     """
-    Unit of a timestamp or a time. A Tiozin convention, since the Open Data
-    Contract Standard has no place for it, written as the `timeUnit` custom
-    property.
-    """
-
-    MILLIS = "millis"
-    MICROS = "micros"
-    NANOS = "nanos"
-
-
-class TiozinStringFormat(StrEnum):
-    """
-    Formats of a string that Tiozin knows. The Open Data Contract Standard
-    v3.2.0 leaves the format of a string free, and lists these among its
-    examples.
+    Fields of a property that belong to its type. Changing the type of a
+    property drops them.
     """
 
-    UUID = "uuid"
+    PHYSICAL_TYPE = "physicalType"
+    LOGICAL_TYPE_OPTIONS = "logicalTypeOptions"
+    BINARY = TiozinCustomProperty.BINARY
+    PRECISION = TiozinCustomProperty.PRECISION
+    SCALE = TiozinCustomProperty.SCALE
+    TYPE_SIZE = TiozinCustomProperty.TYPE_SIZE
+    TIME_UNIT = TiozinCustomProperty.TIME_UNIT
+    PROPERTIES = "properties"
+    ITEMS = "items"
+    MAP = "map"
 
 
 class Case(StrEnum):

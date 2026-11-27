@@ -7,7 +7,7 @@ from tiozin import config
 from tiozin.utils import default
 
 from ...exceptions import SchemaError
-from ...model import EnumValue, LogicalType, Map, Property, Schema, TiozinStringFormat
+from ...model import EnumValue, LogicalType, Map, Property, Schema, TiozinLogicalType
 from ...utils import without_none
 from . import constants as const
 from .avro_type import AvroType
@@ -318,7 +318,7 @@ class AvroSchemaWriter:
             case Property(logicalType=LogicalType.TIMESTAMP | LogicalType.TIME):
                 return self.to_primitive_type(self.to_temporal_type_name(property))
             case Property(logicalType=LogicalType.STRING) if (
-                self.option_value(property, "format") == TiozinStringFormat.UUID
+                self.option_value(property, "format") == TiozinLogicalType.UUID
             ):
                 return self.to_primitive_type(const.UUID_LOGICAL_TYPE)
             case Property(logicalType=LogicalType.INTEGER):

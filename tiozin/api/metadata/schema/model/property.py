@@ -1,14 +1,28 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 import pydantic as pyd
+
+from tiozin import config
+from tiozin.utils import default
 
 from ..exceptions import PropertyNotFoundError, SchemaError
 from .element import Element
 from .enum_value import EnumValue
-from .enums import Case, LogicalType, SemanticType, TiozinCustomProperty, TiozinTimeUnit
+from .enums import (
+    Case,
+    IntegerFormat,
+    LogicalType,
+    NumberFormat,
+    SemanticType,
+    TiozinCustomProperty,
+    TiozinLogicalType,
+    TiozinTimeUnit,
+    TypeField,
+    TypeName,
+)
 from .map import Map
 from .options import (
     ArrayOptions,
@@ -25,6 +39,8 @@ from .path import PATH_SEPARATOR, PropertyPath
 from .relationship import Relationship
 
 NO_POSITION = -1
+
+TYPE_NAMES = (*LogicalType, *TiozinLogicalType)
 
 OPTIONS_BY_LOGICAL_TYPE = {
     LogicalType.STRING: StringOptions,
@@ -314,7 +330,7 @@ class Property(Element):
             None,
         )
 
-    def add(self, child: Property) -> Property:
+    def add(self, child: Property) -> Self:
         """
         Adds a child to this property, going through arrays and maps.
 
@@ -355,7 +371,7 @@ class Property(Element):
         self.properties.append(child)
         return self
 
-    def remove(self, name: str) -> Property:
+    def remove(self, name: str) -> Self:
         """
         Removes the child with the given name, ignoring case.
 
@@ -380,7 +396,7 @@ class Property(Element):
         self.children().remove(child)
         return self
 
-    def cast(self, logical_type: LogicalType | str) -> Property:
+    def cast(self, logical_type: LogicalType | str) -> Self:
         """
         Changes the logical type of this property. The physical type is
         dropped, because it belonged to the old type.
@@ -409,7 +425,357 @@ class Property(Element):
         self.model_fields_set.discard("physicalType")
         return self
 
-    def require(self) -> Property:
+    def retype(
+        self,
+        type: TypeName,
+        precision: int = None,
+        scale: int = None,
+        length: int = None,
+        size: int = None,
+        time_unit: TiozinTimeUnit | str = None,
+        of: TypeName = None,
+        key: TypeName = None,
+        value: TypeName = None,
+    ) -> Self:
+        """
+        Forces the logical type of this property, without checking
+        compatibility. Documentation and constraints are kept.
+
+        Args:
+            type:
+                An Open Data Contract Standard logical type, such as "integer",
+                or a Tiozin logical type, such as "int32" or "decimal".
+            precision:
+                Number of digits of a decimal.
+            scale:
+                Number of digits after the point of a decimal.
+            length:
+                Maximum length of a varchar.
+            size:
+                Size in bytes of a fixed type.
+            time_unit:
+                Unit of a time or a timestamp.
+            of:
+                Type of the items of an array.
+            key:
+                Type of the keys of a map.
+            value:
+                Type of the values of a map.
+
+        Raises:
+            SchemaError:
+                If the logical type does not exist, or an argument is missing or
+                has an invalid value, such as a fixed type without size or a
+                precision of 0. The property is left unchanged.
+            TypeError:
+                If an argument does not apply to the logical type, such as a length for an integer.
+
+        Examples:
+
+            ```python
+            property.retype("integer")
+            property.retype("int32")
+            property.retype("decimal", precision=10, scale=2)
+            property.retype("array", of="int32")
+            ```
+        """
+        SchemaError.raise_if_not_in(
+            type,
+            TYPE_NAMES,
+        )
+
+        method = getattr(self, f"to_{type}")
+        arguments = {
+            "precision": precision,
+            "scale": scale,
+            "length": length,
+            "size": size,
+            "time_unit": time_unit,
+            "of": of,
+            "key": key,
+            "value": value,
+        }
+
+        return method(**{name: arg for name, arg in arguments.items() if arg is not None})
+
+    def to_string(self) -> Self:
+        """Forces the logical type to a string with no length limit."""
+        self._clear_type()
+        self.logicalType = LogicalType.STRING
+        return self
+
+    def to_varchar(self, length: int = None) -> Self:
+        """
+        Forces the logical type to a string of at most `length` characters, or
+        with no limit when `length` is not given.
+        """
+        SchemaError.raise_if(
+            length is not None and length < 1,
+            "A varchar requires a length of at least 1",
+        )
+
+        if length is None:
+            return self.to_string()
+
+        self._clear_type()
+        self.logicalType = LogicalType.STRING
+        self.logicalTypeOptions = StringOptions(maxLength=length)
+        return self
+
+    def to_char(self) -> Self:
+        """Forces the logical type to a string of exactly one character."""
+        self._clear_type()
+        self.logicalType = LogicalType.STRING
+        self.logicalTypeOptions = StringOptions(minLength=1, maxLength=1)
+        return self
+
+    def to_uuid(self) -> Self:
+        """Forces the logical type to a string in the uuid format."""
+        self._clear_type()
+        self.logicalType = LogicalType.STRING
+        self.logicalTypeOptions = StringOptions(format=TiozinLogicalType.UUID)
+        return self
+
+    def to_binary(self) -> Self:
+        """Forces the logical type to a string of raw bytes."""
+        self._clear_type()
+        self.logicalType = LogicalType.STRING
+        self.binary = True
+        return self
+
+    def to_fixed(self, size: int = None) -> Self:
+        """Forces the logical type to a string of exactly `size` raw bytes."""
+        SchemaError.raise_if(
+            size is None,
+            "A fixed type requires a size",
+        ).raise_if(
+            size < 1,
+            "A fixed type requires a size of at least 1",
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.STRING
+        self.binary = True
+        self.typeSize = size
+        return self
+
+    def to_integer(self) -> Self:
+        """Forces the logical type to a 64-bit integer."""
+        return self.to_int64()
+
+    def to_int8(self) -> Self:
+        """Forces the logical type to an 8-bit integer."""
+        self._clear_type()
+        self.logicalType = LogicalType.INTEGER
+        self.logicalTypeOptions = IntegerOptions(format=IntegerFormat.INT8)
+        return self
+
+    def to_int16(self) -> Self:
+        """Forces the logical type to a 16-bit integer."""
+        self._clear_type()
+        self.logicalType = LogicalType.INTEGER
+        self.logicalTypeOptions = IntegerOptions(format=IntegerFormat.INT16)
+        return self
+
+    def to_int32(self) -> Self:
+        """Forces the logical type to a 32-bit integer."""
+        self._clear_type()
+        self.logicalType = LogicalType.INTEGER
+        self.logicalTypeOptions = IntegerOptions(format=IntegerFormat.INT32)
+        return self
+
+    def to_int64(self) -> Self:
+        """Forces the logical type to a 64-bit integer."""
+        self._clear_type()
+        self.logicalType = LogicalType.INTEGER
+        self.logicalTypeOptions = IntegerOptions(format=IntegerFormat.INT64)
+        return self
+
+    def to_number(self, precision: int = None, scale: int = None) -> Self:
+        """
+        Forces the logical type to a 64-bit float, or to a decimal when
+        `precision` or `scale` is given.
+        """
+        if precision is not None or scale is not None:
+            return self.to_decimal(precision, scale)
+
+        return self.to_float64()
+
+    def to_float32(self) -> Self:
+        """Forces the logical type to a 32-bit float."""
+        self._clear_type()
+        self.logicalType = LogicalType.NUMBER
+        self.logicalTypeOptions = NumberOptions(format=NumberFormat.FLOAT32)
+        return self
+
+    def to_float64(self) -> Self:
+        """Forces the logical type to a 64-bit float."""
+        self._clear_type()
+        self.logicalType = LogicalType.NUMBER
+        self.logicalTypeOptions = NumberOptions(format=NumberFormat.FLOAT64)
+        return self
+
+    def to_decimal(self, precision: int = None, scale: int = None) -> Self:
+        """
+        Forces the logical type to a decimal of `precision` digits, `scale` of
+        them after the point, 10 and 0 by default.
+        """
+        SchemaError.raise_if(
+            precision is not None and precision < 1,
+            "A decimal requires a precision of at least 1",
+        ).raise_if(
+            scale is not None and scale < 0,
+            "A decimal requires a scale of at least 0",
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.NUMBER
+        self.precision = default(precision, 10)
+        self.scale = default(scale, 0)
+        return self
+
+    def to_boolean(self) -> Self:
+        """Forces the logical type to a boolean."""
+        self._clear_type()
+        self.logicalType = LogicalType.BOOLEAN
+        return self
+
+    def to_date(self) -> Self:
+        """Forces the logical type to a date."""
+        self._clear_type()
+        self.logicalType = LogicalType.DATE
+        return self
+
+    def to_time(self, time_unit: TiozinTimeUnit | str = None) -> Self:
+        """Forces the logical type to a time of day, in micros by default."""
+        SchemaError.raise_if_not_in(
+            time_unit,
+            list(TiozinTimeUnit),
+            allow_none=True,
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.TIME
+        self.timeUnit = default(time_unit, config.default_schema_time_unit)
+        return self
+
+    def to_time_millis(self) -> Self:
+        """Forces the logical type to a time of day in millis."""
+        return self.to_time(TiozinTimeUnit.MILLIS)
+
+    def to_time_micros(self) -> Self:
+        """Forces the logical type to a time of day in micros."""
+        return self.to_time(TiozinTimeUnit.MICROS)
+
+    def to_time_nanos(self) -> Self:
+        """Forces the logical type to a time of day in nanos."""
+        return self.to_time(TiozinTimeUnit.NANOS)
+
+    def to_timestamp(self, time_unit: TiozinTimeUnit | str = None) -> Self:
+        """Forces the logical type to a timestamp with timezone, in micros by default."""
+        SchemaError.raise_if_not_in(
+            time_unit,
+            list(TiozinTimeUnit),
+            allow_none=True,
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.TIMESTAMP
+        self.logicalTypeOptions = TimestampOptions(timezone=True)
+        self.timeUnit = default(time_unit, config.default_schema_time_unit)
+        return self
+
+    def to_timestamp_millis(self) -> Self:
+        """Forces the logical type to a timestamp with timezone in millis."""
+        return self.to_timestamp(TiozinTimeUnit.MILLIS)
+
+    def to_timestamp_micros(self) -> Self:
+        """Forces the logical type to a timestamp with timezone in micros."""
+        return self.to_timestamp(TiozinTimeUnit.MICROS)
+
+    def to_timestamp_nanos(self) -> Self:
+        """Forces the logical type to a timestamp with timezone in nanos."""
+        return self.to_timestamp(TiozinTimeUnit.NANOS)
+
+    def to_timestamp_ntz(self, time_unit: TiozinTimeUnit | str = None) -> Self:
+        """Forces the logical type to a timestamp without timezone, in micros by default."""
+        SchemaError.raise_if_not_in(
+            time_unit,
+            list(TiozinTimeUnit),
+            allow_none=True,
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.TIMESTAMP
+        self.logicalTypeOptions = TimestampOptions(timezone=False)
+        self.timeUnit = default(time_unit, config.default_schema_time_unit)
+        return self
+
+    def to_object(self) -> Self:
+        """Forces the logical type to an object with no nested properties."""
+        self._clear_type()
+        self.logicalType = LogicalType.OBJECT
+        self.properties = []
+        return self
+
+    def to_array(self, of: TypeName = None) -> Self:
+        """Forces the logical type to an array of `of` items, strings by default."""
+        SchemaError.raise_if_not_in(
+            of,
+            TYPE_NAMES,
+            allow_none=True,
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.ARRAY
+        self.items = Property().retype(default(of, LogicalType.STRING))
+        return self
+
+    def to_map(
+        self,
+        value: TypeName = None,
+        key: TypeName = None,
+    ) -> Self:
+        """Forces the logical type to a map from `key` to `value`, strings by default."""
+        SchemaError.raise_if_not_in(
+            key,
+            TYPE_NAMES,
+            allow_none=True,
+        ).raise_if_not_in(
+            value,
+            TYPE_NAMES,
+            allow_none=True,
+        )
+
+        self._clear_type()
+        self.logicalType = LogicalType.MAP
+        self.map = Map(
+            key=Property().retype(default(key, LogicalType.STRING)),
+            value=Property().retype(default(value, LogicalType.STRING)),
+        )
+        return self
+
+    def to_vector(self) -> Self:
+        """Forces the logical type to a vector."""
+        self._clear_type()
+        self.logicalType = LogicalType.VECTOR
+        return self
+
+    def _clear_type(self) -> None:
+        for field in TypeField:
+            setattr(self, field, None)
+            self.model_fields_set.discard(field)
+
+        self.customProperties = [
+            custom_property
+            for custom_property in self.customProperties or []
+            if custom_property.vendor is None and custom_property.property != "default"
+        ] or None
+
+        if self.customProperties is None:
+            self.model_fields_set.discard("customProperties")
+
+    def require(self) -> Self:
         """
         Marks this property as required.
 
@@ -423,7 +789,7 @@ class Property(Element):
         self.required = True
         return self
 
-    def optional(self) -> Property:
+    def optional(self) -> Self:
         """
         Marks this property as optional.
 
@@ -437,7 +803,7 @@ class Property(Element):
         self.required = False
         return self
 
-    def normalize_field_names(self, case: Case) -> Property:
+    def normalize_field_names(self, case: Case) -> Self:
         """
         Renames every nested property to the given case. This property
         keeps its own name.
@@ -469,7 +835,7 @@ class Property(Element):
         self.has_unique_names(self.children())
         return self
 
-    def sort(self) -> Property:
+    def sort(self) -> Self:
         """
         Sorts the nested properties by name, ignoring case, at every level.
 

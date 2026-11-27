@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable
 from typing import Any, Literal
 
@@ -21,7 +22,7 @@ from .enums import (
     IntegerFormat,
     LogicalType,
     NumberFormat,
-    TiozinStringFormat,
+    TiozinLogicalType,
     TiozinTimeUnit,
 )
 from .map import Map
@@ -445,14 +446,26 @@ class Schema(Element):
         return self.number(path, precision=precision, scale=scale, **attributes)
 
     def uuid(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=TiozinStringFormat.UUID)
+        options = with_options(attributes, format=TiozinLogicalType.UUID)
         return self.string(path, logicalTypeOptions=options, **attributes)
 
-    def varchar(self, path: str | Iterable[str], length: int, **attributes) -> Schema:
+    def varchar(self, path: str | Iterable[str], length: int = None, **attributes) -> Schema:
+        if length is None:
+            return self.string(path, **attributes)
+
         options = with_options(attributes, maxLength=length)
         return self.string(path, logicalTypeOptions=options, **attributes)
 
-    def char(self, path: str | Iterable[str], length: int, **attributes) -> Schema:
+    def char(self, path: str | Iterable[str], length: int = None, **attributes) -> Schema:
+        if length not in (None, 1):
+            warnings.warn(
+                "`length` of `char` is deprecated and will be removed in the next major "
+                "version: a char always has length 1. Use `string` or `varchar` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        length = default(length, 1)
         options = with_options(attributes, minLength=length, maxLength=length)
         return self.string(path, logicalTypeOptions=options, **attributes)
 
