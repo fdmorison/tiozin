@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import pydantic as pyd
 
+from ..enums import NumberFormat
 from .logical_type_options import LogicalTypeOptions
 
 
@@ -27,7 +26,7 @@ class NumberOptions(LogicalTypeOptions):
 
     model_config = pyd.ConfigDict(extra="forbid")
 
-    format: Literal["f32", "f64"] | None = pyd.Field(
+    format: NumberFormat | None = pyd.Field(
         None,
         description="Size of the values, named as the Rust float types.",
     )

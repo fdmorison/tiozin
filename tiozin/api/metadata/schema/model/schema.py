@@ -11,13 +11,19 @@ from rich.syntax import RICH_SYNTAX_THEMES, Syntax
 from tiozin.utils import default
 
 from ..converters import SchemaConverter
-from ..converters import conventions as conv
 from ..exceptions import SchemaError
 from ..merges import BackwardCompatibleEvolution, DocumentationMerge
 from ..utils import SchemaYamlLexer
 from .context import Context
 from .element import Element
-from .enums import Case, LogicalType
+from .enums import (
+    Case,
+    IntegerFormat,
+    LogicalType,
+    NumberFormat,
+    TiozinStringFormat,
+    TiozinTimeUnit,
+)
 from .map import Map
 from .path import PropertyPath
 from .property import Property
@@ -26,12 +32,6 @@ from .relationship import Relationship
 TERMINAL_BACKGROUND = "default"
 DEFAULT_THEME = "solarized-dark"
 DEFAULT_PHYSICAL_TYPE = "table"
-INT8_FORMAT = "i8"
-INT16_FORMAT = "i16"
-INT32_FORMAT = "i32"
-INT64_FORMAT = "i64"
-FLOAT32_FORMAT = "f32"
-FLOAT64_FORMAT = "f64"
 
 
 class Schema(Element):
@@ -75,7 +75,7 @@ class Schema(Element):
         DEFAULT_PHYSICAL_TYPE,
         description="Kind of object in storage, such as table, view, topic or file.",
     )
-    logicalType: Literal["object"] | None = pyd.Field(
+    logicalType: Literal[LogicalType.OBJECT] | None = pyd.Field(
         None,
         description="Type of the schema, which is always object.",
     )
@@ -394,49 +394,49 @@ class Schema(Element):
         return self.add(path, LogicalType.TIME, **attributes)
 
     def time_millis(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.time(path, timeUnit=conv.MILLIS, **attributes)
+        return self.time(path, timeUnit=TiozinTimeUnit.MILLIS, **attributes)
 
     def time_micros(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.time(path, timeUnit=conv.MICROS, **attributes)
+        return self.time(path, timeUnit=TiozinTimeUnit.MICROS, **attributes)
 
     def time_nanos(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.time(path, timeUnit=conv.NANOS, **attributes)
+        return self.time(path, timeUnit=TiozinTimeUnit.NANOS, **attributes)
 
     def timestamp_millis(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.timestamp(path, timeUnit=conv.MILLIS, **attributes)
+        return self.timestamp(path, timeUnit=TiozinTimeUnit.MILLIS, **attributes)
 
     def timestamp_micros(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.timestamp(path, timeUnit=conv.MICROS, **attributes)
+        return self.timestamp(path, timeUnit=TiozinTimeUnit.MICROS, **attributes)
 
     def timestamp_nanos(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.timestamp(path, timeUnit=conv.NANOS, **attributes)
+        return self.timestamp(path, timeUnit=TiozinTimeUnit.NANOS, **attributes)
 
     def timestamp_ntz(self, path: str | Iterable[str], **attributes) -> Schema:
         options = with_options(attributes, timezone=False)
         return self.timestamp(path, logicalTypeOptions=options, **attributes)
 
     def int8(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=INT8_FORMAT)
+        options = with_options(attributes, format=IntegerFormat.INT8)
         return self.integer(path, logicalTypeOptions=options, **attributes)
 
     def int16(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=INT16_FORMAT)
+        options = with_options(attributes, format=IntegerFormat.INT16)
         return self.integer(path, logicalTypeOptions=options, **attributes)
 
     def int32(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=INT32_FORMAT)
+        options = with_options(attributes, format=IntegerFormat.INT32)
         return self.integer(path, logicalTypeOptions=options, **attributes)
 
     def int64(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=INT64_FORMAT)
+        options = with_options(attributes, format=IntegerFormat.INT64)
         return self.integer(path, logicalTypeOptions=options, **attributes)
 
     def float32(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=FLOAT32_FORMAT)
+        options = with_options(attributes, format=NumberFormat.FLOAT32)
         return self.number(path, logicalTypeOptions=options, **attributes)
 
     def float64(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=FLOAT64_FORMAT)
+        options = with_options(attributes, format=NumberFormat.FLOAT64)
         return self.number(path, logicalTypeOptions=options, **attributes)
 
     def decimal(
@@ -445,7 +445,7 @@ class Schema(Element):
         return self.number(path, precision=precision, scale=scale, **attributes)
 
     def uuid(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=conv.UUID_FORMAT)
+        options = with_options(attributes, format=TiozinStringFormat.UUID)
         return self.string(path, logicalTypeOptions=options, **attributes)
 
     def varchar(self, path: str | Iterable[str], length: int, **attributes) -> Schema:

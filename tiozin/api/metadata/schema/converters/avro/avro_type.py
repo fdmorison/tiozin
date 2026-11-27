@@ -4,9 +4,8 @@ import json
 from typing import Any
 
 from ...exceptions import SchemaError
-from ...model import LogicalType
+from ...model import LogicalType, TiozinCustomProperty, TiozinStringFormat
 from ...utils import without_none
-from .. import conventions as conv
 from . import constants as const
 
 
@@ -227,20 +226,22 @@ class AvroType:
                     f"Avro decimal `{self.json_value}` has no precision",
                 )
                 parameters = {
-                    conv.PRECISION_PROPERTY: self.json_value["precision"],
-                    conv.SCALE_PROPERTY: self.json_value.get("scale"),
-                    conv.TYPE_SIZE_PROPERTY: self.json_value.get("size") if is_fixed else None,
+                    TiozinCustomProperty.PRECISION: self.json_value["precision"],
+                    TiozinCustomProperty.SCALE: self.json_value.get("scale"),
+                    TiozinCustomProperty.TYPE_SIZE: self.json_value.get("size")
+                    if is_fixed
+                    else None,
                 }
             case const.FIXED_TYPE:
                 parameters = {
-                    conv.BINARY_PROPERTY: True,
-                    conv.TYPE_SIZE_PROPERTY: self.json_value["size"],
+                    TiozinCustomProperty.BINARY: True,
+                    TiozinCustomProperty.TYPE_SIZE: self.json_value["size"],
                 }
             case const.BYTES_TYPE:
-                parameters = {conv.BINARY_PROPERTY: True}
+                parameters = {TiozinCustomProperty.BINARY: True}
             case name if name in const.AVRO_TEMPORAL_TYPES:
                 _, _, time_unit = const.AVRO_TEMPORAL_TYPES[name]
-                parameters = {conv.TIME_UNIT_PROPERTY: time_unit}
+                parameters = {TiozinCustomProperty.TIME_UNIT: time_unit}
             case _:
                 parameters = {}
 
@@ -275,7 +276,7 @@ class AvroType:
                 _, timezone, _ = const.AVRO_TEMPORAL_TYPES[name]
                 return without_none({"timezone": timezone}) or None
             case const.UUID_LOGICAL_TYPE:
-                return {"format": conv.UUID_FORMAT}
+                return {"format": TiozinStringFormat.UUID}
             case name if name in const.AVRO_FORMATS:
                 return {"format": const.AVRO_FORMATS[name]}
             case _:
@@ -311,8 +312,8 @@ class AvroType:
         match self.json_value:
             case {"type": str() as kind, "name": str() as name} if kind in const.AVRO_NAMED_TYPES:
                 named = {
-                    const.TYPE_NAME_PROPERTY: name,
-                    const.NAMESPACE_PROPERTY: self.json_value.get("namespace"),
+                    TiozinCustomProperty.TYPE_NAME: name,
+                    TiozinCustomProperty.NAMESPACE: self.json_value.get("namespace"),
                 }
                 named_properties = [
                     {"property": key, "value": value} for key, value in without_none(named).items()

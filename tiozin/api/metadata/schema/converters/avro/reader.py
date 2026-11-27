@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ...exceptions import SchemaError
-from ...model import Property, Schema
+from ...model import Property, Schema, TiozinCustomProperty
 from ...utils import without_none
 from . import constants as const
 from .avro_type import AvroType
@@ -101,7 +101,7 @@ class AvroSchemaReader:
         written_record = record
         record = inline_named_types(record)
         odcs_attributes = record.get(const.ODCS_KEY) or {}
-        namespace = without_none({const.NAMESPACE_PROPERTY: record.get("namespace")})
+        namespace = without_none({TiozinCustomProperty.NAMESPACE: record.get("namespace")})
         record_properties = {
             key: value for key, value in record.items() if key not in const.RECORD_KEYS
         }
@@ -339,7 +339,7 @@ class AvroSchemaReader:
             *(
                 custom_property
                 for custom_property in value_type.custom_properties
-                if custom_property != {"property": const.TYPE_NAME_PROPERTY, "value": path}
+                if custom_property != {"property": TiozinCustomProperty.TYPE_NAME, "value": path}
             ),
             *(odcs_attributes.get("customProperties") or []),
         ]

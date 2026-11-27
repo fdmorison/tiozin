@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 import pydantic as pyd
 
 from ..exceptions import PropertyNotFoundError, SchemaError
 from .element import Element
 from .enum_value import EnumValue
-from .enums import Case, LogicalType
+from .enums import Case, LogicalType, SemanticType, TiozinCustomProperty, TiozinTimeUnit
 from .map import Map
 from .options import (
     ArrayOptions,
@@ -84,11 +84,11 @@ class Property(Element):
 
     custom_fields: ClassVar[tuple[str, ...]] = (
         *Element.custom_fields,
-        "binary",
-        "precision",
-        "scale",
-        "typeSize",
-        "timeUnit",
+        TiozinCustomProperty.BINARY,
+        TiozinCustomProperty.PRECISION,
+        TiozinCustomProperty.SCALE,
+        TiozinCustomProperty.TYPE_SIZE,
+        TiozinCustomProperty.TIME_UNIT,
     )
 
     logicalTypeOptions: pyd.SerializeAsAny[LogicalTypeOptions] | None = pyd.Field(
@@ -119,8 +119,8 @@ class Property(Element):
         NO_POSITION,
         description="Position of the property in the partition key, starting at 1.",
     )
-    semanticType: Literal["column", "measure", "dimension"] = pyd.Field(
-        "column",
+    semanticType: SemanticType = pyd.Field(
+        SemanticType.COLUMN,
         description="Role of the property in the data model: column, measure or dimension.",
     )
     classification: str | None = pyd.Field(
@@ -204,7 +204,7 @@ class Property(Element):
             "the `typeSize` custom property, and left out when not set."
         ),
     )
-    timeUnit: Literal["millis", "micros", "nanos"] | None = pyd.Field(
+    timeUnit: TiozinTimeUnit | None = pyd.Field(
         None,
         exclude=True,
         description=(

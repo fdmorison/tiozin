@@ -67,6 +67,9 @@ default_schema_default_version = "latest"
 default_schema_subject_template = (
     "{{org}}.{{region}}.{{domain}}.{{subdomain}}.{{layer}}.{{product}}.{{model}}"
 )
+default_schema_time_unit = "micros"
+default_schema_integer_format = "i64"
+default_schema_number_format = "f64"
 
 default_lineage_registry = "tio_kernel:NoOpLineageRegistry"
 default_lineage_emit_level = "JOB"

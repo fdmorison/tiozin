@@ -95,7 +95,7 @@ Each one is written as a custom property of the same name, without vendor, and l
 
 1. Declare the field with `exclude=True`.
 2. Say in its `Field` description that it is a Tiozin convention, written as the custom property of the same name, and left out when not set.
-3. Add its name to the `custom_fields` ClassVar, declared at the top of the class. `Property` extends `Element.custom_fields`.
+3. Add its name to the `TiozinCustomProperty` enum in `model/enums.py`, and its member to the `custom_fields` ClassVar, declared at the top of the class. `Property` extends `Element.custom_fields`.
 4. Add it to the table in rule 6.
 
 `Element` handles the rest. Its serializer writes every set field as a custom property without vendor. Its validator moves a custom property with only `property` and `value` back to the field, and a field given directly wins.
@@ -126,12 +126,12 @@ precision = next(cp.value for cp in property.customProperties if cp.property == 
 
 **Every writer fills the same gap with the same default.**
 
-- An integer is "i64" (`DEFAULT_INTEGER_FORMAT`).
-- A number is "f64" (`DEFAULT_NUMBER_FORMAT`).
-- A timestamp or time unit is "micros" (`DEFAULT_TIME_UNIT`).
+- An integer is "i64" (`config.default_schema_integer_format`).
+- A number is "f64" (`config.default_schema_number_format`).
+- A timestamp or time unit is "micros" (`config.default_schema_time_unit`).
 - A timestamp carries its timezone unless its `timezone` option is false.
 
-Import these constants from `tiozin/api/metadata/schema/converters/conventions.py`. Never redefine them in a format package.
+Read these defaults from `tiozin/config.py`, and the convention names, time units and formats from the enums in `tiozin/api/metadata/schema/model/enums.py`. Never redefine them in a format package, and never import them from a converter module into the model.
 
 ## 9. Conventions win over format attributes
 

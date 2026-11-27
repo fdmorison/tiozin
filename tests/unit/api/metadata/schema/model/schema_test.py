@@ -5,8 +5,9 @@ import jsonschema
 import pytest
 
 from tiozin import Schema
+from tiozin.api.metadata.schema.converters.spark import SparkTimeType
 from tiozin.api.metadata.schema.model import Context, Property, StringOptions
-from tiozin.exceptions import PropertyNotFoundError, SchemaError
+from tiozin.exceptions import ModelError, PropertyNotFoundError, SchemaError
 
 
 def test_add_should_add_property():
@@ -1046,6 +1047,30 @@ def test_to_spark_should_write_time_as_given_time_type():
     assert actual == expected
 
 
+def test_to_spark_should_accept_time_type_member():
+    # Arrange
+    schema = Schema(name="users").time("starts_at")
+
+    # Act
+    result = schema.to_spark(time_type=SparkTimeType.LONG)
+
+    # Assert
+    actual = result
+    expected = {
+        "type": "struct",
+        "fields": [
+            {
+                "name": "starts_at",
+                "type": "long",
+                "nullable": True,
+                "metadata": {"logicalType": "time"},
+            }
+        ],
+        "metadata": {"name": "users"},
+    }
+    assert actual == expected
+
+
 def test_from_spark_should_create_schema_from_spark():
     # Arrange
     spark_schema = {
@@ -1248,6 +1273,22 @@ def test_schema_should_accept_context_as_text_or_object(context, expected):
     # Assert
     actual = result.context
     assert actual == expected
+
+
+def test_schema_should_accept_object_logical_type():
+    # Act
+    result = Schema(name="orders", logicalType="object")
+
+    # Assert
+    actual = result.logicalType
+    expected = "object"
+    assert actual == expected
+
+
+def test_schema_should_raise_model_error_when_logical_type_is_not_object():
+    # Act / Assert
+    with pytest.raises(ModelError):
+        Schema(name="orders", logicalType="string")
 
 
 def test_to_yaml_should_round_trip_full_document():

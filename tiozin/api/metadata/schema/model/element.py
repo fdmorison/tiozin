@@ -6,7 +6,7 @@ import pydantic as pyd
 
 from .authoritative_definition import AuthoritativeDefinition
 from .custom_property import CustomProperty
-from .enums import LogicalType
+from .enums import LogicalType, TiozinCustomProperty
 from .model import Model
 from .quality import Quality
 from .relationship import Relationship
@@ -37,7 +37,10 @@ class Element(Model):
         ```
     """
 
-    custom_fields: ClassVar[tuple[str, ...]] = ("typeName", "namespace")
+    custom_fields: ClassVar[tuple[str, ...]] = (
+        TiozinCustomProperty.TYPE_NAME,
+        TiozinCustomProperty.NAMESPACE,
+    )
 
     id: StableId | None = pyd.Field(
         None,

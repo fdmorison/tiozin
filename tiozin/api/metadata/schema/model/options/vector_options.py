@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import pydantic as pyd
 
+from ..enums import DistanceMetric, VectorElementType
 from .logical_type_options import LogicalTypeOptions
 
 
@@ -33,28 +32,11 @@ class VectorOptions(LogicalTypeOptions):
         ge=1,
         description="Number of elements of the vector.",
     )
-    elementType: Literal[
-        "bfloat16",
-        "binary",
-        "float16",
-        "float32",
-        "float64",
-        "int8",
-        "uint8",
-    ] = pyd.Field(
-        "float32",
+    elementType: VectorElementType = pyd.Field(
+        VectorElementType.FLOAT32,
         description="Type of each element of the vector.",
     )
-    distanceMetric: (
-        Literal[
-            "cosine",
-            "dotProduct",
-            "euclidean",
-            "hamming",
-            "manhattan",
-        ]
-        | None
-    ) = pyd.Field(
+    distanceMetric: DistanceMetric | None = pyd.Field(
         None,
         description="How the distance between two vectors is measured.",
     )

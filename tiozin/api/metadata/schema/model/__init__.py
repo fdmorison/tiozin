@@ -26,7 +26,22 @@ from .context import Context
 from .custom_property import CustomProperty
 from .element import Element
 from .enum_value import EnumValue
-from .enums import Case, LogicalType
+from .enums import (
+    Case,
+    DistanceMetric,
+    IntegerFormat,
+    LogicalType,
+    NumberFormat,
+    QualityDimension,
+    QualityMetric,
+    QualityType,
+    RelationshipType,
+    SemanticType,
+    TiozinCustomProperty,
+    TiozinStringFormat,
+    TiozinTimeUnit,
+    VectorElementType,
+)
 from .map import Map
 from .model import Model
 from .options import (
@@ -57,26 +72,38 @@ __all__ = [
     "AuthoritativeDefinition",
     "Case",
     "Constraint",
+    "TiozinCustomProperty",
     "Context",
     "CustomProperty",
     "DateOptions",
+    "DistanceMetric",
     "Element",
     "EnumValue",
+    "IntegerFormat",
     "IntegerOptions",
     "LogicalType",
     "LogicalTypeOptions",
     "Map",
     "Model",
+    "NumberFormat",
     "NumberOptions",
     "ObjectOptions",
     "Property",
     "PropertyPath",
     "Quality",
+    "QualityDimension",
+    "QualityMetric",
+    "QualityType",
     "Relationship",
+    "RelationshipType",
     "Schema",
+    "SemanticType",
+    "TiozinStringFormat",
     "StringOptions",
     "Synonym",
+    "TiozinTimeUnit",
     "TimestampOptions",
+    "VectorElementType",
     "VectorOptions",
     "VerifiedStatement",
 ]

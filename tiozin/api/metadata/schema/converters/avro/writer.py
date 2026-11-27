@@ -3,12 +3,12 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from tiozin import config
 from tiozin.utils import default
 
 from ...exceptions import SchemaError
-from ...model import EnumValue, LogicalType, Map, Property, Schema
+from ...model import EnumValue, LogicalType, Map, Property, Schema, TiozinStringFormat
 from ...utils import without_none
-from .. import conventions as conv
 from . import constants as const
 from .avro_type import AvroType
 from .named_types import reference_named_types
@@ -318,16 +318,16 @@ class AvroSchemaWriter:
             case Property(logicalType=LogicalType.TIMESTAMP | LogicalType.TIME):
                 return self.to_primitive_type(self.to_temporal_type_name(property))
             case Property(logicalType=LogicalType.STRING) if (
-                self.option_value(property, "format") == conv.UUID_FORMAT
+                self.option_value(property, "format") == TiozinStringFormat.UUID
             ):
                 return self.to_primitive_type(const.UUID_LOGICAL_TYPE)
             case Property(logicalType=LogicalType.INTEGER):
                 return self.to_sized_type(
-                    property, const.AVRO_INTEGER_BY_FORMAT, conv.DEFAULT_INTEGER_FORMAT
+                    property, const.AVRO_INTEGER_BY_FORMAT, config.default_schema_integer_format
                 )
             case Property(logicalType=LogicalType.NUMBER):
                 return self.to_sized_type(
-                    property, const.AVRO_NUMBER_BY_FORMAT, conv.DEFAULT_NUMBER_FORMAT
+                    property, const.AVRO_NUMBER_BY_FORMAT, config.default_schema_number_format
                 )
             case Property(logicalType=logical_type) if logical_type in const.LOGICAL_TO_AVRO:
                 return self.to_primitive_type(const.LOGICAL_TO_AVRO[logical_type])
@@ -496,7 +496,7 @@ class AvroSchemaWriter:
 
         Raises SchemaError when Avro has no type for that unit.
         """
-        time_unit = default(property.timeUnit, conv.DEFAULT_TIME_UNIT)
+        time_unit = default(property.timeUnit, config.default_schema_time_unit)
         timezone = (
             self.option_value(property, "timezone") is not False
             if property.logicalType == LogicalType.TIMESTAMP

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import pydantic as pyd
 
 from .custom_property import CustomProperty
+from .enums import RelationshipType
 from .model import Model
 
 
@@ -45,8 +44,8 @@ class Relationship(Model):
         None,
         description="Stable identifier, unique among the relationships around it.",
     )
-    type: Literal["foreignKey"] = pyd.Field(
-        "foreignKey",
+    type: RelationshipType = pyd.Field(
+        RelationshipType.FOREIGN_KEY,
         description="Kind of relationship.",
     )
     from_: str | list[str] | None = pyd.Field(

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import pydantic as pyd
 
+from ..enums import IntegerFormat
 from .logical_type_options import LogicalTypeOptions
 
 
@@ -24,19 +23,8 @@ class IntegerOptions(LogicalTypeOptions):
 
     model_config = pyd.ConfigDict(extra="forbid")
 
-    format: Literal[
-        "i8",
-        "i16",
-        "i32",
-        "i64",
-        "i128",
-        "u8",
-        "u16",
-        "u32",
-        "u64",
-        "u128",
-    ] = pyd.Field(
-        "i32",
+    format: IntegerFormat = pyd.Field(
+        IntegerFormat.INT32,
         description="Size and sign of the values, named as the Rust integer types.",
     )
     multipleOf: int | float | None = pyd.Field(
