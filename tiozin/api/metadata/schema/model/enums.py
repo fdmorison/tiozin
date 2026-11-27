@@ -6,6 +6,10 @@ from tiozin.utils import slugify
 
 NAME_WITHOUT_WORDS = "_"
 
+# ===============================================
+#           Open Data Contract Standard
+# ===============================================
+
 
 class LogicalType(StrEnum):
     """
@@ -40,27 +44,19 @@ class LogicalType(StrEnum):
     VECTOR = "vector"
 
 
-class TiozinCustomProperty(StrEnum):
+class SemanticType(StrEnum):
     """
-    Attributes of a type that the Open Data Contract Standard has no place
-    for. Tiozin writes them as custom properties of the same name, without
-    vendor, and every converter reads and writes them with the same meaning.
+    Role of a property in the data model, as the Open Data Contract Standard
+    v3.2.0 defines it.
 
-    - typeName and namespace: the name and namespace of a named type, such as
-      an Avro record, enum or fixed type.
-    - binary: true for a string of raw bytes.
-    - precision and scale: the digits of a decimal number.
-    - typeSize: the size in bytes of a fixed-size binary type.
-    - timeUnit: the unit of a timestamp or a time.
+    - column: a plain column, the default.
+    - measure: a value to aggregate, such as an amount.
+    - dimension: a value to group or filter by, such as a country.
     """
 
-    TYPE_NAME = "typeName"
-    NAMESPACE = "namespace"
-    BINARY = "binary"
-    PRECISION = "precision"
-    SCALE = "scale"
-    TYPE_SIZE = "typeSize"
-    TIME_UNIT = "timeUnit"
+    COLUMN = "column"
+    MEASURE = "measure"
+    DIMENSION = "dimension"
 
 
 class IntegerFormat(StrEnum):
@@ -91,17 +87,122 @@ class NumberFormat(StrEnum):
     FLOAT64 = "f64"
 
 
-class StringFormat(StrEnum):
+class VectorElementType(StrEnum):
     """
-    Formats of a string that Tiozin knows.
+    Type of each element of a vector, as the Open Data Contract Standard
+    v3.2.0 defines it.
     """
 
-    UUID = "uuid"
+    BFLOAT16 = "bfloat16"
+    BINARY = "binary"
+    FLOAT16 = "float16"
+    FLOAT32 = "float32"
+    FLOAT64 = "float64"
+    INT8 = "int8"
+    UINT8 = "uint8"
 
 
-class TimeUnit(StrEnum):
+class DistanceMetric(StrEnum):
     """
-    Unit of a timestamp or a time.
+    How the distance between two vectors is measured, as the Open Data
+    Contract Standard v3.2.0 defines it.
+    """
+
+    COSINE = "cosine"
+    DOT_PRODUCT = "dotProduct"
+    EUCLIDEAN = "euclidean"
+    HAMMING = "hamming"
+    MANHATTAN = "manhattan"
+
+
+class RelationshipType(StrEnum):
+    """
+    Kind of a relationship between properties, as the Open Data Contract
+    Standard v3.2.0 defines it.
+    """
+
+    FOREIGN_KEY = "foreignKey"
+
+
+class QualityType(StrEnum):
+    """
+    Kind of a data quality rule, as the Open Data Contract Standard v3.2.0
+    defines it.
+
+    - text: only a description.
+    - library: a metric the standard defines, the default.
+    - sql: a query.
+    - custom: a rule in the language of an engine, such as soda.
+    """
+
+    TEXT = "text"
+    LIBRARY = "library"
+    SQL = "sql"
+    CUSTOM = "custom"
+
+
+class QualityDimension(StrEnum):
+    """
+    Data quality dimension a rule belongs to, as the Open Data Contract
+    Standard v3.2.0 defines it.
+    """
+
+    ACCURACY = "accuracy"
+    COMPLETENESS = "completeness"
+    CONFORMITY = "conformity"
+    CONSISTENCY = "consistency"
+    COVERAGE = "coverage"
+    TIMELINESS = "timeliness"
+    UNIQUENESS = "uniqueness"
+
+
+class QualityMetric(StrEnum):
+    """
+    Metric a library rule measures, as the Open Data Contract Standard v3.2.0
+    defines it.
+    """
+
+    NULL_VALUES = "nullValues"
+    MISSING_VALUES = "missingValues"
+    INVALID_VALUES = "invalidValues"
+    DUPLICATE_VALUES = "duplicateValues"
+    ROW_COUNT = "rowCount"
+
+
+# ===============================================
+#           Tiozin Customizations
+# ===============================================
+
+
+class TiozinCustomProperty(StrEnum):
+    """
+    Tiozin conventions: attributes of a type that the Open Data Contract
+    Standard has no place for. Tiozin writes them as custom properties of the
+    same name, without vendor, and every converter reads and writes them with
+    the same meaning.
+
+    - typeName and namespace: the name and namespace of a named type, such as
+      an Avro record, enum or fixed type.
+    - binary: true for a string of raw bytes.
+    - precision and scale: the digits of a decimal number.
+    - typeSize: the size in bytes of a fixed-size binary type.
+    - timeUnit: the unit of a timestamp or a time.
+    """
+
+    TYPE_NAME = "typeName"
+    NAMESPACE = "namespace"
+    BINARY = "binary"
+    PRECISION = "precision"
+    SCALE = "scale"
+    TYPE_SIZE = "typeSize"
+    TIME_UNIT = "timeUnit"
+
+
+class TiozinTimeUnit(StrEnum):
+    """
+    Unit of a timestamp or a time. A Tiozin convention, since the Open Data
+    Contract Standard has no place for it, written as the `timeUnit` custom
+    property.
     """
 
     MILLIS = "millis"
@@ -109,9 +210,21 @@ class TimeUnit(StrEnum):
     NANOS = "nanos"
 
 
+class TiozinStringFormat(StrEnum):
+    """
+    Formats of a string that Tiozin knows. The Open Data Contract Standard
+    v3.2.0 leaves the format of a string free, and lists these among its
+    examples.
+    """
+
+    UUID = "uuid"
+
+
 class Case(StrEnum):
     """
-    Naming conventions that property names can be normalized to.
+    Naming conventions that property names can be normalized to. Defined by
+    Tiozin, not by the Open Data Contract Standard, and never written to a
+    schema.
 
     - snake: lowercase words delimited by underscores, as `first_name`.
     - camel: words without delimiters, all capitalized but the first, as `firstName`.

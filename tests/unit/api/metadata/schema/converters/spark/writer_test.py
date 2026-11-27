@@ -4,7 +4,7 @@ import pytest
 import yaml
 
 from tiozin import Schema
-from tiozin.api.metadata.schema.converters.spark import SparkSchemaWriter
+from tiozin.api.metadata.schema.converters.spark import SparkSchemaWriter, SparkTimeType
 from tiozin.api.metadata.schema.model import Map, Property
 from tiozin.exceptions import SchemaError
 
@@ -68,6 +68,19 @@ def test_write_should_write_time_as_given_time_type(time_type, expected_type, ex
         "nullable": True,
         "metadata": expected_metadata,
     }
+    assert actual == expected
+
+
+def test_write_should_accept_time_type_member():
+    # Arrange
+    schema = Schema(name="users").time("starts_at")
+
+    # Act
+    result = SparkSchemaWriter(time_type=SparkTimeType.TIME).write(schema)
+
+    # Assert
+    actual = result["fields"][0]
+    expected = {"name": "starts_at", "type": "time(6)", "nullable": True, "metadata": {}}
     assert actual == expected
 
 

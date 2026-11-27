@@ -4,7 +4,7 @@ import json
 from typing import Any
 
 from ...exceptions import SchemaError
-from ...model import LogicalType, StringFormat, TiozinCustomProperty
+from ...model import LogicalType, TiozinCustomProperty, TiozinStringFormat
 from ...utils import without_none
 from . import constants as const
 
@@ -276,7 +276,7 @@ class AvroType:
                 _, timezone, _ = const.AVRO_TEMPORAL_TYPES[name]
                 return without_none({"timezone": timezone}) or None
             case const.UUID_LOGICAL_TYPE:
-                return {"format": StringFormat.UUID}
+                return {"format": TiozinStringFormat.UUID}
             case name if name in const.AVRO_FORMATS:
                 return {"format": const.AVRO_FORMATS[name]}
             case _:

@@ -16,7 +16,14 @@ from ..merges import BackwardCompatibleEvolution, DocumentationMerge
 from ..utils import SchemaYamlLexer
 from .context import Context
 from .element import Element
-from .enums import Case, IntegerFormat, LogicalType, NumberFormat, StringFormat, TimeUnit
+from .enums import (
+    Case,
+    IntegerFormat,
+    LogicalType,
+    NumberFormat,
+    TiozinStringFormat,
+    TiozinTimeUnit,
+)
 from .map import Map
 from .path import PropertyPath
 from .property import Property
@@ -68,7 +75,7 @@ class Schema(Element):
         DEFAULT_PHYSICAL_TYPE,
         description="Kind of object in storage, such as table, view, topic or file.",
     )
-    logicalType: Literal["object"] | None = pyd.Field(
+    logicalType: Literal[LogicalType.OBJECT] | None = pyd.Field(
         None,
         description="Type of the schema, which is always object.",
     )
@@ -387,22 +394,22 @@ class Schema(Element):
         return self.add(path, LogicalType.TIME, **attributes)
 
     def time_millis(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.time(path, timeUnit=TimeUnit.MILLIS, **attributes)
+        return self.time(path, timeUnit=TiozinTimeUnit.MILLIS, **attributes)
 
     def time_micros(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.time(path, timeUnit=TimeUnit.MICROS, **attributes)
+        return self.time(path, timeUnit=TiozinTimeUnit.MICROS, **attributes)
 
     def time_nanos(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.time(path, timeUnit=TimeUnit.NANOS, **attributes)
+        return self.time(path, timeUnit=TiozinTimeUnit.NANOS, **attributes)
 
     def timestamp_millis(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.timestamp(path, timeUnit=TimeUnit.MILLIS, **attributes)
+        return self.timestamp(path, timeUnit=TiozinTimeUnit.MILLIS, **attributes)
 
     def timestamp_micros(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.timestamp(path, timeUnit=TimeUnit.MICROS, **attributes)
+        return self.timestamp(path, timeUnit=TiozinTimeUnit.MICROS, **attributes)
 
     def timestamp_nanos(self, path: str | Iterable[str], **attributes) -> Schema:
-        return self.timestamp(path, timeUnit=TimeUnit.NANOS, **attributes)
+        return self.timestamp(path, timeUnit=TiozinTimeUnit.NANOS, **attributes)
 
     def timestamp_ntz(self, path: str | Iterable[str], **attributes) -> Schema:
         options = with_options(attributes, timezone=False)
@@ -438,7 +445,7 @@ class Schema(Element):
         return self.number(path, precision=precision, scale=scale, **attributes)
 
     def uuid(self, path: str | Iterable[str], **attributes) -> Schema:
-        options = with_options(attributes, format=StringFormat.UUID)
+        options = with_options(attributes, format=TiozinStringFormat.UUID)
         return self.string(path, logicalTypeOptions=options, **attributes)
 
     def varchar(self, path: str | Iterable[str], length: int, **attributes) -> Schema:

@@ -9,6 +9,7 @@ from tiozin.utils import default
 from ...exceptions import SchemaError
 from ...model import CustomProperty, LogicalType, Map, Property, Schema
 from . import constants as const
+from .enums import SparkTimeType
 from .spark_type import SparkType
 
 
@@ -81,7 +82,7 @@ class SparkSchemaWriter(Loggable):
 
         SchemaError.raise_if_not_in(
             time_type,
-            const.TIME_TYPES,
+            list(SparkTimeType),
         )
 
         self.time_type = time_type
@@ -280,7 +281,7 @@ class SparkSchemaWriter(Loggable):
                 "to micros, so Spark truncates its values when it reads the data"
             )
 
-        if self.time_type != const.TIME_AS_TIME:
+        if self.time_type != SparkTimeType.TIME:
             return self.time_type
 
         precision = const.SPARK_TIME_PRECISION_BY_UNIT.get(

@@ -1,6 +1,6 @@
 """
 Deprecated aliases of the schema conventions, kept for plugins that still
-import them. Use `TiozinCustomProperty`, `TimeUnit` and `StringFormat` from the
+import them. Use `TiozinCustomProperty`, `TiozinTimeUnit` and `TiozinStringFormat` from the
 schema model, and the defaults in `tiozin.config`.
 
 This module will be removed in the next major version.
@@ -12,12 +12,12 @@ import warnings
 
 from tiozin import config
 
-from ..model import StringFormat, TimeUnit, TiozinCustomProperty
+from ..model import TiozinCustomProperty, TiozinStringFormat, TiozinTimeUnit
 
 warnings.warn(
     "`tiozin.api.metadata.schema.converters.conventions` is deprecated and will be removed "
-    "in the next major version. Use `TiozinCustomProperty`, `TimeUnit` and `StringFormat` "
-    "from `tiozin.api.metadata.schema.model`, and the defaults in "
+    "in the next major version. Use `TiozinCustomProperty`, `TiozinTimeUnit` and "
+    "`TiozinStringFormat` from `tiozin.api.metadata.schema.model`, and the defaults in "
     "`tiozin.config`.",
     DeprecationWarning,
     stacklevel=2,
@@ -36,11 +36,11 @@ TYPE_PARAMETER_PROPERTIES = {
     TiozinCustomProperty.TIME_UNIT,
 }
 
-MILLIS = TimeUnit.MILLIS
-MICROS = TimeUnit.MICROS
-NANOS = TimeUnit.NANOS
+MILLIS = TiozinTimeUnit.MILLIS
+MICROS = TiozinTimeUnit.MICROS
+NANOS = TiozinTimeUnit.NANOS
 DEFAULT_TIME_UNIT = config.default_schema_time_unit
 
-UUID_FORMAT = StringFormat.UUID
+UUID_FORMAT = TiozinStringFormat.UUID
 DEFAULT_INTEGER_FORMAT = config.default_schema_integer_format
 DEFAULT_NUMBER_FORMAT = config.default_schema_number_format

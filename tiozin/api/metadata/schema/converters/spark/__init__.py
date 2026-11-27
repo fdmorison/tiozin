@@ -13,6 +13,7 @@ Examples:
 """
 
 from .converter import SparkSchemaConverter
+from .enums import SparkTimeType
 from .reader import SparkSchemaReader
 from .spark_type import SparkType
 from .writer import SparkSchemaWriter
@@ -21,5 +22,6 @@ __all__ = [
     "SparkSchemaConverter",
     "SparkSchemaReader",
     "SparkSchemaWriter",
+    "SparkTimeType",
     "SparkType",
 ]

@@ -1,6 +1,11 @@
 import pytest
 
-from tiozin.api.metadata.schema.model import Quality
+from tiozin.api.metadata.schema.model import (
+    Quality,
+    QualityDimension,
+    QualityMetric,
+    QualityType,
+)
 from tiozin.exceptions import SchemaError
 
 
@@ -38,6 +43,36 @@ def test_quality_should_default_type_to_library():
     # Assert
     actual = result.type
     expected = "library"
+    assert actual == expected
+
+
+def test_quality_should_write_type_member_as_text():
+    # Act
+    result = Quality(type=QualityType.SQL, query="select count(*) from orders", mustBeGreaterThan=0)
+
+    # Assert
+    actual = result.to_yaml()
+    expected = "type: sql\nquery: select count(*) from orders\nmustBeGreaterThan: 0\n"
+    assert actual == expected
+
+
+def test_quality_should_write_dimension_member_as_text():
+    # Act
+    result = Quality(dimension=QualityDimension.COMPLETENESS, metric="nullValues", mustBe=0)
+
+    # Assert
+    actual = result.to_yaml()
+    expected = "dimension: completeness\nmetric: nullValues\nmustBe: 0\n"
+    assert actual == expected
+
+
+def test_quality_should_write_metric_member_as_text():
+    # Act
+    result = Quality(metric=QualityMetric.ROW_COUNT, mustBeGreaterThan=0)
+
+    # Assert
+    actual = result.to_yaml()
+    expected = "metric: rowCount\nmustBeGreaterThan: 0\n"
     assert actual == expected
 
 

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 
-from ...model import IntegerFormat, LogicalType, NumberFormat, Property, TimeUnit
+from ...model import IntegerFormat, LogicalType, NumberFormat, Property, TiozinTimeUnit
+from .enums import SparkTimeType
 
 COMMENT_KEY = "comment"
 CUSTOM_PROPERTIES_KEY = "customProperties"
@@ -78,12 +79,7 @@ STRUCTURAL_ATTRIBUTES = {"required", "properties", "items", "map"}
 DEFAULT_DECIMAL_SCALE = 0
 SPARK_TIMESTAMP_WITHOUT_TIMEZONE = "timestamp_ntz"
 SPARK_VARIABLE_LENGTH_TYPE = "varchar"
-TIME_AS_TIME = "time"
-TIME_AS_TIMESTAMP_NTZ = "timestamp_ntz"
-TIME_AS_LONG = "long"
-TIME_AS_STRING = "string"
-TIME_TYPES = {TIME_AS_TIME, TIME_AS_TIMESTAMP_NTZ, TIME_AS_LONG, TIME_AS_STRING}
-MICROS_TIME_TYPES = {TIME_AS_TIME, TIME_AS_TIMESTAMP_NTZ}
-DEFAULT_TIME_TYPE = TIME_AS_TIMESTAMP_NTZ
-SPARK_TIME_PRECISION_BY_UNIT = {TimeUnit.MILLIS: 3, TimeUnit.MICROS: 6}
+MICROS_TIME_TYPES = {SparkTimeType.TIME, SparkTimeType.TIMESTAMP_NTZ}
+DEFAULT_TIME_TYPE = SparkTimeType.TIMESTAMP_NTZ
+SPARK_TIME_PRECISION_BY_UNIT = {TiozinTimeUnit.MILLIS: 3, TiozinTimeUnit.MICROS: 6}
 SPARK_MAX_TIME_PRECISION = 6

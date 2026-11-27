@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Self
+from typing import Any, Self
 
 import pydantic as pyd
 
 from ..exceptions import SchemaError
 from .authoritative_definition import AuthoritativeDefinition
 from .custom_property import CustomProperty
+from .enums import QualityDimension, QualityMetric, QualityType
 from .model import Model
 from .stable_id import StableId
 
@@ -71,22 +72,11 @@ class Quality(Model):
         None,
         description="What the rule checks.",
     )
-    type: Literal["text", "library", "sql", "custom"] = pyd.Field(
-        "library",
+    type: QualityType = pyd.Field(
+        QualityType.LIBRARY,
         description="Kind of rule: text, library, sql or custom.",
     )
-    dimension: (
-        Literal[
-            "accuracy",
-            "completeness",
-            "conformity",
-            "consistency",
-            "coverage",
-            "timeliness",
-            "uniqueness",
-        ]
-        | None
-    ) = pyd.Field(
+    dimension: QualityDimension | None = pyd.Field(
         None,
         description="Data quality dimension the rule belongs to.",
     )
@@ -126,16 +116,7 @@ class Quality(Model):
         None,
         description="Links to sources with more details.",
     )
-    metric: (
-        Literal[
-            "nullValues",
-            "missingValues",
-            "invalidValues",
-            "duplicateValues",
-            "rowCount",
-        ]
-        | None
-    ) = pyd.Field(
+    metric: QualityMetric | None = pyd.Field(
         None,
         description="Metric a library rule measures.",
     )
@@ -212,9 +193,9 @@ class Quality(Model):
             ```
         """
         declared_type = self.type if "type" in self.model_fields_set else None
-        is_library = declared_type == "library" or self.metric is not None
-        is_sql = declared_type == "sql"
-        is_custom = declared_type == "custom"
+        is_library = declared_type == QualityType.LIBRARY or self.metric is not None
+        is_sql = declared_type == QualityType.SQL
+        is_custom = declared_type == QualityType.CUSTOM
         operators = [operator for operator in OPERATORS if operator in self.model_fields_set]
 
         SchemaError.raise_if(

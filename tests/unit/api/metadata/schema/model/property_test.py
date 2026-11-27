@@ -10,6 +10,7 @@ from tiozin.api.metadata.schema.model import (
     NumberOptions,
     ObjectOptions,
     Property,
+    SemanticType,
     StringOptions,
     TimestampOptions,
     VectorOptions,
@@ -792,6 +793,16 @@ def test_property_should_default_to_spec_values():
         "column",
         None,
     )
+    assert actual == expected
+
+
+def test_property_should_write_semantic_type_member_as_text():
+    # Act
+    result = Property(name="amount", semanticType=SemanticType.MEASURE)
+
+    # Assert
+    actual = result.to_yaml()
+    expected = "name: amount\nsemanticType: measure\n"
     assert actual == expected
 
 

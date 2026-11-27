@@ -4,7 +4,7 @@ import json
 from typing import Any
 
 from ...exceptions import SchemaError
-from ...model import LogicalType, TimeUnit, TiozinCustomProperty
+from ...model import LogicalType, TiozinCustomProperty, TiozinTimeUnit
 from . import constants as const
 
 
@@ -145,13 +145,15 @@ class SparkType:
                     {"property": TiozinCustomProperty.SCALE, "value": scale},
                 ]
             case name if name in const.SPARK_TIMEZONE_BY_TYPE:
-                return [{"property": TiozinCustomProperty.TIME_UNIT, "value": TimeUnit.MICROS}]
+                return [
+                    {"property": TiozinCustomProperty.TIME_UNIT, "value": TiozinTimeUnit.MICROS}
+                ]
             case name if name == const.SPARK_TIME_TYPE:
                 (precision,) = self.type_arguments or (const.SPARK_DEFAULT_TIME_PRECISION,)
                 time_unit = (
-                    TimeUnit.MILLIS
+                    TiozinTimeUnit.MILLIS
                     if precision <= const.SPARK_MILLIS_PRECISION
-                    else TimeUnit.MICROS
+                    else TiozinTimeUnit.MICROS
                 )
                 return [{"property": TiozinCustomProperty.TIME_UNIT, "value": time_unit}]
             case name if name == const.SPARK_BINARY_TYPE:

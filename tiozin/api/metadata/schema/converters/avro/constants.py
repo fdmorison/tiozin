@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from ...model import IntegerFormat, LogicalType, NumberFormat, TimeUnit, TiozinCustomProperty
+from ...model import IntegerFormat, LogicalType, NumberFormat, TiozinCustomProperty, TiozinTimeUnit
 
 AVRO_TO_LOGICAL = {
     "string": LogicalType.STRING,
@@ -59,14 +59,14 @@ AVRO_STRUCTURAL_TYPES = {"record", "array", "map"}
 UUID_LOGICAL_TYPE = "uuid"
 
 AVRO_TEMPORAL_TYPES = {
-    "time-millis": (LogicalType.TIME, None, TimeUnit.MILLIS),
-    "time-micros": (LogicalType.TIME, None, TimeUnit.MICROS),
-    "timestamp-millis": (LogicalType.TIMESTAMP, True, TimeUnit.MILLIS),
-    "timestamp-micros": (LogicalType.TIMESTAMP, True, TimeUnit.MICROS),
-    "timestamp-nanos": (LogicalType.TIMESTAMP, True, TimeUnit.NANOS),
-    "local-timestamp-millis": (LogicalType.TIMESTAMP, False, TimeUnit.MILLIS),
-    "local-timestamp-micros": (LogicalType.TIMESTAMP, False, TimeUnit.MICROS),
-    "local-timestamp-nanos": (LogicalType.TIMESTAMP, False, TimeUnit.NANOS),
+    "time-millis": (LogicalType.TIME, None, TiozinTimeUnit.MILLIS),
+    "time-micros": (LogicalType.TIME, None, TiozinTimeUnit.MICROS),
+    "timestamp-millis": (LogicalType.TIMESTAMP, True, TiozinTimeUnit.MILLIS),
+    "timestamp-micros": (LogicalType.TIMESTAMP, True, TiozinTimeUnit.MICROS),
+    "timestamp-nanos": (LogicalType.TIMESTAMP, True, TiozinTimeUnit.NANOS),
+    "local-timestamp-millis": (LogicalType.TIMESTAMP, False, TiozinTimeUnit.MILLIS),
+    "local-timestamp-micros": (LogicalType.TIMESTAMP, False, TiozinTimeUnit.MICROS),
+    "local-timestamp-nanos": (LogicalType.TIMESTAMP, False, TiozinTimeUnit.NANOS),
 }
 
 AVRO_COMPLEX_TO_LOGICAL = {
